@@ -1,0 +1,10 @@
+<package>
+  <description brief="Sherpa-TT specialized proxy_library containing all BaseType-DataTypes.">
+  
+  </description>
+  <author>Stefan Haase/stefan.haase@ground-truth-robotics.de</author>
+  <license></license>
+  <url>http://</url>
+  <logo>http://</logo>
+  <depend package="communication/proxy_library" />
+</package>

@@ -1,0 +1,4 @@
+# Ignore all build dirs
+build
+install
+env.sh

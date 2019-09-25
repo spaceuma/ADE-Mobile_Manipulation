@@ -1,0 +1,11 @@
+<package>
+  <description brief="Rock independent library to communicate with the Rock proxy module.">
+  
+  </description>
+  <author>Stefan Haase/stefan.haase@ground-truth-robotics.de</author>
+  <license></license>
+  <url>http://</url>
+  <logo>http://</logo>
+  <depend package="tools/detached_logger" />
+  <depend package="communication/ip_tunnel" />
+</package>
