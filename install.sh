@@ -1,6 +1,6 @@
 sudo apt-get -y install libopencv-dev cmake libboost-all-dev
 
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$PWD/cmake/
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$PWD/deps/sherpa_tt_api/cmake/
 install_folder=$PWD/install
 
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$install_folder/lib/pkgconfig
@@ -43,6 +43,12 @@ cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
 make install
 
 cd $cur/spike/dummy_lib
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+make install
+
+cd $cur/spike/plannerExample
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..

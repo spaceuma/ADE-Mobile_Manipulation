@@ -1,10 +1,10 @@
-rock_library(dummy_lib
-    SOURCES Dummy.cpp
-    HEADERS Dummy.hpp)
+rock_library(biFMplanner_lib
+    SOURCES biFMplanner.cpp
+    HEADERS biFMplanner.hpp)
 
-TARGET_LINK_LIBRARIES(dummy_lib pthread)
+TARGET_LINK_LIBRARIES(biFMplanner_lib pthread)
 
-rock_library(dummy_types
+rock_library(sherpa_types
     SOURCES types/DEM.cpp
             types/DGPS.cpp
             types/Image.cpp
@@ -29,8 +29,8 @@ rock_library(dummy_types
     DEPS_PKGCONFIG proxy_library
 )
 
-rock_executable(dummy_lib_bin Main.cpp
-    DEPS dummy_lib
-    DEPS dummy_types
+rock_executable(biFMplanner_example Main.cpp
+    DEPS biFMplanner_lib
+    DEPS sherpa_types
     DEPS_PKGCONFIG proxy_library_sherpa_tt)
 

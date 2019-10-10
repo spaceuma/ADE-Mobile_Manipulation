@@ -2,7 +2,7 @@
 #include <mutex>
 #include <thread>
 #include <iostream>
-#include <dummy_lib/Dummy.hpp>
+#include <plannerExample/biFMplanner.hpp>
 #include <proxy_library/ProxyLibrary.hpp>
 #include <proxy_library_sherpa_tt/ProxyLibrarySherpaTT.hpp>
 

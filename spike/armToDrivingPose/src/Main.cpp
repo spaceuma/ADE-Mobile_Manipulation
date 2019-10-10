@@ -2,9 +2,7 @@
 #include <mutex>
 #include <thread>
 #include <iostream>
-#include <dummy_lib/Dummy.hpp>
-#include <proxy_library/ProxyLibrary.hpp>
-#include <proxy_library_sherpa_tt/ProxyLibrarySherpaTT.hpp>
+#include "Main.hpp"
 
 using namespace proxy_library;
 
