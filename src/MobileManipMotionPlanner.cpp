@@ -20,7 +20,7 @@ int MobileManipMotionPlanner::updateMap(/* DEM using the Airbus data struct */Ro
 	throw "Not yet implemented";
 }
 
-int MobileManipMotionPlanner::getStatus() {
+MM_status MobileManipMotionPlanner::getStatus() {
 	return this->status;
 }
 
@@ -53,22 +53,52 @@ void MobileManipMotionPlanner::abort() {
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::updateRoverArmPos(Joints& arm_command, MotionCommand& rover_command, Pose rover_position, Joints arm_joints) {
+void MobileManipMotionPlanner::updateRoverArmPos(/**
+	 * Command to compute for the arm.
+	 */
+	Joints& arm_command, /**
+	 * Command to compute for the rover base.
+	 */
+	MotionCommand& rover_command, /**
+	 * Current pose of the rover base.
+	 */
+	Pose rover_position, /**
+	 * Current position of the joints.
+	 */
+	Joints arm_joints) {
 	// TODO - implement MobileManipMotionPlanner::updateRoverArmPos
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::updateLocCamDEM(RoverGuidance_DEM locCamDEM, Pose rover_position, Joints arm_joints) {
+void MobileManipMotionPlanner::updateLocCamDEM(/**
+	 * DEM using Airbus data struct
+	 */
+	RoverGuidance_DEM locCamDEM, /**
+	 * Current position of the base
+	 */
+	Pose rover_position, /**
+	 * Current position of the joints
+	 */
+	Joints arm_joints) {
 	// TODO - implement MobileManipMotionPlanner::updateLocCamDEM
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::updateSamplePos(SamplePose sample) {
+void MobileManipMotionPlanner::updateSamplePos(/**
+	 * Pose of the sample including error.
+	 */
+	SamplePose sample) {
 	// TODO - implement MobileManipMotionPlanner::updateSamplePos
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::pause(Joints& arm_command, MotionCommand& rover_command) {
+void MobileManipMotionPlanner::pause(/**
+	 * By reference parameter to get commands to stop the joints.
+	 */
+	Joints& arm_command, /**
+	 * By reference parameter to get commands to stop the rover base.
+	 */
+	MotionCommand& rover_command) {
 	// TODO - implement MobileManipMotionPlanner::pause
 	throw "Not yet implemented";
 }
@@ -88,7 +118,7 @@ void MobileManipMotionPlanner::resumeError() {
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::getErrorCode() {
+MM_error MobileManipMotionPlanner::getErrorCode() {
 	// TODO - implement MobileManipMotionPlanner::getErrorCode
 	throw "Not yet implemented";
 }
@@ -98,7 +128,13 @@ void MobileManipMotionPlanner::start() {
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::stopMotion(Joints& arm_command, MotionCommand& rover_command) {
+void MobileManipMotionPlanner::stopMotion(/**
+	 * By reference parameter to get commands to stop the joints.
+	 */
+	Joints& arm_command, /**
+	 * By reference parameter to get commands to stop the rover base.
+	 */
+	MotionCommand& rover_command) {
 	// TODO - implement MobileManipMotionPlanner::stopMotion
 	throw "Not yet implemented";
 }

@@ -8,6 +8,9 @@ private:
 	 * Rover surronding map that would be used to generate the rover-manipulator trajectories.
 	 */
 	MobileManipMap currentMap;
+	/**
+	 * The motion plan that is currently available.
+	 */
 	MotionPlan currentMotionPlan;
 	/**
 	 * Object that run the execution of the planned trajectory.
@@ -15,20 +18,41 @@ private:
 	MobileManipExecutor executor;
 	/**
 	 * Status of the motion planner:
-	 * Idle
-	 * Processing
-	 * Running
-	 * TBD
+	 * IDLE
+	 * GENERATING_MOTION_PLAN
+	 * READY_TO_MOVE
+	 * EXECUTING_MOTION_PLAN
+	 * EXECUTING_ARM_OPERATION
+	 * RETRIEVING_ARM
+	 * FINISHED
+	 * ERROR
+	 * REPLANNING
+	 * PAUSE
 	 */
 	MM_status status;
 	/**
 	 * Attribute to indicate the error code
 	 */
 	MM_error error;
+	/**
+	 * The status prior to entering to the current one. This is useful for entering and exiting PAUSE status.
+	 */
 	MM_status priorStatus;
+	/**
+	 * A variable that indicates which kind of operation shall be performed with the arm (e.g. some atomic operation or sample handling)
+	 */
 	ArmOperation currentArmOperation;
+	/**
+	 * The pose of the sample.
+	 */
 	samplePose currentSamplePos;
+	/**
+	 * The current pose of the rover.
+	 */
 	Pose currentRoverPos;
+	/**
+	 * The current position of the arm joints.
+	 */
 	Joints currentJointPositions;
 
 public:
@@ -52,32 +76,104 @@ public:
 	 */
 	void generateMotionPlan(/* It should include the estimation error. */Pose rover_position, /* It should include the estimation error. */SamplePose sample, Joints arm_joints);
 
-	int getStatus();
+	/**
+	 * It returns the status in which the software is.
+	 */
+	MM_status getStatus();
 
+	/**
+	 * It serves to perform an operation with only the arm.
+	 */
 	void executeAtomicOperation(ArmOperation arm_operation);
 
+	/**
+	 * It makes the software finish immediately.
+	 */
 	void abort();
 
-	void updateRoverArmPos(Joints& arm_command, MotionCommand& rover_command, Pose rover_position, Joints arm_joints);
+	/**
+	 * It provides commands depending on the current position of the rover and the arm joints
+	 */
+	void updateRoverArmPos(/**
+	 * Command to compute for the arm.
+	 */
+	Joints& arm_command, /**
+	 * Command to compute for the rover base.
+	 */
+	MotionCommand& rover_command, /**
+	 * Current pose of the rover base.
+	 */
+	Pose rover_position, /**
+	 * Current position of the joints.
+	 */
+	Joints arm_joints);
 
-	void updateLocCamDEM(RoverGuidance_DEM locCamDEM, Pose rover_position, Joints arm_joints);
+	/**
+	 * It procceses the input LocCamDEM and triggers a replanning if necessary.
+	 */
+	void updateLocCamDEM(/**
+	 * DEM using Airbus data struct
+	 */
+	RoverGuidance_DEM locCamDEM, /**
+	 * Current position of the base
+	 */
+	Pose rover_position, /**
+	 * Current position of the joints
+	 */
+	Joints arm_joints);
 
 	/**
 	 * Goal is updated during the execution of the motion plan. It requires to recalculate the motion plan taking into consideration the previously received DEM.
 	 */
-	void updateSamplePos(SamplePose sample);
+	void updateSamplePos(/**
+	 * Pose of the sample including error.
+	 */
+	SamplePose sample);
 
-	void pause(Joints& arm_command, MotionCommand& rover_command);
+	/**
+	 * It makes the software enter into the PAUSE state, first creating commands to stop the rover base and arm.
+	 */
+	void pause(/**
+	 * By reference parameter to get commands to stop the joints.
+	 */
+	Joints& arm_command, /**
+	 * By reference parameter to get commands to stop the rover base.
+	 */
+	MotionCommand& rover_command);
 
+	/**
+	 * It returns to the state indicated by priorStatus. Useful to exit the PAUSE state.
+	 */
 	void resumeOperation();
 
+	/**
+	 * It serves to acknowledge by the user that the operation is completely finished.
+	 */
 	void ack();
 
+	/**
+	 * It handles the error and behaves according to its type.
+	 */
 	void resumeError();
 
-	void getErrorCode();
+	/**
+	 * Returns the indication of which error affects the software.
+	 */
+	MM_error getErrorCode();
 
+	/**
+	 * Serves to actively start moving the rover and arm once a motion plan is available.
+	 */
 	void start();
 
-	void stopMotion(Joints& arm_command, MotionCommand& rover_command);
+	/**
+	 * Provides commands to completely stop the rover.
+	 */
+	void stopMotion(/**
+	 * By reference parameter to get commands to stop the joints.
+	 */
+	Joints& arm_command, /**
+	 * By reference parameter to get commands to stop the rover base.
+	 */
+	MotionCommand& rover_command);
 };
