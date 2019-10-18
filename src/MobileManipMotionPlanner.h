@@ -7,11 +7,12 @@ private:
 	/**
 	 * Rover surronding map that would be used to generate the rover-manipulator trajectories.
 	 */
-	int currentMap;
+	MobileManipMap currentMap;
+	MotionPlan currentMotionPlan;
 	/**
 	 * Object that run the execution of the planned trajectory.
 	 */
-	int MMExecution;
+	MobileManipExecutor executor;
 	/**
 	 * Status of the motion planner:
 	 * Idle
@@ -19,34 +20,64 @@ private:
 	 * Running
 	 * TBD
 	 */
-	int status;
+	MM_status status;
 	/**
 	 * Attribute to indicate the error code
 	 */
-	int error;
+	MM_error error;
+	MM_status priorStatus;
+	ArmOperation currentArmOperation;
+	samplePose currentSamplePos;
+	Pose currentRoverPos;
+	Joints currentJointPositions;
 
 public:
 	/**
 	 * Constructor, it receives a DEM and generates the Map object.
 	 */
-	MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */RoverGuidance_Dem dem);
+	MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */RoverGuidance_Dem navCamDEM);
 
 	/**
 	 * Run the execution of the motion
 	 */
-	int ExecuteMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan);
-
-	/**
-	 * It generates a motion plan based on the Map, the rover pose and the sample position.
-	 */
-	MotionPlan generateMotionPlan(Rover roverPose, Sample samplePos);
+	void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan);
 
 	/**
 	 * It updates the stored map
 	 */
-	int updateMap(/* DEM using the Airbus data struct */RoverGuidance_Dem currentDEM);
+	void updateNavCamDEM(/* DEM using the Airbus data struct */RoverGuidance_Dem navCamDEM);
+
+	/**
+	 * It generates a motion plan based on the Map, the rover pose and the sample position.
+	 */
+	void generateMotionPlan(/* It should include the estimation error. */Pose rover_position, /* It should include the estimation error. */SamplePose sample, Joints arm_joints);
 
 	int getStatus();
 
-	void setStatus(int newStatus);
+	void executeAtomicOperation(ArmOperation arm_operation);
+
+	void abort();
+
+	void updateRoverArmPos(Joints& arm_command, MotionCommand& rover_command, Pose rover_position, Joints arm_joints);
+
+	void updateLocCamDEM(RoverGuidance_DEM locCamDEM, Pose rover_position, Joints arm_joints);
+
+	/**
+	 * Goal is updated during the execution of the motion plan. It requires to recalculate the motion plan taking into consideration the previously received DEM.
+	 */
+	void updateSamplePos(SamplePose sample);
+
+	void pause(Joints& arm_command, MotionCommand& rover_command);
+
+	void resumeOperation();
+
+	void ack();
+
+	void resumeError();
+
+	void getErrorCode();
+
+	void start();
+
+	void stopMotion(Joints& arm_command, MotionCommand& rover_command);
 };
