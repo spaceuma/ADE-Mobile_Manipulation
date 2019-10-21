@@ -1,7 +1,7 @@
 /**
  * This class includes the provide DEM, the cost map and the obstacles map.
  */
-class Map {
+class MobileManipMap {
 
 private:
 	/**
@@ -14,17 +14,13 @@ private:
 	 * * index = row * cols + col
 	 */
 	boolean currentObstaclesMap[];
+	double currentCostMap[];
 
 public:
 	/**
 	 * Constructor that receives the map, process it and generates the cost and obstacles maps.
 	 */
-	Map(RoverGuidance_Dem dem);
-
-	/**
-	 * It updates currentDem and recalculates the cost and obstacles maps.
-	 */
-	void updateDem(RoverGuidance_Dem dem);
+	MobileManipMap(RoverGuidance_Dem dem);
 
 private:
 	/**
@@ -36,4 +32,7 @@ private:
 	 * It calculates o recalculates the obstacles map based on currentDEM
 	 */
 	void calculateObstaclesMap();
+
+public:
+	void checkObstacles(RoverGuidance_DEM locCamDEM, MotionPlan motionPlan);
 };
