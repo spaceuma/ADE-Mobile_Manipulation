@@ -15,7 +15,7 @@ void MobileManipMap::calculateObstaclesMap() {
 	throw "Not yet implemented";
 }
 
-void MobileManipMap::checkObstacles(RoverGuidance_DEM locCamDEM, MotionPlan motionPlan) {
+void MobileManipMap::checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan) {
 	// TODO - implement MobileManipMap::checkObstacles
 	throw "Not yet implemented";
 }

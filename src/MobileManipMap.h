@@ -13,7 +13,7 @@ private:
 	 * The mapping of the data (row/column) onto the 1D data arrays (single index) is defined as follows:
 	 * * index = row * cols + col
 	 */
-	boolean currentObstaclesMap[];
+	bool currentObstaclesMap[];
 	double currentCostMap[];
 
 public:
@@ -34,5 +34,5 @@ private:
 	void calculateObstaclesMap();
 
 public:
-	void checkObstacles(RoverGuidance_DEM locCamDEM, MotionPlan motionPlan);
+	void checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan);
 };
