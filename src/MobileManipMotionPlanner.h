@@ -1,3 +1,6 @@
+#include <types/MM_status.h>
+#include <types/MM_error.h>
+
 /**
  * It is the main class that receives all the information from other components, start the execution of the coupled rover-manipulator motion, etc.
  */

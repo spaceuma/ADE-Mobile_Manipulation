@@ -1,3 +1,9 @@
+#include <types/Joints.h>
+#include <types/Waypoint.hpp>
+#include <types/ArmOperation.h>
+using namespace proxy_library;
+using namespace base;
+
 class MotionPlan {
 
 private:
@@ -8,7 +14,7 @@ private:
 	/**
 	 * The path that must be followed by the rover, made up by 2d waypoints
 	 */
-	Waypoint roverPath[];
+	std::vector<Waypoint> roverPath;
 	/**
 	 * Profile of joint positions to be followed by the arm.
 	 */

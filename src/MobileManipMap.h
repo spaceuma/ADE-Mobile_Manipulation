@@ -1,3 +1,5 @@
+#include <types/RoverGuidance_Dem.h>
+#include "MotionPlan.h"
 /**
  * This class includes the provide DEM, the cost map and the obstacles map.
  */
