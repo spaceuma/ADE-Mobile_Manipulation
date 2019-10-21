@@ -2,13 +2,16 @@
 
 // THis is the enumerated with the states
 
-enum mobility_status = { IDLE, GENERATING_MOTION_PLAN, READy_TO_MOVE, EXECUTING_MOTION_PLAN, SAMPLE_HANDLING, RETRIEVING_ARM, FINISHED };
+enum mobility_status = { IDLE, GENERATING_MOTION_PLAN, READY_TO_MOVE,
+	                       EXECUTING_MOTION_PLAN, SAMPLE_HANDLING, RETRIEVING_ARM,
+												 PAUSE, ERROR, FINISHED };
 
 mobility_status mob_status; /* variable */
-mob_interface  mobility
-Position  RoverPosition;
-DEM       navcamDEM;
-DEM       loccamDEM;
+mob_interface   mobility
+Position        RoverPosition;
+DEM             navcamDEM;
+DEM             loccamDEM;
+
 
 /**
  * Description: function to move the rover and arm to the pick or drop a given sample
@@ -18,34 +21,36 @@ DEM       loccamDEM;
 void harness_main_operation( Pose Sample_position )
 {
 // TODO #1: Change 1 in your interface. UpdateNavCanDEM signature. We assume the DEM as argument */
-mobility->updateNavCamDEM(navcamDEM);
-RoverPosition = rover->getRoverPosition();
-if (mobilility->getStatus()==IDLE)
+  mobility->updateNavCamDEM(navcamDEM);
+  RoverPosition = rover->getRoverPosition();
+  if (mobilility->getStatus()==IDLE)
 	{
 	/** This will trigger a transition to GENERATING_MOTION_PLAN */
 	/** TODO #2: generateMotionPLan signature, we expect RoverPosition and sample position, arm_position ?) */
-	mobility->generateMotionPlan(RoverCurrentPosition, sample_position, arm_position );
+	  mobility->generateMotionPlan(RoverCurrentPosition, sample_position, arm_position );
 	}
 
 /** Waiting till the plan is generated */
-while ( (mobilility->getStatus()==GENERATING_MOTION_PLAN) && (!timeout) )
-
+  while ( (mobilility->getStatus()==GENERATING_MOTION_PLAN) && (!timeout) )
+  {
 /** If we are in ready to move, we shall start */
-if (mobilility->getStatus()==READY_TO_MOVE)
-	{
-	previousPosition = roverPosition; /** This is to compute the distance travelled, see below */
-	mobility->start();  /* This will trigger a transition to EXECUTING_MOTION_PLAN - hopefully */
-	}
-else
-	{
-	if (timeout)
-		message ("timeout while planning in c mobility");
-	else
-		{
-		message ("unexpected mov. status %d while planning", mobility->getStatus());
-		}
-	}
-
+    if (mobilility->getStatus()==READY_TO_MOVE)
+	  {
+	    previousPosition = roverPosition; /** This is to compute the distance travelled, see below */
+	    mobility->start();  /* This will trigger a transition to EXECUTING_MOTION_PLAN - hopefully */
+	  }
+    else
+	  {
+	    if (timeout)
+		  {
+		    message ("timeout while planning in c mobility");
+		  }
+	    else
+		  {
+		    message ("unexpected mov. status %d while planning", mobility->getStatus());
+		  }
+	  }
+  }
 }
 
 /**
@@ -133,7 +138,7 @@ bool harness_dem_handling_10Hz()
 		case PAUSE: /** Wait until DEM available. When it is, resumeOperation */
 			if (rover->DEMAvailable())
 				{
-				rover->getLocDem(&loccanDEM);
+				rover->getLocDem(&locDEM);
 				/** TODO #5: We think the easiest way is to update the local DEM before we are switching from
 				 * PAUSE to EXECUTING MoTION PLAN, because it is the *only* time in which it is needed. Note that we
 				 * use PAUSE as a state in which we get the new DEM, and this could take time.
@@ -184,6 +189,3 @@ void mobility_harness_10hzTask()
 		}
 	return;
 }
-
-
-
