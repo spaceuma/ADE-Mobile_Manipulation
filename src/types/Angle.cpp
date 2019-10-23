@@ -1,6 +1,5 @@
 #include "Angle.hpp"
 #include <boost/format.hpp>
-#include <base/Eigen.hpp>
 
 namespace base {
 

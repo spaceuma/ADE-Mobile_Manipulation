@@ -1,5 +1,6 @@
 enum MM_error
 {
+  NO_ERROR,
   POOR_DEM,
   POOR_CONFIG,
   OOB_ROVER_POS,

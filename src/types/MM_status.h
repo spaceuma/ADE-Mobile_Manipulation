@@ -1,3 +1,6 @@
+#ifndef __MM_STATUS__
+#define __MM_STATUS__
+
 enum MM_status
 {
   IDLE,
@@ -11,3 +14,5 @@ enum MM_status
   REPLANNING,
   PAUSE
 };
+
+#endif

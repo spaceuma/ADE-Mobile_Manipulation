@@ -1,3 +1,6 @@
+#ifndef __ROVER_GUIDANCE_DEM__
+#define __ROVER_GUIDANCE_DEM__
+
 #include <stdint.h>
 
 /*!
@@ -5,7 +8,7 @@
 *
 * @brief Structure designed to hold a digital elevation map which is provided as input to the rover guidance.
 */
-typedef struct RoverGuidance_DemStruct
+typedef struct RoverGuidance_Dem
 {
 /*! @name cols
 * @details Number of columns in the map, where columns is given by the x direction and an increase in the
@@ -54,3 +57,5 @@ double *p_heightData_m;
 */
 int8_t *p_pointValidityFlag;
 }RoverGuidance_Dem;
+
+#endif
