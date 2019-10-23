@@ -55,6 +55,14 @@ cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
 make install
 
 cd $cur/test/harnessExample
+#rm -rf build
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+make
+
+cd $cur/test/unit
+#rm -rf build
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
@@ -65,6 +73,7 @@ cd $cur
 echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$install_folder/lib" > env.sh
 echo "export PATH=$PATH:$install_folder/bin" >> env.sh
 echo "export PATH=$PATH:$cur/test/harnessExample/build" >> env.sh
+echo "export PATH=$PATH:$cur/test/unit/build" >> env.sh
 
 echo 
 echo "Installation finished..."
