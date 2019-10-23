@@ -21,6 +21,7 @@ file(GLOB MM_types_SRC
 # Link runTests with what we want to test and the GTest and pthread library
 add_executable(runUnitTests 
                UnitTests.cpp 
+               MobileManipMotionPlannerTests.cpp
                ${MM_SRC}
                ${MM_types_SRC})
 target_include_directories(runUnitTests PRIVATE ../../src/types)

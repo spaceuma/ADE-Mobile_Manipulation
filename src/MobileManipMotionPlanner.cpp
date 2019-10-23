@@ -116,20 +116,22 @@ void MobileManipMotionPlanner::updateSamplePos(/**
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::pause(/**
-	 * By reference parameter to get commands to stop the joints.
-	 */
-	Joints& arm_command, /**
-	 * By reference parameter to get commands to stop the rover base.
-	 */
-	MotionCommand& rover_command) {
-	// TODO - implement MobileManipMotionPlanner::pause
-	throw "Not yet implemented";
+void MobileManipMotionPlanner::pause(/* By reference parameter to get commands to stop the joints.*/
+  Joints& arm_command, 
+  /* By reference parameter to get commands to stop the rover base.*/
+  MotionCommand& rover_command)
+{
+  // TODO - implement MobileManipMotionPlanner::pause
+  this->priorStatus = this->status;
+  this->status = PAUSE;
+  cout << "MMPLANNER: execution in pause" << endl;
 }
 
 void MobileManipMotionPlanner::resumeOperation() {
-	// TODO - implement MobileManipMotionPlanner::resumeOperation
-	throw "Not yet implemented";
+  // TODO - implement MobileManipMotionPlanner::pause
+  this->status = this->priorStatus;
+  this->priorStatus = PAUSE;
+  cout << "MMPLANNER: resuming operation" << endl;
 }
 
 void MobileManipMotionPlanner::ack() {
