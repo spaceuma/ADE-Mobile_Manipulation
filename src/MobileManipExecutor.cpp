@@ -1,16 +1,16 @@
 #include "MobileManipExecutor.h"
+#include "MotionCommand.h"
 
-MobileManipExecutor::MobileManipExecutor(MotionPlan motion_plan) {
+MobileManipExecutor::MobileManipExecutor() {
 	// TODO - implement MobileManipExecutor::MobileManipExecutor
-	throw "Not yet implemented";
 }
 
-boolean MobileManipExecutor::isRoverWithinCorridor(Pose rover_pose) {
+bool MobileManipExecutor::isRoverWithinCorridor(Pose rover_pose) {
 	// TODO - implement MobileManipExecutor::isRoverWithinCorridor
 	throw "Not yet implemented";
 }
 
-boolean MobileManipExecutor::isArmColliding() {
+bool MobileManipExecutor::isArmColliding() {
 	// TODO - implement MobileManipExecutor::isArmColliding
 	throw "Not yet implemented";
 }

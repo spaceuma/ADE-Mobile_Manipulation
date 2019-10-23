@@ -1,3 +1,6 @@
+#ifndef __MOBILE_MANIP_MAP__
+#define __MOBILE_MANIP_MAP__
+
 #include <types/RoverGuidance_Dem.h>
 #include "MotionPlan.h"
 /**
@@ -15,13 +18,14 @@ private:
 	 * The mapping of the data (row/column) onto the 1D data arrays (single index) is defined as follows:
 	 * * index = row * cols + col
 	 */
-	bool currentObstaclesMap[];
-	double currentCostMap[];
+	std::vector<std::vector<bool>> currentObstaclesMap;
+	std::vector<std::vector<double>> currentCostMap;
 
 public:
 	/**
 	 * Constructor that receives the map, process it and generates the cost and obstacles maps.
 	 */
+        MobileManipMap();
 	MobileManipMap(RoverGuidance_Dem dem);
 
 private:
@@ -38,3 +42,5 @@ private:
 public:
 	void checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan);
 };
+
+#endif

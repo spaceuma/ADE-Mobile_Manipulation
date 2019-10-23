@@ -1,8 +1,11 @@
 #include "MobileManipMap.h"
 
+MobileManipMap::MobileManipMap() {
+	// TODO - implement MobileManipMap::MobileManipMap
+}
+
 MobileManipMap::MobileManipMap(RoverGuidance_Dem dem) {
 	// TODO - implement MobileManipMap::MobileManipMap
-	throw "Not yet implemented";
 }
 
 void MobileManipMap::calculateCostMap() {

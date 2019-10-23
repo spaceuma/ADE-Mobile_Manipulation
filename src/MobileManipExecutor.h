@@ -1,14 +1,17 @@
+#include "MotionPlan.h"
+#include "MotionCommand.h"
+
 class MobileManipExecutor {
 
 private:
 	MotionPlan currentMotionPlan;
 
 public:
-	MobileManipExecutor(MotionPlan motion_plan);
+	MobileManipExecutor();
 
-	boolean isRoverWithinCorridor(Pose rover_pose);
+	bool isRoverWithinCorridor(Pose rover_pose);
 
-	boolean isArmColliding();
+	bool isArmColliding();
 
 	MotionCommand getRoverCommand(Pose rover_pose);
 

@@ -1,8 +1,7 @@
 #include "MotionPlan.h"
 
-MotionPlan::MotionPlan(ArmOperation arm_operation) {
+MotionPlan::MotionPlan() {
 	// TODO - implement MotionPlan::MotionPlan
-	throw "Not yet implemented";
 }
 
 void MotionPlan::updateMotionPlan() {

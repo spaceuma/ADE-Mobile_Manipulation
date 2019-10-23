@@ -1,5 +1,10 @@
-#include <types/MM_status.h>
-#include <types/MM_error.h>
+#include "MM_status.h"
+#include "MM_error.h"
+#include "RoverGuidance_Dem.h"
+#include "MotionCommand.h"
+#include "MotionPlan.h"
+#include "MobileManipMap.h"
+#include "MobileManipExecutor.h"
 
 /**
  * It is the main class that receives all the information from other components, start the execution of the coupled rover-manipulator motion, etc.
@@ -46,9 +51,9 @@ private:
 	 */
 	ArmOperation currentArmOperation;
 	/**
-	 * The pose of the sample.
+	 * The pose of the sample. TODO: CHANGE ITS TYPE BY THE ONE USED BY MAGELLIUM!!
 	 */
-	samplePose currentSamplePos;
+	Pose currentSamplePos;
 	/**
 	 * The current pose of the rover.
 	 */
@@ -56,7 +61,7 @@ private:
 	/**
 	 * The current position of the arm joints.
 	 */
-	Joints currentJointPositions;
+	//Joints currentJointPositions;
 
 public:
 	/**
@@ -77,7 +82,7 @@ public:
 	/**
 	 * It generates a motion plan based on the Map, the rover pose and the sample position.
 	 */
-	void generateMotionPlan(/* It should include the estimation error. */Pose rover_position, /* It should include the estimation error. */SamplePose sample, Joints arm_joints);
+	void generateMotionPlan(/* It should include the estimation error. */Pose rover_position, /* It should include the estimation error. */Pose sample, Joints arm_joints);
 
 	/**
 	 * It returns the status in which the software is.
@@ -117,7 +122,7 @@ public:
 	void updateLocCamDEM(/**
 	 * DEM using Airbus data struct
 	 */
-	RoverGuidance_DEM locCamDEM, /**
+	RoverGuidance_Dem locCamDEM, /**
 	 * Current position of the base
 	 */
 	Pose rover_position, /**
@@ -131,7 +136,7 @@ public:
 	void updateSamplePos(/**
 	 * Pose of the sample including error.
 	 */
-	SamplePose sample);
+	Pose sample);
 
 	/**
 	 * It makes the software enter into the PAUSE state, first creating commands to stop the rover base and arm.

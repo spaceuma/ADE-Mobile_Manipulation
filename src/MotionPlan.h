@@ -1,6 +1,9 @@
-#include <types/Joints.h>
-#include <types/Waypoint.hpp>
-#include <types/ArmOperation.h>
+#ifndef __MOBILE_MANIP_MOTION_PLAN__
+#define __MOBILE_MANIP_MOTION_PLAN__
+
+#include "Joints.h"
+#include "Waypoint.hpp"
+#include "ArmOperation.h"
 using namespace proxy_library;
 using namespace base;
 
@@ -18,10 +21,12 @@ private:
 	/**
 	 * Profile of joint positions to be followed by the arm.
 	 */
-	Joints jointsProfile[];
+	std::vector<Joints> jointsProfile;
 
 public:
-	MotionPlan(ArmOperation arm_operation);
+	MotionPlan();
 
 	void updateMotionPlan();
 };
+
+#endif
