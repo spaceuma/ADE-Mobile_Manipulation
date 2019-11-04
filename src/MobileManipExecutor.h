@@ -1,19 +1,23 @@
 #include "MotionPlan.h"
 #include "MotionCommand.h"
+#include "WaypointNavigation.hpp"
 
 class MobileManipExecutor {
 
 private:
-	MotionPlan currentMotionPlan;
+  MotionPlan* currentMotionPlan;
+  double corridorWidth;
 
 public:
-	MobileManipExecutor();
+  MobileManipExecutor();
 
-	bool isRoverWithinCorridor(Pose rover_pose);
+  void updateMotionPlan(MotionPlan* newMotionPlan);
 
-	bool isArmColliding();
+  bool isRoverWithinCorridor(Pose rover_pose);
 
-	MotionCommand getRoverCommand(Pose rover_pose);
+  bool isArmColliding();
 
-	Joints getArmCommand(Joints arm_joints);
+  MotionCommand getRoverCommand(Pose rover_pose);
+
+  Joints getArmCommand(Joints arm_joints);
 };

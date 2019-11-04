@@ -23,10 +23,12 @@ private:
 	 */
 	std::vector<Joints> jointsProfile;
 
-public:
-	MotionPlan();
 
-	void updateMotionPlan();
+public:
+  MotionPlan();
+
+  void updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vector<Joints> newJointsProfile);
+
 };
 
 #endif

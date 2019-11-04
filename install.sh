@@ -6,6 +6,10 @@ install_folder=$PWD/install
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$install_folder/lib/pkgconfig
 cur=$PWD
 
+
+## To install opencv follow https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html
+
+
 cd $cur/deps/sherpa_tt_api/base-logging
 mkdir build
 cd build

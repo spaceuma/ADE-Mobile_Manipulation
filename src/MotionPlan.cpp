@@ -4,7 +4,9 @@ MotionPlan::MotionPlan() {
 	// TODO - implement MotionPlan::MotionPlan
 }
 
-void MotionPlan::updateMotionPlan() {
-	// TODO - implement MotionPlan::updateMotionPlan
-	throw "Not yet implemented";
+void MotionPlan::updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vector<Joints> newJointsProfile)
+{
+  // TODO - implement MotionPlan::updateMotionPlan
+  this->roverPath = newRoverPath;
+  this->jointsProfile = newJointsProfile;
 }

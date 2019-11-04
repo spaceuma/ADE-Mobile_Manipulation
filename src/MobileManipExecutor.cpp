@@ -5,6 +5,11 @@ MobileManipExecutor::MobileManipExecutor() {
 	// TODO - implement MobileManipExecutor::MobileManipExecutor
 }
 
+void MobileManipExecutor::updateMotionPlan(MotionPlan* newMotionPlan)
+{
+  this->currentMotionPlan = newMotionPlan;
+}
+
 bool MobileManipExecutor::isRoverWithinCorridor(Pose rover_pose) {
 	// TODO - implement MobileManipExecutor::isRoverWithinCorridor
 	throw "Not yet implemented";

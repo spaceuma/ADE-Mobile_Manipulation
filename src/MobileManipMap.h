@@ -2,7 +2,10 @@
 #define __MOBILE_MANIP_MAP__
 
 #include <types/RoverGuidance_Dem.h>
+#include <opencv2/opencv.hpp>
 #include "MotionPlan.h"
+
+using namespace cv;
 /**
  * This class includes the provide DEM, the cost map and the obstacles map.
  */
@@ -13,34 +16,42 @@ private:
 	 * The mapping of the data (row/column) onto the 1D data arrays (single index) is defined as follows:
 	 * * index = row * cols + col
 	 */
-	RoverGuidance_Dem currentDem;
-	/**
-	 * The mapping of the data (row/column) onto the 1D data arrays (single index) is defined as follows:
-	 * * index = row * cols + col
-	 */
-	std::vector<std::vector<bool>> currentObstaclesMap;
-	std::vector<std::vector<double>> currentCostMap;
+  RoverGuidance_Dem rgDem;
+  double offsetXYZ[3];
+  unsigned int numXnodes;
+  unsigned int numYnodes;
+  double resDem;
+  Mat elevationMap;
+  Mat slopeMap;
+  std::vector<std::vector<double>> currentObstaclesMap;
+  std::vector<std::vector<double>> currentCostMap;
 
 public:
 	/**
 	 * Constructor that receives the map, process it and generates the cost and obstacles maps.
 	 */
-        MobileManipMap();
-	MobileManipMap(RoverGuidance_Dem dem);
+  MobileManipMap();
+  MobileManipMap(RoverGuidance_Dem dem);
+  int setRGDem(RoverGuidance_Dem dem);
+  int setImageDem(Mat inputDem);
+  void showElevationMap();
+  void showSlopeMap();
 
 private:
+  bool calculateElevationMap();
+  bool calculateSlopeMap();
 	/**
 	 * Based on currentDEM, it calculates or recalculates the currentCostMap.
 	 */
-	void calculateCostMap();
+  bool calculateCostMap();
 
 	/**
 	 * It calculates o recalculates the obstacles map based on currentDEM
 	 */
-	void calculateObstaclesMap();
+  bool calculateObstacleMap();
 
 public:
-	void checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan);
+  void checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan);
 };
 
 #endif
