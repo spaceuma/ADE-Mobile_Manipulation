@@ -12,11 +12,11 @@ class BiFastMarching
 		// -- PARAMETERS --
 
 		// -- FUNCTIONS --
-		void computeTMap(const std::vector<std::vector<double>> * currentCostMap,
-				    std::vector<int> goal,
-				    std::vector<int> start,
-				    std::vector<std::vector<double>> * TMapGoal,
-				    std::vector<std::vector<double>> * TMapStart);
+		std::vector<int> computeTMap(const std::vector<std::vector<double>> * currentCostMap,
+				             std::vector<int> goal,
+	 				     std::vector<int> start,
+	 				     std::vector<std::vector<double>> * TMapGoal,
+	 				     std::vector<std::vector<double>> * TMapStart);
 
 		void updateNode(std::vector<int> nodeTarget,
 				const std::vector<std::vector<double>> * currentCostMap,
@@ -27,6 +27,7 @@ class BiFastMarching
 
 		double getEikonal(double THor, double TVer, double cost);
 
-		int bisect(std::vector<double> * nbT, double T);
+		int getInsertIndex(std::vector<double> * nbT, double T);
+
 };
 }
