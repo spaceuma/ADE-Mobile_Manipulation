@@ -35,7 +35,7 @@ file(GLOB WP_SRC
 add_executable(runUnitTests 
                UnitTests.cpp 
                MobileManipMotionPlannerTests.cpp
-	       #MobileManipMapTests.cpp
+	       MobileManipMapTests.cpp
                MotionPlanTests.cpp
 	       FastMarchingTests.cpp
                ${MM_SRC}
