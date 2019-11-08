@@ -4,11 +4,56 @@
 
 using namespace FastMarching_lib;
 
-std::vector<int> BiFastMarching::computeTMap(const std::vector<std::vector<double>> * currentCostMap,
-					     std::vector<int> goal,
-	 				     std::vector<int> start,
-	 				     std::vector<std::vector<double>> * TMapGoal,
-	 				     std::vector<std::vector<double>> * TMapStart)
+void BiFastMarching::planRoverPath(const std::vector<std::vector<double>> * currentCostMap,
+				   double mapResolution,
+ 				   base::Waypoint roverPos,
+ 				   base::Waypoint samplePos,
+ 				   std::vector<base::Waypoint> * roverPath)
+{
+	std::vector<int> goal(2,0);
+	std::vector<int> start(2,0);
+
+	goal[0] = (int) (samplePos.position[0]/mapResolution + 0.5);
+	goal[1] = (int) (samplePos.position[1]/mapResolution + 0.5);
+
+	start[0] = (int) (roverPos.position[0]/mapResolution + 0.5);
+	start[1] = (int) (roverPos.position[1]/mapResolution + 0.5);
+	
+	std::vector<std::vector<double>> * TMapGoal = new std::vector<std::vector<double>>;
+	std::vector<std::vector<double>> * TMapStart = new std::vector<std::vector<double>>;
+
+	std::vector<int> * nodeJoin = new std::vector<int>;
+
+	computeTMap(currentCostMap, goal, start, TMapGoal, TMapStart, nodeJoin);
+
+	std::vector<std::vector<double>> * path = new std::vector<std::vector<double>>;
+	std::vector<std::vector<double>> * pathStart = new std::vector<std::vector<double>>;
+
+	planPathGDM(TMapGoal, (*nodeJoin), goal, 0.5, path);
+	planPathGDM(TMapStart, (*nodeJoin), start, 0.5, pathStart);
+
+	path->insert(path->begin(), pathStart->rbegin(), pathStart->rend());
+
+	roverPath->resize(path->size());
+	(*roverPath)[0].position[0] = mapResolution * (*path)[0][0];
+	(*roverPath)[0].position[1] = mapResolution * (*path)[0][1];
+	(*roverPath)[0].heading = roverPos.heading;
+
+	for(int i = 1; i < path->size(); i++)
+	{
+		(*roverPath)[i].position[0] = mapResolution * (*path)[i][0];
+		(*roverPath)[i].position[1] = mapResolution * (*path)[i][1];
+		(*roverPath)[i].heading = atan2((*path)[i][1]-(*path)[i-1][1], (*path)[i][0]-(*path)[i-1][0]);
+	}
+
+}
+
+void BiFastMarching::computeTMap(const std::vector<std::vector<double>> * currentCostMap,
+			         std::vector<int> goal,
+				 std::vector<int> start,
+				 std::vector<std::vector<double>> * TMapGoal,
+				 std::vector<std::vector<double>> * TMapStart,
+				 std::vector<int> * nodeJoin)
 {
 	int n = currentCostMap->size();
 	int m = currentCostMap[0].size();
@@ -59,8 +104,6 @@ std::vector<int> BiFastMarching::computeTMap(const std::vector<std::vector<doubl
 	updateNode(nodeTargetGoal, currentCostMap, TMapGoal, nbTGoal, nbNodesGoal, closedMapGoal);
 	updateNode(nodeTargetStart, currentCostMap, TMapStart, nbTStart, nbNodesStart, closedMapStart);
 
-	std::vector<int> nodeJoin;
-
 	while((nbTGoal->size() > 0) || (nbTStart->size() > 0))
 	{
 		if(nbTGoal->size() > 0)
@@ -81,17 +124,15 @@ std::vector<int> BiFastMarching::computeTMap(const std::vector<std::vector<doubl
 		}
 		if((*closedMapStart)[nodeTargetGoal[1]][nodeTargetGoal[0]] == 1)
 		{
-			nodeJoin = nodeTargetGoal;
+			(*nodeJoin) = nodeTargetGoal;
 			break;
 		}
 		if((*closedMapGoal)[nodeTargetStart[1]][nodeTargetStart[0]] == 1)
 		{
-			nodeJoin = nodeTargetStart;
+			(*nodeJoin) = nodeTargetStart;
 			break;
 		}
 	}
-
-	return nodeJoin;
 }
 
 
@@ -151,11 +192,13 @@ void BiFastMarching::updateNode(std::vector<int> nodeTarget,
 					double tempT = (*TMap)[nodeChild[1]][nodeChild[0]];
 					int index = getInsertIndex(nbT, tempT);
 					for(int i = index; i < nbNodes->size(); i++)
+					{
 						if((*nbNodes)[i] == nodeChild)
 						{
 							index = i;
 							break;
 						}
+					}
 
 					nbT->erase(nbT->begin()+index);
 					nbNodes->erase(nbNodes->begin()+index);
@@ -191,7 +234,256 @@ int BiFastMarching::getInsertIndex(std::vector<double> * nbT, double T)
 {
 	int i;
 	for(i = 0; i < nbT->size(); i++)
-		if(T < nbT->at(i))
+		if(T <= nbT->at(i))
 			break;
 	return i;
 }
+
+void BiFastMarching::planPathGDM(const std::vector<std::vector<double>> * TMap,
+				 std::vector<int> initNode,
+				 std::vector<int> endNode,
+				 double tau,
+				 std::vector<std::vector<double>> * path)
+{
+	std::vector<double> auxVector;
+	auxVector.push_back((double)initNode[0]);
+	auxVector.push_back((double)initNode[1]);
+
+	path->push_back(auxVector);
+
+	std::vector<int> nearNode = {0, 0};
+	
+	std::vector<std::vector<double>> * G1 = new std::vector<std::vector<double>>;
+	std::vector<std::vector<double>> * G2 = new std::vector<std::vector<double>>;
+
+	G1->resize(TMap->size(), std::vector<double>(TMap[0].size()));
+	G2->resize(TMap->size(), std::vector<double>(TMap[0].size()));
+
+	for(int k = 0; k < (int)15000/tau; k++)
+	{
+		computeGradient(TMap, path->at(path->size()-1), G1, G2);
+		double dx = getInterpolatedPoint(path->at(path->size()-1), G1);
+		double dy = getInterpolatedPoint(path->at(path->size()-1), G2);
+
+		if(isnan(dx) || isnan(dy))
+		{
+			try
+			{
+				nearNode[0] = (int)(*path)[path->size()-1][0]+0.5;
+				nearNode[1] = (int)(*path)[path->size()-1][1]+0.5;
+				while(isinf((*TMap)[nearNode[1]][nearNode[0]]))
+				{
+					path->erase(path->end());
+					nearNode[0] = (int)(*path)[path->size()-1][0]+0.5;
+					nearNode[1] = (int)(*path)[path->size()-1][1]+0.5;
+				}
+
+				if(path->size() > 0)
+				{
+					std::vector<double> distVector;
+					distVector.push_back((*path)[path->size()-1][0]-(double)nearNode[0]);
+					distVector.push_back((*path)[path->size()-1][1]-(double)nearNode[1]);
+					while(sqrt(pow(distVector[0],2)+pow(distVector[1],2)) < 1)
+					{
+						path->erase(path->end());
+						if(path->size() == 0) break;
+						distVector[0] = (*path)[path->size()-1][0]-(double)nearNode[0];
+						distVector[1] = (*path)[path->size()-1][1]-(double)nearNode[1];
+					}
+				}
+
+				auxVector[0] = (double)nearNode[0];
+				auxVector[1] = (double)nearNode[1];
+				path->push_back(auxVector);
+
+				double currentT = (*TMap)[nearNode[1]][nearNode[0]];
+				for(int i = 1; i < 5; i++)
+				{
+					std::vector<int> nodeChild(2,0);
+					if(i == 1)
+					{
+						nodeChild[0] = nearNode[0];
+						nodeChild[1] = nearNode[1] - 1;
+					}
+					else if(i == 2)
+					{
+						nodeChild[0] = nearNode[0];
+						nodeChild[1] = nearNode[1] + 1;
+					}
+					else if(i == 3)
+					{
+						nodeChild[0] = nearNode[0] - 1;
+						nodeChild[1] = nearNode[1];
+					}
+					else if(i == 4)
+					{
+						nodeChild[0] = nearNode[0] + 1;
+						nodeChild[1] = nearNode[1];
+					}
+
+					if((*TMap)[nodeChild[1]][nodeChild[0]] < currentT)
+					{
+						currentT = (*TMap)[nodeChild[1]][nodeChild[0]];
+						dx = (nearNode[0] - nodeChild[0])/tau;
+						dy = (nearNode[1] - nodeChild[1])/tau;
+					}
+				}
+			}
+			catch(std::exception& e)
+			{
+				std::cout<<"Exception was caught during GDM, with message "<<e.what()<<std::endl;
+				break;
+			}
+		}
+		
+		double d = sqrt(pow(dx,2)+pow(dy,2));
+		if(d < 0.01)
+		{
+			double dnx = dx/d;
+			double dny = dy/d;
+
+			auxVector[0] = (*path)[path->size()-1][0] - tau*dnx;
+			auxVector[1] = (*path)[path->size()-1][1] - tau*dny;
+			path->push_back(auxVector);
+		}
+		else
+		{
+			dx = dx/d;
+			dy = dy/sqrt(pow(dx,2)+pow(dy,2));
+
+			auxVector[0] = (*path)[path->size()-1][0] - tau*dx;
+			auxVector[1] = (*path)[path->size()-1][1] - tau*dy;
+			path->push_back(auxVector);
+		}
+
+		auxVector[0] = (*path)[path->size()-1][0] - (double)endNode[0];
+		auxVector[1] = (*path)[path->size()-1][1] - (double)endNode[1];
+		if(sqrt(pow(auxVector[0],2) + pow(auxVector[1],2)) < 1.5) break;
+	}
+	
+	auxVector[0] = (double)endNode[0];
+	auxVector[1] = (double)endNode[1];
+	path->push_back(auxVector);
+
+}
+
+void BiFastMarching::computeGradient(const std::vector<std::vector<double>> * TMap,
+				     std::vector<double> point,
+				     std::vector<std::vector<double>> * Gnx,
+				     std::vector<std::vector<double>> * Gny)
+{
+	int n = TMap->size();
+	int m = TMap[0].size();
+	
+	int jmax, imax, jmin, imin;
+	if(point.size() == 0)
+	{
+		jmax = m;
+		imax = n;
+
+		jmin = 0;
+		imin = 0;
+	}
+	else
+	{
+		jmax = std::min(m, (int)(point[1]+3.5));
+		imax = std::min(n, (int)(point[0]+3.5));
+
+		jmin = std::max(0, (int)(point[1]-2.5));
+		imin = std::max(0, (int)(point[0]-2.5));
+	}
+
+	std::vector<std::vector<double>> Gx, Gy;
+
+	Gx.resize(n, std::vector<double>(m));
+	Gy.resize(n, std::vector<double>(m));
+
+	for(int i = imin; i < imax; i++)
+		for(int j = jmin; j < jmax; j++)
+		{
+			if(j == 0) Gy[0][i] = (*TMap)[1][i] - (*TMap)[0][i];
+			else
+			{
+				if(j == m - 1) Gy[j][i] = (*TMap)[j][i] - (*TMap)[j-1][i];
+				else
+				{
+					if(isinf((*TMap)[j+1][i]))
+					{
+						if(isinf((*TMap)[j-1][i])) Gy[j][i] = 0;
+						else Gy[j][i] = (*TMap)[j][i] - (*TMap)[j-1][i];
+					}
+					else
+					{
+						if(isinf((*TMap)[j-1][i])) Gy[j][i] = (*TMap)[j+1][i] - (*TMap)[j][i];
+						else Gy[j][i] = ((*TMap)[j+1][i] - (*TMap)[j-1][i])/2;
+					}
+				}
+			}
+
+			if(i == 0) Gx[j][0] = (*TMap)[j][1] - (*TMap)[j][0];
+			else
+			{
+				if(i == n - 1) Gx[j][i] = (*TMap)[j][i] - (*TMap)[j][i-1];
+				else
+				{
+					if(isinf((*TMap)[j][i+1]))
+					{
+						if(isinf((*TMap)[j][i-1])) Gx[j][i] = 0;
+						else Gx[j][i] = (*TMap)[j][i] - (*TMap)[j][i-1];
+					}
+					else
+					{
+						if(isinf((*TMap)[j][i-1])) Gx[j][i] = (*TMap)[j][i+1] - (*TMap)[j][i];
+						else Gx[j][i] = ((*TMap)[j][i+1] - (*TMap)[j][i-1])/2;
+					}
+				}
+			}
+
+			(*Gnx)[j][i] = Gx[j][i]/sqrt(pow(Gx[j][i],2)+pow(Gy[j][i],2));
+			(*Gny)[j][i] = Gy[j][i]/sqrt(pow(Gx[j][i],2)+pow(Gy[j][i],2));
+		}
+}
+
+double BiFastMarching::getInterpolatedPoint(std::vector<double> point,
+					    const std::vector<std::vector<double>> * mapI)
+{
+	int i = (int)point[0];
+	int j = (int)point[1];
+	double a = point[0] - double(i);
+	double b = point[1] - double(j);
+
+	int n = mapI->size();
+	int m = mapI[0].size();
+
+	double I;
+
+	if(i == n)
+	{
+		if(j == m) I = (*mapI)[j][i];
+		else I = b*(*mapI)[j+1][i] + (1-b)*(*mapI)[j][i];
+	}
+	else
+	{
+		if(j == m) I = a*(*mapI)[j][i+1] + (1-a)*(*mapI)[j][i];
+		else
+		{
+			double a00 = (*mapI)[j][i];
+			double a10 = (*mapI)[j][i+1] - (*mapI)[j][i];
+			double a01 = (*mapI)[j+1][i] - (*mapI)[j][i];
+			double a11 = (*mapI)[j+1][i+1] + (*mapI)[j][i] - (*mapI)[j][i+1] - (*mapI)[j+1][i];
+			if(a == 0)
+			{
+				if(b == 0) I = a00;
+				else I = a00 + a01*b;
+			}
+			else
+			{
+				if(b == 0) I = a00 + a10*a;
+				else I = a00 + a10*a + a01*b + a11*a*b;
+			}
+		}
+	}
+
+	return I;
+}
+

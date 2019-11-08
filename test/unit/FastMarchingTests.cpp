@@ -49,11 +49,12 @@ std::vector<std::vector<double>> readMatrixFile(std::string cost_map_file)
 }
 
 
-TEST(FastMarchingTests, computingTMap){
+TEST(FastMarchingTests, computingTMap)
+{
 	BiFastMarching dummyFM;
 	
 	std::vector<std::vector<double>> * costMap = new std::vector<std::vector<double>>;
-	std::string costMapFile = "/home/ares/ADE_Mobile-Manipulation/test/unit/data/dummyCostMap.txt";
+	std::string costMapFile = "../data/dummyCostMap.txt";
 	(*costMap) = readMatrixFile(costMapFile);
 	for(int i = 0; i < costMap->size(); i++)
 		for(int j = 0; j < (*costMap)[0].size(); j++)
@@ -65,29 +66,29 @@ TEST(FastMarchingTests, computingTMap){
 	std::vector<int> goal;
 	std::vector<int> start;
 
-	goal.push_back(1);
-	goal.push_back(1);
+	goal.push_back(30);
+	goal.push_back(5);
 
-	start.push_back(98);
-	start.push_back(98);
+	start.push_back(65);
+	start.push_back(94);
 
 	std::vector<std::vector<double>> * TMapGoal = new std::vector<std::vector<double>>;
 	std::vector<std::vector<double>> * TMapStart = new std::vector<std::vector<double>>;
 
-	std::vector<int> nodeJoin;
+	std::vector<int> * nodeJoin = new std::vector<int>;
 
-	nodeJoin = dummyFM.computeTMap(costMap, goal, start, TMapGoal, TMapStart);
+	dummyFM.computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin);
 
-	std::cout<<"Node join: ["<<nodeJoin[0]<<", "<<nodeJoin[1]<<"]"<<std::endl;
+	std::cout<<"Node join: ["<<(*nodeJoin)[0]<<", "<<(*nodeJoin)[1]<<"]"<<std::endl;
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-	std::cout<<"Elapsed execution time: "<<elapsed_secs<<std::endl;
+	std::cout<<"Elapsed execution time computeT: "<<elapsed_secs<<std::endl;
 
 	std::ofstream TMapGoalFile;
 	std::ofstream TMapStartFile;
 
-	TMapGoalFile.open("/home/ares/ADE_Mobile-Manipulation/test/unit/data/results/TMapGoal.txt");
-	TMapStartFile.open("/home/ares/ADE_Mobile-Manipulation/test/unit/data/results/TMapStart.txt");
+	TMapGoalFile.open("../data/results/TMapGoal.txt");
+	TMapStartFile.open("../data/results/TMapStart.txt");
 
 	for(int j = 0; j < costMap->size(); j++)
 	{
@@ -107,3 +108,47 @@ TEST(FastMarchingTests, computingTMap){
 
 }
 
+TEST(FastMarchingTests, planningRoverPath)
+{
+	BiFastMarching dummyFM;
+	
+	std::vector<std::vector<double>> * costMap = new std::vector<std::vector<double>>;
+	std::string costMapFile = "../data/dummyCostMap.txt";
+	(*costMap) = readMatrixFile(costMapFile);
+	for(int i = 0; i < costMap->size(); i++)
+		for(int j = 0; j < (*costMap)[0].size(); j++)
+			if(i == 0 || j == 0 || i == costMap->size()-1 || j == (*costMap)[0].size()-1)
+				(*costMap)[i][j] = INFINITY;
+
+	clock_t begin = clock();	
+	double mapResolution = 1;
+	base::Waypoint roverPos, samplePos;
+
+	roverPos.position[0] = 30;
+	roverPos.position[1] = 5;
+	roverPos.heading = 0;
+
+	samplePos.position[0] = 65;
+	samplePos.position[1] = 94;
+	samplePos.heading = 0;
+
+	std::vector<base::Waypoint> * roverPath = new std::vector<base::Waypoint>;
+
+	dummyFM.planRoverPath(costMap, mapResolution, roverPos, samplePos, roverPath);	
+
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	std::cout<<"Elapsed execution time planning: "<<elapsed_secs<<std::endl;
+
+	std::ofstream pathFile;
+
+	pathFile.open("../data/results/path.txt");
+
+	for(int j = 0; j < roverPath->size(); j++)
+	{
+		pathFile << (*roverPath)[j].position[0] <<" " << (*roverPath)[j].position[1] << "\n";
+	}
+
+	pathFile.close();
+
+}
