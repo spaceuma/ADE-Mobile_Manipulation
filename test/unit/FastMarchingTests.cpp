@@ -48,6 +48,53 @@ std::vector<std::vector<double>> readMatrixFile(std::string cost_map_file)
     return cost_map_matrix;
 }
 
+std::vector<std::vector<std::vector<double>>> readMatrixFile3D(std::string cost_map_file)
+{
+    std::cout << "Reading cost_map " << cost_map_file<<std::endl;
+    std::vector<std::vector<std::vector<double>>> cost_map_cube;
+    std::string line;
+    std::ifstream e_file(cost_map_file.c_str(), std::ios::in);
+    std::vector<std::vector<double>> matrix;
+    std::vector<double> row;
+
+    if (e_file.is_open())
+    {
+        while (std::getline(e_file, line))
+        {
+            std::stringstream ss(line);
+            std::string cell;
+	    int i = 0;
+            while (std::getline(ss, cell, ' '))
+            {
+                double val;
+                std::stringstream numeric_value(cell);
+                numeric_value >> val;
+                row.push_back(val);
+		i++;
+		if(i >= 100)
+		{
+			i = 0;
+			matrix.push_back(row);
+			row.clear();
+		}
+		
+
+            }
+            cost_map_cube.push_back(matrix);
+            matrix.clear();
+        }
+        e_file.close();
+
+	std::cout << "Cost map of " << cost_map_cube.size() << " x " << cost_map_cube[0].size() <<" x "<< cost_map_cube[0][0].size() << " loaded."<<std::endl;
+    }
+    else
+    {
+	    std::cout << "Problem opening the cost_map file"<<std::endl;
+        return cost_map_cube;
+    }
+    return cost_map_cube;
+}
+
 
 TEST(FastMarchingTests, computingTMap)
 {
@@ -92,7 +139,7 @@ TEST(FastMarchingTests, computingTMap)
 
 	for(int j = 0; j < costMap->size(); j++)
 	{
-		for(int i = 0; i < costMap[0].size(); i++)
+		for(int i = 0; i < (*costMap)[0].size(); i++)
 		{
 			TMapGoalFile << (*TMapGoal)[j][i] << " ";
 			TMapStartFile << (*TMapStart)[j][i] << " ";
@@ -152,3 +199,126 @@ TEST(FastMarchingTests, planningRoverPath)
 	pathFile.close();
 
 }
+
+TEST(FastMarchingTests, computingTMap3D)
+{
+	BiFastMarching3D dummyFM3D;
+	
+	std::vector<std::vector<std::vector<double>>> * costMap = new std::vector<std::vector<std::vector<double>>>;
+	std::string costMapFile = "../data/dummyCostMap3D.txt";
+	(*costMap) = readMatrixFile3D(costMapFile);
+
+	for(int i = 0; i < costMap->size(); i++)
+		for(int j = 0; j < (*costMap)[0].size(); j++)
+			for(int k = 0; k < (*costMap)[0][0].size(); k++)
+			{
+				if(i == 0 || j == 0 || k == 0 || i == costMap->size()-1 || j == (*costMap)[0].size()-1 || k == (*costMap)[0][0].size()-1)
+					(*costMap)[i][j][k] = INFINITY;
+				if(i == 0 || j == 6 || k == 6 || i == 24 || j == 54 || k == 94)
+					(*costMap)[i][j][k] = INFINITY;
+			}
+
+	clock_t begin = clock();		
+
+	std::vector<int> goal;
+	std::vector<int> start;
+
+	goal.push_back(10);
+	goal.push_back(5);
+	goal.push_back(10);
+
+	start.push_back(50);
+	start.push_back(15);
+	start.push_back(90);
+
+	std::vector<std::vector<std::vector<double>>> * TMapGoal = new std::vector<std::vector<std::vector<double>>>;
+	std::vector<std::vector<std::vector<double>>> * TMapStart = new std::vector<std::vector<std::vector<double>>>;
+
+	std::vector<int> * nodeJoin = new std::vector<int>;
+
+	dummyFM3D.computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin);
+
+	std::cout<<"Node join: ["<<(*nodeJoin)[0]<<", "<<(*nodeJoin)[1]<<", "<<(*nodeJoin)[2]<<"]"<<std::endl;
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	std::cout<<"Elapsed execution time computeT: "<<elapsed_secs<<std::endl;
+
+	std::ofstream TMapGoalFile;
+	std::ofstream TMapStartFile;
+
+	TMapGoalFile.open("../data/results/TMapGoal3D.txt");
+	TMapStartFile.open("../data/results/TMapStart3D.txt");
+
+	for(int j = 0; j < costMap->size(); j++)
+	{
+		for(int i = 0; i < (*costMap)[0].size(); i++)
+		{
+			for(int k = 0; k < (*costMap)[0][0].size(); k++)
+			{
+				TMapGoalFile << (*TMapGoal)[j][i][k] << " ";
+				TMapStartFile << (*TMapStart)[j][i][k] << " ";
+			}
+			//TMapGoalFile << ", ";
+			//TMapStartFile << ", ";
+		}
+		TMapGoalFile << "\n";
+		TMapStartFile << "\n";
+	}
+
+	TMapGoalFile.close();
+	TMapStartFile.close();
+}
+
+TEST(FastMarchingTests, planningSimple3Dpath)
+{
+	BiFastMarching3D dummyFM3D;
+	
+	std::vector<std::vector<std::vector<double>>> * costMap = new std::vector<std::vector<std::vector<double>>>;
+	std::string costMapFile = "../data/dummyCostMap3D.txt";
+	(*costMap) = readMatrixFile3D(costMapFile);
+
+	for(int i = 0; i < costMap->size(); i++)
+		for(int j = 0; j < (*costMap)[0].size(); j++)
+			for(int k = 0; k < (*costMap)[0][0].size(); k++)
+			{
+				if(i == 0 || j == 0 || k == 0 || i == costMap->size()-1 || j == (*costMap)[0].size()-1 || k == (*costMap)[0][0].size()-1)
+					(*costMap)[i][j][k] = INFINITY;
+				if(i == 0 || j == 6 || k == 6 || i == 24 || j == 54 || k == 94)
+					(*costMap)[i][j][k] = INFINITY;
+			}
+
+	clock_t begin = clock();	
+
+	double mapResolution = 1;
+	double zResolution = 1;
+	base::Waypoint iniPos, samplePos;
+
+	iniPos.position[0] = 10;
+	iniPos.position[1] = 5;
+	iniPos.position[2] = 10;
+
+	samplePos.position[0] = 50;
+	samplePos.position[1] = 15;
+	samplePos.position[2] = 90;
+
+	std::vector<base::Waypoint> * endEffectorPath = new std::vector<base::Waypoint>;
+
+	dummyFM3D.planEndEffectorPath(costMap, mapResolution, zResolution, iniPos, samplePos, endEffectorPath);	
+
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	std::cout<<"Elapsed execution time planning: "<<elapsed_secs<<std::endl;
+
+	std::ofstream pathFile;
+
+	pathFile.open("../data/results/3Dpath.txt");
+
+	for(int j = 0; j < endEffectorPath->size(); j++)
+	{
+		pathFile << (*endEffectorPath)[j].position[0] << " " << (*endEffectorPath)[j].position[1] << " " << (*endEffectorPath)[j].position[2] << "\n";
+	}
+
+	pathFile.close();
+
+}
+
