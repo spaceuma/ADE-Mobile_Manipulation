@@ -1,105 +1,97 @@
-#include <vector>
 #include "Waypoint.hpp"
+#include <vector>
 
-
-namespace FastMarching_lib 
+namespace FastMarching_lib
 {
 class BiFastMarching
 {
-	private:
+private:
+public:
+    // -- PARAMETERS --
 
-	public:
-		// -- PARAMETERS --
+    // -- FUNCTIONS --
+    void planPath(const std::vector<std::vector<double>> *costMap,
+                  double mapResolution,
+                  base::Waypoint iniPos,
+                  base::Waypoint finalPos,
+                  std::vector<base::Waypoint> *path);
 
-		// -- FUNCTIONS --
-		void planRoverPath(const std::vector<std::vector<double>> * currentCostMap,
-				   double mapResolution,
- 				   base::Waypoint roverPos,
- 				   base::Waypoint samplePos,
- 				   std::vector<base::Waypoint> * roverPath);
+    void computeTMap(const std::vector<std::vector<double>> *costMap,
+                     std::vector<int> goal,
+                     std::vector<int> start,
+                     std::vector<std::vector<double>> *TMapGoal,
+                     std::vector<std::vector<double>> *TMapStart,
+                     std::vector<int> *nodeJoin);
 
-		void computeTMap(const std::vector<std::vector<double>> * currentCostMap,
-				 std::vector<int> goal,
-				 std::vector<int> start,
-				 std::vector<std::vector<double>> * TMapGoal,
-				 std::vector<std::vector<double>> * TMapStart,
-				 std::vector<int> * nodeJoin);
+    void updateNode(std::vector<int> nodeTarget,
+                    const std::vector<std::vector<double>> *costMap,
+                    std::vector<std::vector<double>> *TMap,
+                    std::vector<double> *nbT,
+                    std::vector<std::vector<int>> *nbNodes,
+                    const std::vector<std::vector<double>> *closedMap);
 
-		void updateNode(std::vector<int> nodeTarget,
-				const std::vector<std::vector<double>> * currentCostMap,
-    				std::vector<std::vector<double>> * TMap,
-    				std::vector<double> * nbT,
-    				std::vector<std::vector<int>> * nbNodes,
-    				const std::vector<std::vector<double>> * closedMap);
+    double getEikonal(double THor, double TVer, double cost);
 
-		double getEikonal(double THor, double TVer, double cost);
+    int getInsertIndex(std::vector<double> *nbT, double T);
 
-		int getInsertIndex(std::vector<double> * nbT, double T);
+    void computePathGDM(const std::vector<std::vector<double>> *TMap,
+                        std::vector<int> initNode,
+                        std::vector<int> endNode,
+                        double tau,
+                        std::vector<std::vector<double>> *path);
 
-		void planPathGDM(const std::vector<std::vector<double>> * TMap,
-				 std::vector<int> initNode,
-				 std::vector<int> endNode,
-				 double tau,
-				 std::vector<std::vector<double>> * path);
+    void computeGradient(const std::vector<std::vector<double>> *TMap,
+                         std::vector<double> point,
+                         std::vector<std::vector<double>> *Gnx,
+                         std::vector<std::vector<double>> *Gny);
 
-		void computeGradient(const std::vector<std::vector<double>> * TMap,
-				     std::vector<double> point,
-				     std::vector<std::vector<double>> * Gnx,
-				     std::vector<std::vector<double>> * Gny);
-
-		double getInterpolatedPoint(std::vector<double> point,
-					    const std::vector<std::vector<double>> * mapI);
-
+    double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<double>> *mapI);
 };
 
 class BiFastMarching3D
 {
-	private:
+private:
+public:
+    // -- PARAMETERS --
 
-	public:
-		// -- PARAMETERS --
+    // -- FUNCTIONS --
+    void planPath(const std::vector<std::vector<std::vector<double>>> *costMap3D,
+                  double mapResolution,
+                  double zResolution,
+                  base::Waypoint iniPos,
+                  base::Waypoint endPos,
+                  std::vector<base::Waypoint> *path3D);
 
-		// -- FUNCTIONS --
-		void planEndEffectorPath(const std::vector<std::vector<std::vector<double>>> * tunnelCostMap,
-				   double mapResolution,
-				   double zResolution,
- 				   base::Waypoint roverPos,
- 				   base::Waypoint samplePos,
- 				   std::vector<base::Waypoint> * endEffectorPath);
+    void computeTMap(const std::vector<std::vector<std::vector<double>>> *costMap3D,
+                     std::vector<int> goal,
+                     std::vector<int> start,
+                     std::vector<std::vector<std::vector<double>>> *TMapGoal,
+                     std::vector<std::vector<std::vector<double>>> *TMapStart,
+                     std::vector<int> *nodeJoin);
 
-		void computeTMap(const std::vector<std::vector<std::vector<double>>> * currentCostMap,
-				 std::vector<int> goal,
-				 std::vector<int> start,
-				 std::vector<std::vector<std::vector<double>>> * TMapGoal,
-				 std::vector<std::vector<std::vector<double>>> * TMapStart,
-				 std::vector<int> * nodeJoin);
+    void updateNode(std::vector<int> nodeTarget,
+                    const std::vector<std::vector<std::vector<double>>> *costMap3D,
+                    std::vector<std::vector<std::vector<double>>> *TMap,
+                    std::vector<double> *nbT,
+                    std::vector<std::vector<int>> *nbNodes,
+                    const std::vector<std::vector<std::vector<double>>> *closedMap);
 
-		void updateNode(std::vector<int> nodeTarget,
-				const std::vector<std::vector<std::vector<double>>> * currentCostMap,
-    				std::vector<std::vector<std::vector<double>>> * TMap,
-    				std::vector<double> * nbT,
-    				std::vector<std::vector<int>> * nbNodes,
-    				const std::vector<std::vector<std::vector<double>>> * closedMap);
+    double getEikonal(double Tx, double Ty, double Tz, double cost);
 
-		double getEikonal(double Tx, double Ty, double Tz, double cost);
+    int getInsertIndex(std::vector<double> *nbT, double T);
 
-		int getInsertIndex(std::vector<double> * nbT, double T);
+    void computePathGDM(const std::vector<std::vector<std::vector<double>>> *TMap,
+                        std::vector<int> initNode,
+                        std::vector<int> endNode,
+                        double tau,
+                        std::vector<std::vector<double>> *path);
 
-		void planPathGDM(const std::vector<std::vector<std::vector<double>>> * TMap,
-				 std::vector<int> initNode,
-				 std::vector<int> endNode,
-				 double tau,
-				 std::vector<std::vector<double>> * path);
+    void computeGradient(const std::vector<std::vector<std::vector<double>>> *TMap,
+                         std::vector<double> point,
+                         std::vector<std::vector<std::vector<double>>> *Gnx,
+                         std::vector<std::vector<std::vector<double>>> *Gny,
+                         std::vector<std::vector<std::vector<double>>> *Gnz);
 
-		void computeGradient(const std::vector<std::vector<std::vector<double>>> * TMap,
-				     std::vector<double> point,
-				     std::vector<std::vector<std::vector<double>>> * Gnx,
-				     std::vector<std::vector<std::vector<double>>> * Gny,
-				     std::vector<std::vector<std::vector<double>>> * Gnz);
-
-		double getInterpolatedPoint(std::vector<double> point,
-					    const std::vector<std::vector<std::vector<double>>> * mapI);
-
+    double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<std::vector<double>>> *mapI);
 };
-
 }
