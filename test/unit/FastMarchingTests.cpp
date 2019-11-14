@@ -101,7 +101,7 @@ TEST(FastMarchingTests, computingTMap)
 	BiFastMarching dummyFM;
 	
 	std::vector<std::vector<double>> * costMap = new std::vector<std::vector<double>>;
-	std::string costMapFile = "../data/dummyCostMap.txt";
+	std::string costMapFile = "test/unit/data/dummyCostMap.txt";
 	(*costMap) = readMatrixFile(costMapFile);
 	for(int i = 0; i < costMap->size(); i++)
 		for(int j = 0; j < (*costMap)[0].size(); j++)
@@ -134,8 +134,8 @@ TEST(FastMarchingTests, computingTMap)
 	std::ofstream TMapGoalFile;
 	std::ofstream TMapStartFile;
 
-	TMapGoalFile.open("../data/results/TMapGoal.txt");
-	TMapStartFile.open("../data/results/TMapStart.txt");
+	TMapGoalFile.open("test/unit/data/results/TMapGoal.txt");
+	TMapStartFile.open("test/unit/data/results/TMapStart.txt");
 
 	for(int j = 0; j < costMap->size(); j++)
 	{
@@ -160,7 +160,7 @@ TEST(FastMarchingTests, planningRoverPath)
 	BiFastMarching dummyFM;
 	
 	std::vector<std::vector<double>> * costMap = new std::vector<std::vector<double>>;
-	std::string costMapFile = "../data/dummyCostMap.txt";
+	std::string costMapFile = "test/unit/data/dummyCostMap.txt";
 	(*costMap) = readMatrixFile(costMapFile);
 	for(int i = 0; i < costMap->size(); i++)
 		for(int j = 0; j < (*costMap)[0].size(); j++)
@@ -189,7 +189,7 @@ TEST(FastMarchingTests, planningRoverPath)
 
 	std::ofstream pathFile;
 
-	pathFile.open("../data/results/path.txt");
+	pathFile.open("test/unit/data/results/path.txt");
 
 	for(int j = 0; j < roverPath->size(); j++)
 	{
@@ -205,7 +205,7 @@ TEST(FastMarchingTests, computingTMap3D)
 	BiFastMarching3D dummyFM3D;
 	
 	std::vector<std::vector<std::vector<double>>> * costMap = new std::vector<std::vector<std::vector<double>>>;
-	std::string costMapFile = "../data/dummyCostMap3D.txt";
+	std::string costMapFile = "test/unit/data/dummyCostMap3D.txt";
 	(*costMap) = readMatrixFile3D(costMapFile);
 
 	for(int i = 0; i < costMap->size(); i++)
@@ -246,8 +246,8 @@ TEST(FastMarchingTests, computingTMap3D)
 	std::ofstream TMapGoalFile;
 	std::ofstream TMapStartFile;
 
-	TMapGoalFile.open("../data/results/TMapGoal3D.txt");
-	TMapStartFile.open("../data/results/TMapStart3D.txt");
+	TMapGoalFile.open("test/unit/data/results/TMapGoal3D.txt");
+	TMapStartFile.open("test/unit/data/results/TMapStart3D.txt");
 
 	for(int j = 0; j < costMap->size(); j++)
 	{
@@ -274,7 +274,7 @@ TEST(FastMarchingTests, planningSimple3Dpath)
 	BiFastMarching3D dummyFM3D;
 	
 	std::vector<std::vector<std::vector<double>>> * costMap = new std::vector<std::vector<std::vector<double>>>;
-	std::string costMapFile = "../data/dummyCostMap3D.txt";
+	std::string costMapFile = "test/unit/data/dummyCostMap3D.txt";
 	(*costMap) = readMatrixFile3D(costMapFile);
 
 	for(int i = 0; i < costMap->size(); i++)
@@ -311,7 +311,7 @@ TEST(FastMarchingTests, planningSimple3Dpath)
 
 	std::ofstream pathFile;
 
-	pathFile.open("../data/results/3Dpath.txt");
+	pathFile.open("test/unit/data/results/3Dpath.txt");
 
 	for(int j = 0; j < endEffectorPath->size(); j++)
 	{
