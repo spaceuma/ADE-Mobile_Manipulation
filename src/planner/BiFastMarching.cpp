@@ -29,8 +29,8 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     std::vector<std::vector<double>> *pathGoal = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *pathStart = new std::vector<std::vector<double>>;
 
-    computePathGDM(TMapGoal, (*nodeJoin), goal, 0.5, pathGoal);
-    computePathGDM(TMapStart, (*nodeJoin), start, 0.5, pathStart);
+    computePathGDM(TMapGoal, (*nodeJoin), goal, 0.2, pathGoal);
+    computePathGDM(TMapStart, (*nodeJoin), start, 0.2, pathStart);
 
     pathGoal->insert(pathGoal->begin(), pathStart->rbegin(), pathStart->rend());
 
