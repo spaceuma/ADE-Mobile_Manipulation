@@ -3,6 +3,7 @@
 
 #include <types/RoverGuidance_Dem.h>
 #include <opencv2/opencv.hpp>
+#include <math.h>
 #include "MotionPlan.h"
 
 using namespace cv;
@@ -23,6 +24,7 @@ private:
   double resDem;
   Mat elevationMap;
   Mat slopeMap;
+  Mat obstacleMap;
   std::vector<std::vector<double>> currentObstaclesMap;
   std::vector<std::vector<double>> currentCostMap;
 
@@ -32,10 +34,11 @@ public:
 	 */
   MobileManipMap();
   MobileManipMap(RoverGuidance_Dem dem);
-  int setRGDem(RoverGuidance_Dem dem);
-  int setImageDem(Mat inputDem);
+  int setRGDem(RoverGuidance_Dem &dem);
+  int setImageDem(Mat inputDem, double resDem);
   void showElevationMap();
   void showSlopeMap();
+  void showObstacleMap();
 
 private:
   bool calculateElevationMap();
