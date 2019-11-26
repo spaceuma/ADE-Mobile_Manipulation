@@ -1,8 +1,10 @@
-#include "ArmPlanner.h"
 #include <ctime>
-#include <fstream>
 #include <gtest/gtest.h>
 #include <math.h>
+#include <fstream>
+#include "ArmPlanner.h"
+
+using namespace ArmPlanner_lib;
 
 std::vector<std::vector<double>> readMatrixFile(std::string cost_map_file)
 {
@@ -102,22 +104,28 @@ TEST(ArmPlannerTests, planningEEPath)
             if (i == 0 || j == 0 || i == costMap->size() - 1 || j == (*costMap)[0].size() - 1)
                 (*costMap)[i][j] = INFINITY;
 
-    clock_t begin = clock();
     double mapResolution = 0.10;
     base::Waypoint roverPos, samplePos;
 
     roverPos.position[0] = 3;
-    roverPos.position[1] = 0.5;
+    roverPos.position[1] = 1.5;
     roverPos.heading = 0;
 
-    samplePos.position[0] = 6.51;
-    samplePos.position[1] = 9.4;
+    samplePos.position[0] = 8.5;
+    samplePos.position[1] = 8.4;
     samplePos.position[2] = 1.2;
     samplePos.heading = 0;
 
     std::vector<base::Waypoint> *roverPath = new std::vector<base::Waypoint>;
+
+    clock_t ini2D = clock();
     dummyFM.planPath(costMap, mapResolution, roverPos, samplePos, roverPath);
-    roverPath->erase(roverPath->end() - 60, roverPath->end());
+    clock_t end2D = clock();    
+    double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
+    std::cout << "Elapsed execution time planning 2D: " << t << std::endl;
+
+    //TODO here it goes the FetchingPoseComputation
+    roverPath->erase(roverPath->end() - 10, roverPath->end());
 
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
@@ -125,45 +133,14 @@ TEST(ArmPlannerTests, planningEEPath)
     std::vector<std::vector<double>> *endEffectorPath = new std::vector<std::vector<double>>;
     std::vector<int> *pathsAssignment = new std::vector<int>;
 
+    clock_t begin = clock();
     ArmPlanner_lib::ArmPlanner dummyArmPlanner;
     dummyArmPlanner.planEndEffectorPath(
         roverPath, DEM, mapResolution, zResolution, samplePos, endEffectorPath, pathsAssignment);
 
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time planning: " << elapsed_secs << std::endl;
+    std::cout << "Elapsed execution time planning 3D: " << elapsed_secs << std::endl;
 
-    // Printing results into .txt files
-    std::ofstream pathFile;
-
-    pathFile.open("test/unit/data/results/roverPath.txt");
-
-    for (int j = 0; j < roverPath->size(); j++)
-    {
-        pathFile << (*roverPath)[j].position[0] << " " << (*roverPath)[j].position[1] << "\n";
-    }
-
-    pathFile.close();
-
-    std::ofstream path3DFile;
-    path3DFile.open("test/unit/data/results/EEPath.txt");
-
-    for (int j = 0; j < endEffectorPath->size(); j++)
-    {
-        path3DFile << (*endEffectorPath)[j][0] << " " << (*endEffectorPath)[j][1] << " " << (*endEffectorPath)[j][2]
-                   << "\n";
-    }
-
-    path3DFile.close();
-
-    std::ofstream assignmentFile;
-    assignmentFile.open("test/unit/data/results/assignment.txt");
-
-    for (int j = 0; j < pathsAssignment->size(); j++)
-    {
-        assignmentFile << (*pathsAssignment)[j] << "\n";
-    }
-
-    assignmentFile.close();
 }
 }

@@ -3,6 +3,8 @@
 #include "Waypoint.hpp"
 #include <vector>
 
+#define pi 3.14159265359
+
 namespace ArmPlanner_lib
 {
 class ArmPlanner
@@ -33,7 +35,7 @@ public:
     double heightGround2BCS = 0.645;
     double optimalLeftDeviation = 0.6;                              // TODO set parameter properly
     std::vector<double> BCS2iniEEpos = {0.738, 0, 0.550};           // TODO set parameter properly
-    std::vector<double> iniEEorientation = {-1.933, 0.751, -1.822}; // TODO set parameter properly
+    std::vector<double> iniEEorientation = {0, pi/2, pi/3}; // TODO set parameter properly
 
     // -- FUNCTIONS --
     void planEndEffectorPath(const std::vector<base::Waypoint> *roverPath,

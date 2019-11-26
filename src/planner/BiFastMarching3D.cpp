@@ -35,7 +35,7 @@ void BiFastMarching3D::planPath(const std::vector<std::vector<std::vector<double
     computePathGDM(TMapGoal, (*nodeJoin), goal, 0.5, path);
     computePathGDM(TMapStart, (*nodeJoin), start, 0.5, pathStart);
 
-    path->insert(path->begin(), pathStart->rbegin(), pathStart->rend());
+    path->insert(path->begin(), pathStart->rbegin(), pathStart->rend()-1);
 
     path3D->resize(path->size());
     (*path3D)[0].position[0] = mapResolution * (*path)[0][0];
