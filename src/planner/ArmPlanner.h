@@ -54,7 +54,6 @@ public:
 
     void computeWaypointAssignment(const std::vector<std::vector<double>> *roverPath6,
                                    const std::vector<std::vector<double>> *endEffectorPath6,
-                                   double assignmentDistance,
                                    std::vector<int> *pathsAssignment);
 
     double getDist3(std::vector<double> a, std::vector<double> b);

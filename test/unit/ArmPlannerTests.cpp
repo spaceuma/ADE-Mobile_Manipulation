@@ -1,8 +1,8 @@
+#include "ArmPlanner.h"
 #include <ctime>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <math.h>
-#include "ArmPlanner.h"
 
 std::vector<std::vector<double>> readMatrixFile(std::string cost_map_file)
 {
@@ -117,24 +117,7 @@ TEST(ArmPlannerTests, planningEEPath)
 
     std::vector<base::Waypoint> *roverPath = new std::vector<base::Waypoint>;
     dummyFM.planPath(costMap, mapResolution, roverPos, samplePos, roverPath);
-    roverPath->erase(roverPath->end()-50,roverPath->end());
-
-
-
-///////
-    std::ofstream pathFile;
-
-    pathFile.open("test/unit/data/results/roverPath.txt");
-
-    for (int j = 0; j < roverPath->size(); j++)
-    {
-        pathFile << (*roverPath)[j].position[0] << " " << (*roverPath)[j].position[1] << "\n";
-    }
-
-    pathFile.close();
-///////
-
-
+    roverPath->erase(roverPath->end() - 60, roverPath->end());
 
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
@@ -150,6 +133,17 @@ TEST(ArmPlannerTests, planningEEPath)
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning: " << elapsed_secs << std::endl;
 
+    // Printing results into .txt files
+    std::ofstream pathFile;
+
+    pathFile.open("test/unit/data/results/roverPath.txt");
+
+    for (int j = 0; j < roverPath->size(); j++)
+    {
+        pathFile << (*roverPath)[j].position[0] << " " << (*roverPath)[j].position[1] << "\n";
+    }
+
+    pathFile.close();
 
     std::ofstream path3DFile;
     path3DFile.open("test/unit/data/results/EEPath.txt");
