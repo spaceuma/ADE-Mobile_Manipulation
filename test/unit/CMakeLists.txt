@@ -37,7 +37,7 @@ add_executable(runUnitTests
                MobileManipMotionPlannerTests.cpp
 	       MobileManipMapTests.cpp
                MotionPlanTests.cpp
-	       FastMarchingTests.cpp
+	       #FastMarchingTests.cpp
                ${MM_SRC}
                ${MM_types_SRC}
 	       ${FM_SRC}
