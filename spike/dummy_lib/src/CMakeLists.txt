@@ -2,6 +2,8 @@ rock_library(dummy_lib
     SOURCES Dummy.cpp
     HEADERS Dummy.hpp)
 
+TARGET_LINK_LIBRARIES(dummy_lib pthread)
+
 rock_library(dummy_types
     SOURCES types/DEM.cpp
             types/DGPS.cpp

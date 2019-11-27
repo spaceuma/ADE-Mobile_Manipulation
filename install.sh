@@ -1,10 +1,14 @@
 sudo apt-get -y install libopencv-dev cmake libboost-all-dev
 
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$PWD/cmake/
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$PWD/deps/sherpa_tt_api/cmake/
 install_folder=$PWD/install
 
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$install_folder/lib/pkgconfig
 cur=$PWD
+
+
+## To install opencv follow https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html
+
 
 cd $cur/deps/sherpa_tt_api/base-logging
 mkdir build
@@ -48,10 +52,32 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
 make install
 
+cd $cur/spike/plannerExample
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+make install
+
+cd $cur/test/harnessExample
+#rm -rf build
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+make
+
+cd $cur/test/unit
+#rm -rf build
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+make
+
 cd $cur
 
 echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$install_folder/lib" > env.sh
 echo "export PATH=$PATH:$install_folder/bin" >> env.sh
+echo "export PATH=$PATH:$cur/test/harnessExample/build" >> env.sh
+echo "export PATH=$PATH:$cur/test/unit/build" >> env.sh
 
 echo 
 echo "Installation finished..."

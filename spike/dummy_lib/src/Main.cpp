@@ -8,7 +8,41 @@
 
 using namespace proxy_library;
 
-int main(int argc, char** argv)
+//Code extracted from Sherpa API example
+Joints buildDrivingPoseArmCommand(){
+    Joints j;
+    j.m_jointNames.push_back("arm_joint_1");
+    j.m_jointNames.push_back("arm_joint_2");
+    j.m_jointNames.push_back("arm_joint_3");
+    j.m_jointNames.push_back("arm_joint_4");
+    j.m_jointNames.push_back("arm_joint_5");
+    j.m_jointNames.push_back("arm_joint_6");
+    j.m_jointStates.resize(6);
+
+    j.m_jointStates[0].m_position = 0;
+    j.m_jointStates[1].m_position = -1.833;
+    j.m_jointStates[2].m_position = 2.845;
+    j.m_jointStates[3].m_position = -0.033;
+    j.m_jointStates[4].m_position = -0.785;
+    j.m_jointStates[5].m_position = 2.356;
+
+    return j;
+}
+
+// Checks whether the arm state is the one desired
+bool checkFinishedArmCommand(Joints armCommand, Joints armReadings)
+{
+  for (uint i = 0; i < 6; i++)
+  {
+    if (fabs(armCommand.m_jointStates[i].m_position -
+            armReadings.m_jointStates[i].m_position ) > 0.01)
+      return false;
+  }
+  return true;
+}
+
+// Dummy thread to command the arm
+void moveArm(Joints armCommand)
 {
   // The proxy config.
   Config config;
@@ -26,36 +60,36 @@ int main(int argc, char** argv)
   // The proxy.
   ProxyLibrarySherpaTT proxy(config);
 
-  dummy_lib::DummyClass dummyClass;
-  dummyClass.welcome();
+  std::cout << "Proxy is created" << std::endl;
+  proxy.sendManipulatorJointCommand(&armCommand);
 
-  while(true) {
-      std::cout << "\n================================= " << std::endl;
-      bool st;
+  std::cout << "Command is sent to SherpaTT" << std::endl;
 
-      /*DGPS dgps;
-      st = proxy.getDGPS(dgps);
-      std::cout << "DGPS: " << st << std::endl;
-
-      IMU imu;
-      st = proxy.getIMUData(imu);
-      std::cout << "IMU: " << st << std::endl;*/
-
-      Joints mjoints;
-      st = proxy.getManipulatorJointState(mjoints);
-      std::cout << "ManipulatorJoints: " << st << std::endl;
-/*
-      Joints rjoints;
-      st = proxy.getMobileBaseJointState(rjoints);
-      std::cout << "MobileBaseJoints: " << st << std::endl;
-
-      Pose pose;
-      st = proxy.getPose(pose);
-      std::cout << "Pose: " << st << std::endl;
-      std::cout << "--------------------------------- " << std::endl;
-*/
-      usleep(100000);
+  Joints jointReadings;
+  bool st = false;
+  while (!st)
+  {
+    st  = proxy.getManipulatorJointState(jointReadings);
+    std::cout << "Waiting for Reading" << std::endl;
   }
+  std::cout << "Last Joint Command is " << jointReadings.m_jointStates[5].m_position << std::endl;
+  std::cout << "First Reading Completed" << std::endl;
+  while(!checkFinishedArmCommand(armCommand, jointReadings))
+  {
+    std::cout << "\n================================= " << std::endl;
+    st = proxy.getManipulatorJointState(jointReadings);
+    std::cout << "ManipulatorJoints: " << st << std::endl;
+    usleep(100000);
+  }
+}
+
+
+int main(int argc, char** argv)
+{
+
+  std::thread executerThread(moveArm, buildDrivingPoseArmCommand());
+
+  executerThread.join();
 
   return 0;
 }

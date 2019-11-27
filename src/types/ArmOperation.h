@@ -1,0 +1,11 @@
+#ifndef __MOBILE_MANIP_ARM_OPERATION__
+#define __MOBILE_MANIP_ARM_OPERATION__
+
+enum ArmOperation
+{
+  ATOMIC_PICK,
+  SAMPLE_SWEEP,
+  SAMPLE_TAKING
+};
+
+#endif
