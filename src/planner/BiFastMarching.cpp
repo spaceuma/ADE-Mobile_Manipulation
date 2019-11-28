@@ -32,7 +32,7 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     computePathGDM(TMapGoal, (*nodeJoin), goal, 0.5, pathGoal);
     computePathGDM(TMapStart, (*nodeJoin), start, 0.5, pathStart);
 
-    pathGoal->insert(pathGoal->begin(), pathStart->rbegin(), pathStart->rend()-1);
+    pathGoal->insert(pathGoal->begin(), pathStart->rbegin(), pathStart->rend() - 1);
 
     path->resize(pathGoal->size());
     (*path)[0].position[0] = mapResolution * (*pathGoal)[0][0];
@@ -44,12 +44,12 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
         (*path)[i].position[0] = mapResolution * (*pathGoal)[i][0];
         (*path)[i].position[1] = mapResolution * (*pathGoal)[i][1];
         (*path)[i].heading
-            = atan2((*pathGoal)[i+1][1] - (*pathGoal)[i - 1][1], (*pathGoal)[i+1][0] - (*pathGoal)[i - 1][0]);
+            = atan2((*pathGoal)[i + 1][1] - (*pathGoal)[i - 1][1], (*pathGoal)[i + 1][0] - (*pathGoal)[i - 1][0]);
     }
 
-    (*path)[path->size()-1].position[0] = mapResolution * (*pathGoal)[path->size()-1][0];
-    (*path)[path->size()-1].position[1] = mapResolution * (*pathGoal)[path->size()-1][1];
-    (*path)[path->size()-1].heading = (*path)[path->size()-2].heading;
+    (*path)[path->size() - 1].position[0] = mapResolution * (*pathGoal)[path->size() - 1][0];
+    (*path)[path->size() - 1].position[1] = mapResolution * (*pathGoal)[path->size() - 1][1];
+    (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
 }
 
 void BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,

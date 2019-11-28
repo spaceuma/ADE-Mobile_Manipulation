@@ -2,9 +2,8 @@
 #include <gtest/gtest.h>
 #include <math.h>
 #include <fstream>
+#include "FetchingPoseEstimator.h"
 #include "ArmPlanner.h"
-
-using namespace ArmPlanner_lib;
 
 std::vector<std::vector<double>> readMatrixFile(std::string cost_map_file)
 {
@@ -124,8 +123,11 @@ TEST(ArmPlannerTests, planningEEPath)
     double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 2D: " << t << std::endl;
 
-    //TODO here it goes the FetchingPoseComputation
-    roverPath->erase(roverPath->end() - 10, roverPath->end());
+    // Decide where to stop the rover to fetch optimally
+    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
+    int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);
+    roverPath->erase(roverPath->begin()+endWaypoint+1,roverPath->end());
+    std::cout<<"Last waypoint: ["<<(*roverPath)[roverPath->size()-1].position[0]<<" "<<(*roverPath)[roverPath->size()-1].position[1]<<"]"<<std::endl;
 
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
