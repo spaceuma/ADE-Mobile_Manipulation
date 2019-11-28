@@ -37,7 +37,6 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     path->resize(pathGoal->size());
     (*path)[0].position[0] = mapResolution * (*pathGoal)[0][0];
     (*path)[0].position[1] = mapResolution * (*pathGoal)[0][1];
-    (*path)[0].heading = iniPos.heading;
 
     for (int i = 1; i < path->size() - 1; i++)
     {
@@ -46,6 +45,7 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
         (*path)[i].heading
             = atan2((*pathGoal)[i + 1][1] - (*pathGoal)[i - 1][1], (*pathGoal)[i + 1][0] - (*pathGoal)[i - 1][0]);
     }
+    (*path)[0].heading = (*path)[1].heading;
 
     (*path)[path->size() - 1].position[0] = mapResolution * (*pathGoal)[path->size() - 1][0];
     (*path)[path->size() - 1].position[1] = mapResolution * (*pathGoal)[path->size() - 1][1];

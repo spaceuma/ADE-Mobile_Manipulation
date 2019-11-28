@@ -30,10 +30,7 @@ int FetchingPoseEstimator::getFetchWaypointIndex(const std::vector<base::Waypoin
         }
     }
     if (fetchWaypointIndex > 0)
-    {
-        std::cout<<"Fetch waypoint: ["<<(*roverPath)[fetchWaypointIndex].position[0]<<" "<<(*roverPath)[fetchWaypointIndex].position[1]<<"]"<<std::endl;
         return fetchWaypointIndex;
-    }
     else
     {
         std::cout << "\033[1;31mERROR [FetchingPoseEstimator_lib::getFetchWaypointIndex]: No valid position for "
@@ -56,7 +53,6 @@ double FetchingPoseEstimator::getHeadingCost(base::Waypoint pathPose, base::Wayp
     double devAngle = pathPose.heading - bestHeading;
 
     if (devAngle > pi) devAngle -= 2 * pi;
-    if (devAngle < pi) devAngle += 2 * pi;
-
+    if (devAngle < -pi) devAngle += 2 * pi;
     return abs(devAngle) / pi;
 }

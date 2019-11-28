@@ -148,7 +148,6 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     // Printing results into .txt files
 
     std::ofstream cMap3DFile;
-
     cMap3DFile.open("test/unit/data/results/cMap3D.txt");
 
     for (int j = 0; j < costMap3D->size(); j++)
@@ -166,7 +165,6 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     cMap3DFile.close();
 
     std::ofstream pathFile;
-
     pathFile.open("test/unit/data/results/roverPath.txt");
 
     for (int j = 0; j < roverPath->size(); j++)
@@ -200,7 +198,6 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     assignmentFile.close();
 
     std::ofstream armJointsFile;
-
     armJointsFile.open("test/unit/data/results/armJoints.txt");
 
     for (int i = 0; i < armJoints.size(); i++)

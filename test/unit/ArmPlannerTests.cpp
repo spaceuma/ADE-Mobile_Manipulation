@@ -106,13 +106,13 @@ TEST(ArmPlannerTests, planningEEPath)
     double mapResolution = 0.10;
     base::Waypoint roverPos, samplePos;
 
-    roverPos.position[0] = 3;
-    roverPos.position[1] = 1.5;
+    roverPos.position[0] = 2;
+    roverPos.position[1] = 1;
     roverPos.heading = 0;
 
-    samplePos.position[0] = 8.5;
-    samplePos.position[1] = 8.4;
-    samplePos.position[2] = 1.2;
+    samplePos.position[0] = 7.5;
+    samplePos.position[1] = 9.4;
+    samplePos.position[2] = 1.1;
     samplePos.heading = 0;
 
     std::vector<base::Waypoint> *roverPath = new std::vector<base::Waypoint>;
@@ -127,7 +127,6 @@ TEST(ArmPlannerTests, planningEEPath)
     FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
     int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);
     roverPath->erase(roverPath->begin()+endWaypoint+1,roverPath->end());
-    std::cout<<"Last waypoint: ["<<(*roverPath)[roverPath->size()-1].position[0]<<" "<<(*roverPath)[roverPath->size()-1].position[1]<<"]"<<std::endl;
 
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
