@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <fstream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "MobileManipMap.h"
@@ -45,6 +46,13 @@ TEST(MMMapTest, constructorTest){
   waitKey();
   dummyMap.showObstacleMap();
   waitKey();
+  std::vector<std::vector<double>> costMap;
+  costMap.resize(dummyDem->rows);
+  for (uint i = 0; i < dummyDem->rows; i++){
+    costMap[i].resize(dummyDem->cols);
+  }
+  dummyMap.getCostMap(costMap); 
+  std::cout << " The size of the costMap is " << costMap.size() << " x " << costMap[0].size() << std::endl; 
   //ASSERT_NO_THROW(dummyMap.setImageDem(decosDEM,0.028));
   //ASSERT_NO_THROW(dummyMap.showSlopeMap());
 
@@ -52,6 +60,21 @@ TEST(MMMapTest, constructorTest){
   //imshow("DECOS Map", decosDEM);
   //waitKey();
   //destroyWindow("DECOS Map");
+    std::ofstream costMapFile;
+
+    costMapFile.open("test/unit/data/results/costMap.txt");
+
+    for (int j = 0; j < costMap.size(); j++)
+    {
+        for (int i = 0; i < costMap[0].size(); i++)
+        {
+            costMapFile << costMap[j][i] << " ";
+        }
+        costMapFile << "\n";
+    }
+
+    costMapFile.close();
+
 }
 
 

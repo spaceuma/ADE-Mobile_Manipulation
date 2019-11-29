@@ -39,7 +39,8 @@ public:
   void showElevationMap();
   void showSlopeMap();
   void showObstacleMap();
-
+  void getCostMap(std::vector<std::vector<double>> &costMap);
+  std::vector<std::vector<double>>* getCostMapPointer(); 
 private:
   bool calculateElevationMap();
   bool calculateSlopeMap();

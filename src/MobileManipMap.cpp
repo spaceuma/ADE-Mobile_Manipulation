@@ -66,6 +66,9 @@ int MobileManipMap::setImageDem(Mat inputDem, double resDem)
   }
 }
 
+void MobileManipMap::getCostMap(std::vector<std::vector<double>> &costMap){
+  costMap = currentCostMap;
+}	
 bool MobileManipMap::calculateElevationMap() {
   // TODO - implement MobileManipMap::calculateElevationMap
   this->elevationMap = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_64F);
@@ -223,7 +226,7 @@ bool MobileManipMap::calculateCostMap()
   {
     for (uint i = 0; i < this->numXnodes; i++)
     {
-      current_proximity = this->slopeMap.at<float>(j,i);
+      current_proximity = this->obstacleMap.at<float>(j,i);
       if (current_proximity < 0.5) // Geometric Obstacle
       {
          row_cost.push_back(INFINITY);
@@ -243,6 +246,8 @@ bool MobileManipMap::calculateCostMap()
     currentCostMap.push_back(row_cost);
     row_cost.clear();
   }
+  std::cout << " The size of the costMap is " << currentCostMap.size() << " x " << currentCostMap[0].size() << std::endl; 
+  
 }
 
 void MobileManipMap::checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan) {

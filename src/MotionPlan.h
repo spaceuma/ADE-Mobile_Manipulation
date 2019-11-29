@@ -4,6 +4,7 @@
 #include "Joints.h"
 #include "Waypoint.hpp"
 #include "ArmOperation.h"
+#include <types/RoverGuidance_Dem.h>
 using namespace proxy_library;
 using namespace base;
 
