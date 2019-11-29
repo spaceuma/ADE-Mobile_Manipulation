@@ -195,18 +195,6 @@ TEST(FastMarchingTests, planningRoverPath)
 
     pathFile.close();
 
-    std::vector<std::vector<std::vector<double>>> caca;
-
-    clock_t r0 = clock();
-    caca.resize(100, std::vector<std::vector<double>>(100, std::vector<double>(100)));
-
-    for (int i = 0; i < 100; i++)
-        for (int j = 0; j < 100; j++)
-            for (int k = 0; k < 100; k++)
-                caca[i][j][k] = INFINITY;
-
-    elapsed_secs = double(clock() - r0) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time caca: " << elapsed_secs << std::endl;
 }
 
 TEST(FastMarchingTests, computingTMap3D)
