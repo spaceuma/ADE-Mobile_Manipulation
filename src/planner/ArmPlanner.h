@@ -60,3 +60,4 @@ public:
 
     double getDist3(std::vector<double> a, std::vector<double> b);
 };
+}

@@ -1,3 +1,6 @@
+#ifndef __FAST_MARCHING__
+#define __FAST_MARCHING__
+
 #include "Waypoint.hpp"
 #include <vector>
 
@@ -95,3 +98,4 @@ public:
     double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<std::vector<double>>> *mapI);
 };
 }
+#endif

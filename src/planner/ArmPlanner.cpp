@@ -369,4 +369,4 @@ double ArmPlanner::getDist3(std::vector<double> a, std::vector<double> b)
 {
     return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2) + pow(a[2] - b[2], 2));
 }
-}
+
