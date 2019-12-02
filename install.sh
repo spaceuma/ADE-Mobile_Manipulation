@@ -8,7 +8,11 @@ cur=$PWD
 
 
 ## To install opencv follow https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html
-
+## To install useful libraries for python visualization:
+# sudo apt-get -y install python3-pip
+# pip3 install mayavi
+# pip3 install PyQt5
+# sudo apt-get -y install python3-matplotlib
 
 cd $cur/deps/sherpa_tt_api/base-logging
 mkdir build
