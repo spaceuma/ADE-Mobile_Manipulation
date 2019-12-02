@@ -1,9 +1,9 @@
+#include "ArmPlanner.h"
+#include "FetchingPoseEstimator.h"
 #include <ctime>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <math.h>
-#include <fstream>
-#include "FetchingPoseEstimator.h"
-#include "ArmPlanner.h"
 
 std::vector<std::vector<double>> readMatrixFile(std::string cost_map_file)
 {
@@ -119,14 +119,14 @@ TEST(ArmPlannerTests, planningEEPath)
 
     clock_t ini2D = clock();
     dummyFM.planPath(costMap, mapResolution, roverPos, samplePos, roverPath);
-    clock_t end2D = clock();    
+    clock_t end2D = clock();
     double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 2D: " << t << std::endl;
 
     // Decide where to stop the rover to fetch optimally
     FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
     int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);
-    roverPath->erase(roverPath->begin()+endWaypoint+1,roverPath->end());
+    roverPath->erase(roverPath->begin() + endWaypoint + 1, roverPath->end());
 
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
@@ -142,6 +142,5 @@ TEST(ArmPlannerTests, planningEEPath)
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 3D: " << elapsed_secs << std::endl;
-
 }
 }

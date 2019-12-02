@@ -1,12 +1,16 @@
 #include <fstream>
-#include <string>
 #include <iostream>
-#include <vector>
 #include <sstream>
-#include "RoverGuidance_Dem.h"
+#include <string>
+#include <vector>
 #include "readMatrixFile.h"
+#include "RoverGuidance_Dem.h"
 
-void readMatrixFile(std::string map_file, double res, double &n_row, double &n_col, std::vector<double>& vector_elevationData)
+void readMatrixFile(std::string map_file,
+                    double res,
+                    double &n_row,
+                    double &n_col,
+                    std::vector<double> &vector_elevationData)
 {
     std::cout << "Reading map " << map_file << std::endl;
     std::string line;
@@ -39,9 +43,9 @@ void readMatrixFile(std::string map_file, double res, double &n_row, double &n_c
     {
         std::cout << "Problem opening the map file" << std::endl;
     }
-    //double elevationData[rgDem->v_elevationData_m.size()];
-        //double elevationData[vector_elevationData.size()];
-        //rgDem->p_heightData_m = elevationData;
+    // double elevationData[rgDem->v_elevationData_m.size()];
+    // double elevationData[vector_elevationData.size()];
+    // rgDem->p_heightData_m = elevationData;
     /*for (uint j = 0; j<rgDem->rows; j++)
     {
         for (uint i = 0; i<rgDem->cols; i++)
@@ -50,8 +54,3 @@ void readMatrixFile(std::string map_file, double res, double &n_row, double &n_c
         }
     }*/
 }
-
-
-
-
-

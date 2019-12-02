@@ -194,7 +194,6 @@ TEST(FastMarchingTests, planningRoverPath)
     }
 
     pathFile.close();
-
 }
 
 TEST(FastMarchingTests, computingTMap3D)
