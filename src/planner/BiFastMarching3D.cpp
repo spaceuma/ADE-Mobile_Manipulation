@@ -129,13 +129,27 @@ void BiFastMarching3D::computeTMap(const std::vector<std::vector<std::vector<dou
         }
         if ((*closedMapStart)[nodeTargetGoal[1]][nodeTargetGoal[0]][nodeTargetGoal[2]] == 1)
         {
-            (*nodeJoin) = nodeTargetGoal;
-            break;
+            double GGoalx, GGoaly, GGoalz, GStartx, GStarty, GStartz;
+            computeGradient(TMapStart, nodeTargetGoal, &GStartx, &GStarty, &GStartz);
+            computeGradient(TMapGoal, nodeTargetGoal, &GGoalx, &GGoaly, &GGoalz);
+
+            if((abs(GGoalx + GStartx) < 0.25)&&(abs(GGoaly + GStarty) < 0.25)&&(abs(GGoalz + GStartz) < 0.25))
+            {
+                (*nodeJoin) = nodeTargetGoal;
+                break;
+            }
         }
         if ((*closedMapGoal)[nodeTargetStart[1]][nodeTargetStart[0]][nodeTargetStart[2]] == 1)
         {
-            (*nodeJoin) = nodeTargetStart;
-            break;
+            double GGoalx, GGoaly, GGoalz, GStartx, GStarty, GStartz;
+            computeGradient(TMapStart, nodeTargetStart, &GStartx, &GStarty, &GStartz);
+            computeGradient(TMapGoal, nodeTargetStart, &GGoalx, &GGoaly, &GGoalz);
+
+            if((abs(GGoalx + GStartx) < 0.25)&&(abs(GGoaly + GStarty) < 0.25)&&(abs(GGoalz + GStartz) < 0.25))
+            {
+                (*nodeJoin) = nodeTargetStart;
+                break;
+            }
         }
     }
 }
@@ -572,6 +586,102 @@ void BiFastMarching3D::computeGradient(const std::vector<std::vector<std::vector
                 (*Gny)[j][i][k] = Gy[j][i][k] / sqrt(pow(Gx[j][i][k], 2) + pow(Gy[j][i][k], 2) + pow(Gz[j][i][k], 2));
                 (*Gnz)[j][i][k] = Gz[j][i][k] / sqrt(pow(Gx[j][i][k], 2) + pow(Gy[j][i][k], 2) + pow(Gz[j][i][k], 2));
             }
+}
+
+void BiFastMarching3D::computeGradient(const std::vector<std::vector<std::vector<double>>> *TMap,
+                         std::vector<int> point,
+                         double *Gnx,
+                         double *Gny,
+                         double *Gnz)
+{
+    int n = TMap->size();
+    int m = (*TMap)[0].size();
+    int l = (*TMap)[0][0].size();
+
+    int i = point[0];
+    int j = point[1];
+    int k = point[2];
+
+    double Gx, Gy, Gz;
+
+    if (j == 0)
+        Gy = (*TMap)[1][i][k] - (*TMap)[0][i][k];
+    else
+    {
+        if (j == n - 1)
+            Gy = (*TMap)[j][i][k] - (*TMap)[j - 1][i][k];
+        else
+        {
+            if (isinf((*TMap)[j + 1][i][k]))
+            {
+                if (isinf((*TMap)[j - 1][i][k]))
+                    Gy = 0;
+                else
+                    Gy = (*TMap)[j][i][k] - (*TMap)[j - 1][i][k];
+            }
+            else
+            {
+                if (isinf((*TMap)[j - 1][i][k]))
+                    Gy = (*TMap)[j + 1][i][k] - (*TMap)[j][i][k];
+                else
+                    Gy = ((*TMap)[j + 1][i][k] - (*TMap)[j - 1][i][k]) / 2;
+            }
+        }
+    }
+
+    if (i == 0)
+        Gx = (*TMap)[j][1][k] - (*TMap)[j][0][k];
+    else
+    {
+        if (i == m - 1)
+            Gx = (*TMap)[j][i][k] - (*TMap)[j][i - 1][k];
+        else
+        {
+            if (isinf((*TMap)[j][i + 1][k]))
+            {
+                if (isinf((*TMap)[j][i - 1][k]))
+                    Gx = 0;
+                else
+                    Gx = (*TMap)[j][i][k] - (*TMap)[j][i - 1][k];
+            }
+            else
+            {
+                if (isinf((*TMap)[j][i - 1][k]))
+                    Gx = (*TMap)[j][i + 1][k] - (*TMap)[j][i][k];
+                else
+                    Gx = ((*TMap)[j][i + 1][k] - (*TMap)[j][i - 1][k]) / 2;
+            }
+        }
+    }
+
+    if (k == 0)
+        Gz = (*TMap)[j][i][1] - (*TMap)[j][i][0];
+    else
+    {
+        if (k == l - 1)
+            Gz = (*TMap)[j][i][k] - (*TMap)[j][i][k - 1];
+        else
+        {
+            if (isinf((*TMap)[j][i][k + 1]))
+            {
+                if (isinf((*TMap)[j][i][k - 1]))
+                    Gz = 0;
+                else
+                    Gz = (*TMap)[j][i][k] - (*TMap)[j][i][k - 1];
+            }
+            else
+            {
+                if (isinf((*TMap)[j][i][k - 1]))
+                    Gz = (*TMap)[j][i][k + 1] - (*TMap)[j][i][k];
+                else
+                    Gz = ((*TMap)[j][i][k + 1] - (*TMap)[j][i][k - 1]) / 2;
+            }
+        }
+    }
+
+    (*Gnx) = Gx / sqrt(pow(Gx, 2) + pow(Gy, 2) + pow(Gz, 2));
+    (*Gny) = Gy / sqrt(pow(Gx, 2) + pow(Gy, 2) + pow(Gz, 2));
+    (*Gnz) = Gz / sqrt(pow(Gx, 2) + pow(Gy, 2) + pow(Gz, 2));
 }
 
 double BiFastMarching3D::getInterpolatedPoint(std::vector<double> point,

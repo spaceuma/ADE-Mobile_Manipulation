@@ -48,6 +48,11 @@ public:
                          std::vector<std::vector<double>> *Gnx,
                          std::vector<std::vector<double>> *Gny);
 
+    void computeGradient(const std::vector<std::vector<double>> *TMap,
+                         const std::vector<int> point,
+                         double *Gnx,
+                         double *Gny);
+
     double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<double>> *mapI);
 };
 
@@ -94,6 +99,12 @@ public:
                          std::vector<std::vector<std::vector<double>>> *Gnx,
                          std::vector<std::vector<std::vector<double>>> *Gny,
                          std::vector<std::vector<std::vector<double>>> *Gnz);
+
+    void computeGradient(const std::vector<std::vector<std::vector<double>>> *TMap,
+                         std::vector<int> point,
+                         double *Gnx,
+                         double *Gny,
+                         double *Gnz);
 
     double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<std::vector<double>>> *mapI);
 };
