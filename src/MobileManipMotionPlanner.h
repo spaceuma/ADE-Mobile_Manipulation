@@ -5,6 +5,7 @@
 #include "MotionPlan.h"
 #include "MobileManipMap.h"
 #include "MobileManipExecutor.h"
+#include "Waypoint.hpp"
 
 /**
  * It is the main class that receives all the information from other components, start the execution of the coupled rover-manipulator motion, etc.
@@ -82,7 +83,7 @@ public:
 	/**
 	 * It generates a motion plan based on the Map, the rover pose and the sample position.
 	 */
-	void generateMotionPlan(/* It should include the estimation error. */Pose rover_position, /* It should include the estimation error. */Pose sample, Joints arm_joints);
+	void generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample, Joints arm_joints);
 
 	/**
 	 * It returns the status in which the software is.

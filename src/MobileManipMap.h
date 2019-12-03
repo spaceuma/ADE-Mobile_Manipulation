@@ -4,7 +4,7 @@
 #include <types/RoverGuidance_Dem.h>
 #include <opencv2/opencv.hpp>
 #include <math.h>
-#include "MotionPlan.h"
+//#include "MotionPlan.h"
 
 using namespace cv;
 /**
@@ -40,7 +40,8 @@ public:
   void showSlopeMap();
   void showObstacleMap();
   void getCostMap(std::vector<std::vector<double>> &costMap);
-  std::vector<std::vector<double>>* getCostMapPointer(); 
+  std::vector<std::vector<double>>* getCostMapPointer();
+  double getResolution(); 
 private:
   bool calculateElevationMap();
   bool calculateSlopeMap();
@@ -54,8 +55,6 @@ private:
 	 */
   bool calculateObstacleMap();
 
-public:
-  void checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan);
 };
 
 #endif

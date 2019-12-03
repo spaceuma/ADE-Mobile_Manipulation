@@ -250,7 +250,6 @@ bool MobileManipMap::calculateCostMap()
   
 }
 
-void MobileManipMap::checkObstacles(RoverGuidance_Dem locCamDEM, MotionPlan motionPlan) {
-	// TODO - implement MobileManipMap::checkObstacles
-	throw "Not yet implemented";
+double MobileManipMap::getResolution(){
+  return this->resDem;
 }

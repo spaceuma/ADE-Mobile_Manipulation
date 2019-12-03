@@ -23,6 +23,11 @@ file(GLOB MM_types_SRC
     "../../src/types/*.cpp"
 )  
 
+file(GLOB FM_SRC
+    "../../src/planner/*.h"
+    "../../src/planner/*.cpp"
+)
+
 file(GLOB WP_SRC
     "../../deps/control-waypoint_navigation/WaypointNavigation.hpp"
     "../../deps/control-waypoint_navigation/WaypointNavigation.cpp"
@@ -32,8 +37,10 @@ add_executable(harnessexample
                HarnessExample.cpp
                ${MM_SRC}
                ${MM_types_SRC}
+               ${FM_SRC}
                ${WP_SRC})
 target_include_directories(harnessexample PRIVATE ../../src/types)
+target_include_directories(harnessexample PRIVATE ../../src/planner)
 target_include_directories(harnessexample PRIVATE ../../deps/control-waypoint_navigation)
 target_link_libraries (harnessexample Eigen3::Eigen ${OpenCV_LIBS})
 

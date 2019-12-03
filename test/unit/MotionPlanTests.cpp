@@ -13,7 +13,6 @@ using namespace FastMarching_lib;
 TEST(MMMotionPlanTest, roverbaseplanning)
 {
     // Reading the DEM 
-    MotionPlan dummyPlan;
     double res = 0.04; // meters
     double n_row, n_col;
     std::vector<double> vector_elevationData;
@@ -36,9 +35,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     MobileManipMap dummyMap;
     dummyMap.setRGDem(dummyDem);
     base::Waypoint roverPos, samplePos;
-    std::vector<base::Waypoint> *roverPath = new std::vector<base::Waypoint>;
 
-    BiFastMarching dummyFM;
     clock_t begin = clock();
 
     roverPos.position[0] = 1.0;
@@ -50,12 +47,11 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     samplePos.position[2] = 1.1;
     samplePos.heading = 0;
 
-    std::vector<int> *nodeJoin = new std::vector<int>;
-    std::vector<std::vector<double>> costMap;
-    dummyMap.getCostMap(costMap);
 
+    MotionPlan dummyPlan;
     clock_t ini2D = clock();
-    dummyFM.planPath(&costMap, dummyDem.nodeSize_m, roverPos, samplePos, roverPath);
+    dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
+    std::vector<base::Waypoint> roverPath = dummyPlan.getPath();
     clock_t end2D = clock();
     double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 2D: " << t << std::endl;
@@ -64,15 +60,15 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     pathFile.open("test/unit/data/results/path.txt");
 
-    for (int j = 0; j < roverPath->size(); j++)
+    for (int j = 0; j < roverPath.size(); j++)
     {
-        pathFile << (*roverPath)[j].position[0] << " " << (*roverPath)[j].position[1] << "\n";
+        pathFile << roverPath[j].position[0] << " " << roverPath[j].position[1] << "\n";
     }
 
     pathFile.close();
-
+    std::cout << "The resulting path has " << roverPath.size() << " Waypoints" << std::endl;
     // Decide where to stop the rover to fetch optimally
-    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
+/*    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
     int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);
     roverPath->erase(roverPath->begin() + endWaypoint + 1, roverPath->end());
 
@@ -89,5 +85,6 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 3D: " << elapsed_secs << std::endl;
+    */
 }
 

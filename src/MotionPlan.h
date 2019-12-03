@@ -5,8 +5,13 @@
 #include "Waypoint.hpp"
 #include "ArmOperation.h"
 #include <types/RoverGuidance_Dem.h>
+//#include <planner/FastMarching.h>
+#include "FastMarching.h"
+#include "MobileManipMap.h"
+
 using namespace proxy_library;
 using namespace base;
+using namespace FastMarching_lib;
 
 class MotionPlan {
 
@@ -24,12 +29,14 @@ private:
 	 */
 	std::vector<Joints> jointsProfile;
 
+	BiFastMarching fmPlanner;
 
 public:
   MotionPlan();
 
   void updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vector<Joints> newJointsProfile);
-
+  void executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Waypoint rover_position, base::Waypoint sample);
+  std::vector<base::Waypoint> getPath();
 };
 
 #endif

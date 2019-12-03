@@ -8,6 +8,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(/* Provided DEM using the sam
 	cout << "MMPLANNER: Creating MMMP" << endl;
 	this->status = IDLE;
 	this->error = NO_ERROR;
+	this->currentMap.setRGDem(navCamDEM);	
 }
 
 void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan) {
@@ -15,7 +16,7 @@ void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */Mo
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::generateMotionPlan(Pose rover_position, Pose sample, Joints arm_joints) {
+void MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample, Joints arm_joints) {
 	// TODO - implement MobileManipMotionPlanner::generateMotionPlan
         cout << "MMPLANNER: Generating Motion Plan" << endl;
 	if (this->status == IDLE)
