@@ -150,6 +150,8 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     std::ofstream cMap3DFile;
     cMap3DFile.open("test/unit/data/results/cMap3D.txt");
 
+    cMap3DFile << (*costMap3D).size() << " " << (*costMap3D)[0].size() << " " << (*costMap3D)[0][0].size() << "\n";
+    cMap3DFile << mapResolution << " " << zResolution << "\n";
     for (int j = 0; j < costMap3D->size(); j++)
     {
         for (int i = 0; i < (*costMap3D)[0].size(); i++)
@@ -284,7 +286,8 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
     }
 
     // Last stretch of the tunnel
-    int numExtraWayp = 40;
+    double iRes;
+    int numExtraWayp = 30;
     for (int i = 0; i < numExtraWayp; i++)
     {
         std::vector<double> pos{(*roverPath6)[n - 1][0], (*roverPath6)[n - 1][1], (*roverPath6)[n - 1][2]};
@@ -302,15 +305,17 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
 
         std::vector<std::vector<double>> TW2NewWayp = dot(TW2BCS, TBCS2NewWayp);
 
+        iRes = zResolution + sin(pitchEnd)*(mapResolution - zResolution);
+
         for (int j = 0; j < 2 * tunnelSizeY; j++)
-            for (int k = 0; k < 2 * tunnelSizeZ; k++)
+            for (int k = 0; k < 2 * (int)(tunnelSizeZ*zResolution/iRes+0.5); k++)
             {
                 double dist = sqrt(pow(mapResolution * j / 2, 2) + pow(zResolution * k / 2, 2));
                 if (dist < maxArmDistance)
                 {
                     std::vector<std::vector<double>> TNewWayp2Node = {{1, 0, 0, 0},
                                                                       {0, 1, 0, mapResolution * j / 2},
-                                                                      {0, 0, 1, d0 + zResolution * k / 2},
+                                                                      {0, 0, 1, d0 + iRes * k / 2},
                                                                       {0, 0, 0, 1}};
 
                     std::vector<std::vector<double>> TW2Node = dot(TW2NewWayp, TNewWayp2Node);
@@ -319,13 +324,26 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
                     int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                     int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
 
+                    double cost = 1 + abs(sqrt(pow(mapResolution * j/2 - maxArmDistance / 2, 2)
+                                               + pow(zResolution * k/2 - maxArmDistance / 2, 2))
+                                          / (maxArmDistance / 2));
+
                     if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1 && iz < sz - 1)
                         if (TW2Node[2][3] > (*DEM)[iy][ix])
-                            if (isinf((*costMap3D)[iy][ix][iz]))
-                                (*costMap3D)[iy][ix][iz]
-                                    = 1 + abs(sqrt(pow(mapResolution * j / 2 - maxArmDistance / 2, 2)
-                                                   + pow(zResolution * k / 2 - maxArmDistance / 2, 2))
-                                              / (maxArmDistance / 2));
+                            if (isinf((*costMap3D)[iy][ix][iz])) (*costMap3D)[iy][ix][iz] = cost;
+
+                    if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1 && iy < sy - 1 && iz < sz - 1)
+                        if (TW2Node[2][3] > (*DEM)[iy][ix+1])
+                            if (isinf((*costMap3D)[iy][ix + 1][iz])) (*costMap3D)[iy][ix + 1][iz] = cost;
+                    if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1 && iy < sy - 1 && iz < sz - 1)
+                        if (TW2Node[2][3] > (*DEM)[iy][ix-1])
+                            if (isinf((*costMap3D)[iy][ix - 1][iz])) (*costMap3D)[iy][ix - 1][iz] = cost;
+                    if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1 && iy + 1 < sy - 1 && iz < sz - 1)
+                        if (TW2Node[2][3] > (*DEM)[iy+1][ix])
+                            if (isinf((*costMap3D)[iy + 1][ix][iz])) (*costMap3D)[iy + 1][ix][iz] = cost;
+                    if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1 && iy - 1 < sy - 1 && iz < sz - 1)
+                        if (TW2Node[2][3] > (*DEM)[iy-1][ix])
+                            if (isinf((*costMap3D)[iy - 1][ix][iz])) (*costMap3D)[iy - 1][ix][iz] = cost;
                 }
             }
     }

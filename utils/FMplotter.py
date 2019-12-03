@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-costMap = np.loadtxt(open("../test/unit/data/results/costMap.txt"), skiprows=0)
+costMap = np.loadtxt(open("../test/unit/data/dummyCostMap.txt"), skiprows=0)
 costMap[np.where(costMap==np.inf)] = np.nan
 
 total_cost_G = np.loadtxt(open("../test/unit/data/results/TMapGoal.txt"), skiprows=0)

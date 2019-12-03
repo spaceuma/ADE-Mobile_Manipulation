@@ -327,7 +327,7 @@ py = np.array(py)
 pz = np.array(pz)
 
 fig1 = mlab.figure()
-mlab.plot3d(path[:,0], path[:,1], (1+0.625)*np.ones(len(path)), color=(1,1,1), tube_radius = 0.05)
+mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.05)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
 mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 1)
 plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
