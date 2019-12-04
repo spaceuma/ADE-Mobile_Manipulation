@@ -16,6 +16,26 @@ void MotionPlan::executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Wa
 	std::vector<std::vector<double>> costMap;
 	inputMap->getCostMap(costMap);
 	this->fmPlanner.planPath(&costMap, inputMap->getResolution(), rover_position, sample, &(this->roverPath));
+	this->samplePos = sample;
+}
+
+int MotionPlan::shortenPathForFetching(){
+        //FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
+        int endWaypoint = this->fetchPosePlanner.getFetchWaypointIndex(&(this->roverPath));
+        std::cout << "MotionPlan: the end waypoint is " << endWaypoint << std::endl;
+        this->roverPath.erase(this->roverPath.begin() + endWaypoint + 1, this->roverPath.end());
+        return endWaypoint;
+}
+
+void MotionPlan::executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution){
+    std::vector<std::vector<double>> *endEffectorPath = new std::vector<std::vector<double>>;
+    std::vector<int> *pathsAssignment = new std::vector<int>;
+    std::vector<std::vector<double>> elevationMap;
+    inputMap->getElevationMap(elevationMap);
+
+    this->armPlanner.planEndEffectorPath(
+        &(this->roverPath), &elevationMap, inputMap->getResolution(), zResolution, this->samplePos, endEffectorPath, pathsAssignment);
+
 
 }
 

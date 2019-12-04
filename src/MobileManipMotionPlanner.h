@@ -83,7 +83,7 @@ public:
 	/**
 	 * It generates a motion plan based on the Map, the rover pose and the sample position.
 	 */
-	void generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample, Joints arm_joints);
+	void generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample_position, Joints arm_joints);
 
 	/**
 	 * It returns the status in which the software is.

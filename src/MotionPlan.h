@@ -8,10 +8,14 @@
 //#include <planner/FastMarching.h>
 #include "FastMarching.h"
 #include "MobileManipMap.h"
+#include "FetchingPoseEstimator.h"
+#include "ArmPlanner.h"
 
 using namespace proxy_library;
 using namespace base;
 using namespace FastMarching_lib;
+using namespace FetchingPoseEstimator_lib;
+using namespace ArmPlanner_lib;
 
 class MotionPlan {
 
@@ -30,13 +34,17 @@ private:
 	std::vector<Joints> jointsProfile;
 
 	BiFastMarching fmPlanner;
-
+        FetchingPoseEstimator fetchPosePlanner;
+	ArmPlanner armPlanner;
+	Waypoint samplePos;
 public:
   MotionPlan();
 
   void updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vector<Joints> newJointsProfile);
   void executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Waypoint rover_position, base::Waypoint sample);
   std::vector<base::Waypoint> getPath();
+  int shortenPathForFetching();
+  void executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution);
 };
 
 #endif

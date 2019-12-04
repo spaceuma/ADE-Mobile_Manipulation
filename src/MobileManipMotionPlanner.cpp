@@ -16,14 +16,18 @@ void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */Mo
 	throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample, Joints arm_joints) {
+void MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample_position, Joints arm_joints) {
 	// TODO - implement MobileManipMotionPlanner::generateMotionPlan
         cout << "MMPLANNER: Generating Motion Plan" << endl;
 	if (this->status == IDLE)
 	{
 	  // TODO - Since for now there is no computation, the state will go to READY_TO_MOVE
 	  this->status = GENERATING_MOTION_PLAN;
+	  this->currentMotionPlan.executeRoverBasePathPlanning(&(this->currentMap), rover_position, sample_position);
+	  this->currentMotionPlan.shortenPathForFetching();
 	  this->status = READY_TO_MOVE;
+	  std::vector<base::Waypoint> roverPath = this->currentMotionPlan.getPath();
+	  std::cout << "MMPLANNER: The resulting path has " << roverPath.size() << " Waypoints" << std::endl;
           cout << "MMPLANNER: Ready to move" << endl;
 	}
 	else

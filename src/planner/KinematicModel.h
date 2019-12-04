@@ -1,3 +1,6 @@
+#ifndef __KINEMATIC_MODEL__
+#define __KINEMATIC_MODEL__
+
 #include "Waypoint.hpp"
 #include <vector>
 
@@ -47,4 +50,6 @@ public:
                                        std::vector<double> orientation,
                                        std::vector<double> previousConfig);
 };
-} // namespace KinematicModel_lib
+}
+#endif
+// namespace KinematicModel_lib

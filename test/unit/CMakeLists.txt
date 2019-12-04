@@ -34,9 +34,9 @@ file(GLOB WP_SRC
 # Link runTests with what we want to test and the GTest and pthread library
 add_executable(runUnitTests 
                UnitTests.cpp 
-               MobileManipMapTests.cpp
+	       MobileManipMapTests.cpp
                MotionPlanTests.cpp
-               #MobileManipMotionPlannerTests.cpp
+               MobileManipMotionPlannerTests.cpp
                readMatrixFile.h
                readMatrixFile.cpp
                ${MM_SRC}

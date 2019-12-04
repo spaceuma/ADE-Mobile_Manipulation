@@ -54,7 +54,7 @@ int MobileManipMap::setRGDem(RoverGuidance_Dem &dem){
 
 int MobileManipMap::setImageDem(Mat inputDem, double resDem)
 {
-  flip(inputDem, this->elevationMap, 0); //0 = flip upside down
+  flip(inputDem, this->matElevationMap, 0); //0 = flip upside down
   this->resDem = resDem;
   if (this->calculateCostMap())
   {
@@ -68,10 +68,17 @@ int MobileManipMap::setImageDem(Mat inputDem, double resDem)
 
 void MobileManipMap::getCostMap(std::vector<std::vector<double>> &costMap){
   costMap = currentCostMap;
-}	
+}
+
+void MobileManipMap::getElevationMap(std::vector<std::vector<double>> &elevationMap){
+  elevationMap = this->vecElevationMap;
+}
+
 bool MobileManipMap::calculateElevationMap() {
   // TODO - implement MobileManipMap::calculateElevationMap
-  this->elevationMap = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_64F);
+  this->matElevationMap = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_64F);
+  this->vecElevationMap.clear();
+  std::vector<double> row;
   //this->elevationMap.resize(numYnodes);
   for (int j = 0; j < this->numYnodes; j++)
   {
@@ -80,7 +87,8 @@ bool MobileManipMap::calculateElevationMap() {
     {
       try
       {
-        elevationMap.at<double>(j,i) = this->rgDem.p_heightData_m[i + j*this->numXnodes];
+        this->matElevationMap.at<double>(j,i) = this->rgDem.p_heightData_m[i + j*this->numXnodes];
+	row.push_back(this->rgDem.p_heightData_m[i + j*this->numXnodes]);
         /*cout << "Index " << i + j*this->numXnodes << endl;
         cout << "Node " << i << "," << j << endl;
 	cout << "Elevation is " << elevationMap.at<double>(j,i) << endl;
@@ -95,6 +103,8 @@ bool MobileManipMap::calculateElevationMap() {
         throw;
       }
     }
+    this->vecElevationMap.push_back(row);
+    row.clear();
   }
   return true;
 }
@@ -104,9 +114,9 @@ void MobileManipMap::showElevationMap()
   Mat mapToShow;
   //flip(this->elevationMap, mapToShow,0);
   double min, max;
-  minMaxLoc(this->elevationMap, &min, &max);
+  minMaxLoc(this->matElevationMap, &min, &max);
   //cout << " The min is " << min << " and the max " << max << endl;
-  mapToShow = this->elevationMap - min;
+  mapToShow = this->matElevationMap - min;
   flip(mapToShow, mapToShow,0);
   mapToShow.convertTo(mapToShow, CV_32F, 1.0 / (max-min), 0);
   namedWindow("Elevation Map", WINDOW_NORMAL);
@@ -142,7 +152,7 @@ bool MobileManipMap::calculateSlopeMap() {
   Mat dx, dy, elev;
   double scale = 0.125; // 1/8 to normalize sobel filter
   double delta = 0;
-  this->elevationMap.convertTo(elev, CV_32F, 1.0 , 0);
+  this->matElevationMap.convertTo(elev, CV_32F, 1.0 , 0);
   //getDerivKernels(dx,dy,1,1,3,true,CV_32F);
   Sobel(elev, dx, CV_32F, 1,0, 3, scale, delta, BORDER_DEFAULT );
   Sobel(elev, dy, CV_32F, 0,1, 3, scale, delta, BORDER_DEFAULT );
@@ -155,7 +165,7 @@ bool MobileManipMap::calculateSlopeMap() {
     contSize.height = 1;
   }*/
 
-  this->slopeMap = Mat::zeros(this->elevationMap.size(), CV_32FC1); 
+  this->slopeMap = Mat::zeros(this->matElevationMap.size(), CV_32FC1); 
   for (int j = 0; j < slopeMap.rows; j++)
   {
     for (int i = 0; i < slopeMap.cols; i++)
@@ -178,7 +188,7 @@ bool MobileManipMap::calculateSlopeMap() {
 
 bool MobileManipMap::calculateObstacleMap()
 {
-  Mat obstacleMap = Mat::zeros(this->elevationMap.size(), CV_32FC1);
+  Mat obstacleMap = Mat::zeros(this->matElevationMap.size(), CV_32FC1);
   threshold(this->slopeMap, obstacleMap, 20.0, 255, THRESH_BINARY_INV);
 
   // Borders are considered obstacles

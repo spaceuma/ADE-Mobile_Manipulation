@@ -1,3 +1,6 @@
+#ifndef __FETCHING_POSE_ESTIMATOR__ 
+#define __FETCHING_POSE_ESTIMATOR__
+
 #include "Waypoint.hpp"
 #include <vector>
 
@@ -21,3 +24,5 @@ public:
     double getHeadingCost(base::Waypoint pathPose, base::Waypoint samplePose);
 };
 } // namespace FetchingPoseEstimator_lib
+
+#endif

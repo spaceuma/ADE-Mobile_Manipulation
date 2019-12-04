@@ -1,3 +1,6 @@
+#ifndef __ARM_PLANNER__
+#define __ARM_PLANNER__
+
 #include "FastMarching.h"
 #include "KinematicModel.h"
 #include "Waypoint.hpp"
@@ -60,4 +63,6 @@ public:
 
     double getDist3(std::vector<double> a, std::vector<double> b);
 };
-} // namespace ArmPlanner_lib
+}
+#endif
+// namespace ArmPlanner_lib

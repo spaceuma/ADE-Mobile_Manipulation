@@ -6,7 +6,6 @@
 TEST(MMMPTest, NominalStateFlow)
 {
     // Reading the DEM 
-    MotionPlan dummyPlan;
     double res = 0.04; // meters
     double n_row, n_col;
     std::vector<double> vector_elevationData;
@@ -25,13 +24,6 @@ TEST(MMMPTest, NominalStateFlow)
     dummyDem.rows = n_row;
     dummyDem.nodeSize_m = res;
 
-    // Introducing RG-DEM into planner
-    MobileManipMotionPlanner dummyPlanner(dummyDem);
-
-    base::Waypoint roverPos, samplePos;
-    std::vector<base::Waypoint> *roverPath = new std::vector<base::Waypoint>;
-
-    BiFastMarching dummyFM;
     clock_t begin = clock();
     base::Waypoint roverPos, samplePos;
 
@@ -44,11 +36,14 @@ TEST(MMMPTest, NominalStateFlow)
     samplePos.position[2] = 1.1;
     samplePos.heading = 0;
 
+    // Introducing RG-DEM into planner
+    MobileManipMotionPlanner dummyPlanner(dummyDem);
+
     EXPECT_EQ(IDLE, dummyPlanner.getStatus());
     Joints arm_joints;
-    /*dummyPlanner.generateMotionPlan(roverPos, samplePos, arm_joints);
+    dummyPlanner.generateMotionPlan(roverPos, samplePos, arm_joints);
     EXPECT_EQ(READY_TO_MOVE, dummyPlanner.getStatus());
-    dummyPlanner.start();
+    /*dummyPlanner.start();
     EXPECT_EQ(EXECUTING_MOTION_PLAN, dummyPlanner.getStatus());
     Joints arm_command;
     MotionCommand rover_command;

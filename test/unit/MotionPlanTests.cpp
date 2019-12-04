@@ -17,7 +17,6 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     double n_row, n_col;
     std::vector<double> vector_elevationData;
     readMatrixFile("test/unit/data/ColmenarRocks_smaller_4cmDEM.csv", res, n_row, n_col, vector_elevationData);
-    std::cout << "MMMotionPlanTest: The size is " << vector_elevationData.size() << std::endl;
    
     // Creating the Rover Guidance DEM 
     RoverGuidance_Dem dummyDem;
@@ -51,6 +50,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     MotionPlan dummyPlan;
     clock_t ini2D = clock();
     dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
+    int numWaypoints = dummyPlan.shortenPathForFetching();
     std::vector<base::Waypoint> roverPath = dummyPlan.getPath();
     clock_t end2D = clock();
     double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
@@ -67,6 +67,9 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     pathFile.close();
     std::cout << "The resulting path has " << roverPath.size() << " Waypoints" << std::endl;
+    std::cout << "The waypoint number to erase is " << numWaypoints << std::endl;
+    double zRes = 0.1;
+    dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
     // Decide where to stop the rover to fetch optimally
 /*    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
     int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);

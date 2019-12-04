@@ -22,9 +22,10 @@ private:
   unsigned int numXnodes;
   unsigned int numYnodes;
   double resDem;
-  Mat elevationMap;
+  Mat matElevationMap;
   Mat slopeMap;
   Mat obstacleMap;
+  std::vector<std::vector<double>> vecElevationMap;
   std::vector<std::vector<double>> currentObstaclesMap;
   std::vector<std::vector<double>> currentCostMap;
 
@@ -40,6 +41,7 @@ public:
   void showSlopeMap();
   void showObstacleMap();
   void getCostMap(std::vector<std::vector<double>> &costMap);
+  void getElevationMap(std::vector<std::vector<double>> &elevationMap);
   std::vector<std::vector<double>>* getCostMapPointer();
   double getResolution(); 
 private:
