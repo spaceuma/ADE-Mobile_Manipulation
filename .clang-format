@@ -1,6 +1,6 @@
 Language:        Cpp
 AccessModifierOffset: -4
-AlignAfterOpenBracket: true
+AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignEscapedNewlinesLeft: false
 AlignOperands:   true
@@ -11,7 +11,6 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
-AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
 BinPackArguments: false
@@ -21,7 +20,7 @@ BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: true
 ColumnLimit:     120
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
@@ -44,7 +43,7 @@ PenaltyBreakComment: 22312
 PenaltyBreakFirstLessLess: 120
 PenaltyBreakString: 2123
 PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 60
+PenaltyReturnTypeOnItsOwnLine: 100000
 PointerAlignment: Right
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
@@ -56,6 +55,6 @@ SpacesInContainerLiterals: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard:        Cpp11
+Standard:        Auto
 TabWidth:        4
 UseTab:          Never

@@ -133,7 +133,7 @@ void BiFastMarching3D::computeTMap(const std::vector<std::vector<std::vector<dou
             computeGradient(TMapStart, nodeTargetGoal, &GStartx, &GStarty, &GStartz);
             computeGradient(TMapGoal, nodeTargetGoal, &GGoalx, &GGoaly, &GGoalz);
 
-            if((abs(GGoalx + GStartx) < 0.25)&&(abs(GGoaly + GStarty) < 0.25)&&(abs(GGoalz + GStartz) < 0.25))
+            if ((abs(GGoalx + GStartx) < 0.25) && (abs(GGoaly + GStarty) < 0.25) && (abs(GGoalz + GStartz) < 0.25))
             {
                 (*nodeJoin) = nodeTargetGoal;
                 break;
@@ -145,7 +145,7 @@ void BiFastMarching3D::computeTMap(const std::vector<std::vector<std::vector<dou
             computeGradient(TMapStart, nodeTargetStart, &GStartx, &GStarty, &GStartz);
             computeGradient(TMapGoal, nodeTargetStart, &GGoalx, &GGoaly, &GGoalz);
 
-            if((abs(GGoalx + GStartx) < 0.25)&&(abs(GGoaly + GStarty) < 0.25)&&(abs(GGoalz + GStartz) < 0.25))
+            if ((abs(GGoalx + GStartx) < 0.25) && (abs(GGoaly + GStarty) < 0.25) && (abs(GGoalz + GStartz) < 0.25))
             {
                 (*nodeJoin) = nodeTargetStart;
                 break;
@@ -283,8 +283,9 @@ double BiFastMarching3D::getEikonal(double Tx, double Ty, double Tz, double cost
         double Tmax = std::max(Tx, std::max(Ty, Tz));
         if (pow(cost, 2) > (pow(Tmax - Tx, 2) + pow(Tmax - Ty, 2) + pow(Tmax - Tz, 2)))
         {
-            return (1.0 / 3.0) * (Tx + Ty + Tz + sqrt(3 * pow(cost, 2) + pow(Tx + Ty + Tz, 2)
-                                                      - 3 * (pow(Tx, 2) + pow(Ty, 2) + pow(Tz, 2))));
+            return (1.0 / 3.0)
+                   * (Tx + Ty + Tz
+                      + sqrt(3 * pow(cost, 2) + pow(Tx + Ty + Tz, 2) - 3 * (pow(Tx, 2) + pow(Ty, 2) + pow(Tz, 2))));
         }
         else
         {
@@ -589,10 +590,10 @@ void BiFastMarching3D::computeGradient(const std::vector<std::vector<std::vector
 }
 
 void BiFastMarching3D::computeGradient(const std::vector<std::vector<std::vector<double>>> *TMap,
-                         std::vector<int> point,
-                         double *Gnx,
-                         double *Gny,
-                         double *Gnz)
+                                       std::vector<int> point,
+                                       double *Gnx,
+                                       double *Gny,
+                                       double *Gnz)
 {
     int n = TMap->size();
     int m = (*TMap)[0].size();

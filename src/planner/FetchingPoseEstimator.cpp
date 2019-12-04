@@ -33,7 +33,9 @@ int FetchingPoseEstimator::getFetchWaypointIndex(const std::vector<base::Waypoin
         return fetchWaypointIndex;
     else
     {
-        std::cout << "\033[1;31mERROR [FetchingPoseEstimator_lib::getFetchWaypointIndex]: No valid position for "
+        std::cout << "\033[1;31mERROR "
+                     "[FetchingPoseEstimator_lib::getFetchWaypointIndex]: No valid "
+                     "position for "
                      "fetching\033[0m\n";
         return -1;
     }

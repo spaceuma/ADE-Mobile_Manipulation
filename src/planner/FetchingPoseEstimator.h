@@ -20,4 +20,4 @@ public:
 
     double getHeadingCost(base::Waypoint pathPose, base::Waypoint samplePose);
 };
-}
+} // namespace FetchingPoseEstimator_lib

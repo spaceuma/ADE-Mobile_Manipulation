@@ -38,7 +38,13 @@ public:
     // -- FUNCTIONS --
     std::vector<std::vector<double>> getEEtransform(std::vector<double> manipulatorJoints);
 
-    std::vector<double>
-    getManipJoints(std::vector<double> position, std::vector<double> orientation, int shoulder, int elbow);
+    std::vector<double> getManipJoints(std::vector<double> position,
+                                       std::vector<double> orientation,
+                                       int shoulder,
+                                       int elbow);
+
+    std::vector<double> getManipJoints(std::vector<double> position,
+                                       std::vector<double> orientation,
+                                       std::vector<double> previousConfig);
 };
-}
+} // namespace KinematicModel_lib

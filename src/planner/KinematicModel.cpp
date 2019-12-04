@@ -141,8 +141,8 @@ std::vector<std::vector<double>> KinematicModel_lib::getInverse(std::vector<std:
     double det = getDeterminant(A);
     if (det == 0)
     {
-        std::cout
-            << "\033[1;31mERROR [KinematicModel_lib::getInverse]: Singular matrix, can't find its inverse\033[0m\n";
+        std::cout << "\033[1;31mERROR [KinematicModel_lib::getInverse]: Singular "
+                     "matrix, can't find its inverse\033[0m\n";
         return std::vector<std::vector<double>>(1, std::vector<double>(1, 0));
     }
 
@@ -160,8 +160,8 @@ std::vector<std::vector<double>> KinematicModel_lib::getInverse(std::vector<std:
 
 std::vector<std::vector<double>> Manipulator::getEEtransform(std::vector<double> manipulatorJoints)
 {
-    // This function uses the direct kinematics model to compute the position and
-    // orientation of the end effector given a certain configuration of the manipulator
+    // This function uses the direct kinematics model to compute the position and orientation of the end effector given
+    // a certain configuration of the manipulator
 
     double theta1 = manipulatorJoints[0];
     double theta2 = manipulatorJoints[1];
@@ -199,6 +199,9 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
                                                 int shoulder = 1,
                                                 int elbow = 1)
 {
+    // This function uses a geometric Inverse Kinematics Model to obtain the needed configuration of the arm to reach a
+    // certain cartesian position and orientation.
+
     std::vector<double> q(6, 0);
 
     double x = position[0];
@@ -211,14 +214,16 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
 
     if (abs(shoulder) != 1)
     {
-        std::cout << "\033[1;31mWARNING [Manipulator::getManipJoints]: shoulder value have to be 1 or -1, shoulder "
+        std::cout << "\033[1;31mWARNING [Manipulator::getManipJoints]: shoulder "
+                     "value have to be 1 or -1, shoulder "
                      "will be considered as 1\033[0m\n";
         shoulder = 1;
     }
 
     if (abs(elbow) != 1)
     {
-        std::cout << "\033[1;31mWARNING [Manipulator::getManipJoints]: elbow value have to be 1 or -1, it will be "
+        std::cout << "\033[1;31mWARNING [Manipulator::getManipJoints]: elbow value "
+                     "have to be 1 or -1, it will be "
                      "considered as 1\033[0m\n";
         elbow = 1;
     }
@@ -240,7 +245,8 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
 
     if (d > l1 + l2)
     {
-        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist position is too far, unreachable position "
+        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+                     "position is too far, unreachable position "
                      "and orientation\033[0m\n";
         return std::vector<double>(1, 0);
     }
@@ -313,4 +319,14 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
     }
 
     return q;
+}
+
+std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
+                                                std::vector<double> orientation,
+                                                std::vector<double> previousConfig)
+{
+    // This function uses a geometric Inverse Kinematics Model to obtain the needed
+    // configuration of the arm to reach a certain cartesian position and orientation.
+
+    return previousConfig;
 }

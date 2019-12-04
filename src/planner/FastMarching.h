@@ -108,5 +108,5 @@ public:
 
     double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<std::vector<double>>> *mapI);
 };
-}
+} // namespace FastMarching_lib
 #endif

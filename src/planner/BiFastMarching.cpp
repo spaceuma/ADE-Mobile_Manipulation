@@ -131,7 +131,7 @@ void BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
             computeGradient(TMapStart, nodeTargetGoal, &GStartx, &GStarty);
             computeGradient(TMapGoal, nodeTargetGoal, &GGoalx, &GGoaly);
 
-            if((abs(GGoalx + GStartx) < 0.1)&&(abs(GGoaly + GStarty) < 0.1))
+            if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetGoal;
                 break;
@@ -143,7 +143,7 @@ void BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
             computeGradient(TMapStart, nodeTargetStart, &GStartx, &GStarty);
             computeGradient(TMapGoal, nodeTargetStart, &GGoalx, &GGoaly);
 
-            if((abs(GGoalx + GStartx) < 0.1)&&(abs(GGoaly + GStarty) < 0.1))
+            if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetStart;
                 break;

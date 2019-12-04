@@ -1,7 +1,7 @@
+#include "ArmPlanner.h"
 #include <fstream>
 #include <iostream>
 #include <math.h>
-#include "ArmPlanner.h"
 
 #define pi 3.14159265359
 
@@ -37,7 +37,8 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     iniPos.position[1] = (*roverPath6)[0][1] + BCS2iniEEpos[0] * sin((*roverPath6)[0][5] + pi / 3);
     iniPos.position[2] = (*roverPath6)[0][2] + BCS2iniEEpos[2];
 
-    // The sample position is slightly changed to avoid possible collisions with the mast
+    // The sample position is slightly changed to avoid possible collisions with
+    // the mast
     samplePos.position[0] += optimalLeftDeviation * cos((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
     samplePos.position[1] += optimalLeftDeviation * sin((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
 
@@ -266,9 +267,10 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
                     int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
                     int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                     int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
-                    double cost = 1 + abs(sqrt(pow(mapResolution * j - maxArmDistance / 2, 2)
-                                               + pow(zResolution * k - maxArmDistance / 2, 2))
-                                          / (maxArmDistance / 2));
+                    double cost = 1
+                                  + abs(sqrt(pow(mapResolution * j - maxArmDistance / 2, 2)
+                                             + pow(zResolution * k - maxArmDistance / 2, 2))
+                                        / (maxArmDistance / 2));
 
                     if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1 && iz < sz - 1)
                         if (isinf((*costMap3D)[iy][ix][iz])) (*costMap3D)[iy][ix][iz] = cost;
@@ -305,18 +307,16 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
 
         std::vector<std::vector<double>> TW2NewWayp = dot(TW2BCS, TBCS2NewWayp);
 
-        iRes = zResolution + sin(pitchEnd)*(mapResolution - zResolution);
+        iRes = zResolution + sin(pitchEnd) * (mapResolution - zResolution);
 
         for (int j = 0; j < 2 * tunnelSizeY; j++)
-            for (int k = 0; k < 2 * (int)(tunnelSizeZ*zResolution/iRes+0.5); k++)
+            for (int k = 0; k < 2 * (int)(tunnelSizeZ * zResolution / iRes + 0.5); k++)
             {
                 double dist = sqrt(pow(mapResolution * j / 2, 2) + pow(zResolution * k / 2, 2));
                 if (dist < maxArmDistance)
                 {
-                    std::vector<std::vector<double>> TNewWayp2Node = {{1, 0, 0, 0},
-                                                                      {0, 1, 0, mapResolution * j / 2},
-                                                                      {0, 0, 1, d0 + iRes * k / 2},
-                                                                      {0, 0, 0, 1}};
+                    std::vector<std::vector<double>> TNewWayp2Node
+                        = {{1, 0, 0, 0}, {0, 1, 0, mapResolution * j / 2}, {0, 0, 1, d0 + iRes * k / 2}, {0, 0, 0, 1}};
 
                     std::vector<std::vector<double>> TW2Node = dot(TW2NewWayp, TNewWayp2Node);
 
@@ -324,25 +324,26 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
                     int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                     int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
 
-                    double cost = 1 + abs(sqrt(pow(mapResolution * j/2 - maxArmDistance / 2, 2)
-                                               + pow(zResolution * k/2 - maxArmDistance / 2, 2))
-                                          / (maxArmDistance / 2));
+                    double cost = 1
+                                  + abs(sqrt(pow(mapResolution * j / 2 - maxArmDistance / 2, 2)
+                                             + pow(zResolution * k / 2 - maxArmDistance / 2, 2))
+                                        / (maxArmDistance / 2));
 
                     if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1 && iz < sz - 1)
                         if (TW2Node[2][3] > (*DEM)[iy][ix])
                             if (isinf((*costMap3D)[iy][ix][iz])) (*costMap3D)[iy][ix][iz] = cost;
 
                     if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1 && iy < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy][ix+1])
+                        if (TW2Node[2][3] > (*DEM)[iy][ix + 1])
                             if (isinf((*costMap3D)[iy][ix + 1][iz])) (*costMap3D)[iy][ix + 1][iz] = cost;
                     if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1 && iy < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy][ix-1])
+                        if (TW2Node[2][3] > (*DEM)[iy][ix - 1])
                             if (isinf((*costMap3D)[iy][ix - 1][iz])) (*costMap3D)[iy][ix - 1][iz] = cost;
                     if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1 && iy + 1 < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy+1][ix])
+                        if (TW2Node[2][3] > (*DEM)[iy + 1][ix])
                             if (isinf((*costMap3D)[iy + 1][ix][iz])) (*costMap3D)[iy + 1][ix][iz] = cost;
                     if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1 && iy - 1 < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy-1][ix])
+                        if (TW2Node[2][3] > (*DEM)[iy - 1][ix])
                             if (isinf((*costMap3D)[iy - 1][ix][iz])) (*costMap3D)[iy - 1][ix][iz] = cost;
                 }
             }
@@ -387,4 +388,3 @@ double ArmPlanner::getDist3(std::vector<double> a, std::vector<double> b)
 {
     return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2) + pow(a[2] - b[2], 2));
 }
-
