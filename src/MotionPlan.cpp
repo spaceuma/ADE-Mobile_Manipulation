@@ -33,7 +33,19 @@ void MotionPlan::executeEndEffectorPlanning(MobileManipMap* inputMap, double zRe
     std::vector<std::vector<double>> elevationMap;
     inputMap->getElevationMap(elevationMap);
 
-    this->armPlanner.planEndEffectorPath(
+    for (uint j = 0; j<elevationMap.size(); j++)
+    {
+        for (uint i = 0; i<elevationMap[0].size(); i++)
+        {
+            std::cout << "Elevation =  " << elevationMap[j][i] << std::endl;
+        }
+    }
+    for (uint i = 0; i < this->roverPath.size(); i++)
+    {
+	std::cout << "Waypoint " << i << " is ( " << this->roverPath[i].position[0] << ", " << this->roverPath[i].position[1] << " )" << std::endl;
+    }
+   std::cout << "The sample position is " << this->samplePos.position[0] << "," << this->samplePos.position[1] << std::endl;
+   this->armPlanner.planEndEffectorPath(
         &(this->roverPath), &elevationMap, inputMap->getResolution(), zResolution, this->samplePos, endEffectorPath, pathsAssignment);
 
 
