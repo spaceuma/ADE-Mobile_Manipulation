@@ -71,7 +71,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     std::cout << "Elapsed execution time tunnel generation: " << t << std::endl;
 
     // End effector path planning
-    FastMarching_lib::BiFastMarching3D pathPlanner3D;
+    FastMarching_lib::FastMarching3D pathPlanner3D;
     std::vector<base::Waypoint> *endEffectorPath = new std::vector<base::Waypoint>;
 
     clock_t inip = clock();

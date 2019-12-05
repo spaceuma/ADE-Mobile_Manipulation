@@ -44,6 +44,12 @@ box[:,-1,:] = np.max(costMap3D)
 box[:,:,0] = np.max(costMap3D)
 box[:,:,-1] = np.max(costMap3D)
 
+d = 0
+for i in range(1,len(path)):
+    d = d + np.linalg.norm(path[i]-path[i-1])
+
+print('Distance covered in the path: '+str(d))
+
 fig1 = mlab.figure()
 mlab.plot3d(path[:,0]/res, path[:,1]/res, path[:,2]/resz, color=(1,1,1), tube_radius = 1)
 mlab.contour3d(box, contours = 5, opacity = 0.05, transparent = True)

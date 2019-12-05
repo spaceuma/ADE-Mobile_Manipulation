@@ -130,7 +130,7 @@ TEST(ArmPlannerTests, planningEEPath)
 
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
-    double zResolution = 0.10;
+    double zResolution = 0.08;
     std::vector<std::vector<double>> *endEffectorPath = new std::vector<std::vector<double>>;
     std::vector<int> *pathsAssignment = new std::vector<int>;
 
