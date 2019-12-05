@@ -16,7 +16,7 @@ TEST(KinematicModelTests, testingInverseComputation)
                                          {-134.0 / 219.0, -6.0 / 73.0, -31.0 / 146.0, 85.0 / 438.0},
                                          {-6.0 / 73.0, 9.0 / 73.0, 5.0 / 73.0, -3.0 / 73.0},
                                          {155.0 / 292.0, 23.0 / 292.0, 29.0 / 292.0, -8.0 / 73.0}};
-    EXPECT_EQ(inv, getInverse(C));
+    EXPECT_EQ(inv, getInverse(&C));
 }
 
 TEST(KinematicModelTests, testingDKM)
@@ -46,6 +46,26 @@ TEST(KinematicModelTests, testingIKM)
 
     std::vector<double> q{0.785398, -0.812875, 1.16748, 0, 1.21619, 0.785398};
     std::vector<double> qres = dummyManipulator.getManipJoints(pos, orientation, 1, 1);
+    std::vector<double> diff{abs(q[5] - qres[5]),
+                             abs(q[5] - qres[5]),
+                             abs(q[5] - qres[5]),
+                             abs(q[5] - qres[5]),
+                             abs(q[5] - qres[5]),
+                             abs(q[5] - qres[5])};
+
+    EXPECT_EQ(true, (diff[0] + diff[1] + diff[2] + diff[3] + diff[4] + diff[5]) < 1e-4);
+}
+
+TEST(KinematicModelTests, testingCLIK)
+{
+    Manipulator dummyManipulator;
+
+    std::vector<double> pos{1, 1, 0.5};
+    std::vector<double> orientation{0, 3.14159265359, 0};
+
+    std::vector<double> q{0.785398, -0.812875, 1.16748, 0, 1.21619, 0.785398};
+    std::vector<double> qi{0, -0.2, 0.2, 0, 0.2, 0};
+    std::vector<double> qres = dummyManipulator.getManipJoints(pos, orientation, qi);
     std::vector<double> diff{abs(q[5] - qres[5]),
                              abs(q[5] - qres[5]),
                              abs(q[5] - qres[5]),

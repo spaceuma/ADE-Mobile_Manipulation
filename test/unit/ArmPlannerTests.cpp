@@ -143,4 +143,4 @@ TEST(ArmPlannerTests, planningEEPath)
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 3D: " << elapsed_secs << std::endl;
 }
-}
+
