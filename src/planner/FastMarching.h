@@ -6,6 +6,49 @@
 
 namespace FastMarching_lib
 {
+class FastMarching
+{
+private:
+public:
+    // -- PARAMETERS --
+
+    // -- FUNCTIONS --
+    void planPath(const std::vector<std::vector<double>> *costMap,
+                  double mapResolution,
+                  base::Waypoint iniPos,
+                  base::Waypoint finalPos,
+                  std::vector<base::Waypoint> *path);
+
+    void computeTMap(const std::vector<std::vector<double>> *costMap,
+                     std::vector<int> goal,
+                     std::vector<int> start,
+                     std::vector<std::vector<double>> *TMap);
+
+    void updateNode(std::vector<int> nodeTarget,
+                    const std::vector<std::vector<double>> *costMap,
+                    std::vector<std::vector<double>> *TMap,
+                    std::vector<double> *nbT,
+                    std::vector<std::vector<int>> *nbNodes,
+                    const std::vector<std::vector<double>> *closedMap);
+
+    double getEikonal(double THor, double TVer, double cost);
+
+    int getInsertIndex(std::vector<double> *nbT, double T);
+
+    void computePathGDM(const std::vector<std::vector<double>> *TMap,
+                        std::vector<int> initNode,
+                        std::vector<int> endNode,
+                        double tau,
+                        std::vector<std::vector<double>> *path);
+
+    void computeGradient(const std::vector<std::vector<double>> *TMap,
+                         std::vector<double> point,
+                         std::vector<std::vector<double>> *Gnx,
+                         std::vector<std::vector<double>> *Gny);
+
+    double getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<double>> *mapI);
+};
+
 class BiFastMarching
 {
 private:

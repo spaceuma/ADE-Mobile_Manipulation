@@ -38,11 +38,8 @@ void BiFastMarching3D::planPath(const std::vector<std::vector<std::vector<double
     path->insert(path->begin(), pathStart->rbegin(), pathStart->rend() - 1);
 
     path3D->resize(path->size());
-    (*path3D)[0].position[0] = mapResolution * (*path)[0][0];
-    (*path3D)[0].position[1] = mapResolution * (*path)[0][1];
-    (*path3D)[0].position[2] = zResolution * (*path)[0][2];
 
-    for (int i = 1; i < path->size(); i++)
+    for (int i = 0; i < path->size(); i++)
     {
         (*path3D)[i].position[0] = mapResolution * (*path)[i][0];
         (*path3D)[i].position[1] = mapResolution * (*path)[i][1];
