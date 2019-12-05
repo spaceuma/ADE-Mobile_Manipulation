@@ -9,6 +9,10 @@ namespace KinematicModel_lib
 
 std::vector<std::vector<double>> dot(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B);
 
+std::vector<double> dot(std::vector<std::vector<double>> A, std::vector<double> b);
+
+std::vector<double> dot(double n, std::vector<double> a);
+
 std::vector<std::vector<double>> getTraslation(std::vector<double> position);
 
 std::vector<std::vector<double>> getXrot(double angle);
@@ -17,13 +21,21 @@ std::vector<std::vector<double>> getYrot(double angle);
 
 std::vector<std::vector<double>> getZrot(double angle);
 
-double getDeterminant(std::vector<std::vector<double>> A);
+double getDeterminant(const std::vector<std::vector<double>> *A);
 
-std::vector<std::vector<double>> getCofactor(std::vector<std::vector<double>> A, int row, int col);
+std::vector<std::vector<double>> getCofactor(const std::vector<std::vector<double>> *A, int row, int col);
 
-std::vector<std::vector<double>> getAdjoint(std::vector<std::vector<double>> A);
+std::vector<std::vector<double>> getAdjoint(const std::vector<std::vector<double>> *A);
 
-std::vector<std::vector<double>> getInverse(std::vector<std::vector<double>> A);
+std::vector<std::vector<double>> getInverse(const std::vector<std::vector<double>> *A);
+
+std::vector<double> getCrossProduct(std::vector<double> a, std::vector<double> b);
+
+std::vector<double> getSum(std::vector<double> a, std::vector<double> b);
+
+std::vector<double> getDifference(std::vector<double> a, std::vector<double> b);
+
+double getNorm(std::vector<double> a);
 
 class Manipulator
 {
@@ -49,6 +61,8 @@ public:
     std::vector<double> getManipJoints(std::vector<double> position,
                                        std::vector<double> orientation,
                                        std::vector<double> previousConfig);
+
+    std::vector<std::vector<double>> getJacobianMatrix(std::vector<double> manipulatorJoints);
 };
 }
 #endif

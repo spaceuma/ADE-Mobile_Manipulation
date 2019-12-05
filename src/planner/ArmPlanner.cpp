@@ -103,8 +103,11 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
 
     // Computing inverse kinematics for collision checking
     std::vector<std::vector<double>> armJoints;
+    Manipulator sherpa_tt_arm;
+    armJoints.push_back(
+        sherpa_tt_arm.getManipJoints(BCS2iniEEpos, iniEEorientation, std::vector<double>{0, -0.5, 0.5, 0, 0.5, 0}));
 
-    for (int i = 0; i < endEffectorPath6->size(); i++)
+    for (int i = 1; i < endEffectorPath6->size(); i++)
     {
         int pathInd = (*pathsAssignment)[i];
         std::vector<std::vector<double>> TW2BCS(4, std::vector<double>(4));
@@ -130,7 +133,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
 
         TW2EE = dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
-        TBCS2EE = dot(getInverse(TW2BCS), TW2EE);
+        TBCS2EE = dot(getInverse(&TW2BCS), TW2EE);
 
         position[0] = TBCS2EE[0][3];
         position[1] = TBCS2EE[1][3];
@@ -141,8 +144,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
         yaw = (*endEffectorPath6)[i][5];
         std::vector<double> orientation{roll, pitch, yaw};
 
-        Manipulator sherpa_tt_arm;
-        armJoints.push_back(sherpa_tt_arm.getManipJoints(position, orientation, 1, 1));
+        armJoints.push_back(sherpa_tt_arm.getManipJoints(position, orientation, armJoints[i - 1]));
     }
 
     ///////////////////////////////////////////////////////////
