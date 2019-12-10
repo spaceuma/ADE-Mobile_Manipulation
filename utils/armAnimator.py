@@ -309,6 +309,25 @@ path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0
 armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
 pathsAssignment = np.loadtxt(open("../test/unit/data/results/assignment.txt",'r'), skiprows=0)
 
+sizes = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), max_rows=1)
+resolutions = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), skiprows=1, max_rows=1)
+
+xsize = int(sizes[1])
+ysize = int(sizes[0])
+zsize = int(sizes[2])
+
+res = resolutions[0]
+resz = resolutions[1]
+
+DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_smaller_10cmDEM.csv",'r'), skiprows=0)
+
+minz = np.min(DEM[:,:])
+DEM0 = DEM[:,:] - minz
+
+xMap= np.linspace(0,res*xsize,xsize)
+yMap= np.linspace(0,res*ysize,ysize)
+x,y = np.meshgrid(xMap,yMap)
+
 ind = int(pathsAssignment[0]) 
 
 T = DKM(armJoints[0,:], path[ind,np.array([0,1,2])], path[ind,np.array([3,4,5])])
@@ -327,6 +346,7 @@ py = np.array(py)
 pz = np.array(pz)
 
 fig1 = mlab.figure()
+mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.05)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
 mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 1)
