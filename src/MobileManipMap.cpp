@@ -88,7 +88,6 @@ bool MobileManipMap::calculateElevationMap() {
       try
       {
         this->matElevationMap.at<double>(j,i) = this->rgDem.p_heightData_m[i + j*this->numXnodes];
-	row.push_back(this->rgDem.p_heightData_m[i + j*this->numXnodes]);
         /*cout << "Index " << i + j*this->numXnodes << endl;
         cout << "Node " << i << "," << j << endl;
 	cout << "Elevation is " << elevationMap.at<double>(j,i) << endl;
@@ -103,7 +102,16 @@ bool MobileManipMap::calculateElevationMap() {
         throw;
       }
     }
-    this->vecElevationMap.push_back(row);
+  }
+  double min, max;
+  cv::minMaxLoc(this->matElevationMap, &min, &max);
+  for (int j = 0; j < this->numYnodes; j++)
+  {
+    for (int i = 0; i < this->numXnodes; i++)
+    {
+      row.push_back( this->rgDem.p_heightData_m[i + j*this->numXnodes] - min );
+    }
+    this->vecElevationMap.push_back( row );
     row.clear();
   }
   return true;
