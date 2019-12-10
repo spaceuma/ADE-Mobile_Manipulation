@@ -13,10 +13,10 @@ using namespace FastMarching_lib;
 TEST(MMMotionPlanTest, roverbaseplanning)
 {
     // Reading the DEM 
-    double res = 0.04; // meters
+    double res = 0.1; // meters
     double n_row, n_col;
     std::vector<double> vector_elevationData;
-    readMatrixFile("test/unit/data/ColmenarRocks_smaller_4cmDEM.csv", res, n_row, n_col, vector_elevationData);
+    readMatrixFile("test/unit/data/ColmenarRocks_smaller_10cmDEM.csv", res, n_row, n_col, vector_elevationData);
    
     // Creating the Rover Guidance DEM 
     RoverGuidance_Dem dummyDem;
@@ -37,12 +37,12 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     clock_t begin = clock();
 
-    roverPos.position[0] = 1.0;
-    roverPos.position[1] = 1.2;
+    roverPos.position[0] = 6.5;
+    roverPos.position[1] = 6.5;
     roverPos.heading = 0;
 
-    samplePos.position[0] = 1.0;
-    samplePos.position[1] = 6.4;
+    samplePos.position[0] = 4.0;
+    samplePos.position[1] = 2.0;
     samplePos.heading = 0;
 
 
@@ -50,7 +50,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     clock_t ini2D = clock();
     dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
     int numWaypoints = dummyPlan.shortenPathForFetching();
-    std::vector<base::Waypoint> roverPath = dummyPlan.getPath();
+    std::vector<base::Waypoint>* roverPath = dummyPlan.getPath();
     clock_t end2D = clock();
     double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
     std::cout << "Elapsed execution time planning 2D: " << t << std::endl;
@@ -59,15 +59,15 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     pathFile.open("test/unit/data/results/path.txt");
 
-    for (int j = 0; j < roverPath.size(); j++)
+    for (int j = 0; j < roverPath->size(); j++)
     {
-        pathFile << roverPath[j].position[0] << " " << roverPath[j].position[1] << "\n";
+        pathFile << roverPath->at(j).position[0] << " " << roverPath->at(j).position[1] << "\n";
     }
 
     pathFile.close();
-    std::cout << "The resulting path has " << roverPath.size() << " Waypoints" << std::endl;
+    std::cout << "The resulting path has " << roverPath->size() << " Waypoints" << std::endl;
     std::cout << "The waypoint number to erase is " << numWaypoints << std::endl;
-    double zRes = 0.1;
+    double zRes = 0.08;
     dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
     // Decide where to stop the rover to fetch optimally
 /*    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;

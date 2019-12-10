@@ -16,7 +16,7 @@ void MotionPlan::executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Wa
 	std::vector<std::vector<double>> costMap;
 	inputMap->getCostMap(costMap);
 	this->fmPlanner.planPath(&costMap, inputMap->getResolution(), rover_position, sample, &(this->roverPath));
-	this->samplePos = sample;
+        this->samplePos = sample;
 }
 
 int MotionPlan::shortenPathForFetching(){
@@ -51,6 +51,6 @@ void MotionPlan::executeEndEffectorPlanning(MobileManipMap* inputMap, double zRe
 
 }
 
-std::vector<base::Waypoint> MotionPlan::getPath(){
-	return this->roverPath;
+std::vector<base::Waypoint>* MotionPlan::getPath(){
+	return &(this->roverPath);
 }

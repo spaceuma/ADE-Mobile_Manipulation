@@ -42,7 +42,7 @@ public:
 
   void updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vector<Joints> newJointsProfile);
   void executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Waypoint rover_position, base::Waypoint sample);
-  std::vector<base::Waypoint> getPath();
+  std::vector<base::Waypoint>* getPath();
   int shortenPathForFetching();
   void executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution);
 };

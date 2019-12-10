@@ -31,19 +31,27 @@ file(GLOB WP_SRC
     "../../deps/control-waypoint_navigation/WaypointNavigation.cpp"
 )  
 
+file(GLOB CC_SRC
+    "../../deps/coupled_control/coupledControl.hpp"
+    "../../deps/coupled_control/coupledControl.cpp"
+)  
+
 # Link runTests with what we want to test and the GTest and pthread library
 add_executable(runUnitTests 
                UnitTests.cpp 
 	       MobileManipMapTests.cpp
-               MotionPlanTests.cpp
+	       MotionPlanTests.cpp
+	       MobileManipExecutorTests.cpp
                MobileManipMotionPlannerTests.cpp
                readMatrixFile.h
                readMatrixFile.cpp
                ${MM_SRC}
                ${MM_types_SRC}
 	       ${FM_SRC}
-               ${WP_SRC})
+               ${WP_SRC}
+	       ${CC_SRC})
 target_include_directories(runUnitTests PRIVATE ../../src/types)
 target_include_directories(runUnitTests PRIVATE ../../src/planner)
 target_include_directories(runUnitTests PRIVATE ../../deps/control-waypoint_navigation)
+target_include_directories(runUnitTests PRIVATE ../../deps/coupled_control)
 target_link_libraries(runUnitTests ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread Eigen3::Eigen)

@@ -15,12 +15,12 @@ TEST(MMMapTest, constructorTest)
     dummyDem.cols = 10;
     dummyDem.rows = 10;
     dummyDem.p_heightData_m = &dummyHeightData[0];*/
-    double res = 0.04; // meters
+    double res = 0.1; // meters
     double n_row, n_col;
     std::vector<double> vector_elevationData;
 
     RoverGuidance_Dem *dummyDem = new RoverGuidance_Dem;
-    readMatrixFile("test/unit/data/ColmenarRocks_smaller_4cmDEM.csv", res, n_row, n_col, vector_elevationData);
+    readMatrixFile("test/unit/data/ColmenarRocks_smaller_10cmDEM.csv", res, n_row, n_col, vector_elevationData);
     std::cout << "The size is " << vector_elevationData.size() << std::endl;
     double dummyArray[(int)n_row * (int)n_col];
     dummyDem->p_heightData_m = dummyArray;
