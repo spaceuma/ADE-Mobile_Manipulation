@@ -41,7 +41,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     // the mast
     samplePos.position[0] += optimalLeftDeviation * cos((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
     samplePos.position[1] += optimalLeftDeviation * sin((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
-    samplePos.position[2] = (*DEM)[(int)(samplePos.position[1] + 0.5)][(int)(samplePos.position[0] + 0.5)] + 0.045;
+    samplePos.position[2] = (*DEM)[(int)(samplePos.position[1] + 0.5)][(int)(samplePos.position[0] + 0.5)] + fetchingZDistance;
 
     // Cost map 3D computation
     int n = DEM->size();
@@ -144,6 +144,8 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
         std::vector<double> orientation{roll, pitch, yaw};
 
         armJoints.push_back(sherpa_tt_arm.getManipJoints(position, orientation, 1, 1 ));
+        //if(i == endEffectorPath6->size()-1) 
+        //    armJoints[endEffectorPath6->size()-1] = sherpa_tt_arm.getManipJoints(position, orientation, armJoints[endEffectorPath6->size()-2]);
     }
 
     ///////////////////////////////////////////////////////////
@@ -290,7 +292,7 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
 
     // Last stretch of the tunnel
     double iRes, iDis;
-    int numExtraWayp = 30;
+    int numExtraWayp = (int)(30*0.1/zResolution + 0.5);
     for (int i = 0; i < numExtraWayp; i++)
     {
         std::vector<double> pos{(*roverPath6)[n - 1][0], (*roverPath6)[n - 1][1], (*roverPath6)[n - 1][2]};
@@ -358,6 +360,7 @@ void ArmPlanner::computeWaypointAssignment(const std::vector<std::vector<double>
 {
     std::vector<double> armBasePos;
     std::vector<int> assignmentOpt(endEffectorPath6->size(), 0);
+    std::vector<int> assignmentMaxOpt(endEffectorPath6->size(), 0);
     std::vector<int> assignmentMax(endEffectorPath6->size(), 0);
     pathsAssignment->resize(endEffectorPath6->size());
 
@@ -367,7 +370,8 @@ void ArmPlanner::computeWaypointAssignment(const std::vector<std::vector<double>
         armBasePos[2] += d0;
         for (int j = 0; j < endEffectorPath6->size(); j++)
         {
-            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmOptimalDistance) assignmentOpt[j] = i;
+            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmDistance/2) assignmentOpt[j] = i;
+            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmOptimalDistance) assignmentMaxOpt[j] = i;
             if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmDistance) assignmentMax[j] = i;
         }
     }
@@ -376,6 +380,7 @@ void ArmPlanner::computeWaypointAssignment(const std::vector<std::vector<double>
 
     for (int i = pathsAssignment->size() - 1; i > 0; i--)
     {
+        if ((*pathsAssignment)[i] == 0) (*pathsAssignment)[i] = assignmentMaxOpt[i];
         if ((*pathsAssignment)[i] == 0) (*pathsAssignment)[i] = assignmentMax[i];
         if ((*pathsAssignment)[i] == 0) (*pathsAssignment)[i] = (*pathsAssignment)[i + 1];
     }

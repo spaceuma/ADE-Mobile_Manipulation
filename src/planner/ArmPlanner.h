@@ -36,7 +36,8 @@ public:
 
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
-    double optimalLeftDeviation = 0.6;                          // TODO set parameter properly
+    double optimalLeftDeviation = maxArmDistance/5;
+    double fetchingZDistance = 0.1;
     std::vector<double> BCS2iniEEpos = {0.738, 0, 0.550};       // TODO set parameter properly
     std::vector<double> iniEEorientation = {0, pi / 2, pi / 3}; // TODO set parameter properly
 

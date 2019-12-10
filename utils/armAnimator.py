@@ -363,3 +363,13 @@ def anim():
 anim()
 
 mlab.show()
+
+fig, ax = plt.subplots()
+plt.plot(range(0, len(armJoints)), armJoints[:, 0], label = 'First joint')
+plt.plot(range(0, len(armJoints)), armJoints[:, 1], label = 'Second joint')
+plt.plot(range(0, len(armJoints)), armJoints[:, 2], label = 'Third joint')
+plt.plot(range(0, len(armJoints)), armJoints[:, 3], label = 'Fourth joint')
+plt.plot(range(0, len(armJoints)), armJoints[:, 4], label = 'Fifth joint')
+plt.plot(range(0, len(armJoints)), armJoints[:, 5], label = 'Sixth joint')
+plt.legend()
+plt.show()

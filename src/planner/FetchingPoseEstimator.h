@@ -2,6 +2,7 @@
 #define __FETCHING_POSE_ESTIMATOR__
 
 #include "Waypoint.hpp"
+#include "ArmPlanner.h"
 #include <vector>
 
 #define pi 3.14159265359
@@ -13,8 +14,19 @@ class FetchingPoseEstimator
 private:
 public:
     // -- PARAMETERS --
-    double maxFetchingDistance = 1.3895;
-    double minFetchingDistance = 0.0; // TODO define parameters properly
+    double d0 = 0.500;
+    double a1 = 0.225;
+    double a2 = 0.735;
+    double c2 = 0.030;
+    double a3 = 0.030;
+    double d4 = 0.695;
+    double d6 = 0.300;
+
+    double heightGround2BCS = 0.645;
+    double fetchingZDistance = 0.1;
+
+    double maxFetchingDistance = a1 + sqrt(pow(a2+d4,2) - pow(heightGround2BCS+d0-d6-fetchingZDistance,2));
+    double minFetchingDistance = 0.7;
 
     // -- FUNCTIONS --
     int getFetchWaypointIndex(const std::vector<base::Waypoint> *roverPath);
