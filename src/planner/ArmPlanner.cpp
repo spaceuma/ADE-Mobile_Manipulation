@@ -23,7 +23,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     {
         (*roverPath6)[i][0] = (*roverPath)[i].position[0];
         (*roverPath6)[i][1] = (*roverPath)[i].position[1];
-        (*roverPath6)[i][2] = (*DEM)[(int)((*roverPath)[i].position(1) + 0.5)][(int)((*roverPath)[i].position(0) + 0.5)]
+        (*roverPath6)[i][2] = (*DEM)[(int)((*roverPath)[i].position[1] + 0.5)][(int)((*roverPath)[i].position[0] + 0.5)]
                               + heightGround2BCS;
         // TODO compute properly rover heading
         (*roverPath6)[i][3] = 0;
@@ -41,6 +41,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     // the mast
     samplePos.position[0] += optimalLeftDeviation * cos((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
     samplePos.position[1] += optimalLeftDeviation * sin((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
+    samplePos.position[2] = (*DEM)[(int)(samplePos.position[1] + 0.5)][(int)(samplePos.position[0] + 0.5)] + 0.045;
 
     // Cost map 3D computation
     int n = DEM->size();
@@ -288,7 +289,7 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
     }
 
     // Last stretch of the tunnel
-    double iRes;
+    double iRes, iDis;
     int numExtraWayp = 30;
     for (int i = 0; i < numExtraWayp; i++)
     {
@@ -308,6 +309,7 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
         std::vector<std::vector<double>> TW2NewWayp = dot(TW2BCS, TBCS2NewWayp);
 
         iRes = zResolution + sin(pitchEnd) * (mapResolution - zResolution);
+        iDis = d0 + sin(pitchEnd) * (a1 - d0);
 
         for (int j = 0; j < 2 * tunnelSizeY; j++)
             for (int k = 0; k < 2 * (int)(tunnelSizeZ * zResolution / iRes + 0.5); k++)
@@ -316,7 +318,7 @@ void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPat
                 if (dist < maxArmDistance)
                 {
                     std::vector<std::vector<double>> TNewWayp2Node
-                        = {{1, 0, 0, 0}, {0, 1, 0, mapResolution * j / 2}, {0, 0, 1, d0 + iRes * k / 2}, {0, 0, 0, 1}};
+                        = {{1, 0, 0, 0}, {0, 1, 0, mapResolution * j / 2}, {0, 0, 1, iDis + iRes * k / 2}, {0, 0, 0, 1}};
 
                     std::vector<std::vector<double>> TW2Node = dot(TW2NewWayp, TNewWayp2Node);
 

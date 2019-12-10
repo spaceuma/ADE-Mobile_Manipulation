@@ -13,8 +13,8 @@ class FetchingPoseEstimator
 private:
 public:
     // -- PARAMETERS --
-    double maxFetchingDistance = 1.5; // TODO define parameters properly
-    double minFetchingDistance = 0.5; // TODO define parameters properly
+    double maxFetchingDistance = 1.3895;
+    double minFetchingDistance = 0.0; // TODO define parameters properly
 
     // -- FUNCTIONS --
     int getFetchWaypointIndex(const std::vector<base::Waypoint> *roverPath);

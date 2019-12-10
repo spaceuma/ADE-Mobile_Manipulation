@@ -43,7 +43,6 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     samplePos.position[0] = 1.0;
     samplePos.position[1] = 6.4;
-    samplePos.position[2] = 1.1;
     samplePos.heading = 0;
 
 
