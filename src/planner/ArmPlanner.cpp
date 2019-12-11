@@ -24,7 +24,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     {
         (*roverPath6)[i][0] = (*roverPath)[i].position[0];
         (*roverPath6)[i][1] = (*roverPath)[i].position[1];
-        (*roverPath6)[i][2] = (*DEM)[(int)((*roverPath)[i].position[1] + 0.5)][(int)((*roverPath)[i].position[0] + 0.5)]
+        (*roverPath6)[i][2] = (*DEM)[(int)((*roverPath)[i].position[1]/mapResolution + 0.5)][(int)((*roverPath)[i].position[0]/mapResolution + 0.5)]
                               + heightGround2BCS;
         // TODO compute properly rover heading
         (*roverPath6)[i][3] = 0;
@@ -42,7 +42,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     // the mast
     samplePos.position[0] += optimalLeftDeviation * cos((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
     samplePos.position[1] += optimalLeftDeviation * sin((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
-    samplePos.position[2] = (*DEM)[(int)(samplePos.position[1] + 0.5)][(int)(samplePos.position[0] + 0.5)] + fetchingZDistance;
+    samplePos.position[2] = (*DEM)[(int)(samplePos.position[1]/mapResolution + 0.5)][(int)(samplePos.position[0]/mapResolution + 0.5)] + fetchingZDistance;
 
     // Cost map 3D computation
     int n = DEM->size();
