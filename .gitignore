@@ -4,3 +4,4 @@ install
 env.sh
 test/unit/data/results/*
 *.swp
+*.swo
