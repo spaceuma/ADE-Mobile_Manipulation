@@ -131,13 +131,13 @@ TEST(ArmPlannerTests, planningEEPath)
     std::vector<std::vector<double>> *DEM
         = new std::vector<std::vector<double>>(costMap->size(), std::vector<double>((*costMap)[0].size(), 1));
     double zResolution = 0.08;
-    std::vector<std::vector<double>> *endEffectorPath = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *armJoints = new std::vector<std::vector<double>>;
     std::vector<int> *pathsAssignment = new std::vector<int>;
 
     clock_t begin = clock();
     ArmPlanner_lib::ArmPlanner dummyArmPlanner;
     dummyArmPlanner.planEndEffectorPath(
-        roverPath, DEM, mapResolution, zResolution, samplePos, endEffectorPath, pathsAssignment);
+        roverPath, DEM, mapResolution, zResolution, samplePos, armJoints, pathsAssignment);
 
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;

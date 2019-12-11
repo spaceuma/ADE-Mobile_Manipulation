@@ -13,11 +13,12 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
                                      double mapResolution,
                                      double zResolution,
                                      base::Waypoint samplePos,
-                                     std::vector<std::vector<double>> *endEffectorPath6,
+                                     std::vector<std::vector<double>> *armJoints,
                                      std::vector<int> *pathsAssignment)
 {
     // Rover z coordinate and heading computation
     std::vector<std::vector<double>> *roverPath6 = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *endEffectorPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
     for (int i = 0; i < roverPath->size(); i++)
     {
@@ -103,7 +104,6 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     computeWaypointAssignment(roverPath6, endEffectorPath6, pathsAssignment);
 
     // Computing inverse kinematics for collision checking
-    std::vector<std::vector<double>> armJoints;
     Manipulator sherpa_tt_arm;
 
     for (int i = 0; i < endEffectorPath6->size(); i++)
@@ -143,7 +143,7 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
         yaw = (*endEffectorPath6)[i][5];
         std::vector<double> orientation{roll, pitch, yaw};
 
-        armJoints.push_back(sherpa_tt_arm.getManipJoints(position, orientation, 1, 1 ));
+        armJoints->push_back(sherpa_tt_arm.getManipJoints(position, orientation, 1, 1 ));
         //if(i == endEffectorPath6->size()-1) 
         //    armJoints[endEffectorPath6->size()-1] = sherpa_tt_arm.getManipJoints(position, orientation, armJoints[endEffectorPath6->size()-2]);
     }
@@ -206,11 +206,11 @@ void ArmPlanner::planEndEffectorPath(const std::vector<base::Waypoint> *roverPat
     std::ofstream armJointsFile;
     armJointsFile.open("test/unit/data/results/armJoints.txt");
 
-    for (int i = 0; i < armJoints.size(); i++)
+    for (int i = 0; i < armJoints->size(); i++)
     {
         for (int j = 0; j < 6; j++)
         {
-            armJointsFile << armJoints[i][j] << " ";
+            armJointsFile << (*armJoints)[i][j] << " ";
         }
         armJointsFile << "\n";
     }
