@@ -36,19 +36,19 @@ public:
 
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
-    double optimalLeftDeviation = maxArmDistance/5;
+    double optimalLeftDeviation = maxArmDistance / 5;
     double fetchingZDistance = 0.1;
     std::vector<double> BCS2iniEEpos = {0.738, 0, 0.550};       // TODO set parameter properly
     std::vector<double> iniEEorientation = {0, pi / 2, pi / 3}; // TODO set parameter properly
 
     // -- FUNCTIONS --
-    void planEndEffectorPath(const std::vector<base::Waypoint> *roverPath,
-                             const std::vector<std::vector<double>> *DEM,
-                             double mapResolution,
-                             double zResolution,
-                             base::Waypoint samplePos,
-                             std::vector<std::vector<double>> *endEffectorPath6,
-                             std::vector<int> *pathsAssignment);
+    void planArmMotion(const std::vector<base::Waypoint> *roverPath,
+                       const std::vector<std::vector<double>> *DEM,
+                       double mapResolution,
+                       double zResolution,
+                       base::Waypoint samplePos,
+                       std::vector<std::vector<double>> *armJoints,
+                       std::vector<int> *pathsAssignment);
 
     void generateTunnel(const std::vector<std::vector<double>> *roverPath6,
                         const std::vector<std::vector<double>> *DEM,
@@ -64,6 +64,6 @@ public:
 
     double getDist3(std::vector<double> a, std::vector<double> b);
 };
-}
+} // namespace ArmPlanner_lib
 #endif
 // namespace ArmPlanner_lib

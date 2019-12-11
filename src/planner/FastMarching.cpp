@@ -5,10 +5,10 @@
 using namespace FastMarching_lib;
 
 void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
-                              double mapResolution,
-                              base::Waypoint iniPos,
-                              base::Waypoint finalPos,
-                              std::vector<base::Waypoint> *path)
+                            double mapResolution,
+                            base::Waypoint iniPos,
+                            base::Waypoint finalPos,
+                            std::vector<base::Waypoint> *path)
 {
     std::vector<int> goal(2, 0);
     std::vector<int> start(2, 0);
@@ -46,9 +46,9 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
 }
 
 void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
-                                 std::vector<int> goal,
-                                 std::vector<int> start,
-                                 std::vector<std::vector<double>> *TMap)
+                               std::vector<int> goal,
+                               std::vector<int> start,
+                               std::vector<std::vector<double>> *TMap)
 {
     int n = costMap->size();
     int m = costMap[0].size();
@@ -86,7 +86,7 @@ void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
 
     updateNode(nodeTarget, costMap, TMap, nbT, nbNodes, closedMap);
 
-    while (nbT->size() > 0) 
+    while (nbT->size() > 0)
     {
         nodeTarget = (*nbNodes)[0];
         nbNodes->erase(nbNodes->begin());
@@ -94,7 +94,7 @@ void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
         (*closedMap)[nodeTarget[1]][nodeTarget[0]] = 1;
         updateNode(nodeTarget, costMap, TMap, nbT, nbNodes, closedMap);
 
-        if ((nodeTarget[0]==start[0])&&(nodeTarget[1]==start[1]))
+        if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1]))
         {
             break;
         }
@@ -102,11 +102,11 @@ void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
 }
 
 void FastMarching::updateNode(std::vector<int> nodeTarget,
-                                const std::vector<std::vector<double>> *costMap,
-                                std::vector<std::vector<double>> *TMap,
-                                std::vector<double> *nbT,
-                                std::vector<std::vector<int>> *nbNodes,
-                                const std::vector<std::vector<double>> *closedMap)
+                              const std::vector<std::vector<double>> *costMap,
+                              std::vector<std::vector<double>> *TMap,
+                              std::vector<double> *nbT,
+                              std::vector<std::vector<int>> *nbNodes,
+                              const std::vector<std::vector<double>> *closedMap)
 {
     std::vector<int> nodeChild(2, 0);
     for (int i = 1; i < 4 + 1; i++)
@@ -202,10 +202,10 @@ int FastMarching::getInsertIndex(std::vector<double> *nbT, double T)
 }
 
 void FastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap,
-                                    std::vector<int> initNode,
-                                    std::vector<int> endNode,
-                                    double tau,
-                                    std::vector<std::vector<double>> *path)
+                                  std::vector<int> initNode,
+                                  std::vector<int> endNode,
+                                  double tau,
+                                  std::vector<std::vector<double>> *path)
 {
     std::vector<double> auxVector;
     auxVector.push_back((double)initNode[0]);
@@ -329,9 +329,9 @@ void FastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap,
 }
 
 void FastMarching::computeGradient(const std::vector<std::vector<double>> *TMap,
-                                     std::vector<double> point,
-                                     std::vector<std::vector<double>> *Gnx,
-                                     std::vector<std::vector<double>> *Gny)
+                                   std::vector<double> point,
+                                   std::vector<std::vector<double>> *Gnx,
+                                   std::vector<std::vector<double>> *Gny)
 {
     int n = TMap->size();
     int m = (*TMap)[0].size();

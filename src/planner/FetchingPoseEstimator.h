@@ -1,8 +1,8 @@
-#ifndef __FETCHING_POSE_ESTIMATOR__ 
+#ifndef __FETCHING_POSE_ESTIMATOR__
 #define __FETCHING_POSE_ESTIMATOR__
 
-#include "Waypoint.hpp"
 #include "ArmPlanner.h"
+#include "Waypoint.hpp"
 #include <vector>
 
 #define pi 3.14159265359
@@ -25,7 +25,7 @@ public:
     double heightGround2BCS = 0.645;
     double fetchingZDistance = 0.1;
 
-    double maxFetchingDistance = a1 + sqrt(pow(a2+d4,2) - pow(heightGround2BCS+d0-d6-fetchingZDistance,2));
+    double maxFetchingDistance = a1 + sqrt(pow(a2 + d4, 2) - pow(heightGround2BCS + d0 - d6 - fetchingZDistance, 2));
     double minFetchingDistance = 0.7;
 
     // -- FUNCTIONS --

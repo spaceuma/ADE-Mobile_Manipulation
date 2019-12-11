@@ -119,7 +119,9 @@ double KinematicModel_lib::getDeterminant(const std::vector<std::vector<double>>
     }
 }
 
-std::vector<std::vector<double>> KinematicModel_lib::getCofactor(const std::vector<std::vector<double>> *A, int row, int col)
+std::vector<std::vector<double>> KinematicModel_lib::getCofactor(const std::vector<std::vector<double>> *A,
+                                                                 int row,
+                                                                 int col)
 {
     int n = A->size();
     int subi = 0, subj = 0;

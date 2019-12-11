@@ -64,6 +64,6 @@ public:
 
     std::vector<std::vector<double>> getJacobianMatrix(std::vector<double> manipulatorJoints);
 };
-}
+} // namespace KinematicModel_lib
 #endif
 // namespace KinematicModel_lib

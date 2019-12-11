@@ -5,11 +5,11 @@
 using namespace FastMarching_lib;
 
 void FastMarching3D::planPath(const std::vector<std::vector<std::vector<double>>> *costMap3D,
-                                double mapResolution,
-                                double zResolution,
-                                base::Waypoint iniPos,
-                                base::Waypoint finalPos,
-                                std::vector<base::Waypoint> *path3D)
+                              double mapResolution,
+                              double zResolution,
+                              base::Waypoint iniPos,
+                              base::Waypoint finalPos,
+                              std::vector<base::Waypoint> *path3D)
 {
     std::vector<int> goal(3, 0);
     std::vector<int> start(3, 0);
@@ -41,9 +41,9 @@ void FastMarching3D::planPath(const std::vector<std::vector<std::vector<double>>
 }
 
 void FastMarching3D::computeTMap(const std::vector<std::vector<std::vector<double>>> *costMap3D,
-                     std::vector<int> goal,
-                     std::vector<int> start,
-                     std::vector<std::vector<std::vector<double>>> *TMap)
+                                 std::vector<int> goal,
+                                 std::vector<int> start,
+                                 std::vector<std::vector<std::vector<double>>> *TMap)
 {
     int n = costMap3D->size();
     int m = (*costMap3D)[0].size();
@@ -93,19 +93,19 @@ void FastMarching3D::computeTMap(const std::vector<std::vector<std::vector<doubl
         (*closedMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 1;
         updateNode(nodeTarget, costMap3D, TMap, nbT, nbNodes, closedMap);
 
-        if ((nodeTarget[0]==start[0])&&(nodeTarget[1]==start[1])&&(nodeTarget[2]==start[2]))
+        if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1]) && (nodeTarget[2] == start[2]))
         {
-                break;
+            break;
         }
     }
 }
 
 void FastMarching3D::updateNode(std::vector<int> nodeTarget,
-                                  const std::vector<std::vector<std::vector<double>>> *costMap3D,
-                                  std::vector<std::vector<std::vector<double>>> *TMap,
-                                  std::vector<double> *nbT,
-                                  std::vector<std::vector<int>> *nbNodes,
-                                  const std::vector<std::vector<std::vector<double>>> *closedMap)
+                                const std::vector<std::vector<std::vector<double>>> *costMap3D,
+                                std::vector<std::vector<std::vector<double>>> *TMap,
+                                std::vector<double> *nbT,
+                                std::vector<std::vector<int>> *nbNodes,
+                                const std::vector<std::vector<std::vector<double>>> *closedMap)
 {
     std::vector<int> nodeChild(3, 0);
     for (int i = 1; i < 6 + 1; i++)
@@ -255,10 +255,10 @@ int FastMarching3D::getInsertIndex(std::vector<double> *nbT, double T)
 }
 
 void FastMarching3D::computePathGDM(const std::vector<std::vector<std::vector<double>>> *TMap,
-                                      std::vector<int> initNode,
-                                      std::vector<int> endNode,
-                                      double tau,
-                                      std::vector<std::vector<double>> *path)
+                                    std::vector<int> initNode,
+                                    std::vector<int> endNode,
+                                    double tau,
+                                    std::vector<std::vector<double>> *path)
 {
     std::vector<double> auxVector;
     auxVector.push_back((double)initNode[0]);
@@ -413,10 +413,10 @@ void FastMarching3D::computePathGDM(const std::vector<std::vector<std::vector<do
 }
 
 void FastMarching3D::computeGradient(const std::vector<std::vector<std::vector<double>>> *TMap,
-                                       std::vector<double> point,
-                                       std::vector<std::vector<std::vector<double>>> *Gnx,
-                                       std::vector<std::vector<std::vector<double>>> *Gny,
-                                       std::vector<std::vector<std::vector<double>>> *Gnz)
+                                     std::vector<double> point,
+                                     std::vector<std::vector<std::vector<double>>> *Gnx,
+                                     std::vector<std::vector<std::vector<double>>> *Gny,
+                                     std::vector<std::vector<std::vector<double>>> *Gnz)
 {
     int n = TMap->size();
     int m = (*TMap)[0].size();
@@ -536,7 +536,7 @@ void FastMarching3D::computeGradient(const std::vector<std::vector<std::vector<d
 }
 
 double FastMarching3D::getInterpolatedPoint(std::vector<double> point,
-                                              const std::vector<std::vector<std::vector<double>>> *mapI)
+                                            const std::vector<std::vector<std::vector<double>>> *mapI)
 {
     int i = (int)point[0];
     int j = (int)point[1];
