@@ -330,7 +330,7 @@ x,y = np.meshgrid(xMap,yMap)
 
 ind = int(pathsAssignment[0]) 
 
-T = DKM(armJoints[0,:], path[ind,np.array([0,1,2])], path[ind,np.array([3,4,5])])
+T = DKM(armJoints[ind,:], path[0,np.array([0,1,2])], path[0,np.array([3,4,5])])
 rotT = T
 rotT[0,3] = 0   
 rotT[1,3] = 0   
@@ -340,7 +340,7 @@ Tx = dot(rotT, traslation([1,0,0]))
 Ty = dot(rotT, traslation([0,1,0]))
 Tz = dot(rotT, traslation([0,0,1]))
 
-px,py,pz = plotArm(armJoints[0,:], path[ind,np.array([0,1,2])], path[ind,np.array([3,4,5])])
+px,py,pz = plotArm(armJoints[0,:], path[0,np.array([0,1,2])], path[0,np.array([3,4,5])])
 px = np.array(px)
 py = np.array(py)
 pz = np.array(pz)
@@ -358,9 +358,7 @@ plt_ee = mlab.quiver3d(np.array([px[-1], px[-1], px[-1]]), np.array([py[-1], py[
 def anim():
     mlab.gcf()
     for i in range(0,len(armJoints)):
-        ind = int(pathsAssignment[i]) 
-
-        T = DKM(armJoints[i,:], path[ind,np.array([0,1,2])], path[ind,np.array([3,4,5])])
+        T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], path[i,np.array([3,4,5])])
         rotT = T
         rotT[0,3] = 0   
         rotT[1,3] = 0   
@@ -370,7 +368,7 @@ def anim():
         Ty = dot(rotT, traslation([0,1,0]))
         Tz = dot(rotT, traslation([0,0,1]))
 
-        px,py,pz = plotArm(armJoints[i,:], path[ind,np.array([0,1,2])], path[ind,np.array([3,4,5])])
+        px,py,pz = plotArm(armJoints[i,:], path[i,np.array([0,1,2])], path[i,np.array([3,4,5])])
         px = np.array(px)
         py = np.array(py)
         pz = np.array(pz)

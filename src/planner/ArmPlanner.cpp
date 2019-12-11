@@ -109,29 +109,29 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
     // Computing inverse kinematics for collision checking
     Manipulator sherpa_tt_arm;
 
-    for (int i = 0; i < endEffectorPath6->size(); i++)
+    for (int i = 0; i < roverPath6->size(); i++)
     {
-        int pathInd = (*pathsAssignment)[i];
+        int eeInd = (*pathsAssignment)[i];
         std::vector<std::vector<double>> TW2BCS(4, std::vector<double>(4));
         std::vector<std::vector<double>> TW2EE(4, std::vector<double>(4));
         std::vector<std::vector<double>> TBCS2EE(4, std::vector<double>(4));
 
-        double x = (*roverPath6)[pathInd][0];
-        double y = (*roverPath6)[pathInd][1];
-        double z = (*roverPath6)[pathInd][2];
+        double x = (*roverPath6)[i][0];
+        double y = (*roverPath6)[i][1];
+        double z = (*roverPath6)[i][2];
         std::vector<double> position{x, y, z};
-        double roll = (*roverPath6)[pathInd][3];
-        double pitch = (*roverPath6)[pathInd][4];
-        double yaw = (*roverPath6)[pathInd][5];
+        double roll = (*roverPath6)[i][3];
+        double pitch = (*roverPath6)[i][4];
+        double yaw = (*roverPath6)[i][5];
 
         TW2BCS = dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
-        position[0] = (*endEffectorPath6)[i][0];
-        position[1] = (*endEffectorPath6)[i][1];
-        position[2] = (*endEffectorPath6)[i][2];
-        roll = (*endEffectorPath6)[i][3];
-        pitch = (*endEffectorPath6)[i][4];
-        yaw = (*endEffectorPath6)[i][5];
+        position[0] = (*endEffectorPath6)[eeInd][0];
+        position[1] = (*endEffectorPath6)[eeInd][1];
+        position[2] = (*endEffectorPath6)[eeInd][2];
+        roll = (*endEffectorPath6)[eeInd][3];
+        pitch = (*endEffectorPath6)[eeInd][4];
+        yaw = (*endEffectorPath6)[eeInd][5];
 
         TW2EE = dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
@@ -141,9 +141,9 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
         position[1] = TBCS2EE[1][3];
         position[2] = TBCS2EE[2][3];
         // TODO change the orientation from absolute to relative
-        roll = (*endEffectorPath6)[i][3];
-        pitch = (*endEffectorPath6)[i][4];
-        yaw = (*endEffectorPath6)[i][5];
+        roll = (*endEffectorPath6)[eeInd][3];
+        pitch = (*endEffectorPath6)[eeInd][4];
+        yaw = (*endEffectorPath6)[eeInd][5];
         std::vector<double> orientation{roll, pitch, yaw};
 
         armJoints->push_back(sherpa_tt_arm.getManipJoints(position, orientation, 1, 1));
@@ -363,37 +363,27 @@ void ArmPlanner::computeWaypointAssignment(const std::vector<std::vector<double>
                                            std::vector<int> *pathsAssignment)
 {
     std::vector<double> armBasePos;
-    std::vector<int> assignmentOpt(endEffectorPath6->size(), 0);
-    std::vector<int> assignmentMaxOpt(endEffectorPath6->size(), 0);
-    std::vector<int> assignmentMax(endEffectorPath6->size(), 0);
-    pathsAssignment->resize(endEffectorPath6->size());
+    (*pathsAssignment) = std::vector<int>(roverPath6->size(), 0);
 
-    for (int i = roverPath6->size() - 1; i > -1; i--)
+    for (int i = 0; i < roverPath6->size(); i++)
     {
         armBasePos = (*roverPath6)[i];
         armBasePos[2] += d0;
-        for (int j = 0; j < endEffectorPath6->size(); j++)
+        for (int j = endEffectorPath6->size() - 1; j > -1; j--)
         {
-            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmDistance / 2) assignmentOpt[j] = i;
-            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmOptimalDistance) assignmentMaxOpt[j] = i;
-            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmDistance) assignmentMax[j] = i;
+            if (getDist3(armBasePos, (*endEffectorPath6)[j]) < maxArmOptimalDistance)
+            {
+                (*pathsAssignment)[i] = j;
+                break;
+            }
         }
-    }
-
-    (*pathsAssignment) = assignmentOpt;
-
-    for (int i = pathsAssignment->size() - 1; i > 0; i--)
-    {
-        if ((*pathsAssignment)[i] == 0) (*pathsAssignment)[i] = assignmentMaxOpt[i];
-        if ((*pathsAssignment)[i] == 0) (*pathsAssignment)[i] = assignmentMax[i];
-        if ((*pathsAssignment)[i] == 0) (*pathsAssignment)[i] = (*pathsAssignment)[i + 1];
     }
 
     for (int i = pathsAssignment->size() - 1; i > 0; i--)
         if ((*pathsAssignment)[i] < (*pathsAssignment)[i - 1]) (*pathsAssignment)[i - 1] = (*pathsAssignment)[i];
 
     (*pathsAssignment)[0] = 0;
-    (*pathsAssignment)[endEffectorPath6->size() - 1] = roverPath6->size() - 1;
+    (*pathsAssignment)[roverPath6->size() - 1] = endEffectorPath6->size() - 1;
 }
 
 double ArmPlanner::getDist3(std::vector<double> a, std::vector<double> b)
