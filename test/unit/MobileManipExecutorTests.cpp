@@ -71,6 +71,17 @@ TEST(MMExecutorTest, trajectorycontrol)
     double dt = 0.1;
     double yaw;
 
+    std::vector<JointState> vj_initial_jointstates;
+    vj_initial_jointstates.resize(6);
+    for (uint i = 0; i < 6; i++)
+    {
+        vj_initial_jointstates[i].m_position = 0.0;
+        vj_initial_jointstates[i].m_speed = 0.0;
+    }
+
+    Joints j_initial_joints(0, vj_initial_jointstates);
+    Joints j_next_joints(0, vj_initial_jointstates);
+   
     while (!dummyExecutor.isFinished())
     {
 
@@ -78,7 +89,11 @@ TEST(MMExecutorTest, trajectorycontrol)
         yaw = robotPose.getYaw();
         Eigen::AngleAxisd toWCF, robotRot;
         toWCF = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-
+//	dummyExecutor.getArmCommand(j_initial_joints, j_next_joints);
+	for (uint i = 0; i < 6; i++)
+	{
+		j_next_joints.m_jointStates[i].m_position = j_initial_joints.m_jointStates[i].m_position; 
+	}
         if (fabs(mc.m_speed_ms) < 0.000001)
         {
             // Point turn
@@ -109,8 +124,12 @@ TEST(MMExecutorTest, trajectorycontrol)
                   << "yaw = " << robotPose.getYaw() * 180 / M_PI << " deg." << std::endl
                   << std::endl;
         std::cout << "tv = " << mc.m_speed_ms;
-        std::cout << ", rv = " << mc.m_turnRate_rads << std::endl << std::endl;
-
+        std::cout << ", rv = " << mc.m_turnRate_rads << std::endl;
+	for (uint i = 0; i<6; i++)
+	{
+		std::cout << " Arm Joint " << i << " position is " << j_next_joints.m_jointStates[i].m_position << std::endl;
+	}
+	std::cout << std::endl;
         usleep(10000);
     }
 

@@ -37,6 +37,7 @@ private:
         FetchingPoseEstimator fetchPosePlanner;
 	ArmPlanner armPlanner;
 	Waypoint samplePos;
+        std::vector<int> pathsAssignment;
 public:
   MotionPlan();
 
@@ -45,6 +46,7 @@ public:
   std::vector<base::Waypoint>* getPath();
   int shortenPathForFetching();
   void executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution);
+  std::vector<int> getAssignment();
 };
 
 #endif

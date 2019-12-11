@@ -29,28 +29,24 @@ int MotionPlan::shortenPathForFetching(){
 
 void MotionPlan::executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution){
     std::vector<std::vector<double>> *endEffectorPath = new std::vector<std::vector<double>>;
-    std::vector<int> *pathsAssignment = new std::vector<int>;
     std::vector<std::vector<double>> elevationMap;
     inputMap->getElevationMap(elevationMap);
 
-    for (uint j = 0; j<elevationMap.size(); j++)
-    {
-        for (uint i = 0; i<elevationMap[0].size(); i++)
-        {
-            std::cout << "Elevation =  " << elevationMap[j][i] << std::endl;
-        }
-    }
-    for (uint i = 0; i < this->roverPath.size(); i++)
+    /*for (uint i = 0; i < this->roverPath.size(); i++)
     {
 	std::cout << "Waypoint " << i << " is ( " << this->roverPath[i].position[0] << ", " << this->roverPath[i].position[1] << " )" << std::endl;
-    }
+    }*/
    std::cout << "The sample position is " << this->samplePos.position[0] << "," << this->samplePos.position[1] << std::endl;
    this->armPlanner.planEndEffectorPath(
-        &(this->roverPath), &elevationMap, inputMap->getResolution(), zResolution, this->samplePos, endEffectorPath, pathsAssignment);
+        &(this->roverPath), &elevationMap, inputMap->getResolution(), zResolution, this->samplePos, endEffectorPath, &pathsAssignment);
 
 
 }
 
 std::vector<base::Waypoint>* MotionPlan::getPath(){
 	return &(this->roverPath);
+}
+
+std::vector<int> MotionPlan::getAssignment(){
+	return pathsAssignment;	
 }
