@@ -17,7 +17,7 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan) {
     }
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->waypoint_navigation.setNavigationState(DRIVING);
-    this->vi_assignment = this->p_motion_plan->getAssignment();
+    this->vi_assignment = this->p_motion_plan->getAssignmentVector();
 }
 
 void MobileManipExecutor::updateMotionPlan(MotionPlan &newMotionPlan)

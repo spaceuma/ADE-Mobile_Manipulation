@@ -36,6 +36,8 @@ public:
   MobileManipMap();
   MobileManipMap(RoverGuidance_Dem dem);
   int setRGDem(RoverGuidance_Dem &dem);
+  void setCostMap(std::vector<std::vector<double>> &costMap);
+  void setElevationMap(std::vector<std::vector<double>> &elevationMap, double res);
   int setImageDem(Mat inputDem, double resDem);
   void showElevationMap();
   void showSlopeMap();

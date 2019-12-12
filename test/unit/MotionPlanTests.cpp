@@ -15,28 +15,19 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     // Reading the DEM 
     double res = 0.1; // meters
     double n_row, n_col;
-    std::vector<double> vector_elevationData;
-    readMatrixFile("test/unit/data/ColmenarRocks_smaller_10cmDEM.csv", res, n_row, n_col, vector_elevationData);
-   
-    // Creating the Rover Guidance DEM 
-    RoverGuidance_Dem dummyDem;
-    double dummyArray[(int)n_row * (int)n_col];
-    dummyDem.p_heightData_m = dummyArray;
-    for (uint i = 0; i < vector_elevationData.size(); i++)
-    {
-        dummyDem.p_heightData_m[i] = vector_elevationData[i];
-    }
-    dummyDem.cols = n_col;
-    dummyDem.rows = n_row;
-    dummyDem.nodeSize_m = res;
-
-    // Introducing RG-DEM into MMMap
+    std::vector<std::vector<double>> vvd_costMap;
+    std::vector<std::vector<double>> vector_elevationData;
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv", vector_elevationData); 
+    readMatrixFile("test/unit/data/results/costMap.txt", vvd_costMap);
     MobileManipMap dummyMap;
-    dummyMap.setRGDem(dummyDem);
-    base::Waypoint roverPos, samplePos;
+    dummyMap.setElevationMap(vector_elevationData,res);
+    dummyMap.setCostMap(vvd_costMap);
+
+    MotionPlan dummyPlan;
 
     clock_t begin = clock();
 
+    base::Waypoint roverPos, samplePos;
     roverPos.position[0] = 6.5;
     roverPos.position[1] = 6.5;
     roverPos.heading = 0;
@@ -45,8 +36,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     samplePos.position[1] = 2.0;
     samplePos.heading = 0;
 
-
-    MotionPlan dummyPlan;
+    std::cout << "MOTIONPLANTEST: initiating path planning" << std::endl;
     clock_t ini2D = clock();
     dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
     int numWaypoints = dummyPlan.shortenPathForFetching();
@@ -61,7 +51,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     for (int j = 0; j < roverPath->size(); j++)
     {
-        pathFile << roverPath->at(j).position[0] << " " << roverPath->at(j).position[1] << "\n";
+        pathFile << roverPath->at(j).position[0] << " " << roverPath->at(j).position[1] << " " << roverPath->at(j).heading << "\n";
     }
 
     pathFile.close();
@@ -69,6 +59,35 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     std::cout << "The waypoint number to erase is " << numWaypoints << std::endl;
     double zRes = 0.08;
     dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
+
+    std::vector<std::vector<double>>* pvvd_arm_motion_profile = dummyPlan.getArmMotionProfile();
+    std::ofstream f_arm_motion;
+
+    f_arm_motion.open("test/unit/data/results/armMotionProfile.txt");
+
+    for (int j = 0; j < pvvd_arm_motion_profile->size(); j++)
+    {
+        for (int i = 0; i < (* pvvd_arm_motion_profile)[0].size(); i++)
+        {
+            f_arm_motion << (* pvvd_arm_motion_profile)[j][i] << " ";
+        }
+        f_arm_motion << "\n";
+    }
+
+    f_arm_motion.close();
+
+    std::vector<int> assignmentVector = dummyPlan.getAssignmentVector();
+    std::ofstream assignmentFile;
+
+    assignmentFile.open("test/unit/data/results/assignment.txt");
+
+    for (int j = 0; j < assignmentVector.size(); j++)
+    {
+        assignmentFile << assignmentVector[j] << "\n";
+    }
+
+    pathFile.close();
+
     // Decide where to stop the rover to fetch optimally
 /*    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
     int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);

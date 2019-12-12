@@ -10,52 +10,21 @@
 TEST(MMExecutorTest, trajectorycontrol)
 {
 
-    // Reading the DEM 
-    double res = 0.1; // meters
-    double n_row, n_col;
-    std::vector<double> vector_elevationData;
-    readMatrixFile("test/unit/data/ColmenarRocks_smaller_10cmDEM.csv", res, n_row, n_col, vector_elevationData);
-   
-    // Creating the Rover Guidance DEM 
-    RoverGuidance_Dem dummyDem;
-    double dummyArray[(int)n_row * (int)n_col];
-    dummyDem.p_heightData_m = dummyArray;
-    for (uint i = 0; i < vector_elevationData.size(); i++)
-    {
-        dummyDem.p_heightData_m[i] = vector_elevationData[i];
-    }
-    dummyDem.cols = n_col;
-    dummyDem.rows = n_row;
-    dummyDem.nodeSize_m = res;
-
-    // Introducing RG-DEM into MMMap
-    MobileManipMap dummyMap;
-    dummyMap.setRGDem(dummyDem);
-    base::Waypoint roverPos, samplePos;
-
-    clock_t begin = clock();
-
-    roverPos.position[0] = 6.5;
-    roverPos.position[1] = 6.5;
-    roverPos.heading = 0;
-
-    samplePos.position[0] = 4.0;
-    samplePos.position[1] = 2.0;
-    samplePos.heading = 0;
-
-
+    std::vector<Waypoint> path;
+    std::vector<std::vector<double>> vvd_arm_motion_profile;
+    std::vector<int> vi_assignment;
+    readPath("test/unit/data/input/path.txt",path);
+    readMatrixFile("test/unit/data/input/armMotionProfile.txt", vvd_arm_motion_profile);
+    readIntVector("test/unit/data/input/assignment.txt", vi_assignment);
     MotionPlan dummyPlan;
-    dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
-    int numWaypoints = dummyPlan.shortenPathForFetching();
-
-    double zRes = 0.08;
-    dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
-
+    dummyPlan.setPath(path);
+    dummyPlan.setArmMotionProfile(vvd_arm_motion_profile); 
+    dummyPlan.setAssignmentVector(vi_assignment);
 
     Pose robotPose;
     Waypoint lpoint;
 
-    robotPose.position = Eigen::Vector3d(roverPos.position[0], roverPos.position[1], 0);
+    robotPose.position = Eigen::Vector3d(path[0].position[0], path[0].position[1], 0);
 
     std::cout << "Test Trajectory" << std::endl;
     robotPose.orientation =

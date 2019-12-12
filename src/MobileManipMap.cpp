@@ -13,6 +13,50 @@ MobileManipMap::MobileManipMap(RoverGuidance_Dem dem) {
   this->setRGDem(dem);
 }
 
+void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap){
+  this->currentCostMap.clear();
+  std::vector<double> row;
+  std::cout << "Setting Cost Map of " << costMap[0].size() << "x" << costMap.size() << " nodes" << std::endl;
+  for ( uint j = 0; j < costMap.size(); j++ ){
+    for ( uint i = 0; i < costMap[0].size(); i++){
+      if (costMap[j][i] > 0)
+      {
+	  row.push_back(costMap[j][i]);
+      }
+      else
+      {
+          row.push_back(INFINITY);
+      }
+    }
+    currentCostMap.push_back(row);
+    row.clear();
+  }
+}
+
+void MobileManipMap::setElevationMap(std::vector<std::vector<double>> &elevationMap, double res){
+  this->resDem = res;
+  this->vecElevationMap.clear();
+  std::cout << "Setting Elevation Map of " << elevationMap[0].size() << "x" << elevationMap.size() << " nodes" << std::endl;
+  std::vector<double> row;
+  double d_min_elevation = INFINITY;
+  for ( uint j = 0; j < elevationMap.size(); j++ ){
+    for ( uint i = 0; i < elevationMap[0].size(); i++){
+      row.push_back(elevationMap[j][i]);
+      if (elevationMap[j][i] < d_min_elevation)
+      {
+        d_min_elevation = elevationMap[j][i];
+      }
+    }
+    vecElevationMap.push_back(row);
+    row.clear();
+  }
+  for ( uint j = 0; j < elevationMap.size(); j++ ){
+    for ( uint i = 0; i < elevationMap[0].size(); i++){
+      vecElevationMap[j][i] = vecElevationMap[j][i] - d_min_elevation;
+    }
+  }
+}
+
 int MobileManipMap::setRGDem(RoverGuidance_Dem &dem){
   // TODO - implement MobileManipMap::setDem
   cout << "" << endl;

@@ -1,9 +1,21 @@
 #ifndef __READ_MATRIX_FILE__
 #define __READ_MATRIX_FILE__
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "RoverGuidance_Dem.h"
+#include "Waypoint.hpp"
+
+using namespace base;
+
 void readMatrixFile(std::string map_file,
-                    double res,
-                    double &n_row,
-                    double &n_col,
-                    std::vector<double> &vector_elevationData);
+                    std::vector<std::vector<double>> &vector_elevationData);
+void readPath(std::string s_path_file,
+	      std::vector<Waypoint> &vw_path);
+void readIntVector(std::string s_vector_file,
+		   std::vector<int> &vi_input);
 #endif

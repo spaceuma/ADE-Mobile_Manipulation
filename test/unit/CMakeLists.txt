@@ -42,7 +42,7 @@ add_executable(runUnitTests
 	       MobileManipMapTests.cpp
 	       MotionPlanTests.cpp
 	       MobileManipExecutorTests.cpp
-               MobileManipMotionPlannerTests.cpp
+	       #MobileManipMotionPlannerTests.cpp
                readMatrixFile.h
                readMatrixFile.cpp
                ${MM_SRC}

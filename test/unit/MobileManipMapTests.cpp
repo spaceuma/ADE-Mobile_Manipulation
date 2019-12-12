@@ -17,20 +17,24 @@ TEST(MMMapTest, constructorTest)
     dummyDem.p_heightData_m = &dummyHeightData[0];*/
     double res = 0.1; // meters
     double n_row, n_col;
-    std::vector<double> vector_elevationData;
+    std::vector<std::vector<double>> vector_elevationData;
 
     RoverGuidance_Dem *dummyDem = new RoverGuidance_Dem;
-    readMatrixFile("test/unit/data/ColmenarRocks_smaller_10cmDEM.csv", res, n_row, n_col, vector_elevationData);
-    std::cout << "The size is " << vector_elevationData.size() << std::endl;
-    double dummyArray[(int)n_row * (int)n_col];
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv", vector_elevationData);
+    int i_elevationmatrix_size = vector_elevationData.size()*vector_elevationData[0].size();
+    std::cout << "The size is " <<  i_elevationmatrix_size << std::endl;
+    double dummyArray[i_elevationmatrix_size];
     dummyDem->p_heightData_m = dummyArray;
-    for (uint i = 0; i < vector_elevationData.size(); i++)
+    for (uint j = 0; j < vector_elevationData.size() ; j++)
     {
-        dummyDem->p_heightData_m[i] = vector_elevationData[i];
+	    for (uint i = 0; i < vector_elevationData[0].size(); i++)
+	    {
+        	dummyDem->p_heightData_m[i+j*vector_elevationData[0].size()] = vector_elevationData[j][i];
+	    }
     }
 
-    dummyDem->cols = n_col;
-    dummyDem->rows = n_row;
+    dummyDem->cols = vector_elevationData[0].size();
+    dummyDem->rows = vector_elevationData.size();
     dummyDem->nodeSize_m = res;
     /*for (uint j = 0; j<dummyDem->rows; j++)
     {
