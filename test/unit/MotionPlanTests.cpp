@@ -40,6 +40,8 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     clock_t ini2D = clock();
     dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
     int numWaypoints = dummyPlan.shortenPathForFetching();
+    double zRes = 0.08;
+    dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
     std::vector<base::Waypoint>* roverPath = dummyPlan.getPath();
     clock_t end2D = clock();
     double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
@@ -57,9 +59,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     pathFile.close();
     std::cout << "The resulting path has " << roverPath->size() << " Waypoints" << std::endl;
     std::cout << "The waypoint number to erase is " << numWaypoints << std::endl;
-    double zRes = 0.08;
-    dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
-
+    
     std::vector<std::vector<double>>* pvvd_arm_motion_profile = dummyPlan.getArmMotionProfile();
     std::ofstream f_arm_motion;
 
@@ -81,10 +81,10 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     assignmentFile.open("test/unit/data/results/assignment.txt");
 
-    for (int j = 0; j < assignmentVector.size(); j++)
+    /*for (int j = 0; j < assignmentVector.size(); j++)
     {
         assignmentFile << assignmentVector[j] << "\n";
-    }
+    }*/
 
     pathFile.close();
 

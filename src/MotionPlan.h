@@ -38,17 +38,17 @@ private:
 	ArmPlanner armPlanner;
 	Waypoint samplePos;
         std::vector<int> pathsAssignment;
-        std::vector<std::vector<double>> *pvvd_arm_motion_profile;
+        std::vector<std::vector<double>> vvd_arm_motion_profile;
 public:
   MotionPlan();
 
   void updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vector<Joints> newJointsProfile);
   void executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Waypoint rover_position, base::Waypoint sample);
   std::vector<base::Waypoint>* getPath();
+  std::vector<std::vector<double>>* getArmMotionProfile();
   int shortenPathForFetching();
   void executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution);
   std::vector<int> getAssignmentVector();
-  std::vector<std::vector<double>>* getArmMotionProfile();
   void setArmMotionProfile(std::vector<std::vector<double>> &m_arm_motion_profile);
   void setPath(std::vector<Waypoint> &vw_path);
   void setAssignmentVector(std::vector<int> &vi_assignment);

@@ -19,7 +19,7 @@ private:
   // i.e. 0 indicates that joint reference corresponds to the first base waypoint
   std::vector<int> vi_assignment;
   int i_current_segment;
-  std::vector<double> vd_current_arm_config;
+  std::vector<std::vector<double>> vvd_arm_motion_profile;
   std::vector<double> vd_next_arm_config;
 public:
   MobileManipExecutor();

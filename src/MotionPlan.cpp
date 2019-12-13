@@ -28,7 +28,7 @@ int MotionPlan::shortenPathForFetching(){
 }
 
 void MotionPlan::executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution){
-    this->pvvd_arm_motion_profile = new std::vector<std::vector<double>>;
+    this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     inputMap->getElevationMap(elevationMap);
     /*for ( uint j = 0; j < elevationMap.size(); j++ ){
@@ -43,7 +43,7 @@ void MotionPlan::executeEndEffectorPlanning(MobileManipMap* inputMap, double zRe
    std::cout << " The resolution is " << inputMap->getResolution() << std::endl;
    std::cout << "The sample position is " << this->samplePos.position[0] << "," << this->samplePos.position[1] << std::endl;
    this->armPlanner.planArmMotion(
-        &(this->roverPath), &elevationMap, inputMap->getResolution(), zResolution, this->samplePos, this->pvvd_arm_motion_profile, &(this->pathsAssignment));
+        &(this->roverPath), &elevationMap, inputMap->getResolution(), zResolution, this->samplePos, &(this->vvd_arm_motion_profile));
 
 
 }
@@ -53,7 +53,7 @@ std::vector<base::Waypoint>* MotionPlan::getPath(){
 }
 
 std::vector<std::vector<double>>* MotionPlan::getArmMotionProfile(){
-	return this->pvvd_arm_motion_profile;
+	return &(this->vvd_arm_motion_profile);
 }
 
 std::vector<int> MotionPlan::getAssignmentVector(){
@@ -63,12 +63,12 @@ std::vector<int> MotionPlan::getAssignmentVector(){
 void MotionPlan::setArmMotionProfile(std::vector<std::vector<double>> &m_arm_motion_profile){
 	std::vector<double> row;
 	std::cout << "Setting Arm Motion Profile of " << m_arm_motion_profile[0].size() << " joints and " << m_arm_motion_profile.size() << " samples" << std::endl;
-	(* this->pvvd_arm_motion_profile).clear();
+	this->vvd_arm_motion_profile.clear();
 	for ( uint j = 0; j < m_arm_motion_profile.size(); j++ ){
 		for ( uint i = 0; i < m_arm_motion_profile[0].size(); i++){
 			row.push_back(m_arm_motion_profile[j][i]);
 		}
-		this->pvvd_arm_motion_profile->push_back(row);
+		this->vvd_arm_motion_profile.push_back(row);
 		row.clear();
 	}
 }

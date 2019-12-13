@@ -30,7 +30,7 @@ void coupledControl::selectNextManipulatorPosition(int current_waypoint,
                                                    int negative)
 {
     // Selection of the next manipulator configuration depending on the current waypoint (current_segment)
-    int pointer = (*assign)[current_waypoint];
+    int pointer = current_waypoint;
 
     for (unsigned int i = 0; i < nextConfig->size(); i++)
     {
