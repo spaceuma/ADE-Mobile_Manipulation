@@ -307,7 +307,6 @@ path = np.loadtxt(open("../test/unit/data/results/roverPath.txt",'r'), skiprows=
 path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0)
 
 armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
-pathsAssignment = np.loadtxt(open("../test/unit/data/results/assignment.txt",'r'), skiprows=0)
 
 sizes = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), skiprows=1, max_rows=1)
@@ -328,9 +327,7 @@ xMap= np.linspace(0,res*xsize,xsize)
 yMap= np.linspace(0,res*ysize,ysize)
 x,y = np.meshgrid(xMap,yMap)
 
-ind = int(pathsAssignment[0]) 
-
-T = DKM(armJoints[ind,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
+T = DKM(armJoints[0,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
 rotT = T
 rotT[0,3] = 0   
 rotT[1,3] = 0   

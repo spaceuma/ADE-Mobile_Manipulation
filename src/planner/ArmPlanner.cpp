@@ -8,13 +8,12 @@
 using namespace KinematicModel_lib;
 using namespace ArmPlanner_lib;
 
-void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
+void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
                                const std::vector<std::vector<double>> *DEM,
                                double mapResolution,
                                double zResolution,
                                base::Waypoint samplePos,
-                               std::vector<std::vector<double>> *armJoints,
-                               std::vector<int> *pathsAssignment)
+                               std::vector<std::vector<double>> *armJoints)
 {
     // Rover z coordinate and heading computation
     std::vector<std::vector<double>> *roverPath6 = new std::vector<std::vector<double>>;
@@ -101,6 +100,7 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
     }
 
     // Paths inbetween assignment
+    std::vector<int> *pathsAssignment = new std::vector<int>;
     computeWaypointAssignment(roverPath6, endEffectorPath6, pathsAssignment);
 
     // Waypoint interpolation to smooth the movements of the arm joints
@@ -182,6 +182,8 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
         // else
         armJoints->push_back(config);
     }
+    
+    (*roverPath) = (*interpolatedRoverPath);
 
     clock_t endp = clock();
     double tp = double(endp - inip) / CLOCKS_PER_SEC;

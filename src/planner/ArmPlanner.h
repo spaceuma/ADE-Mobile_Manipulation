@@ -42,13 +42,12 @@ public:
     std::vector<double> iniEEorientation = {0, pi / 2, pi / 3}; // TODO set parameter properly
 
     // -- FUNCTIONS --
-    void planArmMotion(const std::vector<base::Waypoint> *roverPath,
+    void planArmMotion(std::vector<base::Waypoint> *roverPath,
                        const std::vector<std::vector<double>> *DEM,
                        double mapResolution,
                        double zResolution,
                        base::Waypoint samplePos,
-                       std::vector<std::vector<double>> *armJoints,
-                       std::vector<int> *pathsAssignment);
+                       std::vector<std::vector<double>> *armJoints);
 
     void generateTunnel(const std::vector<std::vector<double>> *roverPath6,
                         const std::vector<std::vector<double>> *DEM,
