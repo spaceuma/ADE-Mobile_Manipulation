@@ -62,6 +62,15 @@ public:
                                    const std::vector<std::vector<double>> *endEffectorPath6,
                                    std::vector<int> *pathsAssignment);
 
+    void computeWaypointInterpolation(const std::vector<std::vector<double>> *roverPath6,
+                                      const std::vector<int> *pathsAssignment,
+                                      std::vector<base::Waypoint> *newRoverPath,
+                                      std::vector<int> *newAssignment);
+
+    std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,
+                                                      base::Waypoint waypoint1,
+                                                      int numberIntWaypoints);
+
     double getDist3(std::vector<double> a, std::vector<double> b);
 };
 } // namespace ArmPlanner_lib

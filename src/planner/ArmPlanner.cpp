@@ -81,9 +81,6 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
 
     clock_t inip = clock();
     pathPlanner3D.planPath(costMap3D, mapResolution, zResolution, iniPos, samplePos, endEffectorPath);
-    clock_t endp = clock();
-    double tp = double(endp - inip) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time path planning 3D: " << tp << std::endl;
 
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
     endEffectorPath6->resize(endEffectorPath->size(), std::vector<double>(6));
@@ -106,23 +103,56 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
     // Paths inbetween assignment
     computeWaypointAssignment(roverPath6, endEffectorPath6, pathsAssignment);
 
-    // Computing inverse kinematics for collision checking
+    // Waypoint interpolation to smooth the movements of the arm joints
+    std::vector<base::Waypoint> *interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
+    std::vector<int> *interpolatedAssignment = new std::vector<int>(roverPath6->size());
+    computeWaypointInterpolation(roverPath6, pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
+
+    (*interpolatedRoverPath)[0].position[2]
+        = (*DEM)[(int)((*interpolatedRoverPath)[0].position[1] / mapResolution + 0.5)]
+                [(int)((*interpolatedRoverPath)[0].position[0] / mapResolution + 0.5)]
+          + heightGround2BCS;
+    (*interpolatedRoverPath)[0].heading
+        = atan2((*interpolatedRoverPath)[1].position[1] - (*interpolatedRoverPath)[0].position[1],
+                (*interpolatedRoverPath)[1].position[0] - (*interpolatedRoverPath)[0].position[0]);
+
+    int pSize = interpolatedRoverPath->size();
+    for (int i = 1; i < pSize - 1; i++)
+    {
+        (*interpolatedRoverPath)[i].position[2]
+            = (*DEM)[(int)((*interpolatedRoverPath)[i].position[1] / mapResolution + 0.5)]
+                    [(int)((*interpolatedRoverPath)[i].position[0] / mapResolution + 0.5)]
+              + heightGround2BCS;
+        (*interpolatedRoverPath)[i].heading
+            = atan2((*interpolatedRoverPath)[i + 1].position[1] - (*interpolatedRoverPath)[i - 1].position[1],
+                    (*interpolatedRoverPath)[i + 1].position[0] - (*interpolatedRoverPath)[i - 1].position[0]);
+    }
+
+    (*interpolatedRoverPath)[pSize-1].position[2]
+        = (*DEM)[(int)((*interpolatedRoverPath)[pSize-1].position[1] / mapResolution + 0.5)]
+                [(int)((*interpolatedRoverPath)[pSize-1].position[0] / mapResolution + 0.5)]
+          + heightGround2BCS;
+    (*interpolatedRoverPath)[pSize-1].heading
+        = atan2((*interpolatedRoverPath)[pSize-1].position[1] - (*interpolatedRoverPath)[pSize-2].position[1],
+                (*interpolatedRoverPath)[pSize-1].position[0] - (*interpolatedRoverPath)[pSize-2].position[0]);
+
+    // Computing inverse kinematics
     Manipulator sherpa_tt_arm;
 
-    for (int i = 0; i < roverPath6->size(); i++)
+    for (int i = 0; i < interpolatedRoverPath->size(); i++)
     {
-        int eeInd = (*pathsAssignment)[i];
+        int eeInd = (*interpolatedAssignment)[i];
         std::vector<std::vector<double>> TW2BCS(4, std::vector<double>(4));
         std::vector<std::vector<double>> TW2EE(4, std::vector<double>(4));
         std::vector<std::vector<double>> TBCS2EE(4, std::vector<double>(4));
 
-        double x = (*roverPath6)[i][0];
-        double y = (*roverPath6)[i][1];
-        double z = (*roverPath6)[i][2];
+        double x = (*interpolatedRoverPath)[i].position[0];
+        double y = (*interpolatedRoverPath)[i].position[1];
+        double z = (*interpolatedRoverPath)[i].position[2];
         std::vector<double> position{x, y, z};
-        double roll = (*roverPath6)[i][3];
-        double pitch = (*roverPath6)[i][4];
-        double yaw = (*roverPath6)[i][5];
+        double roll = 0;
+        double pitch = 0;
+        double yaw = (*interpolatedRoverPath)[i].heading;
 
         TW2BCS = dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
@@ -146,11 +176,16 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
         yaw = (*endEffectorPath6)[eeInd][5];
         std::vector<double> orientation{roll, pitch, yaw};
 
-        armJoints->push_back(sherpa_tt_arm.getManipJoints(position, orientation, 1, 1));
-        // if(i == endEffectorPath6->size()-1)
-        //    armJoints[endEffectorPath6->size()-1] = sherpa_tt_arm.getManipJoints(position, orientation,
-        //    armJoints[endEffectorPath6->size()-2]);
+        std::vector<double> config = sherpa_tt_arm.getManipJoints(position, orientation, 1, 1);
+        // if(config == std::vector<double>(1,0))
+        // armJoints->push_back((*armJoints)[armJoints->size()-1]);
+        // else
+        armJoints->push_back(config);
     }
+
+    clock_t endp = clock();
+    double tp = double(endp - inip) / CLOCKS_PER_SEC;
+    std::cout << "Elapsed execution time arm motion planning: " << tp << std::endl;
 
     ///////////////////////////////////////////////////////////
     // Printing results into .txt files
@@ -177,10 +212,10 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
     std::ofstream pathFile;
     pathFile.open("test/unit/data/results/roverPath.txt");
 
-    for (int j = 0; j < roverPath->size(); j++)
+    for (int j = 0; j < interpolatedRoverPath->size(); j++)
     {
-        pathFile << (*roverPath6)[j][0] << " " << (*roverPath6)[j][1] << " " << (*roverPath6)[j][2] << " "
-                 << (*roverPath6)[j][3] << " " << (*roverPath6)[j][4] << " " << (*roverPath6)[j][5] << "\n";
+        pathFile << (*interpolatedRoverPath)[j].position[0] << " " << (*interpolatedRoverPath)[j].position[1] << " "
+                 << (*interpolatedRoverPath)[j].position[2] << " " << (*interpolatedRoverPath)[j].heading << "\n";
     }
 
     pathFile.close();
@@ -200,9 +235,9 @@ void ArmPlanner::planArmMotion(const std::vector<base::Waypoint> *roverPath,
     std::ofstream assignmentFile;
     assignmentFile.open("test/unit/data/results/assignment.txt");
 
-    for (int j = 0; j < pathsAssignment->size(); j++)
+    for (int j = 0; j < interpolatedAssignment->size(); j++)
     {
-        assignmentFile << (*pathsAssignment)[j] << "\n";
+        assignmentFile << (*interpolatedAssignment)[j] << "\n";
     }
 
     assignmentFile.close();
@@ -384,6 +419,92 @@ void ArmPlanner::computeWaypointAssignment(const std::vector<std::vector<double>
 
     (*pathsAssignment)[0] = 0;
     (*pathsAssignment)[roverPath6->size() - 1] = endEffectorPath6->size() - 1;
+}
+
+void ArmPlanner::computeWaypointInterpolation(const std::vector<std::vector<double>> *roverPath6,
+                                              const std::vector<int> *pathsAssignment,
+                                              std::vector<base::Waypoint> *newRoverPath,
+                                              std::vector<int> *newAssignment)
+{
+    for (int i = 0; i < pathsAssignment->size(); i++)
+    {
+        (*newRoverPath)[i].position[0] = (*roverPath6)[i][0];
+        (*newRoverPath)[i].position[1] = (*roverPath6)[i][1];
+        (*newRoverPath)[i].position[2] = (*roverPath6)[i][2];
+        (*newRoverPath)[i].heading = (*roverPath6)[i][5];
+
+        (*newAssignment)[i] = (*pathsAssignment)[i];
+    }
+
+    int i = 1;
+    while (i < newRoverPath->size())
+    {
+        int diff = (*newAssignment)[i] - (*newAssignment)[i - 1];
+        if (diff > 5)
+        {
+            std::vector<base::Waypoint> newWaypoints
+                = getCubicInterpolation((*newRoverPath)[i - 1], (*newRoverPath)[i], diff - 1);
+            newRoverPath->insert(newRoverPath->begin() + i, newWaypoints.begin(), newWaypoints.end());
+            for (int j = 0; j < diff - 1; j++)
+                newAssignment->insert(newAssignment->begin() + i + j, (*newAssignment)[i - 1] + j + 1);
+            i += diff - 1;
+        }
+        i++;
+    }
+}
+
+std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(base::Waypoint waypoint0,
+                                                              base::Waypoint waypoint1,
+                                                              int numberIntWaypoints)
+{
+    double x0 = waypoint0.position[0];
+    double y0 = waypoint0.position[1];
+    double yaw0 = waypoint0.heading;
+    double dy0 = tan(yaw0);
+
+    double x1 = waypoint1.position[0];
+    double y1 = waypoint1.position[1];
+    double yaw1 = waypoint1.heading;
+    double dy1 = tan(yaw1);
+
+    double A = x1 * x1 * x1 - 3 * x1 * x0 * x0 + 2 * x0 * x0 * x0;
+    double B = x1 * x1 - 2 * x1 * x0 + x0 * x0;
+    double C = x1 * dy0 + y0 - x0 * dy0;
+    double D = (dy1 - dy0) / (3 * (x1 * x1 - x0 * x0));
+    double E = 2 * (x1 - x0) / (3 * (x1 * x1 - x0 * x0));
+
+    double b = (y1 - D * A - C) / (B - E * A);
+    double a = D - E * b;
+    double c = dy0 - 3 * a * x0 * x0 - 2 * b * x0;
+    double d = y0 - a * x0 * x0 * x0 - b * x0 * x0 - c * x0;
+
+    double l;
+    std::vector<double> xi(10002, 0);
+    std::vector<double> yi(10002, 0);
+    std::vector<double> laccum(10002, 0);
+
+    xi[0] = x0;
+    yi[0] = y0;
+    for (int i = 1; i < 10002; i++)
+    {
+        xi[i] = x0 + i * (x1 - x0) / 10001;
+        yi[i] = a * xi[i] * xi[i] * xi[i] + b * xi[i] * xi[i] + c * xi[i] + d;
+        l = sqrt((xi[i] - xi[i - 1]) * (xi[i] - xi[i - 1]) + (yi[i] - yi[i - 1]) * (yi[i] - yi[i - 1]));
+        laccum[i] = laccum[i - 1] + l;
+    }
+
+    d = laccum[10001] / (numberIntWaypoints + 1);
+
+    std::vector<base::Waypoint> newWaypoints(numberIntWaypoints);
+    for (int i = 0; i < numberIntWaypoints; i++)
+        for (int j = 0; j < 10002; j++)
+            if (laccum[j] > (i + 1) * d)
+            {
+                newWaypoints[i].position[0] = xi[j];
+                newWaypoints[i].position[1] = yi[j];
+                break;
+            }
+    return newWaypoints;
 }
 
 double ArmPlanner::getDist3(std::vector<double> a, std::vector<double> b)

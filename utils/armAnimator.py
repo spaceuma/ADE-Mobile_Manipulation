@@ -330,35 +330,40 @@ x,y = np.meshgrid(xMap,yMap)
 
 ind = int(pathsAssignment[0]) 
 
-T = DKM(armJoints[ind,:], path[0,np.array([0,1,2])], path[0,np.array([3,4,5])])
+T = DKM(armJoints[ind,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
 rotT = T
 rotT[0,3] = 0   
 rotT[1,3] = 0   
 rotT[2,3] = 0   
 
+Tbx = dot(rotZ(path[0,3]), traslation([1,0,0]))
+Tby = dot(rotZ(path[0,3]), traslation([0,1,0]))
+Tbz = dot(rotZ(path[0,3]), traslation([0,0,1]))
+
 Tx = dot(rotT, traslation([1,0,0]))
 Ty = dot(rotT, traslation([0,1,0]))
 Tz = dot(rotT, traslation([0,0,1]))
 
-px,py,pz = plotArm(armJoints[0,:], path[0,np.array([0,1,2])], path[0,np.array([3,4,5])])
+px,py,pz = plotArm(armJoints[0,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
 px = np.array(px)
 py = np.array(py)
 pz = np.array(pz)
 
 fig1 = mlab.figure()
 mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
-mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.05)
+mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
 mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 1)
 plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
 plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
 plt_ee = mlab.quiver3d(np.array([px[-1], px[-1], px[-1]]), np.array([py[-1], py[-1], py[-1]]), np.array([pz[-1], pz[-1], pz[-1]]), np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), np.array([Tx[2,3], Ty[2,3], Tz[2,3]]), scale_factor = 0.3, color = (0,0,1))
+plt_base = mlab.quiver3d(np.array([px[0], px[0], px[0]]), np.array([py[0], py[0], py[0]]), np.array([pz[0], pz[0], pz[0]]), np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]), scale_factor = 0.3, color = (1,0,0))
 
 @mlab.animate(delay = 100, ui = True)
 def anim():
     mlab.gcf()
     for i in range(0,len(armJoints)):
-        T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], path[i,np.array([3,4,5])])
+        T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         rotT = T
         rotT[0,3] = 0   
         rotT[1,3] = 0   
@@ -368,7 +373,11 @@ def anim():
         Ty = dot(rotT, traslation([0,1,0]))
         Tz = dot(rotT, traslation([0,0,1]))
 
-        px,py,pz = plotArm(armJoints[i,:], path[i,np.array([0,1,2])], path[i,np.array([3,4,5])])
+        Tbx = dot(rotZ(path[i,3]), traslation([1,0,0]))
+        Tby = dot(rotZ(path[i,3]), traslation([0,1,0]))
+        Tbz = dot(rotZ(path[i,3]), traslation([0,0,1]))
+
+        px,py,pz = plotArm(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         px = np.array(px)
         py = np.array(py)
         pz = np.array(pz)
@@ -376,6 +385,7 @@ def anim():
         plt_arm.mlab_source.set(x=px,y=py,z=pz)
         plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
         plt_ee.mlab_source.set(x = np.array([px[-1], px[-1], px[-1]]), y = np.array([py[-1], py[-1], py[-1]]), z = np.array([pz[-1], pz[-1], pz[-1]]), u = np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), v = np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), w = np.array([Tx[2,3], Ty[2,3], Tz[2,3]]))
+        plt_base.mlab_source.set(x = np.array([px[0], px[0], px[0]]), y = np.array([py[0], py[0], py[0]]), z = np.array([pz[0], pz[0], pz[0]]), u = np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), v = np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), w = np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]))
         yield
 
 anim()
@@ -383,11 +393,11 @@ anim()
 mlab.show()
 
 fig, ax = plt.subplots()
-plt.plot(range(0, len(armJoints)), armJoints[:, 0], label = 'First joint')
-plt.plot(range(0, len(armJoints)), armJoints[:, 1], label = 'Second joint')
-plt.plot(range(0, len(armJoints)), armJoints[:, 2], label = 'Third joint')
-plt.plot(range(0, len(armJoints)), armJoints[:, 3], label = 'Fourth joint')
-plt.plot(range(0, len(armJoints)), armJoints[:, 4], label = 'Fifth joint')
-plt.plot(range(0, len(armJoints)), armJoints[:, 5], label = 'Sixth joint')
+plt.scatter(range(0, len(armJoints)), armJoints[:, 0], label = 'First joint', s = 15)
+plt.scatter(range(0, len(armJoints)), armJoints[:, 1], label = 'Second joint', s = 15)
+plt.scatter(range(0, len(armJoints)), armJoints[:, 2], label = 'Third joint', s = 15)
+plt.scatter(range(0, len(armJoints)), armJoints[:, 3], label = 'Fourth joint', s = 15)
+plt.scatter(range(0, len(armJoints)), armJoints[:, 4], label = 'Fifth joint', s = 15)
+plt.scatter(range(0, len(armJoints)), armJoints[:, 5], label = 'Sixth joint', s = 15)
 plt.legend()
 plt.show()
