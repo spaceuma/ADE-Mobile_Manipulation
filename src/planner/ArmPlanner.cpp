@@ -50,14 +50,13 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
             offset += 2 * pi;
 
         heading.push_back((*roverPath)[i].heading + offset);
-
     }
 
     double sigma = 2;
     int samples = 5;
     smoothedHeading = getGaussSmoothen(heading, sigma, samples);
 
-    for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 -1; i++)
+    for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 - 1; i++)
     {
         (*roverPath6)[i][5] = smoothedHeading[i];
         while ((*roverPath6)[i][5] > pi)
@@ -202,8 +201,8 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     for (int j = 0; j < roverPath->size(); j++)
     {
-        inipathFile << (*roverPath6)[j][0] << " " << (*roverPath6)[j][1] << " "
-                    << (*roverPath6)[j][2] << " " << (*roverPath6)[j][5] << "\n";
+        inipathFile << (*roverPath6)[j][0] << " " << (*roverPath6)[j][1] << " " << (*roverPath6)[j][2] << " "
+                    << (*roverPath6)[j][5] << "\n";
     }
 
     inipathFile.close();
@@ -583,7 +582,7 @@ std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values, dou
     std::vector<double> out;
     auto kernel = getGaussKernel(samples, sigma);
     double kernelSum = 0;
-    for(int i = 0; i < kernel.size(); i++)
+    for (int i = 0; i < kernel.size(); i++)
         kernelSum += kernel[i];
     int sampleSide = samples / 2;
     int valueIdx = samples / 2 + 1;
@@ -601,8 +600,8 @@ std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values, dou
                 sampleCtr++;
             }
         }
-        double smoothed = sample / ((double)sampleCtr*kernelSum);
-        out.push_back(smoothed*samples);
+        double smoothed = sample / ((double)sampleCtr * kernelSum);
+        out.push_back(smoothed * samples);
     }
     return out;
 }
