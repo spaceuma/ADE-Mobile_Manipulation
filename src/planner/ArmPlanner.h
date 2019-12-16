@@ -71,7 +71,12 @@ public:
                                                       int numberIntWaypoints);
 
     double getDist3(std::vector<double> a, std::vector<double> b);
+
+    double getGaussValue(double sigma, double x);
+
+    std::vector<double> getGaussKernel(int samples, double sigma);
+
+    std::vector<double> getGaussSmoothen(std::vector<double> values, double sigma, int samples);
 };
 } // namespace ArmPlanner_lib
 #endif
-// namespace ArmPlanner_lib

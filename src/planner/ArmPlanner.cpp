@@ -19,17 +19,51 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     std::vector<std::vector<double>> *roverPath6 = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *endEffectorPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
-    for (int i = 0; i < roverPath->size(); i++)
+
+    std::vector<double> heading, smoothedHeading;
+
+    (*roverPath6)[0][0] = (*roverPath)[0].position[0];
+    (*roverPath6)[0][1] = (*roverPath)[0].position[1];
+    (*roverPath6)[0][2] = (*DEM)[(int)((*roverPath)[0].position[1] / mapResolution + 0.5)]
+                                [(int)((*roverPath)[0].position[0] / mapResolution + 0.5)]
+                          + heightGround2BCS;
+    (*roverPath6)[0][3] = 0;
+    (*roverPath6)[0][4] = 0;
+    (*roverPath6)[0][5] = (*roverPath)[0].heading;
+
+    heading.push_back((*roverPath)[0].heading);
+
+    double offset = 0;
+    for (int i = 1; i < roverPath->size(); i++)
     {
         (*roverPath6)[i][0] = (*roverPath)[i].position[0];
         (*roverPath6)[i][1] = (*roverPath)[i].position[1];
         (*roverPath6)[i][2] = (*DEM)[(int)((*roverPath)[i].position[1] / mapResolution + 0.5)]
                                     [(int)((*roverPath)[i].position[0] / mapResolution + 0.5)]
                               + heightGround2BCS;
-        // TODO compute properly rover heading
         (*roverPath6)[i][3] = 0;
         (*roverPath6)[i][4] = 0;
         (*roverPath6)[i][5] = (*roverPath)[i].heading;
+        if ((*roverPath)[i].heading - (*roverPath)[i - 1].heading > pi)
+            offset -= 2 * pi;
+        else if ((*roverPath)[i].heading - (*roverPath)[i - 1].heading < -pi)
+            offset += 2 * pi;
+
+        heading.push_back((*roverPath)[i].heading + offset);
+
+    }
+
+    double sigma = 2;
+    int samples = 5;
+    smoothedHeading = getGaussSmoothen(heading, sigma, samples);
+
+    for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 -1; i++)
+    {
+        (*roverPath6)[i][5] = smoothedHeading[i];
+        while ((*roverPath6)[i][5] > pi)
+            (*roverPath6)[i][5] -= 2 * pi;
+        while ((*roverPath6)[i][5] < -pi)
+            (*roverPath6)[i][5] += 2 * pi;
     }
 
     // Initial arm pos computation
@@ -108,34 +142,6 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     std::vector<int> *interpolatedAssignment = new std::vector<int>(roverPath6->size());
     computeWaypointInterpolation(roverPath6, pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
 
-    (*interpolatedRoverPath)[0].position[2]
-        = (*DEM)[(int)((*interpolatedRoverPath)[0].position[1] / mapResolution + 0.5)]
-                [(int)((*interpolatedRoverPath)[0].position[0] / mapResolution + 0.5)]
-          + heightGround2BCS;
-    (*interpolatedRoverPath)[0].heading
-        = atan2((*interpolatedRoverPath)[1].position[1] - (*interpolatedRoverPath)[0].position[1],
-                (*interpolatedRoverPath)[1].position[0] - (*interpolatedRoverPath)[0].position[0]);
-
-    int pSize = interpolatedRoverPath->size();
-    for (int i = 1; i < pSize - 1; i++)
-    {
-        (*interpolatedRoverPath)[i].position[2]
-            = (*DEM)[(int)((*interpolatedRoverPath)[i].position[1] / mapResolution + 0.5)]
-                    [(int)((*interpolatedRoverPath)[i].position[0] / mapResolution + 0.5)]
-              + heightGround2BCS;
-        (*interpolatedRoverPath)[i].heading
-            = atan2((*interpolatedRoverPath)[i + 1].position[1] - (*interpolatedRoverPath)[i - 1].position[1],
-                    (*interpolatedRoverPath)[i + 1].position[0] - (*interpolatedRoverPath)[i - 1].position[0]);
-    }
-
-    (*interpolatedRoverPath)[pSize-1].position[2]
-        = (*DEM)[(int)((*interpolatedRoverPath)[pSize-1].position[1] / mapResolution + 0.5)]
-                [(int)((*interpolatedRoverPath)[pSize-1].position[0] / mapResolution + 0.5)]
-          + heightGround2BCS;
-    (*interpolatedRoverPath)[pSize-1].heading
-        = atan2((*interpolatedRoverPath)[pSize-1].position[1] - (*interpolatedRoverPath)[pSize-2].position[1],
-                (*interpolatedRoverPath)[pSize-1].position[0] - (*interpolatedRoverPath)[pSize-2].position[0]);
-
     // Computing inverse kinematics
     Manipulator sherpa_tt_arm;
 
@@ -182,7 +188,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         // else
         armJoints->push_back(config);
     }
-    
+
     (*roverPath) = (*interpolatedRoverPath);
 
     clock_t endp = clock();
@@ -191,6 +197,27 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     ///////////////////////////////////////////////////////////
     // Printing results into .txt files
+    std::ofstream inipathFile;
+    inipathFile.open("test/unit/data/results/iniroverPath.txt");
+
+    for (int j = 0; j < roverPath->size(); j++)
+    {
+        inipathFile << (*roverPath6)[j][0] << " " << (*roverPath6)[j][1] << " "
+                    << (*roverPath6)[j][2] << " " << (*roverPath6)[j][5] << "\n";
+    }
+
+    inipathFile.close();
+
+    std::ofstream pathFile;
+    pathFile.open("test/unit/data/results/roverPath.txt");
+
+    for (int j = 0; j < interpolatedRoverPath->size(); j++)
+    {
+        pathFile << (*interpolatedRoverPath)[j].position[0] << " " << (*interpolatedRoverPath)[j].position[1] << " "
+                 << (*interpolatedRoverPath)[j].position[2] << " " << (*interpolatedRoverPath)[j].heading << "\n";
+    }
+
+    pathFile.close();
 
     std::ofstream cMap3DFile;
     cMap3DFile.open("test/unit/data/results/cMap3D.txt");
@@ -211,17 +238,6 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     cMap3DFile.close();
 
-    std::ofstream pathFile;
-    pathFile.open("test/unit/data/results/roverPath.txt");
-
-    for (int j = 0; j < interpolatedRoverPath->size(); j++)
-    {
-        pathFile << (*interpolatedRoverPath)[j].position[0] << " " << (*interpolatedRoverPath)[j].position[1] << " "
-                 << (*interpolatedRoverPath)[j].position[2] << " " << (*interpolatedRoverPath)[j].heading << "\n";
-    }
-
-    pathFile.close();
-
     std::ofstream path3DFile;
     path3DFile.open("test/unit/data/results/EEPath.txt");
 
@@ -237,9 +253,9 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     std::ofstream assignmentFile;
     assignmentFile.open("test/unit/data/results/assignment.txt");
 
-    for (int j = 0; j < interpolatedAssignment->size(); j++)
+    for (int j = 0; j < pathsAssignment->size(); j++)
     {
-        assignmentFile << (*interpolatedAssignment)[j] << "\n";
+        assignmentFile << (*pathsAssignment)[j] << "\n";
     }
 
     assignmentFile.close();
@@ -504,6 +520,13 @@ std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(base::Waypoint way
             {
                 newWaypoints[i].position[0] = xi[j];
                 newWaypoints[i].position[1] = yi[j];
+                newWaypoints[i].position[2] = (waypoint0.position[2] + waypoint1.position[2]) / 2;
+                if (abs(waypoint0.heading - waypoint1.heading) > pi)
+                    newWaypoints[i].heading = (waypoint0.heading + waypoint1.heading + 2 * pi) / 2;
+                if (newWaypoints[i].heading > pi)
+                    newWaypoints[i].heading -= 2 * pi;
+                else
+                    newWaypoints[i].heading = (waypoint0.heading + waypoint1.heading) / 2;
                 break;
             }
     return newWaypoints;
@@ -512,4 +535,74 @@ std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(base::Waypoint way
 double ArmPlanner::getDist3(std::vector<double> a, std::vector<double> b)
 {
     return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2) + pow(a[2] - b[2], 2));
+}
+
+double ArmPlanner::getGaussValue(double sigma, double x)
+{
+    double expVal = -1 * (pow(x, 2) / pow(2 * sigma, 2));
+    double divider = sqrt(2 * M_PI * pow(sigma, 2));
+    return (1 / divider) * exp(expVal);
+}
+
+std::vector<double> ArmPlanner::getGaussKernel(int samples, double sigma)
+{
+    std::vector<double> v;
+
+    bool doubleCenter = false;
+    if (samples % 2 == 0)
+    {
+        doubleCenter = true;
+        samples--;
+    }
+    int steps = (samples - 1) / 2;
+    double stepSize = (3 * sigma) / steps;
+
+    for (int i = steps; i >= 1; i--)
+    {
+        v.push_back(getGaussValue(sigma, i * stepSize * -1));
+    }
+
+    v.push_back(getGaussValue(sigma, 0));
+    if (doubleCenter)
+    {
+        v.push_back(getGaussValue(sigma, 0));
+    }
+
+    for (int i = 1; i <= steps; i++)
+    {
+        v.push_back(getGaussValue(sigma, i * stepSize));
+    }
+
+    assert(v.size() == samples);
+
+    return v;
+}
+
+std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values, double sigma, int samples)
+{
+    std::vector<double> out;
+    auto kernel = getGaussKernel(samples, sigma);
+    double kernelSum = 0;
+    for(int i = 0; i < kernel.size(); i++)
+        kernelSum += kernel[i];
+    int sampleSide = samples / 2;
+    int valueIdx = samples / 2 + 1;
+    unsigned long ubound = values.size();
+    for (unsigned long i = 0; i < ubound; i++)
+    {
+        double sample = 0;
+        int sampleCtr = 0;
+        for (long j = i - sampleSide; j <= i + sampleSide; j++)
+        {
+            if (j > 0 && j < ubound)
+            {
+                int sampleWeightIndex = sampleSide + (j - i);
+                sample += kernel[sampleWeightIndex] * values[j];
+                sampleCtr++;
+            }
+        }
+        double smoothed = sample / ((double)sampleCtr*kernelSum);
+        out.push_back(smoothed*samples);
+    }
+    return out;
 }
