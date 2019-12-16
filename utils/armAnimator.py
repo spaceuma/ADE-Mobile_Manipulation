@@ -356,7 +356,7 @@ plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8]
 plt_ee = mlab.quiver3d(np.array([px[-1], px[-1], px[-1]]), np.array([py[-1], py[-1], py[-1]]), np.array([pz[-1], pz[-1], pz[-1]]), np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), np.array([Tx[2,3], Ty[2,3], Tz[2,3]]), scale_factor = 0.3, color = (0,0,1))
 plt_base = mlab.quiver3d(np.array([px[0], px[0], px[0]]), np.array([py[0], py[0], py[0]]), np.array([pz[0], pz[0], pz[0]]), np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]), scale_factor = 0.3, color = (1,0,0))
 
-@mlab.animate(delay = 100, ui = True)
+@mlab.animate(delay = 100000, ui = True)
 def anim():
     mlab.gcf()
     for i in range(0,len(armJoints)):
