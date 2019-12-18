@@ -34,6 +34,7 @@ private:
 	std::vector<Joints> jointsProfile;
 
 	BiFastMarching fmPlanner;
+	FastMarching fmShadower;
         FetchingPoseEstimator fetchPosePlanner;
 	ArmPlanner armPlanner;
 	Waypoint samplePos;

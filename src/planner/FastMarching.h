@@ -18,6 +18,15 @@ public:
                   base::Waypoint iniPos,
                   base::Waypoint finalPos,
                   std::vector<base::Waypoint> *path);
+    
+    void getShadowedCostMap(std::vector<std::vector<double>> &costMap,
+				      double mapResolution,
+				      double d_max_distance,
+				      base::Waypoint finalPos);
+
+    void computeEntireTMap(const std::vector<std::vector<double>> *costMap,
+                                     std::vector<int> goal,
+                                     std::vector<std::vector<double>> *TMap);
 
     void computeTMap(const std::vector<std::vector<double>> *costMap,
                      std::vector<int> goal,
