@@ -34,7 +34,7 @@ void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap){
 }
 
 void MobileManipMap::setElevationMap(std::vector<std::vector<double>> &elevationMap, double res){
-  this->resDem = res;
+  this->d_res = res;
   this->vecElevationMap.clear();
   std::cout << "Setting Elevation Map of " << elevationMap[0].size() << "x" << elevationMap.size() << " nodes" << std::endl;
   std::vector<double> row;
@@ -73,7 +73,7 @@ int MobileManipMap::setRGDem(RoverGuidance_Dem &dem){
   this->offsetXYZ[2] = dem.mapOrigin_m_Mlg[2];
   this->numXnodes = dem.cols;
   this->numYnodes = dem.rows;
-  this->resDem = dem.nodeSize_m;
+  this->d_res = dem.nodeSize_m;
   /*for (uint j = 0; j<this->numYnodes; j++)
   {
         for (uint i = 0; i<this->numXnodes; i++)
@@ -85,6 +85,23 @@ int MobileManipMap::setRGDem(RoverGuidance_Dem &dem){
 
   std::cout << " Number of columns = " << this->numXnodes << std::endl;
   std::cout << " Number of rows = " << this->numYnodes << std::endl;
+  std::vector<double> vd_row(this->numXnodes);
+  std::vector<bool> vb_row(this->numXnodes);
+
+  this->vvd_elevation_map.clear();
+  this->vvb_obstacle_map.clear();
+  this->vvd_cost_map.clear();
+  this->vvd_proximity_map.clear();
+
+  for ( uint j = 0; j < this->numYnodes; j++ )
+  {
+     this->vvd_elevation_map.push_back(vd_row); 
+     this->vvb_obstacle_map.push_back(vb_row); 
+     this->vvd_cost_map.push_back(vd_row);
+     this->vvd_proximity_map.push_back(vd_row); 
+  }
+
+
   if (this->calculateElevationMap())
   {
     this->calculateCostMap();
@@ -99,7 +116,7 @@ int MobileManipMap::setRGDem(RoverGuidance_Dem &dem){
 int MobileManipMap::setImageDem(Mat inputDem, double resDem)
 {
   flip(inputDem, this->matElevationMap, 0); //0 = flip upside down
-  this->resDem = resDem;
+  this->d_res = resDem;
   if (this->calculateCostMap())
   {
     return 0;
@@ -111,7 +128,7 @@ int MobileManipMap::setImageDem(Mat inputDem, double resDem)
 }
 
 void MobileManipMap::getCostMap(std::vector<std::vector<double>> &costMap){
-  costMap = currentCostMap;
+  costMap = vvd_cost_map;
 }
 
 void MobileManipMap::getElevationMap(std::vector<std::vector<double>> &elevationMap){
@@ -132,12 +149,7 @@ bool MobileManipMap::calculateElevationMap() {
       try
       {
         this->matElevationMap.at<double>(j,i) = this->rgDem.p_heightData_m[i + j*this->numXnodes];
-        /*cout << "Index " << i + j*this->numXnodes << endl;
-        cout << "Node " << i << "," << j << endl;
-	cout << "Elevation is " << elevationMap.at<double>(j,i) << endl;
-	cout << "Initial Value was " << this->rgDem.p_heightData_m[i + j*this->numXnodes] << endl;*/
-	//p[i] = this->rgDem.p_heightData_m[i + j*i];
-        //cout << "Elevation is " << p[i] << endl;
+        this->vvd_elevation_map[j][i] = this->rgDem.p_heightData_m[i + j*this->numXnodes]; 
       }
       catch(...)
       {
@@ -163,8 +175,8 @@ bool MobileManipMap::calculateElevationMap() {
 
 void MobileManipMap::showElevationMap()
 {
-  Mat mapToShow;
-  //flip(this->elevationMap, mapToShow,0);
+  Mat mapToShow = Mat::zeros( cv::Size( this->numYnodes, this->numXnodes ), CV_64F );
+
   double min, max;
   minMaxLoc(this->matElevationMap, &min, &max);
   //cout << " The min is " << min << " and the max " << max << endl;
@@ -200,47 +212,78 @@ void MobileManipMap::showObstacleMap()
   imshow("Obstacle Map", mapToShow);
 }
 
-bool MobileManipMap::calculateSlopeMap() {
+bool MobileManipMap::calculateObstacleMap() {
+  Mat mat_elevation_map = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_64F);
+  Mat mat_obstacle_map = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_32FC1);
+  Mat mat_slope_map  = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_32FC1);
   Mat dx, dy, elev;
   double scale = 0.125; // 1/8 to normalize sobel filter
   double delta = 0;
-  this->matElevationMap.convertTo(elev, CV_32F, 1.0 , 0);
-  //getDerivKernels(dx,dy,1,1,3,true,CV_32F);
-  Sobel(elev, dx, CV_32F, 1,0, 3, scale, delta, BORDER_DEFAULT );
-  Sobel(elev, dy, CV_32F, 0,1, 3, scale, delta, BORDER_DEFAULT );
-  Mat angle, mag;
-  cartToPolar(dx, dy, mag, angle);
-  //Size contSize = mag.size();
-  /*if (mat.isContinous())
-  {
-    contSize.width *= contSize.height;
-    contSize.height = 1;
-  }*/
 
-  this->slopeMap = Mat::zeros(this->matElevationMap.size(), CV_32FC1); 
-  for (int j = 0; j < slopeMap.rows; j++)
+  for (int j = 0; j < this->numYnodes; j++)
   {
-    for (int i = 0; i < slopeMap.cols; i++)
+    //double* p  = this->elevationMap.ptr<double>(j);
+    for (int i = 0; i < this->numXnodes; i++)
     {
-      //cout << "Magnitude is " << endl;
-      this->slopeMap.at<float>(j,i) = atan(mag.at<float>(j,i) *1.0/this->resDem) * 180.0 / 3.1416;
+      mat_elevation_map.at<double>(j,i) = this->vvd_elevation_map[j][i];
     }
   }
-  /*Size contSize = this->slopeMap.size();
-  cout << "Size is " << contSize.height << "x" << contSize.width << endl;
-  Mat mapToShow;
-  double min, max;
-  minMaxLoc(mag, &min, &max);
-  mag.convertTo(mapToShow, CV_32F, 1.0 / (max-min), 0);
-  namedWindow("Magnitude Map", WINDOW_NORMAL);
-  imshow("Magnitude Map", mapToShow);
-  waitKey();*/
+
+  mat_elevation_map.convertTo(elev, CV_32F, 1.0 , 0);
+  Sobel(elev, dx, CV_32F, 1,0, 3, scale, delta, BORDER_DEFAULT );
+  Sobel(elev, dy, CV_32F, 0,1, 3, scale, delta, BORDER_DEFAULT );
+  Mat angle, mag, mat_proximity_map;
+  cartToPolar(dx, dy, mag, angle);
+  
+  for (int j = 0; j < mat_slope_map.rows; j++)
+  {
+    for (int i = 0; i < mat_slope_map.cols; i++)
+    {
+      mat_slope_map.at<float>(j,i) = atan(mag.at<float>(j,i) *1.0/this->d_res) * 180.0 / 3.1416;
+    }
+  }
+
+  threshold(mat_slope_map, mat_obstacle_map, 20.0, 255, THRESH_BINARY_INV);
+
+  // Borders are considered obstacles
+  /*for (int i = 0; i < slopeMap.cols; i++)
+  {
+    mat_obstacle_map.at<float>(0,i) = 0;
+    mat_obstacle_map.at<float>(this->numYnodes-1,i) = 0;
+  }
+
+  for (int j = 0; j < slopeMap.rows; j++)
+  {
+    mat_obstacle_map.at<float>(j,0) = 0;
+    mat_obstacle_map.at<float>(j,this->numXnodes-1) = 0;
+  }*/
+  
+  mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
+
+  distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
+  mat_proximity_map = mat_proximity_map*this->d_res;
+  threshold(mat_proximity_map,mat_proximity_map,0.5,0,THRESH_TOZERO);
+
+  for ( int j = 0; j < this->numYnodes; j++ )
+  {
+    for ( int i = 0; i < this->numXnodes; i++ )
+    {
+      if ((mat_proximity_map.at<float>(j,i) == 0)||(i == 0)||(j == 0)||(i == this->numXnodes - 1)||(j == this->numYnodes - 1))
+      {
+        this->vvb_obstacle_map[j][i] = true;
+      }
+      else
+      {
+        this->vvb_obstacle_map[j][i] = false;
+      }
+    }
+  }
   return true;
 }
 
-bool MobileManipMap::calculateObstacleMap()
+bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
 {
-  Mat obstacleMap = Mat::zeros(this->matElevationMap.size(), CV_32FC1);
+  /*Mat obstacleMap = Mat::zeros(this->matElevationMap.size(), CV_32FC1);
   threshold(this->slopeMap, obstacleMap, 20.0, 255, THRESH_BINARY_INV);
 
   // Borders are considered obstacles
@@ -256,31 +299,105 @@ bool MobileManipMap::calculateObstacleMap()
     obstacleMap.at<float>(j,this->numXnodes-1) = 0;
   }
 
-  Mat dist;
   obstacleMap.convertTo(obstacleMap, CV_8UC1);
 
-  /*namedWindow("Obstacle map", WINDOW_NORMAL);
-  imshow("Obstacle map", obstacleMap);
-  waitKey();*/
+  std::vector<std::vector<bool>> vvb_obstacle_map;
+  std::vector<bool> vb_row;
+  
+  Mat dist;
+
   distanceTransform(obstacleMap, dist, DIST_L2, 5);
-  dist = dist*this->resDem;
+  dist = dist*this->d_res;
   threshold(dist,dist,0.5,0,THRESH_TOZERO);
-  this->obstacleMap = dist;
-  //threshold(dist,dist,20.0,0,THRESH_TRUNC);
-  //normalize(dist, dist, 0, 1.0, NORM_MINMAX);
-  /*namedWindow("Distance Image", WINDOW_NORMAL);
-  imshow("Distance Image",dist);
-  waitKey();*/
+
+  for ( int j = 0; j < this->numYnodes; j++ )
+  {
+    for ( int i = 0; i < this->numXnodes; i++ )
+    {
+      vb_row.push_back(dist.at<float>(j,i)<0.001);
+    }
+    vvb_obstacle_map.push_back(vb_row);
+    vb_row.clear();
+  }*/
+  this->fmShadower.getShadowedCostMap( this->vvb_obstacle_map, this->d_res, 1.5, sample_pos);	
+  /*for ( int j = 0; j < this->numYnodes; j++ )
+  {
+    for ( int i = 0; i < this->numXnodes; i++ )
+    {
+      if (vvb_obstacle_map[j][i])
+      {
+        obstacleMap.at<float>(j,i) = 0;
+      }
+    }
+  }*/
+  this->calculateProximityToObstaclesMap();
+  std::cout << " Proximity Map is computed " << std::endl;
+
+  for ( uint j = 0; j < this->numYnodes; j++ )
+  {
+    for ( uint i = 0; i < this->numXnodes; i++ )
+    {
+      if ( this->vvd_proximity_map[j][i] < this->d_res )
+      {
+        this->vvd_cost_map[j][i] = INFINITY; 
+      }
+      else
+      {
+        if ( this->vvd_proximity_map[j][i] < 1.0 )//ToDo: this is a adhoc risk distance value!!
+        {
+          this->vvd_cost_map[j][i] = 1.0 + 20.0*(1.0 - (double)this->vvd_proximity_map[j][i]);
+	}
+        else	
+        {
+          this->vvd_cost_map[j][i] = 1.0;
+	}
+      } 
+    }
+  }
   return true;
 }
 
-bool MobileManipMap::calculateCostMap()
+bool MobileManipMap::calculateProximityToObstaclesMap()
 {
-  this->calculateSlopeMap();
-  this->calculateObstacleMap();
-  
-  this->currentCostMap.clear();
+  Mat mat_proximity_map;
+  Mat mat_obstacle_map = Mat::zeros(cv::Size(numYnodes,numXnodes), CV_32FC1);
+  for ( int j = 0; j < this->numYnodes; j++ )
+  {
+    for ( int i = 0; i < this->numXnodes; i++ )
+    {
+      if (vvb_obstacle_map[j][i])
+      {
+        mat_obstacle_map.at<float>(j,i) = 0;
+      }
+      else
+      {
+        mat_obstacle_map.at<float>(j,i) = 1;
+      }
+    }
+  }
+  std::cout << "Obstacle Map openCV matrix is created" << std::endl;
+  mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
+  std::cout << "Obstacle Map openCV matrix is converted" << std::endl;
+  distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
+  std::cout << "Distance Transform is used" << std::endl;
+  mat_proximity_map = mat_proximity_map*this->d_res;
+  for ( int j = 0; j < this->numYnodes; j++ )
+  {
+    for ( int i = 0; i < this->numXnodes; i++ )
+    {
+      vvd_proximity_map[j][i] = mat_proximity_map.at<float>(j,i);
+    }
+  }
+  return true;
+}
 
+bool MobileManipMap::getSamplingCostMap(std::vector<std::vector<double>>& vvd_cost_map, 
+		                        base::Waypoint w_sample)
+{
+/*  this->calculateSamplingObstacleMap(w_sample);
+  this->calculateProximityToObstaclesMap();
+  vvd_cost_map.clear();
+  
   std::vector<double> row_cost;
   float current_proximity;
 
@@ -288,7 +405,7 @@ bool MobileManipMap::calculateCostMap()
   {
     for (uint i = 0; i < this->numXnodes; i++)
     {
-      current_proximity = this->obstacleMap.at<float>(j,i);
+      current_proximity = this->proximityMap.at<float>(j,i);
       if (current_proximity < 0.5) // Geometric Obstacle
       {
          row_cost.push_back(INFINITY);
@@ -305,13 +422,44 @@ bool MobileManipMap::calculateCostMap()
           }
       }
     }
-    currentCostMap.push_back(row_cost);
+    vvd_cost_map.push_back(row_cost);
     row_cost.clear();
   }
-  std::cout << " The size of the costMap is " << currentCostMap.size() << " x " << currentCostMap[0].size() << std::endl; 
+*/
+}
+      
+bool MobileManipMap::calculateCostMap()
+{
+  this->calculateObstacleMap();
+  std::cout << " Obstacle Map is computed " << std::endl;
+  this->calculateProximityToObstaclesMap();
+  std::cout << " Proximity Map is computed " << std::endl;
+
+  for ( uint j = 0; j < this->numYnodes; j++ )
+  {
+    for ( uint i = 0; i < this->numXnodes; i++ )
+    {
+      if ( this->vvd_proximity_map[j][i] < this->d_res )
+      {
+        this->vvd_cost_map[j][i] = INFINITY; 
+      }
+      else
+      {
+        if ( this->vvd_proximity_map[j][i] < 1.0 )//ToDo: this is a adhoc risk distance value!!
+        {
+          this->vvd_cost_map[j][i] = 1.0 + 20.0*(1.0 - (double)this->vvd_proximity_map[j][i]);
+	}
+        else	
+        {
+          this->vvd_cost_map[j][i] = 1.0;
+	}
+      } 
+    }
+  }
+  //std::cout << " The size of the costMap is " << currentCostMap.size() << " x " << currentCostMap[0].size() << std::endl; 
   
 }
 
 double MobileManipMap::getResolution(){
-  return this->resDem;
+  return this->d_res;
 }

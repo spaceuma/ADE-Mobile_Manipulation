@@ -19,7 +19,7 @@ public:
                   base::Waypoint finalPos,
                   std::vector<base::Waypoint> *path);
     
-    void getShadowedCostMap(std::vector<std::vector<double>> &costMap,
+    void getShadowedCostMap(std::vector<std::vector<bool>> &vvb_obstacle_map,
 				      double mapResolution,
 				      double d_max_distance,
 				      base::Waypoint finalPos);

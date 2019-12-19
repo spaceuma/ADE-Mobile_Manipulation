@@ -17,8 +17,8 @@ void MotionPlan::updateMotionPlan(std::vector<Waypoint> newRoverPath, std::vecto
 
 void MotionPlan::executeRoverBasePathPlanning(MobileManipMap* inputMap, base::Waypoint rover_position, base::Waypoint sample){
 	std::vector<std::vector<double>> costMap;
+	//inputMap->getSamplingCostMap( costMap, sample );
 	inputMap->getCostMap( costMap );
-	this->fmShadower.getShadowedCostMap( costMap, inputMap->getResolution(), 1.0, sample );	
 	this->fmPlanner.planPath(&costMap, inputMap->getResolution(), rover_position, sample, &(this->roverPath));
         this->samplePos = sample;
 }

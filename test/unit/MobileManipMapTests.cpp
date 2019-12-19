@@ -43,14 +43,21 @@ TEST(MMMapTest, constructorTest)
               std::cout << "Initial Value is " << dummyDem->p_heightData_m[i+j*dummyDem->cols] << std::endl;
           }
     }*/
+    base::Waypoint samplePos;
+    samplePos.position[0] = 5.3;
+    samplePos.position[1] = 5.6;
+    samplePos.heading = 0;
+
+
     MobileManipMap dummyMap;
     dummyMap.setRGDem((*dummyDem));
-    dummyMap.showElevationMap();
+    //dummyMap.addSampleFacingObstacles(samplePos);
+    /*dummyMap.showElevationMap();
     waitKey();
     dummyMap.showSlopeMap();
     waitKey();
     dummyMap.showObstacleMap();
-    waitKey();
+    waitKey();*/
     std::vector<std::vector<double>> costMap;
     costMap.resize(dummyDem->rows);
     for (uint i = 0; i < dummyDem->rows; i++)

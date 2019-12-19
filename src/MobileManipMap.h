@@ -5,8 +5,11 @@
 #include <opencv2/opencv.hpp>
 #include <math.h>
 //#include "MotionPlan.h"
+#include "Waypoint.hpp"
+#include "FastMarching.h"
 
 using namespace cv;
+using namespace FastMarching_lib;
 /**
  * This class includes the provide DEM, the cost map and the obstacles map.
  */
@@ -21,10 +24,16 @@ private:
   double offsetXYZ[3];
   unsigned int numXnodes;
   unsigned int numYnodes;
-  double resDem;
+  double d_res;
   Mat matElevationMap;
   Mat slopeMap;
   Mat obstacleMap;
+  Mat proximityMap;
+  FastMarching fmShadower;
+  std::vector<std::vector<double>> vvd_elevation_map;
+  std::vector<std::vector<bool>>   vvb_obstacle_map;
+  std::vector<std::vector<double>> vvd_cost_map;
+  std::vector<std::vector<double>> vvd_proximity_map;
   std::vector<std::vector<double>> vecElevationMap;
   std::vector<std::vector<double>> currentObstaclesMap;
   std::vector<std::vector<double>> currentCostMap;
@@ -46,6 +55,7 @@ public:
   void getElevationMap(std::vector<std::vector<double>> &elevationMap);
   std::vector<std::vector<double>>* getCostMapPointer();
   double getResolution(); 
+  bool addSampleFacingObstacles(base::Waypoint sample_pos);
 private:
   bool calculateElevationMap();
   bool calculateSlopeMap();
@@ -59,6 +69,9 @@ private:
 	 */
   bool calculateObstacleMap();
 
+
+  bool getSamplingCostMap(std::vector<std::vector<double>>& vvd_cost_map, base::Waypoint w_sample);
+  bool calculateProximityToObstaclesMap();
 };
 
 #endif
