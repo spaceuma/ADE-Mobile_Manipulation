@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 costMap = np.loadtxt(open("../test/unit/data/results/costMap.txt"), skiprows=0)
-costMap[np.where(costMap==np.inf)] = -1
+costMap[np.where(costMap==np.inf)] = np.nan
 
 fig1, ax1 = plt.subplots()
 plot1 = ax1.contourf(costMap, 40, cmap = 'Reds')
