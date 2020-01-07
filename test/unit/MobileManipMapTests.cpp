@@ -10,48 +10,45 @@ using namespace cv;
 
 TEST(MMMapTest, constructorTest)
 {
-    /*double dummyHeightData [9] = {0.0, 1.0, 2.0, 0.0, 1.0, 2.0, 0.0, 1.0, 2.0};
-    RoverGuidance_Dem dummyDem;
-    dummyDem.cols = 10;
-    dummyDem.rows = 10;
-    dummyDem.p_heightData_m = &dummyHeightData[0];*/
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data;
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevation_data);
     double res = 0.1; // meters
-    double n_row, n_col;
-    std::vector<std::vector<double>> vector_elevationData;
+    int i_elevationmatrix_size
+        = vvd_elevation_data.size() * vvd_elevation_data[0].size();
 
-    RoverGuidance_Dem *dummyDem = new RoverGuidance_Dem;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv", vector_elevationData);
-    int i_elevationmatrix_size = vector_elevationData.size()*vector_elevationData[0].size();
-    std::cout << "The size is " <<  i_elevationmatrix_size << std::endl;
+    std::cout << " MMMapTest - Size of the input map is "
+              << i_elevationmatrix_size << std::endl;
+
+    // A dummy Rover Guidance based DEM is created
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
     double dummyArray[i_elevationmatrix_size];
-    dummyDem->p_heightData_m = dummyArray;
-    for (uint j = 0; j < vector_elevationData.size() ; j++)
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
+    for (uint j = 0; j < vvd_elevation_data.size(); j++)
     {
-	    for (uint i = 0; i < vector_elevationData[0].size(); i++)
-	    {
-        	dummyDem->p_heightData_m[i+j*vector_elevationData[0].size()] = vector_elevationData[j][i];
-	    }
+        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
+                = vvd_elevation_data[j][i];
+        }
     }
 
-    dummyDem->cols = vector_elevationData[0].size();
-    dummyDem->rows = vector_elevationData.size();
-    dummyDem->nodeSize_m = res;
-    /*for (uint j = 0; j<dummyDem->rows; j++)
-    {
-          for (uint i = 0; i<dummyDem->cols; i++)
-          {
-              std::cout << "Initial Value is " << dummyDem->p_heightData_m[i+j*dummyDem->cols] << std::endl;
-          }
-    }*/
     base::Waypoint samplePos;
     samplePos.position[0] = 5.3;
     samplePos.position[1] = 5.6;
     samplePos.heading = 0;
 
-
     MobileManipMap dummyMap;
-    dummyMap.setRGDem((*dummyDem));
-    //dummyMap.addSampleFacingObstacles(samplePos);
+    dummyMap.setRGDem((*prgd_dummy_dem));
+    double d_elevation_min = dummyMap.getMinElevation();
+
+    std::cout << " MMMapTest - The minimum value of elevation is "
+              << d_elevation_min << std::endl;
+    // dummyMap.addSampleFacingObstacles(samplePos);
     /*dummyMap.showElevationMap();
     waitKey();
     dummyMap.showSlopeMap();
@@ -59,13 +56,14 @@ TEST(MMMapTest, constructorTest)
     dummyMap.showObstacleMap();
     waitKey();*/
     std::vector<std::vector<double>> costMap;
-    costMap.resize(dummyDem->rows);
-    for (uint i = 0; i < dummyDem->rows; i++)
+    costMap.resize(prgd_dummy_dem->rows);
+    for (uint i = 0; i < prgd_dummy_dem->rows; i++)
     {
-        costMap[i].resize(dummyDem->cols);
+        costMap[i].resize(prgd_dummy_dem->cols);
     }
     dummyMap.getCostMap(costMap);
-    std::cout << " The size of the costMap is " << costMap.size() << " x " << costMap[0].size() << std::endl;
+    std::cout << " The size of the costMap is " << costMap.size() << " x "
+              << costMap[0].size() << std::endl;
     // ASSERT_NO_THROW(dummyMap.setImageDem(decosDEM,0.028));
     // ASSERT_NO_THROW(dummyMap.showSlopeMap());
 
