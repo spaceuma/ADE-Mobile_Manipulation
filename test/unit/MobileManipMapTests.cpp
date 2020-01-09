@@ -48,7 +48,7 @@ TEST(MMMapTest, constructorTest)
 
     std::cout << " MMMapTest - The minimum value of elevation is "
               << d_elevation_min << std::endl;
-    // dummyMap.addSampleFacingObstacles(samplePos);
+    dummyMap.addSampleFacingObstacles(samplePos);
     /*dummyMap.showElevationMap();
     waitKey();
     dummyMap.showSlopeMap();

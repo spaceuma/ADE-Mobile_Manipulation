@@ -45,7 +45,7 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
 }
 
-void FastMarching::getShadowedCostMap(std::vector<std::vector<bool>> &vvb_obstacle_map,
+void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacle_map,
 				      double d_map_resolution,
 				      double d_max_distance,
 				      base::Waypoint finalPos)
@@ -64,11 +64,12 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<bool>> &vvb_obstac
 
     std::vector<double> clear_row, obstacle_row;
     double value;
-    for ( uint j = 0; j < vvb_obstacle_map.size(); j++ )
+    for ( int j = 0; j < vvi_obstacle_map.size(); j++ )
     {
-        for ( uint i = 0; i < vvb_obstacle_map[0].size(); i++)
+        for ( int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
-	    if (( i == 0 )||( j == 0 )||( i == vvb_obstacle_map[0].size() - 1)||( j == vvb_obstacle_map.size() - 1 ))
+	    if (( i == 0 )||( j == 0 )||( i == vvi_obstacle_map[0].size() - 1)||( j == vvi_obstacle_map.size() - 1 )||
+			    (sqrt(pow((float)(i - vi_goal[0]),2)+pow((float)(j - vi_goal[1]),2)) > d_max_distance/d_map_resolution))
 	    {
                 clear_row.push_back(INFINITY);
 		obstacle_row.push_back(INFINITY);
@@ -76,12 +77,13 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<bool>> &vvb_obstac
 	    else
             {
                 clear_row.push_back(1.0);
-                if (vvb_obstacle_map[j][i])
+                if (vvi_obstacle_map[j][i] == 0)
                 {
                     obstacle_row.push_back(1000.0);
                 }
                 else
                 {
+		    vvi_obstacle_map[j][i] = 2;
                     obstacle_row.push_back(1.0);
                 }
 	    }
@@ -95,37 +97,15 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<bool>> &vvb_obstac
     computeEntireTMap(&vvd_clear_costmap, vi_goal, pvvd_clear_totalcostmap);
     computeEntireTMap(&vvd_obstacle_costmap, vi_goal, pvvd_obstacle_totalcostmap);
 
-    for ( int j = 0; j < vvb_obstacle_map.size(); j++ )
+    for ( int j = 0; j < vvi_obstacle_map.size(); j++ )
     {
-        for ( int i = 0; i < vvb_obstacle_map[0].size(); i++)
+        for ( int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
-	    if (fabs((*pvvd_clear_totalcostmap)[j][i] - (*pvvd_obstacle_totalcostmap)[j][i]) > 0.001)
+	    if (fabs((*pvvd_clear_totalcostmap)[j][i] - (*pvvd_obstacle_totalcostmap)[j][i]) > 0.01)
 	    {
-	       vvb_obstacle_map[j][i] = true; 
+	       vvi_obstacle_map[j][i] = 0; 
             }
-	    /*if (fabs(sqrt(pow((double)i-(double)vi_goal[0],2)+pow((double)j-(double)vi_goal[1],2))) < d_max_distance/d_map_resolution)
-            {
-	        if (costMap[j][i] == INFINITY)
-		{
-                    vb_row.push_back(0);
-		}
-		else
-		{
-	            if (fabs((*pvvd_clear_totalcostmap)[j][i] - (*pvvd_obstacle_totalcostmap)[j][i]) > 0.001)
-                    {
-                        vb_row.push_back(0);
-                    }
-		    else
-		    {
-                        vb_row.push_back(2);//Near sample
-		    }
-		}
-	    }
-	    else
-	    {
-                vb_row.push_back(1);
-	    }*/
-        }
+	}
     }
 }
 

@@ -15,9 +15,43 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
     this->setRGDem(dem);
 }
 
+int MobileManipMap::setRGDem(const RoverGuidance_Dem &dem)
+{
+    // Assignation of DEM parameters
+    this->rgDem = dem;
+    this->ui_num_cols = dem.cols;
+    this->ui_num_rows = dem.rows;
+    this->d_res = dem.nodeSize_m;
+
+    // Initialization of vector matrices
+    this->vvd_elevation_map.clear();
+    this->vvi_traversability_map.clear();
+    this->vvd_cost_map.clear();
+    this->vvd_proximity_map.clear();
+    std::vector<double> vd_row(this->ui_num_cols);
+    std::vector<int> vi_row(this->ui_num_cols);
+    for (uint j = 0; j < this->ui_num_rows; j++)
+    {
+        this->vvd_elevation_map.push_back(vd_row);
+        this->vvi_traversability_map.push_back(vi_row);
+        this->vvd_cost_map.push_back(vd_row);
+        this->vvd_proximity_map.push_back(vd_row);
+    }
+
+    if (this->calculateElevationMap())
+    {
+        this->calculateCostMap();
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
 void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap)
 {
-    this->currentCostMap.clear();
+    this->vvd_cost_map.clear();
     std::vector<double> row;
     std::cout << "Setting Cost Map of " << costMap[0].size() << "x"
               << costMap.size() << " nodes" << std::endl;
@@ -34,7 +68,7 @@ void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap)
                 row.push_back(INFINITY);
             }
         }
-        currentCostMap.push_back(row);
+        this->vvd_cost_map.push_back(row);
         row.clear();
     }
 }
@@ -71,43 +105,9 @@ void MobileManipMap::setElevationMap(
     }
 }
 
-int MobileManipMap::setRGDem(const RoverGuidance_Dem &dem)
-{
-    // Assignation of DEM parameters
-    this->rgDem = dem;
-    this->ui_num_cols = dem.cols;
-    this->ui_num_rows = dem.rows;
-    this->d_res = dem.nodeSize_m;
-
-    // Initialization of vector matrices
-    this->vvd_elevation_map.clear();
-    this->vvi_traversability_map.clear();
-    this->vvd_cost_map.clear();
-    this->vvd_proximity_map.clear();
-    std::vector<double> vd_row(this->ui_num_cols);
-    std::vector<int> vi_row(this->ui_num_cols);
-    for (uint j = 0; j < this->ui_num_rows; j++)
-    {
-        this->vvd_elevation_map.push_back(vd_row);
-        this->vvi_traversability_map.push_back(vi_row);
-        this->vvd_cost_map.push_back(vd_row);
-        this->vvd_proximity_map.push_back(vd_row);
-    }
-
-    if (this->calculateElevationMap())
-    {
-        this->calculateCostMap();
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
 void MobileManipMap::getCostMap(std::vector<std::vector<double>> &costMap)
 {
-    costMap = vvd_cost_map;
+    costMap = this->vvd_cost_map;
 }
 
 void MobileManipMap::getElevationMap(
@@ -138,46 +138,6 @@ bool MobileManipMap::calculateElevationMap()
 double MobileManipMap::getMinElevation()
 {
     return this->d_elevation_min;
-}
-
-void MobileManipMap::showElevationMap()
-{
-    /*Mat mapToShow
-        = Mat::zeros(cv::Size(this->ui_num_rows, this->ui_num_cols), CV_64F);
-
-    double min, max;
-    minMaxLoc(this->matElevationMap, &min, &max);
-    // cout << " The min is " << min << " and the max " << max << endl;
-    mapToShow = this->matElevationMap - min;
-    flip(mapToShow, mapToShow, 0);
-    mapToShow.convertTo(mapToShow, CV_32F, 1.0 / (max - min), 0);
-    namedWindow("Elevation Map", WINDOW_NORMAL);
-    imshow("Elevation Map", mapToShow);*/
-}
-
-void MobileManipMap::showSlopeMap()
-{
-    Mat flippedMap, mapToShow;
-    flip(this->slopeMap, flippedMap, 0);
-    flippedMap.convertTo(mapToShow, CV_32F, 1.0 / 90.0, 0);
-    namedWindow("Slope Map", WINDOW_NORMAL);
-    imshow("Slope Map", mapToShow);
-
-    /*FileStorage fs("slopeMap.yml", FileStorage::WRITE);
-    fs << "SlopeMap" << this->slopeMap;
-    fs.release();*/
-}
-
-void MobileManipMap::showObstacleMap()
-{
-    Mat flippedMap, mapToShow;
-    double min, max;
-    minMaxLoc(this->obstacleMap, &min, &max);
-    cout << " The min is " << min << " and the max " << max << endl;
-    flip(this->obstacleMap, flippedMap, 0);
-    flippedMap.convertTo(mapToShow, CV_32F, 1.0 / max, 0);
-    namedWindow("Obstacle Map", WINDOW_NORMAL);
-    imshow("Obstacle Map", mapToShow);
 }
 
 bool MobileManipMap::calculateTraversabilityMap()
@@ -285,8 +245,8 @@ bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
       vb_row.clear();
     }*/
 
-    /*this->fmShadower.getShadowedCostMap(
-        this->vvi_traversability_map, this->d_res, 1.5, sample_pos);*/
+    this->fmShadower.getShadowedCostMap(
+        this->vvi_traversability_map, this->d_res, 1.5, sample_pos);
 
     /*for ( int j = 0; j < this->ui_num_rows; j++ )
     {
@@ -311,8 +271,8 @@ bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
             }
             else
             {
-                if (this->vvd_proximity_map[j][i]
-                    < 1.0) // ToDo: this is a adhoc risk distance value!!
+                if ((this->vvd_proximity_map[j][i]
+                    < 1.0)&&(vvi_traversability_map[j][i]<2)) // ToDo: this is a adhoc risk distance value!!
                 {
                     this->vvd_cost_map[j][i]
                         = 1.0
@@ -321,7 +281,17 @@ bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
                 }
                 else
                 {
-                    this->vvd_cost_map[j][i] = 1.0;
+		    if (this->vvd_proximity_map[j][i] < 1.01*this->d_res)
+		    {
+		         this->vvd_cost_map[j][i]
+                         = 1.0
+                          + 20.0
+                                * (1.0 - (double)this->vvd_proximity_map[j][i]);
+		    }
+		    else
+	            {
+                        this->vvd_cost_map[j][i] = 1.0;
+		    }
                 }
             }
         }

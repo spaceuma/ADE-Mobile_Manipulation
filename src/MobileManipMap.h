@@ -49,9 +49,6 @@ public:
     void setCostMap(std::vector<std::vector<double>> &costMap);
     void setElevationMap(std::vector<std::vector<double>> &elevationMap,
                          double res);
-    void showElevationMap();
-    void showSlopeMap();
-    void showObstacleMap();
     void getCostMap(std::vector<std::vector<double>> &costMap);
     void getElevationMap(std::vector<std::vector<double>> &elevationMap);
     std::vector<std::vector<double>> *getCostMapPointer();
