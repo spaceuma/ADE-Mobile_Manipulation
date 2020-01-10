@@ -37,7 +37,6 @@ private:
         FetchingPoseEstimator fetchPosePlanner;
 	ArmPlanner armPlanner;
 	Waypoint samplePos;
-        std::vector<int> pathsAssignment;
         std::vector<std::vector<double>> vvd_arm_motion_profile;
 public:
   MotionPlan();
@@ -48,10 +47,8 @@ public:
   std::vector<std::vector<double>>* getArmMotionProfile();
   int shortenPathForFetching();
   void executeEndEffectorPlanning(MobileManipMap* inputMap, double zResolution);
-  std::vector<int> getAssignmentVector();
   void setArmMotionProfile(std::vector<std::vector<double>> &m_arm_motion_profile);
   void setPath(std::vector<Waypoint> &vw_path);
-  void setAssignmentVector(std::vector<int> &vi_assignment);
 };
 
 #endif

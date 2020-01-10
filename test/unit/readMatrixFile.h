@@ -16,6 +16,4 @@ void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData);
 void readPath(std::string s_path_file,
 	      std::vector<Waypoint> &vw_path);
-void readIntVector(std::string s_vector_file,
-		   std::vector<int> &vi_input);
 #endif

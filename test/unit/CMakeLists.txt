@@ -40,8 +40,8 @@ file(GLOB CC_SRC
 add_executable(runUnitTests 
                UnitTests.cpp 
 	       MobileManipMapTests.cpp
-	       #MotionPlanTests.cpp
-	       #MobileManipExecutorTests.cpp
+	       MotionPlanTests.cpp
+	       MobileManipExecutorTests.cpp
 	       #MobileManipMotionPlannerTests.cpp
                readMatrixFile.h
                readMatrixFile.cpp

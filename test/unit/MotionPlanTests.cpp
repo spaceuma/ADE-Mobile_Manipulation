@@ -18,7 +18,7 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     std::vector<std::vector<double>> vvd_costMap;
     std::vector<std::vector<double>> vector_elevationData;
     readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv", vector_elevationData); 
-    readMatrixFile("test/unit/data/results/costMap.txt", vvd_costMap);
+    readMatrixFile("test/unit/data/input/costMap.txt", vvd_costMap);
     MobileManipMap dummyMap;
     dummyMap.setElevationMap(vector_elevationData,res);
     dummyMap.setCostMap(vvd_costMap);
@@ -38,9 +38,10 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     samplePos.position[1] = 5.6;
     samplePos.heading = 0;
 
-    std::cout << "MOTIONPLANTEST: initiating path planning" << std::endl;
+    std::cout << " MMMotionPlanTest: initiating path planning" << std::endl;
     clock_t ini2D = clock();
     dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
+    std::cout << " MMMotionPlanTest: path planning completed" << std::endl;
     std::vector<base::Waypoint>* roverPath = dummyPlan.getPath();
     int numWaypoints = dummyPlan.shortenPathForFetching();
     clock_t end2D = clock();
@@ -79,17 +80,8 @@ TEST(MMMotionPlanTest, roverbaseplanning)
 
     f_arm_motion.close();
 
-    std::vector<int> assignmentVector = dummyPlan.getAssignmentVector();
-    std::ofstream assignmentFile;
 
-    assignmentFile.open("test/unit/data/results/assignment.txt");
 
-    /*for (int j = 0; j < assignmentVector.size(); j++)
-    {
-        assignmentFile << assignmentVector[j] << "\n";
-    }*/
-
-    pathFile.close();
 
     // Decide where to stop the rover to fetch optimally
 /*    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;

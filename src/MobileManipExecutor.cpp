@@ -17,7 +17,6 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan) {
     }
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->waypoint_navigation.setNavigationState(DRIVING);
-    this->vi_assignment = this->p_motion_plan->getAssignmentVector();
     std::vector<std::vector<double>>* pvvd_arm_motion_profile = this->p_motion_plan->getArmMotionProfile();
     this->vvd_arm_motion_profile.clear();
     std::vector<double> row;
@@ -89,13 +88,8 @@ void MobileManipExecutor::getArmCommand(Joints& j_next_arm_command) {
 				std::cout << std::endl;
 			}
 			std::cout << std::endl;
-			for (uint i = 0;i<vi_assignment.size();i++)
-			{
-				std::cout << "The assignment vector at " << i << " is " << vi_assignment[i] << std::endl;
-			}
 		}
 		coupled_control.selectNextManipulatorPosition(this->i_current_segment,
-							      &(this->vi_assignment),
 							      &(this->vvd_arm_motion_profile),
 							      &(this->vd_next_arm_config),
 							      false);

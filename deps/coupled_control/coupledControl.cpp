@@ -24,7 +24,6 @@ void coupledControl::modifyMotionCommand(double mMaxSpeed,
 }
 
 void coupledControl::selectNextManipulatorPosition(int current_waypoint,
-                                                   std::vector<int> *assign,
                                                    std::vector<std::vector<double>> *armConfig,
                                                    std::vector<double> *nextConfig,
                                                    int negative)

@@ -196,7 +196,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     ///////////////////////////////////////////////////////////
     // Printing results into .txt files
-    std::ofstream inipathFile;
+/*    std::ofstream inipathFile;
     inipathFile.open("test/unit/data/results/iniroverPath.txt");
 
     for (int j = 0; j < roverPath->size(); j++)
@@ -249,7 +249,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     path3DFile.close();
 
-    std::ofstream assignmentFile;
+*/    std::ofstream assignmentFile;
     assignmentFile.open("test/unit/data/results/assignment.txt");
 
     for (int j = 0; j < pathsAssignment->size(); j++)
@@ -258,7 +258,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     }
 
     assignmentFile.close();
-
+/*
     std::ofstream armJointsFile;
     armJointsFile.open("test/unit/data/results/armJoints.txt");
 
@@ -271,7 +271,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         armJointsFile << "\n";
     }
 
-    armJointsFile.close();
+    armJointsFile.close();*/
     ///////////////////////////////////////////////////////////
 }
 void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPath6,

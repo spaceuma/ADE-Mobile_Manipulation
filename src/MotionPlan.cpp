@@ -62,10 +62,6 @@ std::vector<std::vector<double>>* MotionPlan::getArmMotionProfile(){
 	return &(this->vvd_arm_motion_profile);
 }
 
-std::vector<int> MotionPlan::getAssignmentVector(){
-	return pathsAssignment;	
-}
-
 void MotionPlan::setArmMotionProfile(std::vector<std::vector<double>> &m_arm_motion_profile){
 	std::vector<double> row;
 	std::cout << "Setting Arm Motion Profile of " << m_arm_motion_profile[0].size() << " joints and " << m_arm_motion_profile.size() << " samples" << std::endl;
@@ -89,10 +85,3 @@ void MotionPlan::setPath(std::vector<Waypoint> &vw_path){
         std::cout << "Done setting path" << std::endl;	
 }
 
-void MotionPlan::setAssignmentVector(std::vector<int> &vi_assignment){
-	this->pathsAssignment.clear();
-	for (uint i = 0; i < vi_assignment.size(); i++)
-	{
-		this->pathsAssignment.push_back(vi_assignment[i]);
-	}
-}

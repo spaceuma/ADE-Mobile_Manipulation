@@ -12,14 +12,11 @@ TEST(MMExecutorTest, trajectorycontrol)
 
     std::vector<Waypoint> path;
     std::vector<std::vector<double>> vvd_arm_motion_profile;
-    std::vector<int> vi_assignment;
     readPath("test/unit/data/input/path.txt",path);
     readMatrixFile("test/unit/data/input/armMotionProfile.txt", vvd_arm_motion_profile);
-    readIntVector("test/unit/data/input/assignment.txt", vi_assignment);
     MotionPlan dummyPlan;
     dummyPlan.setPath(path);
     dummyPlan.setArmMotionProfile(vvd_arm_motion_profile); 
-    dummyPlan.setAssignmentVector(vi_assignment);
 
     Pose robotPose;
     Waypoint lpoint;
@@ -51,7 +48,7 @@ TEST(MMExecutorTest, trajectorycontrol)
     Joints j_current_joints(0, vj_current_jointstates);
     Joints j_next_joints(0, vj_current_jointstates);
    
-    while (!dummyExecutor.isFinished())
+/*    while (!dummyExecutor.isFinished())
     {
 
         mc = dummyExecutor.getRoverCommand(robotPose);
@@ -101,7 +98,7 @@ TEST(MMExecutorTest, trajectorycontrol)
 	std::cout << std::endl;
         usleep(10000);
     }
-
+*/
    /* robotPose.position = Eigen::Vector3d(1.5, 0.0, 0);
     pathTracker.setPose(robotPose);
     pathTracker.setNavigationState(OUT_OF_BOUNDARIES);

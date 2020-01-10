@@ -15,15 +15,13 @@ TEST(MMMapTest, constructorTest)
     readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevation_data);
     double res = 0.1; // meters
-    int i_elevationmatrix_size
-        = vvd_elevation_data.size() * vvd_elevation_data[0].size();
 
-    std::cout << " MMMapTest - Size of the input map is "
-              << i_elevationmatrix_size << std::endl;
+    ASSERT_EQ( vvd_elevation_data.size(), 80 );
+    ASSERT_EQ( vvd_elevation_data[0].size(), 80 );
 
     // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
-    double dummyArray[i_elevationmatrix_size];
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
     prgd_dummy_dem->p_heightData_m = dummyArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
@@ -45,9 +43,9 @@ TEST(MMMapTest, constructorTest)
     MobileManipMap dummyMap;
     dummyMap.setRGDem((*prgd_dummy_dem));
     double d_elevation_min = dummyMap.getMinElevation();
+    ASSERT_LT( d_elevation_min, 1008.55 );
+    ASSERT_GT( d_elevation_min, 1008.53 );
 
-    std::cout << " MMMapTest - The minimum value of elevation is "
-              << d_elevation_min << std::endl;
     dummyMap.addSampleFacingObstacles(samplePos);
     /*dummyMap.showElevationMap();
     waitKey();
