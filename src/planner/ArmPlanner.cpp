@@ -105,7 +105,6 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     generateTunnel(roverPath6, DEM, mapResolution, zResolution, iniPos, samplePos, costMap3D);
     clock_t endt = clock();
     double t = double(endt - init) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time tunnel generation: " << t << std::endl;
 
     // End effector path planning
     FastMarching_lib::FastMarching3D pathPlanner3D;
@@ -192,7 +191,6 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     clock_t endp = clock();
     double tp = double(endp - inip) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time arm motion planning: " << tp << std::endl;
 
     ///////////////////////////////////////////////////////////
     // Printing results into .txt files

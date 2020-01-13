@@ -18,7 +18,7 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
 int MobileManipMap::setRGDem(const RoverGuidance_Dem &dem)
 {
     // Assignation of DEM parameters
-    this->rgDem = dem;
+    this->rg_dem = dem;
     this->ui_num_cols = dem.cols;
     this->ui_num_rows = dem.rows;
     this->d_res = dem.nodeSize_m;
@@ -121,7 +121,7 @@ bool MobileManipMap::calculateElevationMap()
         for (int i = 0; i < this->ui_num_cols; i++)
         {
             this->vvd_elevation_map[j][i]
-                = this->rgDem.p_heightData_m[i + j * this->ui_num_cols];
+                = this->rg_dem.p_heightData_m[i + j * this->ui_num_cols];
             if (this->vvd_elevation_map[j][i] < this->d_elevation_min)
             {
                 this->d_elevation_min = this->vvd_elevation_map[j][i];

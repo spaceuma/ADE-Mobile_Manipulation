@@ -33,9 +33,6 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan)
         this->vvd_arm_motion_profile.push_back(row);
         row.clear();
     }
-    std::cout << " Arm motion profile of " << vvd_arm_motion_profile[0].size()
-              << " joints and " << vvd_arm_motion_profile.size()
-              << " samples is loaded " << std::endl;
 }
 
 void MobileManipExecutor::updateMotionPlan(MotionPlan &newMotionPlan)
