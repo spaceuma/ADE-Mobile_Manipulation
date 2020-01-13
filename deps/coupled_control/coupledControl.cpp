@@ -12,7 +12,8 @@ void coupledControl::modifyMotionCommand(double mMaxSpeed,
     double R = mMaxSpeed / maxJW;
 
     std::cout << "Conversion relation: " << R << std::endl;
-    // Addapt all the arm motion commands to the maximum speed of the real motors
+    // Addapt all the arm motion commands to the maximum speed of the real
+    // motors
     for (unsigned int i = 0; i < jW.size(); i++)
         jW.at(i) = jW.at(i) * R;
 
@@ -23,12 +24,14 @@ void coupledControl::modifyMotionCommand(double mMaxSpeed,
     modified_rover_command.m_turnRate_rads = vR * R;
 }
 
-void coupledControl::selectNextManipulatorPosition(int current_waypoint,
-                                                   std::vector<std::vector<double>> *armConfig,
-                                                   std::vector<double> *nextConfig,
-                                                   int negative)
+void coupledControl::selectNextManipulatorPosition(
+    int current_waypoint,
+    std::vector<std::vector<double>> *armConfig,
+    std::vector<double> *nextConfig,
+    int negative)
 {
-    // Selection of the next manipulator configuration depending on the current waypoint (current_segment)
+    // Selection of the next manipulator configuration depending on the current
+    // waypoint (current_segment)
     int pointer = current_waypoint;
 
     for (unsigned int i = 0; i < nextConfig->size(); i++)

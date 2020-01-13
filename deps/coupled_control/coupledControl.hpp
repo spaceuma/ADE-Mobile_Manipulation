@@ -29,10 +29,11 @@ public:
                              MotionCommand rover_command,
                              MotionCommand &modified_rover_command);
 
-    void selectNextManipulatorPosition(int current_waypoint,
-                                       std::vector<std::vector<double>> *armConfig,
-                                       std::vector<double> *nextConfig,
-                                       int negative);
+    void selectNextManipulatorPosition(
+        int current_waypoint,
+        std::vector<std::vector<double>> *armConfig,
+        std::vector<double> *nextConfig,
+        int negative);
 
     void manipulatorMotionControl(double gain,
                                   int &saturation,
