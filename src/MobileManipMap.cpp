@@ -53,8 +53,6 @@ void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap)
 {
     this->vvd_cost_map.clear();
     std::vector<double> row;
-    std::cout << "Setting Cost Map of " << costMap[0].size() << "x"
-              << costMap.size() << " nodes" << std::endl;
     for (uint j = 0; j < costMap.size(); j++)
     {
         for (uint i = 0; i < costMap[0].size(); i++)
@@ -79,8 +77,6 @@ void MobileManipMap::setElevationMap(
 {
     this->d_res = res;
     this->vvd_elevation_map.clear();
-    std::cout << "Setting Elevation Map of " << elevationMap[0].size() << "x"
-              << elevationMap.size() << " nodes" << std::endl;
     std::vector<double> row;
     double d_min_elevation = INFINITY;
     for (uint j = 0; j < elevationMap.size(); j++)
@@ -208,58 +204,10 @@ bool MobileManipMap::calculateTraversabilityMap()
 
 bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
 {
-    /*Mat obstacleMap = Mat::zeros(this->matElevationMap.size(), CV_32FC1);
-    threshold(this->slopeMap, obstacleMap, 20.0, 255, THRESH_BINARY_INV);
-
-    // Borders are considered obstacles
-    for (int i = 0; i < slopeMap.cols; i++)
-    {
-      obstacleMap.at<float>(0,i) = 0;
-      obstacleMap.at<float>(this->ui_num_rows-1,i) = 0;
-    }
-
-    for (int j = 0; j < slopeMap.rows; j++)
-    {
-      obstacleMap.at<float>(j,0) = 0;
-      obstacleMap.at<float>(j,this->ui_num_cols-1) = 0;
-    }
-
-    obstacleMap.convertTo(obstacleMap, CV_8UC1);
-
-    std::vector<std::vector<bool>> vvb_obstacle_map;
-    std::vector<bool> vb_row;
-
-    Mat dist;
-
-    distanceTransform(obstacleMap, dist, DIST_L2, 5);
-    dist = dist*this->d_res;
-    threshold(dist,dist,0.5,0,THRESH_TOZERO);
-
-    for ( int j = 0; j < this->ui_num_rows; j++ )
-    {
-      for ( int i = 0; i < this->ui_num_cols; i++ )
-      {
-        vb_row.push_back(dist.at<float>(j,i)<0.001);
-      }
-      vvb_obstacle_map.push_back(vb_row);
-      vb_row.clear();
-    }*/
-
-    this->fmShadower.getShadowedCostMap(
+    this->fm_sample_facing.getShadowedCostMap(
         this->vvi_traversability_map, this->d_res, 1.5, sample_pos);
 
-    /*for ( int j = 0; j < this->ui_num_rows; j++ )
-    {
-      for ( int i = 0; i < this->ui_num_cols; i++ )
-      {
-        if (vvb_obstacle_map[j][i])
-        {
-          obstacleMap.at<float>(j,i) = 0;
-        }
-      }
-    }*/
     this->calculateProximityToObstaclesMap();
-    std::cout << " Proximity Map is computed " << std::endl;
 
     for (uint j = 0; j < this->ui_num_rows; j++)
     {
@@ -331,44 +279,6 @@ bool MobileManipMap::calculateProximityToObstaclesMap()
         }
     }
     return true;
-}
-
-bool MobileManipMap::getSamplingCostMap(
-    std::vector<std::vector<double>> &vvd_cost_map,
-    base::Waypoint w_sample)
-{
-    /*  this->calculateSamplingObstacleMap(w_sample);
-      this->calculateProximityToObstaclesMap();
-      vvd_cost_map.clear();
-
-      std::vector<double> row_cost;
-      float current_proximity;
-
-      for (uint j = 0; j < this->ui_num_rows; j++)
-      {
-        for (uint i = 0; i < this->ui_num_cols; i++)
-        {
-          current_proximity = this->proximityMap.at<float>(j,i);
-          if (current_proximity < 0.5) // Geometric Obstacle
-          {
-             row_cost.push_back(INFINITY);
-          }
-          else
-          {
-              if (current_proximity < 1.0) // Risky Distance
-              {
-                row_cost.push_back(1.0 + 20.0*(1.0 - current_proximity));
-              }
-              else
-              {
-                row_cost.push_back(1.0);
-              }
-          }
-        }
-        vvd_cost_map.push_back(row_cost);
-        row_cost.clear();
-      }
-    */
 }
 
 void MobileManipMap::calculateCostValues()

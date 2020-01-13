@@ -26,16 +26,11 @@ private:
     unsigned int ui_num_rows;
     double d_res;
     double d_elevation_min;
-    Mat slopeMap;
-    Mat obstacleMap;
-    Mat proximityMap;
-    FastMarching fmShadower;
+    FastMarching fm_sample_facing;
     std::vector<std::vector<double>> vvd_elevation_map;
     std::vector<std::vector<int>> vvi_traversability_map;
     std::vector<std::vector<double>> vvd_cost_map;
     std::vector<std::vector<double>> vvd_proximity_map;
-    std::vector<std::vector<double>> currentObstaclesMap;
-    std::vector<std::vector<double>> currentCostMap;
 
 public:
     /**
@@ -50,7 +45,6 @@ public:
                          double res);
     void getCostMap(std::vector<std::vector<double>> &costMap);
     void getElevationMap(std::vector<std::vector<double>> &elevationMap);
-    std::vector<std::vector<double>> *getCostMapPointer();
     double getResolution();
     double getMinElevation();
     bool addSampleFacingObstacles(base::Waypoint sample_pos);
@@ -64,13 +58,6 @@ private:
      * Based on currentDEM, it calculates or recalculates the currentCostMap.
      */
     bool calculateCostMap();
-
-    /**
-     * It calculates o recalculates the obstacles map based on currentDEM
-     */
-
-    bool getSamplingCostMap(std::vector<std::vector<double>> &vvd_cost_map,
-                            base::Waypoint w_sample);
 };
 
 #endif
