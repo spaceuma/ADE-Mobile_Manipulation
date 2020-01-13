@@ -1,12 +1,11 @@
 #ifndef __MOBILE_MANIP_MAP__
 #define __MOBILE_MANIP_MAP__
 
+#include "FastMarching.h"
+#include "Waypoint.hpp"
 #include <math.h>
 #include <opencv2/opencv.hpp>
 #include <types/RoverGuidance_Dem.h>
-//#include "MotionPlan.h"
-#include "FastMarching.h"
-#include "Waypoint.hpp"
 
 using namespace cv;
 using namespace FastMarching_lib;

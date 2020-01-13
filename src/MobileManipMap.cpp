@@ -271,8 +271,9 @@ bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
             }
             else
             {
-                if ((this->vvd_proximity_map[j][i]
-                    < 1.0)&&(vvi_traversability_map[j][i]<2)) // ToDo: this is a adhoc risk distance value!!
+                if ((this->vvd_proximity_map[j][i] < 1.0)
+                    && (vvi_traversability_map[j][i]
+                        < 2)) // ToDo: this is a adhoc risk distance value!!
                 {
                     this->vvd_cost_map[j][i]
                         = 1.0
@@ -281,17 +282,18 @@ bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
                 }
                 else
                 {
-		    if (this->vvd_proximity_map[j][i] < 1.01*this->d_res)
-		    {
-		         this->vvd_cost_map[j][i]
-                         = 1.0
-                          + 20.0
-                                * (1.0 - (double)this->vvd_proximity_map[j][i]);
-		    }
-		    else
-	            {
+                    if (this->vvd_proximity_map[j][i] < 1.01 * this->d_res)
+                    {
+                        this->vvd_cost_map[j][i]
+                            = 1.0
+                              + 20.0
+                                    * (1.0
+                                       - (double)this->vvd_proximity_map[j][i]);
+                    }
+                    else
+                    {
                         this->vvd_cost_map[j][i] = 1.0;
-		    }
+                    }
                 }
             }
         }
