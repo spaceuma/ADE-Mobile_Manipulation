@@ -16,8 +16,8 @@ TEST(MMMapTest, constructorTest)
                    vvd_elevation_data);
     double res = 0.1; // meters
 
-    ASSERT_EQ( vvd_elevation_data.size(), 80 );
-    ASSERT_EQ( vvd_elevation_data[0].size(), 80 );
+    ASSERT_EQ(vvd_elevation_data.size(), 80);
+    ASSERT_EQ(vvd_elevation_data[0].size(), 80);
 
     // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
@@ -43,16 +43,10 @@ TEST(MMMapTest, constructorTest)
     MobileManipMap dummyMap;
     dummyMap.setRGDem((*prgd_dummy_dem));
     double d_elevation_min = dummyMap.getMinElevation();
-    ASSERT_LT( d_elevation_min, 1008.55 );
-    ASSERT_GT( d_elevation_min, 1008.53 );
+    ASSERT_LT(d_elevation_min, 1008.55);
+    ASSERT_GT(d_elevation_min, 1008.53);
 
     dummyMap.addSampleFacingObstacles(samplePos);
-    /*dummyMap.showElevationMap();
-    waitKey();
-    dummyMap.showSlopeMap();
-    waitKey();
-    dummyMap.showObstacleMap();
-    waitKey();*/
     std::vector<std::vector<double>> costMap;
     costMap.resize(prgd_dummy_dem->rows);
     for (uint i = 0; i < prgd_dummy_dem->rows; i++)
@@ -60,15 +54,9 @@ TEST(MMMapTest, constructorTest)
         costMap[i].resize(prgd_dummy_dem->cols);
     }
     dummyMap.getCostMap(costMap);
-    std::cout << " The size of the costMap is " << costMap.size() << " x "
-              << costMap[0].size() << std::endl;
-    // ASSERT_NO_THROW(dummyMap.setImageDem(decosDEM,0.028));
-    // ASSERT_NO_THROW(dummyMap.showSlopeMap());
+    ASSERT_EQ(costMap.size(), 80);
+    ASSERT_EQ(costMap[0].size(), 80);
 
-    // namedWindow("DECOS Map", WINDOW_AUTOSIZE);
-    // imshow("DECOS Map", decosDEM);
-    // waitKey();
-    // destroyWindow("DECOS Map");
     std::ofstream costMapFile;
 
     costMapFile.open("test/unit/data/results/costMap.txt");

@@ -5,6 +5,7 @@
 #include <ctime>
 #include <fstream>
 #include <gtest/gtest.h>
+// This comes next
 #include "ArmPlanner.h"
 #include "FetchingPoseEstimator.h"
 
@@ -12,25 +13,22 @@ using namespace FastMarching_lib;
 
 TEST(MMMotionPlanTest, roverbaseplanning)
 {
-    // Reading the DEM 
-    double res = 0.1; // meters
-    double n_row, n_col;
+    // Reading the DEM
     std::vector<std::vector<double>> vvd_costMap;
-    std::vector<std::vector<double>> vector_elevationData;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv", vector_elevationData); 
+    std::vector<std::vector<double>> vvd_elevationMap;
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevationMap);
     readMatrixFile("test/unit/data/input/costMap.txt", vvd_costMap);
     MobileManipMap dummyMap;
-    dummyMap.setElevationMap(vector_elevationData,res);
+    double res = 0.1; // meters
+    dummyMap.setElevationMap(vvd_elevationMap, res);
     dummyMap.setCostMap(vvd_costMap);
 
-    MotionPlan dummyPlan;
-
-    clock_t begin = clock();
+    // Creating the Motion Plan
+    MotionPlan mplan_dummy;
 
     base::Waypoint roverPos, samplePos;
-    //roverPos.position[0] = 6.5;
     roverPos.position[0] = 3.0;
-    //roverPos.position[1] = 6.5;
     roverPos.position[1] = 2.0;
     roverPos.heading = 0;
 
@@ -38,69 +36,44 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     samplePos.position[1] = 5.6;
     samplePos.heading = 0;
 
-    std::cout << " MMMotionPlanTest: initiating path planning" << std::endl;
+    // 2d Rover Base Path Planning
     clock_t ini2D = clock();
-    dummyPlan.executeRoverBasePathPlanning(&dummyMap, roverPos, samplePos);
-    std::cout << " MMMotionPlanTest: path planning completed" << std::endl;
-    std::vector<base::Waypoint>* roverPath = dummyPlan.getPath();
-    int numWaypoints = dummyPlan.shortenPathForFetching();
-    clock_t end2D = clock();
-    double t = double(end2D - ini2D) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time planning 2D: " << t << std::endl;
+    ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
+        &dummyMap, roverPos, samplePos));
+    std::vector<base::Waypoint> *roverPath = mplan_dummy.getPath();
+    ASSERT_EQ(roverPath->size(), 110);
+    int numWaypoints = mplan_dummy.shortenPathForFetching();
+    ASSERT_EQ(roverPath->size(), 90);
+    double t = double(clock() - ini2D) / CLOCKS_PER_SEC;
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: " << t << " s\033[0m" << std::endl;
 
+    // Exporting the Path into a txt file
     std::ofstream pathFile;
-
     pathFile.open("test/unit/data/results/path.txt");
-
     for (int j = 0; j < roverPath->size(); j++)
     {
-        pathFile << roverPath->at(j).position[0] << " " << roverPath->at(j).position[1] << " " << roverPath->at(j).heading << "\n";
+        pathFile << roverPath->at(j).position[0] << " "
+                 << roverPath->at(j).position[1] << " "
+                 << roverPath->at(j).heading << "\n";
     }
-
     pathFile.close();
-    std::cout << "The resulting path has " << roverPath->size() << " Waypoints" << std::endl;
 
+    // 3d End Effector Motion Planning
     double zRes = 0.08;
-    dummyPlan.executeEndEffectorPlanning(&dummyMap, zRes);
-    
-        
-    std::vector<std::vector<double>>* pvvd_arm_motion_profile = dummyPlan.getArmMotionProfile();
+    mplan_dummy.executeEndEffectorPlanning(&dummyMap, zRes);
+
+    // Exporting the Arm Motion Profile into a txt file
+    std::vector<std::vector<double>> *pvvd_arm_motion_profile
+        = mplan_dummy.getArmMotionProfile();
     std::ofstream f_arm_motion;
-
     f_arm_motion.open("test/unit/data/results/armMotionProfile.txt");
-
     for (int j = 0; j < pvvd_arm_motion_profile->size(); j++)
     {
-        for (int i = 0; i < (* pvvd_arm_motion_profile)[0].size(); i++)
+        for (int i = 0; i < (*pvvd_arm_motion_profile)[0].size(); i++)
         {
-            f_arm_motion << (* pvvd_arm_motion_profile)[j][i] << " ";
+            f_arm_motion << (*pvvd_arm_motion_profile)[j][i] << " ";
         }
         f_arm_motion << "\n";
     }
-
     f_arm_motion.close();
-
-
-
-
-    // Decide where to stop the rover to fetch optimally
-/*    FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
-    int endWaypoint = dummyFetchPosePlanner.getFetchWaypointIndex(roverPath);
-    roverPath->erase(roverPath->begin() + endWaypoint + 1, roverPath->end());
-
-    std::vector<std::vector<double>> *DEM
-        = new std::vector<std::vector<double>>(costMap.size(), std::vector<double>(costMap[0].size(), 1));
-    double zResolution = 0.1;
-    std::vector<std::vector<double>> *endEffectorPath = new std::vector<std::vector<double>>;
-    std::vector<int> *pathsAssignment = new std::vector<int>;
-
-    ArmPlanner_lib::ArmPlanner dummyArmPlanner;
-    dummyArmPlanner.planEndEffectorPath(
-        roverPath, DEM, dummyDem.nodeSize_m, zResolution, samplePos, endEffectorPath, pathsAssignment);
-
-    clock_t end = clock();
-    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    std::cout << "Elapsed execution time planning 3D: " << elapsed_secs << std::endl;
-    */
 }
-
