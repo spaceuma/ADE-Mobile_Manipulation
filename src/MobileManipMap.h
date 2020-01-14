@@ -39,6 +39,10 @@ private:
      */
     double d_elevation_min;
     /**
+     * Sample position in waypoint format
+     */
+    base::Waypoint w_sample_pos;
+    /**
      * Fast Marching class for sample facing cost update
      */
     FastMarching fm_sample_facing;
@@ -69,6 +73,12 @@ public:
      */
     MobileManipMap(const RoverGuidance_Dem &rg_dem_m);
     /**
+     * Constructor that receives the map, process it and generates the cost and
+     * obstacles maps
+     */
+    MobileManipMap(const RoverGuidance_Dem &rg_dem_m,
+                   base::Waypoint w_sample_pos_m);
+    /**
      * Constructor that introduces pre-computed elevation and cost maps
      */
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
@@ -90,10 +100,6 @@ public:
      * Returns the minimum value of elevation --> d_elevation_min
      */
     double getMinElevation();
-    /**
-     * Updates the traversability and cost maps based on the sample position
-     */
-    bool addSampleFacingObstacles(base::Waypoint w_sample_pos_m);
 
 private:
     /**
@@ -109,14 +115,13 @@ private:
      */
     bool calculateProximityToObstaclesMap();
     /**
-     * The cost map vvd_cost_map is calculated based on proximity and
-     * traversability maps
-     */
-    bool calculateCostMap();
-    /**
      * Cost values are assigned to the cost map
      */
     void calculateCostValues();
+    /**
+     * Cost Map is modified
+     */
+    bool addSampleFacingObstacles();
 };
 
 #endif

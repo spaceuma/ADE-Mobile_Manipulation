@@ -40,12 +40,11 @@ TEST(MMMapTest, constructorTest)
     samplePos.position[1] = 5.6;
     samplePos.heading = 0;
 
-    MobileManipMap dummyMap((*prgd_dummy_dem));
+    MobileManipMap dummyMap((*prgd_dummy_dem), samplePos);
     double d_elevation_min = dummyMap.getMinElevation();
     ASSERT_LT(d_elevation_min, 1008.55);
     ASSERT_GT(d_elevation_min, 1008.53);
 
-    dummyMap.addSampleFacingObstacles(samplePos);
     std::vector<std::vector<double>> costMap;
     costMap.resize(prgd_dummy_dem->rows);
     for (uint i = 0; i < prgd_dummy_dem->rows; i++)

@@ -28,7 +28,44 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
     }
 
     this->calculateElevationMap();
-    this->calculateCostMap();
+    // Compute vvb_obstacle_map
+    this->calculateTraversabilityMap();
+    // Compute vvd_proximity_map
+    this->calculateProximityToObstaclesMap();
+    // Compute vvd_cost_map
+    this->calculateCostValues();
+}
+
+MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
+                               base::Waypoint w_sample_pos_m)
+{
+    this->w_sample_pos = w_sample_pos_m;
+    // Assignation of DEM parameters
+    this->rg_dem = dem;
+    this->ui_num_cols = dem.cols;
+    this->ui_num_rows = dem.rows;
+    this->d_res = dem.nodeSize_m;
+
+    // Initialization of vector matrices
+    this->vvd_elevation_map.clear();
+    this->vvi_traversability_map.clear();
+    this->vvd_cost_map.clear();
+    this->vvd_proximity_map.clear();
+    std::vector<double> vd_row(this->ui_num_cols);
+    std::vector<int> vi_row(this->ui_num_cols);
+    for (uint j = 0; j < this->ui_num_rows; j++)
+    {
+        this->vvd_elevation_map.push_back(vd_row);
+        this->vvi_traversability_map.push_back(vi_row);
+        this->vvd_cost_map.push_back(vd_row);
+        this->vvd_proximity_map.push_back(vd_row);
+    }
+
+    this->calculateElevationMap();
+    // Compute vvb_obstacle_map
+    this->calculateTraversabilityMap();
+    // Compute vvd_proximity_map
+    this->addSampleFacingObstacles();
 }
 
 MobileManipMap::MobileManipMap(
@@ -181,10 +218,10 @@ bool MobileManipMap::calculateTraversabilityMap()
     return true;
 }
 
-bool MobileManipMap::addSampleFacingObstacles(base::Waypoint sample_pos)
+bool MobileManipMap::addSampleFacingObstacles()
 {
     this->fm_sample_facing.getShadowedCostMap(
-        this->vvi_traversability_map, this->d_res, 1.5, sample_pos);
+        this->vvi_traversability_map, this->d_res, 1.5, this->w_sample_pos);
 
     this->calculateProximityToObstaclesMap();
 
@@ -287,16 +324,6 @@ void MobileManipMap::calculateCostValues()
             }
         }
     }
-}
-
-bool MobileManipMap::calculateCostMap()
-{
-    // Compute vvb_obstacle_map
-    this->calculateTraversabilityMap();
-    // Compute vvd_proximity_map
-    this->calculateProximityToObstaclesMap();
-    // Compute vvd_cost_map
-    this->calculateCostValues();
 }
 
 double MobileManipMap::getResolution()
