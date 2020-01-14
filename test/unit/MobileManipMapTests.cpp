@@ -40,8 +40,7 @@ TEST(MMMapTest, constructorTest)
     samplePos.position[1] = 5.6;
     samplePos.heading = 0;
 
-    MobileManipMap dummyMap;
-    dummyMap.setRGDem((*prgd_dummy_dem));
+    MobileManipMap dummyMap((*prgd_dummy_dem));
     double d_elevation_min = dummyMap.getMinElevation();
     ASSERT_LT(d_elevation_min, 1008.55);
     ASSERT_GT(d_elevation_min, 1008.53);

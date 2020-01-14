@@ -4,18 +4,7 @@
 using namespace std;
 using namespace cv;
 
-MobileManipMap::MobileManipMap()
-{
-    // TODO - implement MobileManipMap::MobileManipMap
-}
-
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
-{
-    // TODO - implement MobileManipMap::MobileManipMap
-    this->setRGDem(dem);
-}
-
-int MobileManipMap::setRGDem(const RoverGuidance_Dem &dem)
 {
     // Assignation of DEM parameters
     this->rg_dem = dem;
@@ -38,28 +27,47 @@ int MobileManipMap::setRGDem(const RoverGuidance_Dem &dem)
         this->vvd_proximity_map.push_back(vd_row);
     }
 
-    if (this->calculateElevationMap())
-    {
-        this->calculateCostMap();
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
+    this->calculateElevationMap();
+    this->calculateCostMap();
 }
 
-void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap)
+MobileManipMap::MobileManipMap(
+    std::vector<std::vector<double>> &vvd_elevation_map_m,
+    std::vector<std::vector<double>> &vvd_cost_map_m,
+    double d_res_m)
 {
-    this->vvd_cost_map.clear();
+    this->d_res = d_res_m;
+    this->vvd_elevation_map.clear();
     std::vector<double> row;
-    for (uint j = 0; j < costMap.size(); j++)
+    double d_min_elevation = INFINITY;
+    for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
     {
-        for (uint i = 0; i < costMap[0].size(); i++)
+        for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
         {
-            if (costMap[j][i] > 0)
+            row.push_back(vvd_elevation_map_m[j][i]);
+            if (vvd_elevation_map_m[j][i] < d_min_elevation)
             {
-                row.push_back(costMap[j][i]);
+                d_min_elevation = vvd_elevation_map_m[j][i];
+            }
+        }
+        vvd_elevation_map.push_back(row);
+        row.clear();
+    }
+    for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
+        {
+            vvd_elevation_map[j][i] = vvd_elevation_map[j][i] - d_min_elevation;
+        }
+    }
+    this->vvd_cost_map.clear();
+    for (uint j = 0; j < vvd_cost_map_m.size(); j++)
+    {
+        for (uint i = 0; i < vvd_cost_map_m[0].size(); i++)
+        {
+            if (vvd_cost_map_m[j][i] > 0)
+            {
+                row.push_back(vvd_cost_map_m[j][i]);
             }
             else
             {
@@ -71,45 +79,16 @@ void MobileManipMap::setCostMap(std::vector<std::vector<double>> &costMap)
     }
 }
 
-void MobileManipMap::setElevationMap(
-    std::vector<std::vector<double>> &elevationMap,
-    double res)
+void MobileManipMap::getCostMap(
+    std::vector<std::vector<double>> &vvd_cost_map_m)
 {
-    this->d_res = res;
-    this->vvd_elevation_map.clear();
-    std::vector<double> row;
-    double d_min_elevation = INFINITY;
-    for (uint j = 0; j < elevationMap.size(); j++)
-    {
-        for (uint i = 0; i < elevationMap[0].size(); i++)
-        {
-            row.push_back(elevationMap[j][i]);
-            if (elevationMap[j][i] < d_min_elevation)
-            {
-                d_min_elevation = elevationMap[j][i];
-            }
-        }
-        vvd_elevation_map.push_back(row);
-        row.clear();
-    }
-    for (uint j = 0; j < elevationMap.size(); j++)
-    {
-        for (uint i = 0; i < elevationMap[0].size(); i++)
-        {
-            vvd_elevation_map[j][i] = vvd_elevation_map[j][i] - d_min_elevation;
-        }
-    }
-}
-
-void MobileManipMap::getCostMap(std::vector<std::vector<double>> &costMap)
-{
-    costMap = this->vvd_cost_map;
+    vvd_cost_map_m = this->vvd_cost_map;
 }
 
 void MobileManipMap::getElevationMap(
-    std::vector<std::vector<double>> &elevationMap)
+    std::vector<std::vector<double>> &vvd_elevation_map_m)
 {
-    elevationMap = this->vvd_elevation_map;
+    vvd_elevation_map_m = this->vvd_elevation_map;
 }
 
 bool MobileManipMap::calculateElevationMap()

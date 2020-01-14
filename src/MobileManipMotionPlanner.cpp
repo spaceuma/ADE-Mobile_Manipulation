@@ -8,7 +8,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(/* Provided DEM using the sam
 	cout << "MMPLANNER: Creating MMMP" << endl;
 	this->status = IDLE;
 	this->error = NO_ERROR;
-	this->currentMap.setRGDem(navCamDEM);	
+	this->currentMap = new MobileManipMap(navCamDEM);	
 }
 
 void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan) {
@@ -23,7 +23,7 @@ void MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position,
 	{
 	  // TODO - Since for now there is no computation, the state will go to READY_TO_MOVE
 	  this->status = GENERATING_MOTION_PLAN;
-	  this->currentMotionPlan.executeRoverBasePathPlanning(&(this->currentMap), rover_position, sample_position);
+	  this->currentMotionPlan.executeRoverBasePathPlanning(this->currentMap, rover_position, sample_position);
 	  this->currentMotionPlan.shortenPathForFetching();
 	  this->status = READY_TO_MOVE;
 	  std::vector<base::Waypoint>* roverPath = this->currentMotionPlan.getPath();

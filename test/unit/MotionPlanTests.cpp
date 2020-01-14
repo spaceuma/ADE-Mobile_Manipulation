@@ -19,10 +19,8 @@ TEST(MMMotionPlanTest, roverbaseplanning)
     readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevationMap);
     readMatrixFile("test/unit/data/input/costMap.txt", vvd_costMap);
-    MobileManipMap dummyMap;
     double res = 0.1; // meters
-    dummyMap.setElevationMap(vvd_elevationMap, res);
-    dummyMap.setCostMap(vvd_costMap);
+    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
 
     // Creating the Motion Plan
     MotionPlan mplan_dummy;

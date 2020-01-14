@@ -16,7 +16,7 @@ private:
 	/**
 	 * Rover surronding map that would be used to generate the rover-manipulator trajectories.
 	 */
-	MobileManipMap currentMap;
+	MobileManipMap* currentMap;
 	/**
 	 * The motion plan that is currently available.
 	 */
