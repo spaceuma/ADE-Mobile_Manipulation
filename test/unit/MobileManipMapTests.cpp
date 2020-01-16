@@ -8,7 +8,7 @@
 
 using namespace cv;
 
-TEST(MMMapTest, NominalWorking)
+TEST(MMMapTest, nominal_working_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
@@ -71,7 +71,7 @@ TEST(MMMapTest, NominalWorking)
     costMapFile.close();
 }
 
-TEST(MMMapTest, DEMformatError)
+TEST(MMMapTest, dem_format_error_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
@@ -101,7 +101,7 @@ TEST(MMMapTest, DEMformatError)
 
     // Error with resolution
     std::cout
-        << "\033[32m[----------]\033[0m Testing exception with resolution value"
+        << "\033[32m[----------]\033[0m [INFO] Testing exception with resolution value"
         << std::endl;
     prgd_dummy_dem->nodeSize_m = 0;
     ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
@@ -111,7 +111,7 @@ TEST(MMMapTest, DEMformatError)
                  std::exception);
     prgd_dummy_dem->nodeSize_m = res;
     // Error with number of cols
-    std::cout << "\033[32m[----------]\033[0m Testing exception with number of "
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with number of "
                  "columns"
               << std::endl;
     prgd_dummy_dem->cols = 0;
@@ -120,17 +120,66 @@ TEST(MMMapTest, DEMformatError)
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     // Error with number of rows
     std::cout
-        << "\033[32m[----------]\033[0m Testing exception with number of rows"
+        << "\033[32m[----------]\033[0m [INFO] Testing exception with number of rows"
         << std::endl;
     prgd_dummy_dem->rows = 0;
     ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
                  std::exception);
     prgd_dummy_dem->rows = vvd_elevation_data.size();
-    // Error with the sample waypoint
-    std::cout << "\033[32m[----------]\033[0m Testing exception with waypoint "
-                 "out of range"
+}
+
+TEST(MMMapTest, sample_pos_error_test)
+{
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data;
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevation_data);
+    double res = 0.1; // meters
+
+    // A dummy Rover Guidance based DEM is created
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    for (uint j = 0; j < vvd_elevation_data.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
+                = vvd_elevation_data[j][i];
+        }
+    }
+
+    base::Waypoint w_sample_one, w_sample_two, w_sample_three, w_sample_four;
+    w_sample_one.position[0] = -1.0;
+    w_sample_one.position[1] = 5.6;
+    w_sample_two.position[0] = 100;
+    w_sample_two.position[1] = 5.6;
+    w_sample_three.position[0] = 5.3;
+    w_sample_three.position[1] = -1.0;
+    w_sample_four.position[0] = 5.3;
+    w_sample_four.position[1] = 100;
+
+    // Error with the sample waypoints
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+                 "out of range - First Sample"
               << std::endl;
-    samplePos.position[0] = 30000;
-    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), w_sample_one),
+                 std::exception);
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+                 "out of range - Second Sample"
+              << std::endl;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), w_sample_two),
+                 std::exception);
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+                 "out of range - Third Sample"
+              << std::endl;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), w_sample_three),
+                 std::exception);
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+                 "out of range - Fourth Sample"
+              << std::endl;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), w_sample_four),
                  std::exception);
 }

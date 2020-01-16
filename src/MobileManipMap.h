@@ -100,6 +100,10 @@ public:
      * Returns the minimum value of elevation --> d_elevation_min
      */
     double getMinElevation();
+    /**
+     * Checks if the waypoint position is within obstacle area
+     */
+    bool isObstacle(const base::Waypoint w_pos_m);
 
 private:
     /**
@@ -110,6 +114,10 @@ private:
      * RG DEM is checked and loaded into MobileManipMap
      */
     void loadSample(const base::Waypoint &w_sample_pos_m);
+    /**
+     * Checks if the waypoint position is inside the map
+     */
+    bool isWaypointOutside(const base::Waypoint &w_sample_pos_m);
     /**
      * Memory is reserved for the matrices
      */

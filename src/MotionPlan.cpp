@@ -2,30 +2,33 @@
 
 MotionPlan::MotionPlan()
 {
-    // TODO - implement MotionPlan::MotionPlan
 }
 
 void MotionPlan::updateMotionPlan(std::vector<Waypoint> newRoverPath,
                                   std::vector<Joints> newJointsProfile)
 {
-    // TODO - implement MotionPlan::updateMotionPlan
     this->vw_rover_path = newRoverPath;
     this->vj_joints_profile = newJointsProfile;
 }
 
-void MotionPlan::executeRoverBasePathPlanning(MobileManipMap *inputMap,
+unsigned int MotionPlan::executeRoverBasePathPlanning(MobileManipMap *inputMap,
                                               base::Waypoint rover_position,
                                               base::Waypoint sample)
 {
     std::vector<std::vector<double>> costMap;
     // inputMap->getSamplingCostMap( costMap, sample );
     inputMap->getCostMap(costMap);
+    if (inputMap->isObstacle(rover_position))
+    {
+        return 1;
+    }
     this->bi_fast_marching.planPath(&costMap,
                                     inputMap->getResolution(),
                                     rover_position,
                                     sample,
                                     &(this->vw_rover_path));
     this->w_sample_pos = sample;
+    return 0;
 }
 
 int MotionPlan::shortenPathForFetching()

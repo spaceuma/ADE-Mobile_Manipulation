@@ -172,12 +172,7 @@ void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
 
 void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
 {
-    if ((w_sample_pos_m.position[0] < this->d_res)
-        || (w_sample_pos_m.position[1] < this->d_res)
-        || (w_sample_pos_m.position[0]
-            > ((double)this->ui_num_cols - 2) * this->d_res)
-        || (w_sample_pos_m.position[1]
-            > ((double)this->ui_num_rows - 2) * this->d_res))
+    if (isWaypointOutside(w_sample_pos_m))
     {
         cout << " MobileManipMap Constructor EXCEPTION: the sample is out of "
                 "the map"
@@ -185,6 +180,39 @@ void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
         throw exception();
     }
     this->w_sample_pos = w_sample_pos_m;
+}
+
+bool MobileManipMap::isWaypointOutside(const base::Waypoint &w_sample_pos_m)
+{
+    if ((w_sample_pos_m.position[0] < this->d_res)
+        || (w_sample_pos_m.position[1] < this->d_res)
+        || (w_sample_pos_m.position[0]
+            > ((double)this->ui_num_cols - 2) * this->d_res)
+        || (w_sample_pos_m.position[1]
+            > ((double)this->ui_num_rows - 2) * this->d_res))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool MobileManipMap::isObstacle(const base::Waypoint w_pos_m)
+{
+    std::vector<int> vi_pos(2, 0);
+    vi_pos[0] = (int)(w_pos_m.position[0] / this->d_res + 0.5);
+    vi_pos[1] = (int)(w_pos_m.position[1] / this->d_res + 0.5);
+    // TODO - take care of exceptions regarding unvalid indexes
+    if (this->vvd_cost_map[vi_pos[1]][vi_pos[0]] == INFINITY)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void MobileManipMap::initializeMatrices()

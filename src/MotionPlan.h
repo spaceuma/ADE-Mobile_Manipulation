@@ -85,7 +85,7 @@ public:
     /**
      * The path for the rover base, vw_rover_path, is calculated
      */
-    void executeRoverBasePathPlanning(MobileManipMap *p_mobile_manip_map_m,
+    unsigned int executeRoverBasePathPlanning(MobileManipMap *p_mobile_manip_map_m,
                                       base::Waypoint w_rover_pos_m,
                                       base::Waypoint w_sample_pos_m);
     /**

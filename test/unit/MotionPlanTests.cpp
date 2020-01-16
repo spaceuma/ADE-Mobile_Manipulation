@@ -11,7 +11,7 @@
 
 using namespace FastMarching_lib;
 
-TEST(MMMotionPlanTest, roverbaseplanning)
+TEST(MMMotionPlanTest, nominal_working_test)
 {
     // Reading the DEM
     std::vector<std::vector<double>> vvd_costMap;
@@ -74,4 +74,35 @@ TEST(MMMotionPlanTest, roverbaseplanning)
         f_arm_motion << "\n";
     }
     f_arm_motion.close();
+}
+
+TEST(MMMotionPlanTest, rover_in_obstacle_test)
+{
+    // Reading the DEM
+    std::vector<std::vector<double>> vvd_costMap;
+    std::vector<std::vector<double>> vvd_elevationMap;
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevationMap);
+    readMatrixFile("test/unit/data/input/costMap.txt", vvd_costMap);
+    double res = 0.1; // meters
+    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
+
+    // Creating the Motion Plan
+    MotionPlan mplan_dummy;
+
+    base::Waypoint roverPos, samplePos;
+    roverPos.position[0] = 6.0;
+    roverPos.position[1] = 2.0;
+    roverPos.heading = 0;
+
+    samplePos.position[0] = 5.3;
+    samplePos.position[1] = 5.6;
+    samplePos.heading = 0;
+
+    unsigned int i_error_code = 0;
+
+    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+        &dummyMap, roverPos, samplePos);
+
+    ASSERT_EQ(i_error_code,1);
 }
