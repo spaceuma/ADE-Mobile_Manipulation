@@ -6,66 +6,91 @@ using namespace cv;
 
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
 {
-    // Assignation of DEM parameters
-    this->rg_dem = dem;
-    this->ui_num_cols = dem.cols;
-    this->ui_num_rows = dem.rows;
-    this->d_res = dem.nodeSize_m;
-
-    // Initialization of vector matrices
-    this->vvd_elevation_map.clear();
-    this->vvi_traversability_map.clear();
-    this->vvd_cost_map.clear();
-    this->vvd_proximity_map.clear();
-    std::vector<double> vd_row(this->ui_num_cols);
-    std::vector<int> vi_row(this->ui_num_cols);
-    for (uint j = 0; j < this->ui_num_rows; j++)
+    try
     {
-        this->vvd_elevation_map.push_back(vd_row);
-        this->vvi_traversability_map.push_back(vi_row);
-        this->vvd_cost_map.push_back(vd_row);
-        this->vvd_proximity_map.push_back(vd_row);
+        // Assignation of DEM parameters
+        this->loadDEM(dem);
+        // Initialization of vector matrices
+        this->initializeMatrices();
+    }
+    catch (bad_alloc &ba)
+    {
+        cout
+            << ba.what()
+            << " exception occured while allocating memory for the map matrices"
+            << endl;
+        throw ba;
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while reading DEM" << endl;
+        throw e;
     }
 
-    this->calculateElevationMap();
-    // Compute vvb_obstacle_map
-    this->calculateTraversabilityMap();
-    // Compute vvd_proximity_map
-    this->calculateProximityToObstaclesMap();
-    // Compute vvd_cost_map
-    this->calculateCostValues();
+    try
+    {
+        this->calculateElevationMap();
+        // Compute vvb_obstacle_map
+        this->calculateTraversabilityMap();
+        // Compute vvd_proximity_map
+        this->calculateProximityToObstaclesMap();
+        // Compute vvd_cost_map
+        this->calculateCostValues();
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while calculating the cost map" << endl;
+        throw e;
+    }
 }
 
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
                                base::Waypoint w_sample_pos_m)
 {
-    this->w_sample_pos = w_sample_pos_m;
-    // Assignation of DEM parameters
-    this->rg_dem = dem;
-    this->ui_num_cols = dem.cols;
-    this->ui_num_rows = dem.rows;
-    this->d_res = dem.nodeSize_m;
-
-    // Initialization of vector matrices
-    this->vvd_elevation_map.clear();
-    this->vvi_traversability_map.clear();
-    this->vvd_cost_map.clear();
-    this->vvd_proximity_map.clear();
-    std::vector<double> vd_row(this->ui_num_cols);
-    std::vector<int> vi_row(this->ui_num_cols);
-    for (uint j = 0; j < this->ui_num_rows; j++)
+    try
     {
-        this->vvd_elevation_map.push_back(vd_row);
-        this->vvi_traversability_map.push_back(vi_row);
-        this->vvd_cost_map.push_back(vd_row);
-        this->vvd_proximity_map.push_back(vd_row);
+        // Assignation of DEM parameters
+        this->loadDEM(dem);
+        // Initialization of vector matrices
+        this->initializeMatrices();
+    }
+    catch (bad_alloc &ba)
+    {
+        cout
+            << ba.what()
+            << " exception occured while allocating memory for the map matrices"
+            << endl;
+        throw ba;
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while reading DEM" << endl;
+        throw e;
     }
 
-    this->calculateElevationMap();
-    // Compute vvb_obstacle_map
-    this->calculateTraversabilityMap();
-    // Compute vvd_proximity_map
-    this->addSampleFacingObstacles();
+    try
+    {
+        this->loadSample(w_sample_pos_m);
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while loading the Sample position"
+             << endl;
+        throw e;
+    }
+    try
+    {
+        this->calculateElevationMap();
+        // Compute vvb_obstacle_map
+        this->calculateTraversabilityMap();
+        // Compute vvd_proximity_map
+        this->addSampleFacingObstacles();
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while calculating the cost map" << endl;
+        throw e;
+    }
 }
 
 MobileManipMap::MobileManipMap(
@@ -116,6 +141,68 @@ MobileManipMap::MobileManipMap(
     }
 }
 
+void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
+{
+    if (dem.nodeSize_m <= 0)
+    {
+        cout << " MobileManipMap Constructor EXCEPTION: DEM node size is "
+                "nonvalid with value = "
+             << dem.nodeSize_m << endl;
+        throw exception();
+    }
+    this->d_res = dem.nodeSize_m;
+    if (dem.cols < 5)
+    {
+        cout << " MobileManipMap Constructor EXCEPTION: DEM number of columns "
+                "is nonvalid with value = "
+             << dem.cols << endl;
+        throw exception();
+    }
+    this->ui_num_cols = dem.cols;
+    if (dem.rows < 5)
+    {
+        cout << " MobileManipMap Constructor EXCEPTION: DEM number of rows is "
+                "nonvalid with value = "
+             << dem.rows << endl;
+        throw exception();
+    }
+    this->ui_num_rows = dem.rows;
+    this->rg_dem = dem;
+}
+
+void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
+{
+    if ((w_sample_pos_m.position[0] < this->d_res)
+        || (w_sample_pos_m.position[1] < this->d_res)
+        || (w_sample_pos_m.position[0]
+            > ((double)this->ui_num_cols - 2) * this->d_res)
+        || (w_sample_pos_m.position[1]
+            > ((double)this->ui_num_rows - 2) * this->d_res))
+    {
+        cout << " MobileManipMap Constructor EXCEPTION: the sample is out of "
+                "the map"
+             << endl;
+        throw exception();
+    }
+    this->w_sample_pos = w_sample_pos_m;
+}
+
+void MobileManipMap::initializeMatrices()
+{
+    this->vvd_elevation_map.clear();
+    this->vvi_traversability_map.clear();
+    this->vvd_cost_map.clear();
+    this->vvd_proximity_map.clear();
+    std::vector<double> vd_row(this->ui_num_cols);
+    std::vector<int> vi_row(this->ui_num_cols);
+    for (uint j = 0; j < this->ui_num_rows; j++)
+    {
+        this->vvd_elevation_map.push_back(vd_row);
+        this->vvi_traversability_map.push_back(vi_row);
+        this->vvd_cost_map.push_back(vd_row);
+        this->vvd_proximity_map.push_back(vd_row);
+    }
+}
 void MobileManipMap::getCostMap(
     std::vector<std::vector<double>> &vvd_cost_map_m)
 {

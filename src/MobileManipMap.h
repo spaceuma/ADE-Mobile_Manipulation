@@ -103,6 +103,18 @@ public:
 
 private:
     /**
+     * RG DEM is checked and loaded into MobileManipMap
+     */
+    void loadDEM(const RoverGuidance_Dem &rg_dem_m);
+    /**
+     * RG DEM is checked and loaded into MobileManipMap
+     */
+    void loadSample(const base::Waypoint &w_sample_pos_m);
+    /**
+     * Memory is reserved for the matrices
+     */
+    void initializeMatrices();
+    /**
      * The elevation map vvd_elevation_map is calculated from rg_dem
      */
     bool calculateElevationMap();

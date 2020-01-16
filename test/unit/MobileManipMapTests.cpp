@@ -8,7 +8,7 @@
 
 using namespace cv;
 
-TEST(MMMapTest, constructorTest)
+TEST(MMMapTest, NominalWorking)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
@@ -69,4 +69,68 @@ TEST(MMMapTest, constructorTest)
     }
 
     costMapFile.close();
+}
+
+TEST(MMMapTest, DEMformatError)
+{
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data;
+    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevation_data);
+    double res = 0.1; // meters
+
+    // A dummy Rover Guidance based DEM is created
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    for (uint j = 0; j < vvd_elevation_data.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
+                = vvd_elevation_data[j][i];
+        }
+    }
+
+    base::Waypoint samplePos;
+    samplePos.position[0] = 5.3;
+    samplePos.position[1] = 5.6;
+    samplePos.heading = 0;
+
+    // Error with resolution
+    std::cout
+        << "\033[32m[----------]\033[0m Testing exception with resolution value"
+        << std::endl;
+    prgd_dummy_dem->nodeSize_m = 0;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
+                 std::exception);
+    prgd_dummy_dem->nodeSize_m = -0.1;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
+                 std::exception);
+    prgd_dummy_dem->nodeSize_m = res;
+    // Error with number of cols
+    std::cout << "\033[32m[----------]\033[0m Testing exception with number of "
+                 "columns"
+              << std::endl;
+    prgd_dummy_dem->cols = 0;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
+                 std::exception);
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    // Error with number of rows
+    std::cout
+        << "\033[32m[----------]\033[0m Testing exception with number of rows"
+        << std::endl;
+    prgd_dummy_dem->rows = 0;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
+                 std::exception);
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    // Error with the sample waypoint
+    std::cout << "\033[32m[----------]\033[0m Testing exception with waypoint "
+                 "out of range"
+              << std::endl;
+    samplePos.position[0] = 30000;
+    ASSERT_THROW(MobileManipMap dummyMap((*prgd_dummy_dem), samplePos),
+                 std::exception);
 }
