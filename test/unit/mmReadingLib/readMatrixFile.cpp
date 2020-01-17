@@ -5,6 +5,7 @@ void readMatrixFile(std::string map_file,
 {
     std::string line;
     std::ifstream e_file(map_file.c_str(), std::ios::in);
+
     double n_row = 0;
     double n_col = 0;
     vector_elevationData.clear();
@@ -34,6 +35,7 @@ void readMatrixFile(std::string map_file,
     else
     {
         std::cout << "Problem opening the path file" << std::endl;
+	throw std::exception();
     }
 }
 

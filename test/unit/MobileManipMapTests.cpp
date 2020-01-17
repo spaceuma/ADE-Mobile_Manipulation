@@ -12,8 +12,8 @@ TEST(MMMapTest, nominal_working_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                   vvd_elevation_data);
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
     double res = 0.1; // meters
 
     ASSERT_EQ(vvd_elevation_data.size(), 80);
@@ -57,7 +57,7 @@ TEST(MMMapTest, nominal_working_test)
 
     std::ofstream costMapFile;
 
-    costMapFile.open("test/unit/data/results/costMap.txt");
+    costMapFile.open("test/unit/data/results/costMap_Shadowing.txt");
 
     for (int j = 0; j < costMap.size(); j++)
     {
@@ -69,6 +69,21 @@ TEST(MMMapTest, nominal_working_test)
     }
 
     costMapFile.close();
+
+    MobileManipMap mmmap_no_shadowing((*prgd_dummy_dem));
+    costMapFile.open("test/unit/data/results/costMap_noShadowing.txt");
+    mmmap_no_shadowing.getCostMap(costMap);
+    for (int j = 0; j < costMap.size(); j++)
+    {
+        for (int i = 0; i < costMap[0].size(); i++)
+        {
+            costMapFile << costMap[j][i] << " ";
+        }
+        costMapFile << "\n";
+    }
+
+    costMapFile.close();
+
 }
 
 TEST(MMMapTest, dem_format_error_test)
@@ -85,6 +100,7 @@ TEST(MMMapTest, dem_format_error_test)
     prgd_dummy_dem->p_heightData_m = dummyArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
     for (uint j = 0; j < vvd_elevation_data.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
@@ -142,6 +158,7 @@ TEST(MMMapTest, sample_pos_error_test)
     prgd_dummy_dem->p_heightData_m = dummyArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
     for (uint j = 0; j < vvd_elevation_data.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_data[0].size(); i++)

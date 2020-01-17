@@ -11,14 +11,16 @@
 
 using namespace FastMarching_lib;
 
-TEST(MMMotionPlanTest, nominal_working_test)
+TEST(MMMotionPlanTest, nominal_working_shadowing_test)
 {
     // Reading the DEM
     std::vector<std::vector<double>> vvd_costMap;
     std::vector<std::vector<double>> vvd_elevationMap;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                   vvd_elevationMap);
-    readMatrixFile("test/unit/data/input/costMap.txt", vvd_costMap);
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                       vvd_elevationMap));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/costMap_Shadowing.txt",
+                                   vvd_costMap));
     double res = 0.1; // meters
     MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
 
@@ -43,7 +45,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
     int numWaypoints = mplan_dummy.shortenPathForFetching();
     ASSERT_EQ(roverPath->size(), 90);
     double t = double(clock() - ini2D) / CLOCKS_PER_SEC;
-    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: " << t << " s\033[0m" << std::endl;
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << t << " s\033[0m" << std::endl;
 
     // Exporting the Path into a txt file
     std::ofstream pathFile;
@@ -76,14 +79,16 @@ TEST(MMMotionPlanTest, nominal_working_test)
     f_arm_motion.close();
 }
 
-TEST(MMMotionPlanTest, rover_in_obstacle_test)
+TEST(MMMotionPlanTest, nominal_working_no_shadowing_test)
 {
     // Reading the DEM
     std::vector<std::vector<double>> vvd_costMap;
     std::vector<std::vector<double>> vvd_elevationMap;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                   vvd_elevationMap);
-    readMatrixFile("test/unit/data/input/costMap.txt", vvd_costMap);
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                       vvd_elevationMap));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/costMap_noShadowing.txt",
+                                   vvd_costMap));
     double res = 0.1; // meters
     MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
 
@@ -91,7 +96,7 @@ TEST(MMMotionPlanTest, rover_in_obstacle_test)
     MotionPlan mplan_dummy;
 
     base::Waypoint roverPos, samplePos;
-    roverPos.position[0] = 6.0;
+    roverPos.position[0] = 3.0;
     roverPos.position[1] = 2.0;
     roverPos.heading = 0;
 
@@ -99,10 +104,108 @@ TEST(MMMotionPlanTest, rover_in_obstacle_test)
     samplePos.position[1] = 5.6;
     samplePos.heading = 0;
 
+    // 2d Rover Base Path Planning
+    clock_t ini2D = clock();
+    ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
+        &dummyMap, roverPos, samplePos));
+    std::vector<base::Waypoint> *roverPath = mplan_dummy.getPath();
+    ASSERT_EQ(roverPath->size(), 109);
+    int numWaypoints = mplan_dummy.shortenPathForFetching();
+    ASSERT_EQ(roverPath->size(), 90);
+    double t = double(clock() - ini2D) / CLOCKS_PER_SEC;
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << t << " s\033[0m" << std::endl;
+
+    // Exporting the Path into a txt file
+    std::ofstream pathFile;
+    pathFile.open("test/unit/data/results/path.txt");
+    for (int j = 0; j < roverPath->size(); j++)
+    {
+        pathFile << roverPath->at(j).position[0] << " "
+                 << roverPath->at(j).position[1] << " "
+                 << roverPath->at(j).heading << "\n";
+    }
+    pathFile.close();
+
+    // 3d End Effector Motion Planning
+    double zRes = 0.08;
+    mplan_dummy.executeEndEffectorPlanning(&dummyMap, zRes);
+
+    // Exporting the Arm Motion Profile into a txt file
+    std::vector<std::vector<double>> *pvvd_arm_motion_profile
+        = mplan_dummy.getArmMotionProfile();
+    std::ofstream f_arm_motion;
+    f_arm_motion.open("test/unit/data/results/armMotionProfile.txt");
+    for (int j = 0; j < pvvd_arm_motion_profile->size(); j++)
+    {
+        for (int i = 0; i < (*pvvd_arm_motion_profile)[0].size(); i++)
+        {
+            f_arm_motion << (*pvvd_arm_motion_profile)[j][i] << " ";
+        }
+        f_arm_motion << "\n";
+    }
+    f_arm_motion.close();
+}
+
+TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
+{
+    // Reading the elevation and cost maps
+    std::vector<std::vector<double>> vvd_costMap;
+    std::vector<std::vector<double>> vvd_elevationMap;
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+                       vvd_elevationMap))
+        << "\033[31m[----------]\033[0m Input CSV elevation map is missing";
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/costMap_Shadowing.txt",
+                                   vvd_costMap))
+        << "\033[31m[----------]\033[0m "
+           "test/unit/data/input/costMap_shadowing.txt is missing";
+    double res = 0.1; // meters
+    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
+
+    // Creating the Motion Plan
+    MotionPlan mplan_dummy;
+
+    base::Waypoint roverPos, samplePos;
     unsigned int i_error_code = 0;
 
+    // Rover out of the map
+    roverPos.position[0] = -6.0;
+    roverPos.position[1] = 2.0;
+    samplePos.position[0] = 5.3;
+    samplePos.position[1] = 5.6;
     i_error_code = mplan_dummy.executeRoverBasePathPlanning(
         &dummyMap, roverPos, samplePos);
+    ASSERT_EQ(i_error_code, 1)
+        << "\033[31m[----------]\033[0m Expected Error Code 1";
 
-    ASSERT_EQ(i_error_code,1);
+    // Rover within obstacle area
+    roverPos.position[0] = 6.0;
+    roverPos.position[1] = 2.0;
+    samplePos.position[0] = 5.3;
+    samplePos.position[1] = 5.6;
+    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+        &dummyMap, roverPos, samplePos);
+    ASSERT_EQ(i_error_code, 2)
+        << "\033[31m[----------]\033[0m Expected Error Code 2";
+
+    // Sample out of the map
+    roverPos.position[0] = 3.0;
+    roverPos.position[1] = 2.0;
+    samplePos.position[0] = -5.3;
+    samplePos.position[1] = 5.6;
+    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+        &dummyMap, roverPos, samplePos);
+    ASSERT_EQ(i_error_code, 3)
+        << "\033[31m[----------]\033[0m Expected Error Code 3";
+
+    // Sample within obstacle area
+    roverPos.position[0] = 3.0;
+    roverPos.position[1] = 2.0;
+    samplePos.position[0] = 6.0;
+    samplePos.position[1] = 2.0;
+    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+        &dummyMap, roverPos, samplePos);
+    ASSERT_EQ(i_error_code, 4)
+        << "\033[31m[----------]\033[0m Expected Error Code 4";
 }

@@ -32,12 +32,23 @@ unsigned int MotionPlan::executeRoverBasePathPlanning(MobileManipMap *inputMap,
                                               base::Waypoint sample)
 {
     std::vector<std::vector<double>> costMap;
-    // inputMap->getSamplingCostMap( costMap, sample );
-    inputMap->getCostMap(costMap);
-    if (inputMap->isObstacle(rover_position))
+    if (inputMap->isOutside(rover_position))
     {
         return 1;
     }
+    if (inputMap->isObstacle(rover_position))
+    {
+        return 2;
+    }
+    if (inputMap->isOutside(sample))
+    {
+        return 3;
+    }
+    if (inputMap->isObstacle(sample))
+    {
+        return 4;
+    }
+    inputMap->getCostMap(costMap);
     this->bi_fast_marching.planPath(&costMap,
                                     inputMap->getResolution(),
                                     rover_position,

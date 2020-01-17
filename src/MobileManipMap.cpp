@@ -139,6 +139,8 @@ MobileManipMap::MobileManipMap(
         this->vvd_cost_map.push_back(row);
         row.clear();
     }
+    this->ui_num_cols = vvd_elevation_map_m[0].size();
+    this->ui_num_rows = vvd_elevation_map_m.size();
 }
 
 void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
@@ -168,11 +170,12 @@ void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     }
     this->ui_num_rows = dem.rows;
     this->rg_dem = dem;
+    this->d_res = dem.nodeSize_m;
 }
 
 void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
 {
-    if (isWaypointOutside(w_sample_pos_m))
+    if (isOutside(w_sample_pos_m))
     {
         cout << " MobileManipMap Constructor EXCEPTION: the sample is out of "
                 "the map"
@@ -182,7 +185,7 @@ void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
     this->w_sample_pos = w_sample_pos_m;
 }
 
-bool MobileManipMap::isWaypointOutside(const base::Waypoint &w_sample_pos_m)
+bool MobileManipMap::isOutside(const base::Waypoint &w_sample_pos_m)
 {
     if ((w_sample_pos_m.position[0] < this->d_res)
         || (w_sample_pos_m.position[1] < this->d_res)
