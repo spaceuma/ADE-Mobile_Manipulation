@@ -4,11 +4,27 @@ MotionPlan::MotionPlan()
 {
 }
 
-void MotionPlan::updateMotionPlan(std::vector<Waypoint> newRoverPath,
-                                  std::vector<Joints> newJointsProfile)
+MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
+                       std::vector<std::vector<double>> &m_arm_motion_profile)
 {
-    this->vw_rover_path = newRoverPath;
-    this->vj_joints_profile = newJointsProfile;
+    this->vw_rover_path.clear();
+    for (uint i = 0; i < vw_rover_path_m.size(); i++)
+    {
+        this->vw_rover_path.push_back(vw_rover_path_m[i]);
+    }
+
+    std::vector<double> row;
+    this->vvd_arm_motion_profile.clear();
+    for (uint j = 0; j < m_arm_motion_profile.size(); j++)
+    {
+        for (uint i = 0; i < m_arm_motion_profile[0].size(); i++)
+        {
+            row.push_back(m_arm_motion_profile[j][i]);
+        }
+        this->vvd_arm_motion_profile.push_back(row);
+        row.clear();
+    }
+
 }
 
 unsigned int MotionPlan::executeRoverBasePathPlanning(MobileManipMap *inputMap,
@@ -65,27 +81,3 @@ std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
     return &(this->vvd_arm_motion_profile);
 }
 
-void MotionPlan::setArmMotionProfile(
-    std::vector<std::vector<double>> &m_arm_motion_profile)
-{
-    std::vector<double> row;
-    this->vvd_arm_motion_profile.clear();
-    for (uint j = 0; j < m_arm_motion_profile.size(); j++)
-    {
-        for (uint i = 0; i < m_arm_motion_profile[0].size(); i++)
-        {
-            row.push_back(m_arm_motion_profile[j][i]);
-        }
-        this->vvd_arm_motion_profile.push_back(row);
-        row.clear();
-    }
-}
-
-void MotionPlan::setPath(std::vector<Waypoint> &vw_path)
-{
-    this->vw_rover_path.clear();
-    for (uint i = 0; i < vw_path.size(); i++)
-    {
-        this->vw_rover_path.push_back(vw_path[i]);
-    }
-}

@@ -14,9 +14,7 @@ TEST(MMExecutorTest, trajectorycontrol)
     readPath("test/unit/data/input/path.txt", path);
     readMatrixFile("test/unit/data/input/armMotionProfile.txt",
                    vvd_arm_motion_profile);
-    MotionPlan dummyPlan;
-    dummyPlan.setPath(path);
-    dummyPlan.setArmMotionProfile(vvd_arm_motion_profile);
+    MotionPlan dummyPlan(path, vvd_arm_motion_profile);
 
     Pose robotPose;
     Waypoint lpoint;

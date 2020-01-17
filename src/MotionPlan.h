@@ -63,17 +63,8 @@ public:
     /**
      * An existing path and profile are introduced into the motion plan 
      */
-    void updateMotionPlan(std::vector<Waypoint> vw_rover_path_m,
-                          std::vector<Joints> vj_joints_profile_m);
-    /**
-     * Updates the arm motion profile
-     */
-    void setArmMotionProfile(
-        std::vector<std::vector<double>> &vj_joints_profile_m);
-    /**
-     * Updates the path
-     */
-    void setPath(std::vector<Waypoint> &vw_path_m);
+    MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
+               std::vector<std::vector<double>> &vj_joints_profile_m);
     /**
      * A pointer to the current path is returned
      */
