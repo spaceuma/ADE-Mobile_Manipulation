@@ -1,7 +1,7 @@
 #include "FastMarching.h"
 #include "MobileManipMap.h"
 #include "MotionPlan.h"
-#include "readMatrixFile.h"
+#include "mmFileManager.h"
 #include <ctime>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -11,140 +11,81 @@
 
 using namespace FastMarching_lib;
 
-TEST(MMMotionPlanTest, nominal_working_shadowing_test)
+TEST(MMMotionPlanTest, nominal_working_test)
 {
     // Reading the DEM
-    std::vector<std::vector<double>> vvd_costMap;
-    std::vector<std::vector<double>> vvd_elevationMap;
+    std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_cost_map_no_shadowing, vvd_elevation_map;
     ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                       vvd_elevationMap));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/costMap_Shadowing.txt",
-                                   vvd_costMap));
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv",
+                       vvd_elevation_map));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_noShadowing.txt",
+                                   vvd_cost_map_no_shadowing));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt",
+                                   vvd_cost_map_shadowing));
     double res = 0.1; // meters
-    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
+    MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res), mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res);
 
     // Creating the Motion Plan
     MotionPlan mplan_dummy;
 
-    base::Waypoint roverPos, samplePos;
-    roverPos.position[0] = 3.0;
-    roverPos.position[1] = 2.0;
-    roverPos.heading = 0;
+    base::Waypoint w_rover_pos_01, w_rover_pos_02, samplePos;
+    ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(w_rover_pos_02 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
 
-    samplePos.position[0] = 5.3;
-    samplePos.position[1] = 5.6;
-    samplePos.heading = 0;
-
-    // 2d Rover Base Path Planning
+    // 2d Rover Base Path Planning (First rover position)
     clock_t ini2D = clock();
     ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
-        &dummyMap, roverPos, samplePos));
-    std::vector<base::Waypoint> *roverPath = mplan_dummy.getPath();
-    ASSERT_EQ(roverPath->size(), 110);
-    int numWaypoints = mplan_dummy.shortenPathForFetching();
-    ASSERT_EQ(roverPath->size(), 90);
-    double t = double(clock() - ini2D) / CLOCKS_PER_SEC;
+        &mmmap_no_shadowing, w_rover_pos_01, samplePos));
+    mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
-              << t << " s\033[0m" << std::endl;
-
-    // Exporting the Path into a txt file
-    std::ofstream pathFile;
-    pathFile.open("test/unit/data/results/path.txt");
-    for (int j = 0; j < roverPath->size(); j++)
-    {
-        pathFile << roverPath->at(j).position[0] << " "
-                 << roverPath->at(j).position[1] << " "
-                 << roverPath->at(j).heading << "\n";
-    }
-    pathFile.close();
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt");
 
     // 3d End Effector Motion Planning
     double zRes = 0.08;
-    mplan_dummy.executeEndEffectorPlanning(&dummyMap, zRes);
-
-    // Exporting the Arm Motion Profile into a txt file
+    mplan_dummy.executeEndEffectorPlanning(&mmmap_no_shadowing, zRes);
     std::vector<std::vector<double>> *pvvd_arm_motion_profile
         = mplan_dummy.getArmMotionProfile();
-    std::ofstream f_arm_motion;
-    f_arm_motion.open("test/unit/data/results/armMotionProfile.txt");
-    for (int j = 0; j < pvvd_arm_motion_profile->size(); j++)
-    {
-        for (int i = 0; i < (*pvvd_arm_motion_profile)[0].size(); i++)
-        {
-            f_arm_motion << (*pvvd_arm_motion_profile)[j][i] << " ";
-        }
-        f_arm_motion << "\n";
-    }
-    f_arm_motion.close();
-}
-
-TEST(MMMotionPlanTest, nominal_working_no_shadowing_test)
-{
-    // Reading the DEM
-    std::vector<std::vector<double>> vvd_costMap;
-    std::vector<std::vector<double>> vvd_elevationMap;
-    ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                       vvd_elevationMap));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/costMap_noShadowing.txt",
-                                   vvd_costMap));
-    double res = 0.1; // meters
-    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
-
-    // Creating the Motion Plan
-    MotionPlan mplan_dummy;
-
-    base::Waypoint roverPos, samplePos;
-    roverPos.position[0] = 3.0;
-    roverPos.position[1] = 2.0;
-    roverPos.heading = 0;
-
-    samplePos.position[0] = 5.3;
-    samplePos.position[1] = 5.6;
-    samplePos.heading = 0;
-
-    // 2d Rover Base Path Planning
-    clock_t ini2D = clock();
+    saveProfile(pvvd_arm_motion_profile, "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt");
+    
+    ini2D = clock();
     ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
-        &dummyMap, roverPos, samplePos));
-    std::vector<base::Waypoint> *roverPath = mplan_dummy.getPath();
-    ASSERT_EQ(roverPath->size(), 109);
-    int numWaypoints = mplan_dummy.shortenPathForFetching();
-    ASSERT_EQ(roverPath->size(), 90);
-    double t = double(clock() - ini2D) / CLOCKS_PER_SEC;
+        &mmmap_shadowing, w_rover_pos_01, samplePos));
+    mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
-              << t << " s\033[0m" << std::endl;
-
-    // Exporting the Path into a txt file
-    std::ofstream pathFile;
-    pathFile.open("test/unit/data/results/path.txt");
-    for (int j = 0; j < roverPath->size(); j++)
-    {
-        pathFile << roverPath->at(j).position[0] << " "
-                 << roverPath->at(j).position[1] << " "
-                 << roverPath->at(j).heading << "\n";
-    }
-    pathFile.close();
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
 
     // 3d End Effector Motion Planning
-    double zRes = 0.08;
-    mplan_dummy.executeEndEffectorPlanning(&dummyMap, zRes);
+    mplan_dummy.executeEndEffectorPlanning(&mmmap_shadowing, zRes);
+    saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
 
-    // Exporting the Arm Motion Profile into a txt file
-    std::vector<std::vector<double>> *pvvd_arm_motion_profile
-        = mplan_dummy.getArmMotionProfile();
-    std::ofstream f_arm_motion;
-    f_arm_motion.open("test/unit/data/results/armMotionProfile.txt");
-    for (int j = 0; j < pvvd_arm_motion_profile->size(); j++)
-    {
-        for (int i = 0; i < (*pvvd_arm_motion_profile)[0].size(); i++)
-        {
-            f_arm_motion << (*pvvd_arm_motion_profile)[j][i] << " ";
-        }
-        f_arm_motion << "\n";
-    }
-    f_arm_motion.close();
+    // 2d Rover Base Path Planning (Second rover position)
+    ini2D = clock();
+    ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
+        &mmmap_no_shadowing, w_rover_pos_02, samplePos));
+    mplan_dummy.shortenPathForFetching();
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt");
+
+    // 3d End Effector Motion Planning
+    mplan_dummy.executeEndEffectorPlanning(&mmmap_no_shadowing, zRes);
+    saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_02.txt");
+
+    ini2D = clock();
+    ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
+        &mmmap_shadowing, w_rover_pos_02, samplePos));
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    mplan_dummy.shortenPathForFetching();
+    //std::vector<base::Waypoint> *roverPath = mplan_dummy.getPath();
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
+
+    // 3d End Effector Motion Planning
+    mplan_dummy.executeEndEffectorPlanning(&mmmap_shadowing, zRes);
+    saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
 }
 
 TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
@@ -153,10 +94,10 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     std::vector<std::vector<double>> vvd_costMap;
     std::vector<std::vector<double>> vvd_elevationMap;
     ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv",
                        vvd_elevationMap))
         << "\033[31m[----------]\033[0m Input CSV elevation map is missing";
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/costMap_Shadowing.txt",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt",
                                    vvd_costMap))
         << "\033[31m[----------]\033[0m "
            "test/unit/data/input/costMap_shadowing.txt is missing";

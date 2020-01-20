@@ -69,7 +69,7 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacl
         for ( int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
 	    if (( i == 0 )||( j == 0 )||( i == vvi_obstacle_map[0].size() - 1)||( j == vvi_obstacle_map.size() - 1 )||
-			    (sqrt(pow((float)(i - vi_goal[0]),2)+pow((float)(j - vi_goal[1]),2)) > d_max_distance/d_map_resolution))
+			    (sqrt(pow(((float)i - vi_goal[0]),2)+pow(((float)j - vi_goal[1]),2)) > d_max_distance/d_map_resolution))
 	    {
                 clear_row.push_back(INFINITY);
 		obstacle_row.push_back(INFINITY);
@@ -79,7 +79,7 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacl
                 clear_row.push_back(1.0);
                 if (vvi_obstacle_map[j][i] == 0)
                 {
-                    obstacle_row.push_back(1000.0);
+                    obstacle_row.push_back(1000000.0);
                 }
                 else
                 {
@@ -101,7 +101,7 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacl
     {
         for ( int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
-	    if (fabs((*pvvd_clear_totalcostmap)[j][i] - (*pvvd_obstacle_totalcostmap)[j][i]) > 0.01)
+	    if (fabs((*pvvd_clear_totalcostmap)[j][i] - (*pvvd_obstacle_totalcostmap)[j][i]) > 0.1)
 	    {
 	       vvi_obstacle_map[j][i] = 0; 
             }

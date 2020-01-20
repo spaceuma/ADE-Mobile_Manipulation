@@ -9,7 +9,7 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories(../../src)
 include_directories(data)
-include_directories(mmReadingLib)
+include_directories(mmFileManagerLib)
 set(WP_DIR ../../deps/control-waypoint_navigation)
 
 file(GLOB MM_SRC
@@ -43,8 +43,8 @@ add_executable(runUnitTests
 	       MobileManipMapTests.cpp
 	       MotionPlanTests.cpp
 	       MobileManipExecutorTests.cpp
-               mmReadingLib/readMatrixFile.h
-               mmReadingLib/readMatrixFile.cpp
+	       mmFileManagerLib/mmFileManager.h
+	       mmFileManagerLib/mmFileManager.cpp
                ${MM_SRC}
                ${MM_types_SRC}
 	       ${FM_SRC}

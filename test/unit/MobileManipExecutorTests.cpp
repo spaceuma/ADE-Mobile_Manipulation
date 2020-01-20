@@ -2,7 +2,7 @@
 #include "MotionCommand.h"
 #include "Waypoint.hpp"
 #include "Waypoint.hpp"
-#include "readMatrixFile.h"
+#include "mmFileManager.h"
 #include <gtest/gtest.h>
 #include <unistd.h>
 
@@ -11,8 +11,8 @@ TEST(MMExecutorTest, trajectorycontrol)
 
     std::vector<Waypoint> path;
     std::vector<std::vector<double>> vvd_arm_motion_profile;
-    readPath("test/unit/data/input/path.txt", path);
-    readMatrixFile("test/unit/data/input/armMotionProfile.txt",
+    readPath("test/unit/data/input/MMExecutorTest/path.txt", path);
+    readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
                    vvd_arm_motion_profile);
     MotionPlan dummyPlan(path, vvd_arm_motion_profile);
 

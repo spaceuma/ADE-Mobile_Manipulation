@@ -1,4 +1,4 @@
-#include "readMatrixFile.h"
+#include "mmFileManager.h"
 
 void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData)
@@ -83,3 +83,61 @@ void readPath(std::string s_path_file,
 
 }
 
+Waypoint getWaypoint(std::string s_path_file)
+{
+    std::string line;
+    std::ifstream e_file(s_path_file.c_str(), std::ios::in);
+
+    Waypoint w_current;
+
+    std::getline(e_file, line);
+    std::stringstream ss(line);
+    std::string cell;
+    double val;
+    std::getline(ss, cell, ' ');
+    std::stringstream numeric_value(cell);
+    numeric_value >> val;
+    w_current.position[0] = val;
+   
+    std::getline(ss, cell, ' ');
+    std::stringstream numeric_value1(cell);
+    numeric_value1 >> val;
+    w_current.position[1] = val;
+   
+    std::getline(ss, cell, ' ');
+    std::stringstream numeric_value2(cell);
+    numeric_value2 >> val;
+    w_current.position[2] = val;
+
+    e_file.close();
+    return w_current;
+}
+
+void savePath(std::vector<base::Waypoint> *roverPath, std::string s_path_file)
+{
+    std::ofstream pathFile;
+    pathFile.open(s_path_file);
+    for (int j = 0; j < roverPath->size(); j++)
+    {
+        pathFile << roverPath->at(j).position[0] << " "
+                 << roverPath->at(j).position[1] << " "
+                 << roverPath->at(j).heading << "\n";
+    }
+    pathFile.close();
+}
+
+void saveProfile(std::vector<std::vector<double>> *pvvd_arm_motion_profile, std::string s_path_file)
+{
+    std::ofstream f_arm_motion;
+    f_arm_motion.open(s_path_file);
+    for (int j = 0; j < pvvd_arm_motion_profile->size(); j++)
+    {
+        for (int i = 0; i < (*pvvd_arm_motion_profile)[0].size(); i++)
+        {
+            f_arm_motion << (*pvvd_arm_motion_profile)[j][i] << " ";
+        }
+        f_arm_motion << "\n";
+    }
+    f_arm_motion.close();
+
+}

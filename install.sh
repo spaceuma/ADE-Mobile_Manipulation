@@ -71,6 +71,9 @@ make install
 
 cd $cur/test/unit
 #rm -rf build
+mkdir data/results/MMMapTest
+mkdir data/results/MMMotionPlanTest
+mkdir data/results/MMExecutorTest
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..

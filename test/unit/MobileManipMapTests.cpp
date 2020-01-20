@@ -1,6 +1,6 @@
 #include "MM_status.h"
 #include "MobileManipMap.h"
-#include "readMatrixFile.h"
+#include "mmFileManager.h"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <opencv2/core/core.hpp>
@@ -12,12 +12,9 @@ TEST(MMMapTest, nominal_working_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
     double res = 0.1; // meters
-
-    ASSERT_EQ(vvd_elevation_data.size(), 80);
-    ASSERT_EQ(vvd_elevation_data[0].size(), 80);
 
     // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
@@ -36,9 +33,7 @@ TEST(MMMapTest, nominal_working_test)
     }
 
     base::Waypoint samplePos;
-    samplePos.position[0] = 5.3;
-    samplePos.position[1] = 5.6;
-    samplePos.heading = 0;
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
     MobileManipMap dummyMap((*prgd_dummy_dem), samplePos);
     double d_elevation_min = dummyMap.getMinElevation();
@@ -57,7 +52,7 @@ TEST(MMMapTest, nominal_working_test)
 
     std::ofstream costMapFile;
 
-    costMapFile.open("test/unit/data/results/costMap_Shadowing.txt");
+    costMapFile.open("test/unit/data/results/MMMapTest/costMap_Shadowing.txt");
 
     for (int j = 0; j < costMap.size(); j++)
     {
@@ -71,7 +66,7 @@ TEST(MMMapTest, nominal_working_test)
     costMapFile.close();
 
     MobileManipMap mmmap_no_shadowing((*prgd_dummy_dem));
-    costMapFile.open("test/unit/data/results/costMap_noShadowing.txt");
+    costMapFile.open("test/unit/data/results/MMMapTest/costMap_noShadowing.txt");
     mmmap_no_shadowing.getCostMap(costMap);
     for (int j = 0; j < costMap.size(); j++)
     {
@@ -90,8 +85,8 @@ TEST(MMMapTest, dem_format_error_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                   vvd_elevation_data);
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevation_data));
     double res = 0.1; // meters
 
     // A dummy Rover Guidance based DEM is created
@@ -111,9 +106,7 @@ TEST(MMMapTest, dem_format_error_test)
     }
 
     base::Waypoint samplePos;
-    samplePos.position[0] = 5.3;
-    samplePos.position[1] = 5.6;
-    samplePos.heading = 0;
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
     // Error with resolution
     std::cout
@@ -148,8 +141,8 @@ TEST(MMMapTest, sample_pos_error_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
-    readMatrixFile("test/unit/data/input/ColmenarRocks_smaller_10cmDEM.csv",
-                   vvd_elevation_data);
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_smaller_10cmDEM.csv",
+                   vvd_elevation_data));
     double res = 0.1; // meters
 
     // A dummy Rover Guidance based DEM is created
