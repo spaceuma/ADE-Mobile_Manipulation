@@ -40,7 +40,6 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt");
 
     // 3d End Effector Motion Planning
     double zRes = 0.08;
@@ -48,18 +47,22 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::vector<std::vector<double>> *pvvd_arm_motion_profile
         = mplan_dummy.getArmMotionProfile();
     saveProfile(pvvd_arm_motion_profile, "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt");
-    
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt");
+   
+    // 2d Rover Base Path Planning 
     ini2D = clock();
     ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
         &mmmap_shadowing, w_rover_pos_01, samplePos));
     mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
 
     // 3d End Effector Motion Planning
     mplan_dummy.executeEndEffectorPlanning(&mmmap_shadowing, zRes);
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
+    //Here the path is the interpolated one
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
+
 
     // 2d Rover Base Path Planning (Second rover position)
     ini2D = clock();
@@ -68,11 +71,11 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt");
 
     // 3d End Effector Motion Planning
     mplan_dummy.executeEndEffectorPlanning(&mmmap_no_shadowing, zRes);
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_02.txt");
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt");
 
     ini2D = clock();
     ASSERT_NO_THROW(mplan_dummy.executeRoverBasePathPlanning(
@@ -81,11 +84,11 @@ TEST(MMMotionPlanTest, nominal_working_test)
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     mplan_dummy.shortenPathForFetching();
     //std::vector<base::Waypoint> *roverPath = mplan_dummy.getPath();
-    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
 
     // 3d End Effector Motion Planning
     mplan_dummy.executeEndEffectorPlanning(&mmmap_shadowing, zRes);
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
+    savePath(mplan_dummy.getPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
 }
 
 TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)

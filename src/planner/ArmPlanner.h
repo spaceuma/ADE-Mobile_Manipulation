@@ -13,6 +13,7 @@ namespace ArmPlanner_lib
 class ArmPlanner
 {
 private:
+    std::vector<base::Waypoint> * interpolatedRoverPath;
 public:
     // -- PARAMETERS --
 
@@ -42,6 +43,8 @@ public:
     std::vector<double> iniEEorientation = {0, pi / 2, pi / 3}; // TODO set parameter properly
 
     // -- FUNCTIONS --
+    std::vector<base::Waypoint> * getInterpolatedRoverPath();
+
     void planArmMotion(std::vector<base::Waypoint> *roverPath,
                        const std::vector<std::vector<double>> *DEM,
                        double mapResolution,

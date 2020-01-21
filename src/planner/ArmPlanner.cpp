@@ -136,7 +136,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     computeWaypointAssignment(roverPath6, endEffectorPath6, pathsAssignment);
 
     // Waypoint interpolation to smooth the movements of the arm joints
-    std::vector<base::Waypoint> *interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
+    interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
     std::vector<int> *interpolatedAssignment = new std::vector<int>(roverPath6->size());
     computeWaypointInterpolation(roverPath6, pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
 
@@ -191,9 +191,17 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     clock_t endp = clock();
     double tp = double(endp - inip) / CLOCKS_PER_SEC;
+}
+
+std::vector<base::Waypoint> * ArmPlanner::getInterpolatedRoverPath()
+{
+    return interpolatedRoverPath;
+}	
 
     ///////////////////////////////////////////////////////////
     // Printing results into .txt files
+
+    
 /*    std::ofstream inipathFile;
     inipathFile.open("test/unit/data/results/iniroverPath.txt");
 
@@ -247,16 +255,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     path3DFile.close();
 
-*/    std::ofstream assignmentFile;
-    assignmentFile.open("test/unit/data/results/assignment.txt");
 
-    for (int j = 0; j < pathsAssignment->size(); j++)
-    {
-        assignmentFile << (*pathsAssignment)[j] << "\n";
-    }
-
-    assignmentFile.close();
-/*
     std::ofstream armJointsFile;
     armJointsFile.open("test/unit/data/results/armJoints.txt");
 
@@ -271,7 +270,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     armJointsFile.close();*/
     ///////////////////////////////////////////////////////////
-}
+
 void ArmPlanner::generateTunnel(const std::vector<std::vector<double>> *roverPath6,
                                 const std::vector<std::vector<double>> *DEM,
                                 double mapResolution,
