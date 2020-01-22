@@ -9,16 +9,19 @@ MobileManipExecutor::MobileManipExecutor()
 MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan)
 {
     this->p_motion_plan = &currentMotionPlan;
+    // Extract the rover path
     std::vector<base::Waypoint> *rover_path = this->p_motion_plan->getPath();
-    this->vpw_path.clear();
 
+    // Set the path into the Waypoint Navigation class
+    this->vpw_path.clear();
     for (size_t i = 0; i < rover_path->size(); i++)
     {
         rover_path->at(i).tol_position = 0.1;
         this->vpw_path.push_back(&rover_path->at(i));
     }
     this->waypoint_navigation.setTrajectory(this->vpw_path);
-    this->waypoint_navigation.setNavigationState(DRIVING);
+
+    // Extract and store the joints profile
     std::vector<std::vector<double>> *pvvd_arm_motion_profile
         = this->p_motion_plan->getArmMotionProfile();
     this->vvd_arm_motion_profile.clear();
@@ -59,13 +62,21 @@ bool MobileManipExecutor::isFinished()
 
 unsigned int MobileManipExecutor::getRoverCommand(Pose rover_pose, MotionCommand &mc_m)
 {
-    // TODO - implement MobileManipExecutor::getRoverCommand
     waypoint_navigation.setPose(rover_pose);
-    if (waypoint_navigation.getNavigationState() == OUT_OF_BOUNDARIES)
-    {
-        return 1; 
-    }
     waypoint_navigation.update(mc_m);
+    this->navstate_current = waypoint_navigation.getNavigationState();
+    if ((this->navstate_current != DRIVING)&&(this->navstate_current != ALIGNING))
+    {
+	if (this->navstate_current == TARGET_REACHED)
+	{
+            return 1;
+	}
+	if (this->navstate_current == OUT_OF_BOUNDARIES)
+	{
+            return 2;
+	}
+        return 3; 
+    }
     return 0;
 }
 

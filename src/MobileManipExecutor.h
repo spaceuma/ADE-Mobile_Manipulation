@@ -46,6 +46,10 @@ private:
      * The next configuration to be reached by the arm 
      */
     std::vector<double> vd_next_arm_config;
+    /**
+     * The next configuration to be reached by the arm 
+     */
+    NavigationState navstate_current;
 
 public:
     /**

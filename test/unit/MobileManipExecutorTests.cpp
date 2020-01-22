@@ -46,7 +46,7 @@ TEST(MMExecutorTest, nominal_working_test)
     {
 
         ui_error_code = dummyExecutor.getRoverCommand(robotPose, mc);
-	ASSERT_EQ(ui_error_code,0);
+	ASSERT_LE(ui_error_code,1);
         dummyExecutor.getArmCommand(j_next_joints);
         
 	Eigen::AngleAxisd toWCF, robotRot;
@@ -81,7 +81,7 @@ TEST(MMExecutorTest, nominal_working_test)
                 = Eigen::Quaterniond(robotRot) * robotPose.orientation;
         }
 
-       /* std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
                   << robotPose.position.y() << ", " << robotPose.position.z()
                   << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
                   << std::endl;
@@ -97,7 +97,7 @@ TEST(MMExecutorTest, nominal_working_test)
         }
         std::cout << std::endl;
 	std::cout << std::endl;
-        usleep(10000);*/
+        usleep(1000);
 
 	// Joints positions are now the ones commanded
         for (uint i = 0; i < 6; i++)
