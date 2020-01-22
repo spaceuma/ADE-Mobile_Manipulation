@@ -17,6 +17,12 @@
  * Date of creation: Dec 2016
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
+ * Modified by J. Ricardo Sanchez Ibanez, ricardosan@uma.es
+ * 
+ * ADE Project (OG10)
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  */
 
 #include "WaypointNavigation.hpp"
@@ -61,7 +67,10 @@ WaypointNavigation::WaypointNavigation()
     distanceToNext = new std::vector<double>();
 }
 
-NavigationState WaypointNavigation::getNavigationState() { return mNavigationState; }
+NavigationState WaypointNavigation::getNavigationState()
+{
+    return mNavigationState;
+}
 
 void WaypointNavigation::setNavigationState(NavigationState state)
 {
@@ -73,7 +82,10 @@ void WaypointNavigation::setNavigationState(NavigationState state)
     }
 }
 
-double WaypointNavigation::getLookaheadDistance() { return lookaheadDistance; }
+double WaypointNavigation::getLookaheadDistance()
+{
+    return lookaheadDistance;
+}
 
 bool WaypointNavigation::setPose(Pose& pose)
 {
@@ -261,6 +273,7 @@ bool WaypointNavigation::update(MotionCommand& mc)
     // 1) Update the current SEGMENT
     // Select the segment such that robot is not within the immediate reach of the 2nd Waypoint
     double distToNext = (w2 - xr).norm();
+    std::cout << "Dist to next is " << distToNext << std::endl;
     while (distToNext <= corridor)
     {
         if (currentSegment < trajectory.size() - 1)
@@ -269,6 +282,7 @@ bool WaypointNavigation::update(MotionCommand& mc)
             setSegmentWaypoint(w2, currentSegment + 1);
             currentSegment++;
             distToNext = (w2 - xr).norm();
+            std::cout << "Dist to next is " << distToNext << std::endl;
         }
         else
         {
@@ -428,12 +442,21 @@ bool WaypointNavigation::update(MotionCommand& mc)
             //LOG_DEBUG_S << "Target headin " << targetHeading * 180.0 / M_PI << "deg";
             //LOG_DEBUG_S << "Heading error " << headingErr * 180.0 / M_PI << " deg";
 
+            std::cout << " Heading Error = "<< headingErr  << std::endl;
             headingErrDiff = headingErr - headingErrPrev;
 
             if (pd_initialized)
             {
                 alignment_dt = (t1 - tprev).toMilliseconds() / 1000.0;
-                headingErrDiff /= alignment_dt;
+                std::cout << " Alignment_dt = "<< alignment_dt  << std::endl;
+		if (alignment_dt == 0)
+		{
+                    headingErrDiff = 0;
+		}
+		else
+		{
+                    headingErrDiff /= alignment_dt;
+		}
                 saturation(headingErrDiff, 10.0 / 180.0 * M_PI);
                 //LOG_DEBUG_S << "d(heading err)/dt = " << headingErrDiff * 180 / M_PI << "deg/"
                             //<< alignment_dt << "sec = " << headingErrDiff;
@@ -452,6 +475,10 @@ bool WaypointNavigation::update(MotionCommand& mc)
             }
             else
             {
+		std::cout << " Alignment P = " << alignment_P << std::endl;
+		std::cout << " Heading Error = "<< headingErr  << std::endl;
+		std::cout << " Alignment D = " << alignment_D << std::endl;
+		std::cout << " Heading Error Diff = "<< headingErrDiff  << std::endl;
                 mc.m_turnRate_rads = alignment_P * headingErr + alignment_D * headingErrDiff;
             }
 
