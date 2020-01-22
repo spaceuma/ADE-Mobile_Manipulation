@@ -81,7 +81,7 @@ public:
     /**
      * Returns the motion command corresponding to the current situation 
      */
-    MotionCommand getRoverCommand(Pose pose_rover);
+    unsigned int getRoverCommand(Pose pose_rover, MotionCommand &mc_m);
 
     /**
      * Provides the next arm command according to the current situation 

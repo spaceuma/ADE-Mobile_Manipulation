@@ -57,12 +57,16 @@ bool MobileManipExecutor::isFinished()
     return waypoint_navigation.getNavigationState() == TARGET_REACHED;
 }
 
-MotionCommand MobileManipExecutor::getRoverCommand(Pose rover_pose)
+unsigned int MobileManipExecutor::getRoverCommand(Pose rover_pose, MotionCommand &mc_m)
 {
     // TODO - implement MobileManipExecutor::getRoverCommand
     waypoint_navigation.setPose(rover_pose);
-    waypoint_navigation.update(this->motion_command);
-    return this->motion_command;
+    if (waypoint_navigation.getNavigationState() == OUT_OF_BOUNDARIES)
+    {
+        return 1; 
+    }
+    waypoint_navigation.update(mc_m);
+    return 0;
 }
 
 void MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
@@ -85,21 +89,6 @@ void MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
             // this->vd_current_arm_config[i] << std::endl;
         }
         this->i_current_segment = this->waypoint_navigation.getCurrentSegment();
-        std::cout << "The current segment is " << i_current_segment
-                  << std::endl;
-        if (i_current_segment == 102)
-        {
-            for (uint j = 0; j < vvd_arm_motion_profile.size(); j++)
-            {
-                std::cout << " Arm Profile at " << j << " is ";
-                for (uint i = 0; i < vvd_arm_motion_profile[0].size(); i++)
-                {
-                    std::cout << vvd_arm_motion_profile[j][i] << " ";
-                }
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-        }
         coupled_control.selectNextManipulatorPosition(
             this->i_current_segment,
             &(this->vvd_arm_motion_profile),

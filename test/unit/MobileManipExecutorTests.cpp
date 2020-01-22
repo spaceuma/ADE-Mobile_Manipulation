@@ -9,32 +9,27 @@
 TEST(MMExecutorTest, nominal_working_test)
 {
 
-    std::vector<Waypoint> path;
+    std::vector<Waypoint> vw_path;
     std::vector<std::vector<double>> vvd_arm_motion_profile;
-    readPath("test/unit/data/input/MMExecutorTest/path.txt", path);
+    readPath("test/unit/data/input/MMExecutorTest/path.txt", vw_path);
     readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
                    vvd_arm_motion_profile);
-    MotionPlan dummyPlan(path, vvd_arm_motion_profile);
+    MotionPlan dummyPlan(vw_path, vvd_arm_motion_profile);
 
     Pose robotPose;
     Waypoint lpoint;
 
     robotPose.position
-        = Eigen::Vector3d(path[0].position[0], path[0].position[1], 0);
+        = Eigen::Vector3d(vw_path[0].position[0], vw_path[0].position[1], 0);
 
     robotPose.orientation = Eigen::Quaterniond(
         Eigen::AngleAxisd(10.0 / 180.0 * M_PI, Eigen::Vector3d::UnitZ()));
 
     MobileManipExecutor dummyExecutor(dummyPlan);
 
-    std::cout << "\033[32m[----------]\033[0m Robot = ("
-              << robotPose.position.x() << "," << robotPose.position.y() << ","
-              << robotPose.position.z() << ")"
-              << "yaw = " << robotPose.getYaw() * 180 / M_PI << "deg."
-              << std::endl;
     MotionCommand mc;
-    double dt = 0.1;
-    double yaw;
+    double dt = 0.1, yaw;
+    unsigned int ui_error_code;
 
     std::vector<JointState> vj_current_jointstates;
     vj_current_jointstates.resize(6);
@@ -50,21 +45,15 @@ TEST(MMExecutorTest, nominal_working_test)
     while (!dummyExecutor.isFinished())
     {
 
-        mc = dummyExecutor.getRoverCommand(robotPose);
-        yaw = robotPose.getYaw();
-        Eigen::AngleAxisd toWCF, robotRot;
-        toWCF = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+        ui_error_code = dummyExecutor.getRoverCommand(robotPose, mc);
+	ASSERT_EQ(ui_error_code,0);
         dummyExecutor.getArmCommand(j_next_joints);
-        for (uint i = 0; i < 6; i++)
-        {
-            j_current_joints.m_jointStates[i].m_position
-                = j_next_joints.m_jointStates[i].m_position;
-        }
+        
+	Eigen::AngleAxisd toWCF, robotRot;
+        toWCF = Eigen::AngleAxisd(robotPose.getYaw(), Eigen::Vector3d::UnitZ());
         if (fabs(mc.m_speed_ms) < 0.000001)
         {
             // Point turn
-            std::cout << "PT of " << (mc.m_turnRate_rads * dt) * 180 / M_PI
-                      << "deg" << std::endl;
             robotRot
                 = AngleAxisd(mc.m_turnRate_rads * dt, Eigen::Vector3d::UnitZ());
             robotPose.orientation
@@ -92,22 +81,30 @@ TEST(MMExecutorTest, nominal_working_test)
                 = Eigen::Quaterniond(robotRot) * robotPose.orientation;
         }
 
-        std::cout << "Robot = (" << robotPose.position.x() << ","
-                  << robotPose.position.y() << "," << robotPose.position.z()
-                  << "), "
-                  << "yaw = " << robotPose.getYaw() * 180 / M_PI << " deg."
-                  << std::endl
+       /* std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+                  << robotPose.position.y() << ", " << robotPose.position.z()
+                  << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
                   << std::endl;
-        std::cout << "tv = " << mc.m_speed_ms;
-        std::cout << ", rv = " << mc.m_turnRate_rads << std::endl;
-        for (uint i = 0; i < 6; i++)
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command is (translation speed = " << mc.m_speed_ms
+		  << " m/s, rotation speed = " << mc.m_turnRate_rads << " rad/s)" << std::endl;
+        std::cout << "\033[32m[----------]\033[0m [INFO] Current Joint Position and Next are:" << std::endl;
+	for (uint i = 0; i < 6; i++)
         {
-            std::cout << " Arm Joint " << i << " position is "
+            std::cout << "                    Joint " << i << " current position is "
                       << j_current_joints.m_jointStates[i].m_position
-                      << std::endl;
+                      << " degrees, and the next is " 
+                      << j_next_joints.m_jointStates[i].m_position << " degrees" << std::endl;
         }
         std::cout << std::endl;
-        usleep(10000);
+	std::cout << std::endl;
+        usleep(10000);*/
+
+	// Joints positions are now the ones commanded
+        for (uint i = 0; i < 6; i++)
+        {
+            j_current_joints.m_jointStates[i].m_position
+                = j_next_joints.m_jointStates[i].m_position;
+        }
     }
 
     /* robotPose.position = Eigen::Vector3d(1.5, 0.0, 0);
