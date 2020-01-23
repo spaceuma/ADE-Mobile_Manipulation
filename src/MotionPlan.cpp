@@ -82,9 +82,14 @@ void MotionPlan::executeEndEffectorPlanning(MobileManipMap *inputMap,
                                     &(this->vvd_arm_motion_profile));
 }
 
-std::vector<base::Waypoint> *MotionPlan::getPath()
+std::vector<base::Waypoint> *MotionPlan::getRoverPath()
 {
     return &(this->vw_rover_path);
+}
+
+std::vector<std::vector<double>> *MotionPlan::getEndEffectorPath()
+{
+    return this->arm_planner.getEEPath();
 }
 
 std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
@@ -92,3 +97,7 @@ std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
     return &(this->vvd_arm_motion_profile);
 }
 
+std::vector<std::vector<std::vector<double>>> * MotionPlan::get3DCostMap()
+{
+    return this->arm_planner.getVolumeCostMap();
+}

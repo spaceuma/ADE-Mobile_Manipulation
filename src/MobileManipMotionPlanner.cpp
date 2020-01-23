@@ -26,7 +26,7 @@ void MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position,
 	  this->currentMotionPlan.executeRoverBasePathPlanning(this->currentMap, rover_position, sample_position);
 	  this->currentMotionPlan.shortenPathForFetching();
 	  this->status = READY_TO_MOVE;
-	  std::vector<base::Waypoint>* roverPath = this->currentMotionPlan.getPath();
+	  std::vector<base::Waypoint>* roverPath = this->currentMotionPlan.getRoverPath();
 	  std::cout << "MMPLANNER: The resulting path has " << roverPath->size() << " Waypoints" << std::endl;
           cout << "MMPLANNER: Ready to move" << endl;
 	}

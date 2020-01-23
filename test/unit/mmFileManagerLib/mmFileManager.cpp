@@ -121,6 +121,7 @@ void savePath(std::vector<base::Waypoint> *roverPath, std::string s_path_file)
     {
         pathFile << roverPath->at(j).position[0] << " "
                  << roverPath->at(j).position[1] << " "
+                 << roverPath->at(j).position[2] << " "
                  << roverPath->at(j).heading << "\n";
     }
     pathFile.close();
@@ -139,5 +140,27 @@ void saveProfile(std::vector<std::vector<double>> *pvvd_arm_motion_profile, std:
         f_arm_motion << "\n";
     }
     f_arm_motion.close();
+
+}
+
+void saveVolume(std::vector<std::vector<std::vector<double>>> * pvvvd_volume, std::string s_path_file)
+{
+    std::ofstream f_volume;
+    f_volume.open(s_path_file);
+
+    f_volume << (*pvvvd_volume).size() << " " << (*pvvvd_volume)[0].size() << " " << (*pvvvd_volume)[0][0].size() << "\n";
+    for (int j = 0; j < pvvvd_volume->size(); j++)
+    {
+        for (int i = 0; i < (*pvvvd_volume)[0].size(); i++)
+        {
+            for (int k = 0; k < (*pvvvd_volume)[0][0].size(); k++)
+            {
+                f_volume << (*pvvvd_volume)[j][i][k] << " ";
+            }
+        }
+        f_volume << "\n";
+    }
+
+    f_volume.close();
 
 }

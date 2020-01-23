@@ -19,4 +19,5 @@ void readPath(std::string s_path_file,
 Waypoint getWaypoint(std::string s_path_file);
 void savePath(std::vector<base::Waypoint> *roverPath, std::string s_path_file);
 void saveProfile(std::vector<std::vector<double>> *pvvd_arm_motion_profile, std::string s_path_file);
+void saveVolume(std::vector<std::vector<std::vector<double>>> * pvvvd_volume, std::string s_path_file);
 #endif

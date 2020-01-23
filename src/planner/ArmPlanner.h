@@ -14,6 +14,7 @@ class ArmPlanner
 {
 private:
     std::vector<base::Waypoint> * interpolatedRoverPath;
+    std::vector<std::vector<std::vector<double>>> * volume_cost_map;
 public:
     // -- PARAMETERS --
 
@@ -41,10 +42,15 @@ public:
     double fetchingZDistance = 0.1;
     std::vector<double> BCS2iniEEpos = {0.738, 0, 0.550};       // TODO set parameter properly
     std::vector<double> iniEEorientation = {0, pi / 2, pi / 3}; // TODO set parameter properly
+    std::vector<std::vector<double>> *endEffectorPath6;
 
     // -- FUNCTIONS --
     std::vector<base::Waypoint> * getInterpolatedRoverPath();
 
+    std::vector<std::vector<double>> * getEEPath();
+
+    std::vector<std::vector<std::vector<double>>> * getVolumeCostMap();
+    
     void planArmMotion(std::vector<base::Waypoint> *roverPath,
                        const std::vector<std::vector<double>> *DEM,
                        double mapResolution,

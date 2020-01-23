@@ -17,7 +17,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 {
     // Rover z coordinate and heading computation
     std::vector<std::vector<double>> *roverPath6 = new std::vector<std::vector<double>>;
-    std::vector<std::vector<double>> *endEffectorPath6 = new std::vector<std::vector<double>>;
+    endEffectorPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
 
     std::vector<double> heading, smoothedHeading;
@@ -93,16 +93,16 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     int l = (int)((maxz + heightGround2BCS + maxZArm) / zResolution + 0.5);
 
-    std::vector<std::vector<std::vector<double>>> *costMap3D = new std::vector<std::vector<std::vector<double>>>;
-    costMap3D->resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
+    volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
+    volume_cost_map->resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
 
     for (int i = 0; i < n; i++)
         for (int j = 0; j < m; j++)
             for (int k = 0; k < l; k++)
-                (*costMap3D)[i][j][k] = INFINITY;
+                (*volume_cost_map)[i][j][k] = INFINITY;
 
     clock_t init = clock();
-    generateTunnel(roverPath6, DEM, mapResolution, zResolution, iniPos, samplePos, costMap3D);
+    generateTunnel(roverPath6, DEM, mapResolution, zResolution, iniPos, samplePos, volume_cost_map);
     clock_t endt = clock();
     double t = double(endt - init) / CLOCKS_PER_SEC;
 
@@ -111,7 +111,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     std::vector<base::Waypoint> *endEffectorPath = new std::vector<base::Waypoint>;
 
     clock_t inip = clock();
-    pathPlanner3D.planPath(costMap3D, mapResolution, zResolution, iniPos, samplePos, endEffectorPath);
+    pathPlanner3D.planPath(volume_cost_map, mapResolution, zResolution, iniPos, samplePos, endEffectorPath);
 
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
     endEffectorPath6->resize(endEffectorPath->size(), std::vector<double>(6));
@@ -193,11 +193,20 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     double tp = double(endp - inip) / CLOCKS_PER_SEC;
 }
 
+std::vector<std::vector<double>> * ArmPlanner::getEEPath()
+{
+    return endEffectorPath6;
+}
+
 std::vector<base::Waypoint> * ArmPlanner::getInterpolatedRoverPath()
 {
     return interpolatedRoverPath;
 }	
 
+std::vector<std::vector<std::vector<double>>> * ArmPlanner::getVolumeCostMap()
+{
+    return this->volume_cost_map;
+}
     ///////////////////////////////////////////////////////////
     // Printing results into .txt files
 

@@ -303,10 +303,13 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
 
     return theta1, theta2, theta3, theta4, theta5, theta6
 
-path = np.loadtxt(open("../test/unit/data/results/roverPath.txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0)
+#path = np.loadtxt(open("../test/unit/data/results/roverPath.txt",'r'), skiprows=0)
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt",'r'), skiprows=0)
+#path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt",'r'), skiprows=0)
 
-armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
+#armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
+armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt",'r'), skiprows=0)
 
 sizes = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), skiprows=1, max_rows=1)
@@ -392,8 +395,8 @@ def make_frame(t):
         mlab.view(azimuth = -110, elevation = 50, distance = 20)
         return mlab.screenshot(antialiased=True)
 
-animation = mpy.VideoClip(make_frame, duration=duration)
-animation.write_gif("sampling.gif", fps=12, program='imageio',opt = 'nq')
+#animation = mpy.VideoClip(make_frame, duration=duration)
+#animation.write_gif("sampling.gif", fps=12, program='imageio',opt = 'nq')
 
 
 @mlab.animate(delay = 100, ui = True)
@@ -423,7 +426,7 @@ def anim():
         plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
         plt_ee.mlab_source.set(x = np.array([px[-1], px[-1], px[-1]]), y = np.array([py[-1], py[-1], py[-1]]), z = np.array([pz[-1], pz[-1], pz[-1]]), u = np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), v = np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), w = np.array([Tx[2,3], Ty[2,3], Tz[2,3]]))
         plt_base.mlab_source.set(x = np.array([px[0], px[0], px[0]]), y = np.array([py[0], py[0], py[0]]), z = np.array([pz[0], pz[0], pz[0]]), u = np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), v = np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), w = np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]))
-        mlab.view(azimuth = -110+i/2.0, elevation = 50)
+#        mlab.view(azimuth = -110+i/2.0, elevation = 50)
         yield
 
 anim()

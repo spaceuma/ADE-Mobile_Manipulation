@@ -6,15 +6,15 @@ import math
 from numpy import dot
 import moviepy.editor as mpy
 
-cMap2d = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), skiprows=2)
+cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), skiprows=1)
 cMap2d[np.where(cMap2d == 0)] = 0.0001
 cMap2d[np.isinf(cMap2d)] = 0
 
-sizes = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), skiprows=1, max_rows=1)
+sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), max_rows=1)
+resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
-path = np.loadtxt(open("../test/unit/data/results/roverPath.txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0)
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt",'r'), skiprows=0)
 
 xsize = int(sizes[1])
 ysize = int(sizes[0])
@@ -78,12 +78,12 @@ def make_frame(t):
     mlab.plot3d(path3D[:,0]/res, path3D[:,1]/res, path3D[:,2]/resz, color=(0.3,0.3,0.5), tube_radius = 1)
     mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 20)
     mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True,slice_index=10*t)     
-    mlab.view(azimuth = -110, elevation = 50, distance = 20)
+    #mlab.view(azimuth = -110, elevation = 50, distance = 20)
     #plt_vs.slice_index=((int)(t/duration))*100
     return mlab.screenshot(antialiased=True)
 
 
-animation = mpy.VideoClip(make_frame, duration=duration)
-animation.write_gif("tunnelcost.gif", fps=12, program='imageio',opt = 'nq')
+#animation = mpy.VideoClip(make_frame, duration=duration)
+#animation.write_gif("tunnelcost.gif", fps=12, program='imageio',opt = 'nq')
 
 mlab.show()

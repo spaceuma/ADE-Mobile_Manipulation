@@ -10,7 +10,7 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan)
 {
     this->p_motion_plan = &currentMotionPlan;
     // Extract the rover path
-    std::vector<base::Waypoint> *rover_path = this->p_motion_plan->getPath();
+    std::vector<base::Waypoint> *rover_path = this->p_motion_plan->getRoverPath();
 
     // Set the path into the Waypoint Navigation class
     this->vpw_path.clear();

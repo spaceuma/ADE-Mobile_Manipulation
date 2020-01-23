@@ -64,15 +64,23 @@ public:
      * An existing path and profile are introduced into the motion plan 
      */
     MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
-               std::vector<std::vector<double>> &vj_joints_profile_m);
+               std::vector<std::vector<double>> &vj_joints_profile_m);    
     /**
-     * A pointer to the current path is returned
+     * A pointer to the current end effector path is returned
      */
-    std::vector<base::Waypoint> *getPath();
+    std::vector<std::vector<double>> * getEndEffectorPath();
+    /**
+     * A pointer to the current rover path is returned
+     */
+    std::vector<base::Waypoint> * getRoverPath();
     /**
      * A pointer to the arm motion profile is returned
      */
     std::vector<std::vector<double>> *getArmMotionProfile();
+    /**
+     * A pointer to the 3d cost map is returned
+     */
+    std::vector<std::vector<std::vector<double>>> * get3DCostMap();
     /**
      * The path for the rover base, vw_rover_path, is calculated
      */
