@@ -273,7 +273,6 @@ bool WaypointNavigation::update(MotionCommand& mc)
     // 1) Update the current SEGMENT
     // Select the segment such that robot is not within the immediate reach of the 2nd Waypoint
     double distToNext = (w2 - xr).norm();
-    std::cout << "Dist to next is " << distToNext << std::endl;
     while (distToNext <= corridor)
     {
         if (currentSegment < trajectory.size() - 1)
@@ -282,7 +281,6 @@ bool WaypointNavigation::update(MotionCommand& mc)
             setSegmentWaypoint(w2, currentSegment + 1);
             currentSegment++;
             distToNext = (w2 - xr).norm();
-            std::cout << "Dist to next is " << distToNext << std::endl;
         }
         else
         {
@@ -442,13 +440,11 @@ bool WaypointNavigation::update(MotionCommand& mc)
             //LOG_DEBUG_S << "Target headin " << targetHeading * 180.0 / M_PI << "deg";
             //LOG_DEBUG_S << "Heading error " << headingErr * 180.0 / M_PI << " deg";
 
-            std::cout << " Heading Error = "<< headingErr  << std::endl;
             headingErrDiff = headingErr - headingErrPrev;
 
             if (pd_initialized)
             {
                 alignment_dt = (t1 - tprev).toMilliseconds() / 1000.0;
-                std::cout << " Alignment_dt = "<< alignment_dt  << std::endl;
 		if (alignment_dt == 0)
 		{
                     headingErrDiff = 0;
@@ -475,10 +471,6 @@ bool WaypointNavigation::update(MotionCommand& mc)
             }
             else
             {
-		std::cout << " Alignment P = " << alignment_P << std::endl;
-		std::cout << " Heading Error = "<< headingErr  << std::endl;
-		std::cout << " Alignment D = " << alignment_D << std::endl;
-		std::cout << " Heading Error Diff = "<< headingErrDiff  << std::endl;
                 mc.m_turnRate_rads = alignment_P * headingErr + alignment_D * headingErrDiff;
             }
 
