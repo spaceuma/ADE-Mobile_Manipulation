@@ -311,8 +311,8 @@ path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_wor
 #armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
 armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt",'r'), skiprows=0)
 
-sizes = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../test/unit/data/results/cMap3D.txt",'r'), skiprows=1, max_rows=1)
+sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), max_rows=1)
+resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
 xsize = int(sizes[1])
 ysize = int(sizes[0])

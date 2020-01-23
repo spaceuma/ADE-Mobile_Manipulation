@@ -60,7 +60,7 @@ unsigned int MotionPlan::executeRoverBasePathPlanning(MobileManipMap *inputMap,
 
 int MotionPlan::shortenPathForFetching()
 {
-    // FetchingPoseEstimator_lib::FetchingPoseEstimator dummyFetchPosePlanner;
+    //TODO- Make this cut a shorter distance, taking into account tol_position from Waypoint Navigation
     int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
         &(this->vw_rover_path));
     this->vw_rover_path.erase(this->vw_rover_path.begin() + endWaypoint + 1,

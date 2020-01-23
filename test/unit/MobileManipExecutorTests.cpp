@@ -16,7 +16,7 @@ TEST(MMExecutorTest, nominal_working_test)
                    vvd_arm_motion_profile);
     MotionPlan dummyPlan(vw_path, vvd_arm_motion_profile);
 
-    Pose robotPose;
+    Pose robotPose, pose_robot_sim;
     Waypoint lpoint;
 
     robotPose.position
@@ -28,7 +28,7 @@ TEST(MMExecutorTest, nominal_working_test)
     MobileManipExecutor dummyExecutor(dummyPlan);
 
     MotionCommand mc;
-    double dt = 0.1, yaw;
+    double dt = 0.1, yaw, d_pos_error_x = 0, d_pos_error_y = 0;
     unsigned int ui_error_code;
 
     std::vector<JointState> vj_current_jointstates;
@@ -42,10 +42,20 @@ TEST(MMExecutorTest, nominal_working_test)
     Joints j_current_joints(0, vj_current_jointstates);
     Joints j_next_joints(0, vj_current_jointstates);
 
+    std::ofstream robotPoseFile, robotSimPoseFile;
+    robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
+    robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt");
+
     while (!dummyExecutor.isFinished())
     {
+        d_pos_error_x = (double)(rand() % 500 - 250) * 0.0001;
+        d_pos_error_y = (double)(rand() % 500 - 250) * 0.0001;
 
-        ui_error_code = dummyExecutor.getRoverCommand(robotPose, mc);
+        pose_robot_sim.position = robotPose.position;
+	pose_robot_sim.position.x() += d_pos_error_x;
+	pose_robot_sim.position.y() += d_pos_error_y;
+        pose_robot_sim.orientation = robotPose.orientation;
+        ui_error_code = dummyExecutor.getRoverCommand(pose_robot_sim, mc);
 	ASSERT_LE(ui_error_code,1);
         dummyExecutor.getArmCommand(j_next_joints);
         
@@ -80,10 +90,23 @@ TEST(MMExecutorTest, nominal_working_test)
             robotPose.orientation
                 = Eigen::Quaterniond(robotRot) * robotPose.orientation;
         }
+	robotPoseFile << robotPose.position.x() << " "
+                      << robotPose.position.y() << " "
+                      << robotPose.position.z() << " "
+                      << robotPose.getYaw() << "\n";
+	robotSimPoseFile << pose_robot_sim.position.x() << " "
+                      << pose_robot_sim.position.y() << " "
+                      << pose_robot_sim.position.z() << " "
+                      << pose_robot_sim.getYaw() << "\n";
 
-        /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
                   << robotPose.position.y() << ", " << robotPose.position.z()
                   << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
+                  << std::endl;
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Estimated Position (simulated) is (" << pose_robot_sim.position.x() << ", "
+                  << pose_robot_sim.position.y() << ", " << pose_robot_sim.position.z()
+                  << ") meters, with yaw " << pose_robot_sim.getYaw() * 180 / M_PI << " degrees"
                   << std::endl;
         std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command is (translation speed = " << mc.m_speed_ms
 		  << " m/s, rotation speed = " << mc.m_turnRate_rads << " rad/s)" << std::endl;
@@ -97,7 +120,7 @@ TEST(MMExecutorTest, nominal_working_test)
         }
         std::cout << std::endl;
 	std::cout << std::endl;
-        usleep(1000);*/
+        usleep(100000);
 
 	// Joints positions are now the ones commanded
         for (uint i = 0; i < 6; i++)
@@ -106,7 +129,8 @@ TEST(MMExecutorTest, nominal_working_test)
                 = j_next_joints.m_jointStates[i].m_position;
         }
     }
-
+    robotPoseFile.close();
+    robotSimPoseFile.close();
     /* robotPose.position = Eigen::Vector3d(1.5, 0.0, 0);
      pathTracker.setPose(robotPose);
      pathTracker.setNavigationState(OUT_OF_BOUNDARIES);
