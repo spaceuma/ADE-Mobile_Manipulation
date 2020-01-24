@@ -17,7 +17,6 @@ TEST(MMExecutorTest, nominal_working_test)
     MotionPlan dummyPlan(vw_path, vvd_arm_motion_profile);
 
     Pose robotPose, pose_robot_sim;
-    Waypoint lpoint;
 
     robotPose.position
         = Eigen::Vector3d(vw_path[0].position[0], vw_path[0].position[1], 0);
@@ -100,7 +99,7 @@ TEST(MMExecutorTest, nominal_working_test)
                       << pose_robot_sim.getYaw() << "\n";
 
 
-        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+/*        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
                   << robotPose.position.y() << ", " << robotPose.position.z()
                   << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
                   << std::endl;
@@ -120,7 +119,7 @@ TEST(MMExecutorTest, nominal_working_test)
         }
         std::cout << std::endl;
 	std::cout << std::endl;
-        usleep(100000);
+        usleep(100000);*/
 
 	// Joints positions are now the ones commanded
         for (uint i = 0; i < 6; i++)
@@ -131,17 +130,57 @@ TEST(MMExecutorTest, nominal_working_test)
     }
     robotPoseFile.close();
     robotSimPoseFile.close();
-    /* robotPose.position = Eigen::Vector3d(1.5, 0.0, 0);
-     pathTracker.setPose(robotPose);
-     pathTracker.setNavigationState(OUT_OF_BOUNDARIES);
-     // Confuse the segment ;)
-     pathTracker.setCurrentSegment(1);
-     std::cout << "-------------------------------------" << std::endl
-               << "Lost segment test (set to previous by mistake)" << std::endl
-               << std::endl;
-     for (int i = 0; i < 3; i++)
-     {
-         pathTracker.update(mc);
-     }
-     pathTracker.setPose(robotPose);*/
+}
+
+TEST(MMExecutorTest, rover_out_of_corridor_test)
+{
+
+    std::vector<Waypoint> vw_path;
+    std::vector<std::vector<double>> vvd_arm_motion_profile;
+    readPath("test/unit/data/input/MMExecutorTest/path.txt", vw_path);
+    readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
+                   vvd_arm_motion_profile);
+    MotionPlan dummyPlan(vw_path, vvd_arm_motion_profile);
+
+    Pose robotPose;
+
+    MotionCommand mc;
+    unsigned int ui_error_code;
+    robotPose.position
+        = Eigen::Vector3d(vw_path[0].position[0], vw_path[0].position[1], 0);
+
+    MobileManipExecutor dummyExecutor(dummyPlan);
+    
+    // Robot out of the corridor from the start
+    robotPose.position.x()+=1.0;
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+                  << robotPose.position.y() << ", " << robotPose.position.z()
+                  << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
+                  << std::endl;
+
+
+    ui_error_code = dummyExecutor.getRoverCommand(robotPose, mc);
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+                  << robotPose.position.y() << ", " << robotPose.position.z()
+                  << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
+                  << std::endl;
+    ASSERT_EQ(ui_error_code,2) << "\033[31m[----------]\033[0m Motion Command is ( transl = " << mc.m_speed_ms << ", rot = " << mc.m_turnRate_rads << ") ";
+
+
+    // Robot out of the corridor after the start
+    robotPose.position.x()-=1.0;
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+                  << robotPose.position.y() << ", " << robotPose.position.z()
+                  << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
+                  << std::endl;
+
+    robotPose.position.x()+=1.0;
+    ui_error_code = dummyExecutor.getRoverCommand(robotPose, mc);
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+                  << robotPose.position.y() << ", " << robotPose.position.z()
+                  << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
+                  << std::endl;
+    ui_error_code = dummyExecutor.getRoverCommand(robotPose, mc);
+    ASSERT_EQ(ui_error_code,2) << "\033[31m[----------]\033[0m Motion Command is ( transl = " << mc.m_speed_ms << ", rot = " << mc.m_turnRate_rads << ") ";
+
 }

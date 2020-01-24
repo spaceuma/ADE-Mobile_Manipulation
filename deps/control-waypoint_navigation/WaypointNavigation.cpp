@@ -101,8 +101,18 @@ bool WaypointNavigation::setPose(Pose& pose)
         xr = base::Vector2d(pose.position(0), pose.position(1));
         if (!poseSet && !trajectory.empty())
         {
-            w1 << curPose.position(0), curPose.position(1);
-            setSegmentWaypoint(w2, currentSegment);
+            // In case the robot is out of the first waypoint,
+	    // the state will be OUT_OF_BOUNDARIES
+            if ((trajectory.size() > 1)&&(currentSegment == 0))
+	    {
+                setSegmentWaypoint(w1, currentSegment);
+                setSegmentWaypoint(w2, currentSegment + 1);
+	    }
+	    else
+	    {
+                w1 << curPose.position(0), curPose.position(1);
+                setSegmentWaypoint(w2, currentSegment);
+	    }
             setNavigationState(DRIVING);
         }
         poseSet = true;
@@ -346,12 +356,6 @@ bool WaypointNavigation::update(MotionCommand& mc)
 
     // 3) Calculate the distance from the nominal trajectory
     distanceToPath = (xr - xi).norm();
-
-    /*
-       std::cout << "Current segment:\t"   << currentSegment   << std::endl;
-       std::cout << "Dist. from nominal:\t" << distanceToPath  << std::endl;
-       */
-
     NavigationState currentState = getNavigationState();
 
     /* -------------------------------------------
@@ -424,6 +428,15 @@ bool WaypointNavigation::update(MotionCommand& mc)
         }  // --- end of DRIVING ---
         case ALIGNING:
         {
+            // OUT OF BOUNDARIES CHECK
+            if (distanceToPath >= corridor)
+            {
+                setNavigationState(OUT_OF_BOUNDARIES);
+                mc.m_speed_ms = 0;
+                mc.m_turnRate_rads = 0;
+                return false;
+            }
+
             mc.m_speed_ms = 0;  // Ensure
             base::Time t1 = base::Time::now();
 
