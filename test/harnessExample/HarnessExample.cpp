@@ -27,7 +27,8 @@ int main()
                 = vvd_elevation_data[j][i];
         }
     }  
-    MobileManipMotionPlanner dummyPlanner(rgd_dummy_dem);
-  cout << "Reached this line" << endl;
+    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem);
+    mmmotion_planner.start();
+    mmmotion_planner.printErrorCode();
   return 0;
 }

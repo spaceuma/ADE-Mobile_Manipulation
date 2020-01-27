@@ -58,12 +58,16 @@ private:
      * Pointer to the map class
      */
     MobileManipMap * pmm_map;
+    /**
+     * Value of Z resolution
+     */
+    double d_zres;
 
 public:
     /**
      * Class Constructor.
      */
-    MotionPlan(MobileManipMap * pmmmap_m);
+    MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m);
     /**
      * An existing path and profile are introduced into the motion plan 
      */
@@ -93,11 +97,11 @@ public:
     /**
      * The path is shortened, ending in the best waypoint to fetch the sample
      */
-    int shortenPathForFetching();
+    void shortenPathForFetching();
     /**
      * Calculates the path of the end effector
      */
-    void executeEndEffectorPlanning(double d_z_res_m);
+    void executeEndEffectorPlanning();
 };
 
 #endif

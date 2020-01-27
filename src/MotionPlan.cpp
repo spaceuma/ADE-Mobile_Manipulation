@@ -1,8 +1,9 @@
 #include "MotionPlan.h"
 
-MotionPlan::MotionPlan(MobileManipMap * pmmmap_m)
+MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m)
 {
     this->pmm_map = pmmmap_m;
+    this->d_zres = d_zres_m;
 }
 
 MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
@@ -58,17 +59,24 @@ unsigned int MotionPlan::executeRoverBasePathPlanning(base::Waypoint rover_posit
     return 0;
 }
 
-int MotionPlan::shortenPathForFetching()
+bool MotionPlan::shortenPathForFetching()
 {
     //TODO- Make this cut a shorter distance, taking into account tol_position from Waypoint Navigation
     int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
         &(this->vw_rover_path));
-    this->vw_rover_path.erase(this->vw_rover_path.begin() + endWaypoint + 1,
+    if (endWaypoint == 0)
+    {
+        return false;
+    }
+    else
+    {
+        this->vw_rover_path.erase(this->vw_rover_path.begin() + endWaypoint + 1,
                               this->vw_rover_path.end());
-    return endWaypoint;
+    }
+    return true;
 }
 
-void MotionPlan::executeEndEffectorPlanning(double zResolution)
+void MotionPlan::executeEndEffectorPlanning()
 {
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
@@ -76,7 +84,7 @@ void MotionPlan::executeEndEffectorPlanning(double zResolution)
     this->arm_planner.planArmMotion(&(this->vw_rover_path),
                                     &elevationMap,
                                     this->pmm_map->getResolution(),
-                                    zResolution,
+                                    this->d_zres,
                                     this->w_sample_pos,
                                     &(this->vvd_arm_motion_profile));
 }

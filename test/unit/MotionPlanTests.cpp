@@ -23,17 +23,17 @@ TEST(MMMotionPlanTest, nominal_working_test)
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt",
                                    vvd_cost_map_shadowing));
     double res = 0.1; // meters
+    double zRes = 0.08;
     MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res), mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res);
 
     // Creating the Motion Plan
-    MotionPlan mplan_dummy(&mmmap_no_shadowing);
+    MotionPlan mplan_dummy(&mmmap_no_shadowing,zRes);
 
     base::Waypoint w_rover_pos_01, w_rover_pos_02, samplePos;
     ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(w_rover_pos_02 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
 
-    double zRes = 0.08;
 
     // 1st Case: Without Shadowing
     clock_t ini2D = clock();
@@ -42,7 +42,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_dummy.executeEndEffectorPlanning(zRes);
+    mplan_dummy.executeEndEffectorPlanning();
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt");
     savePath(mplan_dummy.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt");
     saveProfile(mplan_dummy.getEndEffectorPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt");
@@ -55,7 +55,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_dummy.executeEndEffectorPlanning(zRes);
+    mplan_dummy.executeEndEffectorPlanning();
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     savePath(mplan_dummy.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
     saveProfile(mplan_dummy.getEndEffectorPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
@@ -67,7 +67,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_dummy.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_dummy.executeEndEffectorPlanning(zRes);
+    mplan_dummy.executeEndEffectorPlanning();
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_02.txt");
     savePath(mplan_dummy.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt");
 
@@ -78,7 +78,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     mplan_dummy.shortenPathForFetching();
-    mplan_dummy.executeEndEffectorPlanning(zRes);
+    mplan_dummy.executeEndEffectorPlanning();
     saveProfile(mplan_dummy.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
     savePath(mplan_dummy.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
 }
@@ -100,7 +100,8 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
 
     // Creating the Motion Plan
-    MotionPlan mplan_dummy(&dummyMap);
+    double zRes = 0.08;
+    MotionPlan mplan_dummy(&dummyMap, zRes);
 
     base::Waypoint roverPos, samplePos;
     unsigned int i_error_code = 0;

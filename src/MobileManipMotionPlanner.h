@@ -16,15 +16,15 @@ private:
 	/**
 	 * Rover surronding map that would be used to generate the rover-manipulator trajectories.
 	 */
-	MobileManipMap* currentMap;
+	MobileManipMap* p_mmmap;
 	/**
 	 * The motion plan that is currently available.
 	 */
-	MotionPlan* currentMotionPlan;
+	MotionPlan* p_motionplan;
 	/**
 	 * Object that run the execution of the planned trajectory.
 	 */
-	MobileManipExecutor* executor;
+	MobileManipExecutor* p_mmexecutor;
 	/**
 	 * Status of the motion planner:
 	 * IDLE
@@ -63,6 +63,14 @@ private:
 	 * The current position of the arm joints.
 	 */
 	//Joints currentJointPositions;
+       	/**
+	 * Set the current status
+	 */
+        void setStatus(MMStatus status_m);
+       	/**
+	 * Set an error code
+	 */
+        void setError(MMError error_m); 
 
 public:
 	/**
@@ -83,7 +91,7 @@ public:
 	/**
 	 * It generates a motion plan based on the Map, the rover pose and the sample position.
 	 */
-	MMError generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample_position, Joints arm_joints);
+	bool generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample_position, Joints arm_joints);
 
 	/**
 	 * It returns the status in which the software is.
@@ -170,7 +178,12 @@ public:
 	 */
 	MMError getErrorCode();
 
-	/**
+       	/**
+	 * Returns the indication of which error affects the software.
+	 */
+        void printErrorCode();
+
+ 	/**
 	 * Serves to actively start moving the rover and arm once a motion plan is available.
 	 */
 	void start();

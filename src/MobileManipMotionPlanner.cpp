@@ -4,36 +4,68 @@
 using namespace std;
 
 MobileManipMotionPlanner::MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */const RoverGuidance_Dem &navCamDEM) {
-	// TODO - implement MobileManipMotionPlanner::MobileManipMotionPlanner
 	cout << "MMPLANNER: Creating MMMP" << endl;
 	this->status = IDLE;
 	this->error = NO_ERROR;
-	this->currentMap = new MobileManipMap(navCamDEM);
-	this->currentMotionPlan = new MotionPlan(this->currentMap);
-	this->executor = new MobileManipExecutor(this->currentMotionPlan);
+	// DEM is introduced into the map class
+	this->p_mmmap = new MobileManipMap(navCamDEM);
+	// Each class contains a pointer to the previous one
+	this->p_motionplan = new MotionPlan(this->p_mmmap,0.08);// Maybe enter here Z resolution??
+	this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan);
 }
 
-MMError MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample_position, Joints arm_joints) {
-	// TODO - implement MobileManipMotionPlanner::generateMotionPlan
-        cout << "MMPLANNER: Generating Motion Plan" << endl;
-	if (this->status == IDLE)
+bool MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample_position, Joints arm_joints) {
+	if (getStatus() == IDLE)
 	{
+            unsigned int ui_code = 0;
 	  // TODO - Since for now there is no computation, the state will go to READY_TO_MOVE
-	  this->status = GENERATING_MOTION_PLAN;
-	  this->currentMotionPlan->executeRoverBasePathPlanning(rover_position, sample_position);
-          this->currentMotionPlan->shortenPathForFetching();
-	  this->currentMotionPlan->shortenPathForFetching();
-	  this->status = READY_TO_MOVE;
-	  std::vector<base::Waypoint>* roverPath = this->currentMotionPlan->getRoverPath();
-	  std::cout << "MMPLANNER: The resulting path has " << roverPath->size() << " Waypoints" << std::endl;
-          cout << "MMPLANNER: Ready to move" << endl;
-	  return NO_ERROR;
+	  setStatus(GENERATING_MOTION_PLAN);
+	  ui_code = this->p_motionplan->executeRoverBasePathPlanning(rover_position, sample_position);
+          switch(ui_code)
+	  {
+              case 0:
+                  break;
+	      case 1:
+		  setError(OOB_ROVER_POS);
+		  return false;
+	      case 2:
+		  setError(OBS_ROVER_POS);
+		  return false;
+	      case 3:
+		  setError(OOB_GOAL_POS);
+		  return false;
+	      case 4:
+		  setError(OBS_GOAL_POS);
+		  return false;
+	  }
+	  if(!this->p_motionplan->shortenPathForFetching())
+	  {
+              setError(GOAL_TOO_CLOSE);
+	      return false;
+	  }
+	  // TODO - Deal with EndEffectorPlanning errors
+          this->p_motionplan->executeEndEffectorPlanning();
+	  setStatus(READY_TO_MOVE);
+	  return true;
 	}
 	else
 	{
-		cout << "MMPLANNER: generateMotionPlan() can only be called in IDLE state " << endl;
-		return IMPROPER_CALL;
+		setError(IMPROPER_CALL);
+		return false;
 	}
+}
+
+void MobileManipMotionPlanner::setError(MMError error_m) {
+    if(error_m != NO_ERROR)
+    {
+        setStatus(ERROR);
+    }
+    this->error = error_m;
+}
+
+void MobileManipMotionPlanner::setStatus(MMStatus status_m) {
+	this->priorStatus = getStatus();
+	this->status = status_m;
 }
 
 MMStatus MobileManipMotionPlanner::getStatus() {
@@ -56,8 +88,14 @@ void MobileManipMotionPlanner::executeAtomicOperation(ArmOperation arm_operation
 }
 
 void MobileManipMotionPlanner::abort() {
-	// TODO - implement MobileManipMotionPlanner::abort
-	throw "Not yet implemented";
+	switch(getStatus())
+	{
+            case IDLE:
+		    break;
+            case GENERATING_MOTION_PLAN:
+		    break;
+
+	}
 }
 
 void MobileManipMotionPlanner::updateRoverArmPos(/* Command to compute for the arm.*/
@@ -153,25 +191,114 @@ void MobileManipMotionPlanner::ack() {
 }
 
 void MobileManipMotionPlanner::resumeError() {
-	// TODO - implement MobileManipMotionPlanner::resumeError
-	throw "Not yet implemented";
+    switch(this->error)
+    {
+	    case NO_ERROR:
+		    break;
+	    case POOR_DEM:
+		    break;
+	    case POOR_CONFIG:
+		    break;
+	    case OOB_ROVER_POS:
+		    break;
+	    case OOB_GOAL_POS:
+		    break;
+	    case OBS_ROVER_POS:
+		    break;
+	    case OBS_GOAL_POS:
+		    break;
+	    case UNREACH_GOAL:
+		    break;
+	    case UNCERT_GOAL:
+		    break;
+	    case NON_RESP_ARM:
+		    break;
+	    case COLLIDING_ARM:
+		    break;
+	    case NON_RESP_ROVER:
+		    break;
+	    case EXCESSIVE_DRIFT:
+		    break;
+	    case UNCERT_HEADING:
+		    break;
+	    case GOAL_TOO_CLOSE:
+		    break;
+	    case IMPROPER_CALL:
+                    setStatus(priorStatus);
+		    setError(NO_ERROR);
+		    break;
+    }
+}
+
+void MobileManipMotionPlanner::printErrorCode()
+{
+    std::cout << " Current Error Code is ";
+    switch(this->error)
+    {
+	    case NO_ERROR:
+		    std::cout << "NO_ERROR";
+		    break;
+	    case POOR_DEM:
+		    std::cout << "POOR_DEM";
+		    break;
+	    case POOR_CONFIG:
+		    std::cout << "POOR_CONFIG";
+		    break;
+	    case OOB_ROVER_POS:
+		    std::cout << "OOB_ROVER_POS";
+		    break;
+	    case OOB_GOAL_POS:
+		    std::cout << "OOB_GOAL_POS";
+		    break;
+	    case OBS_ROVER_POS:
+		    std::cout << "OBS_ROVER_POS";
+		    break;
+	    case OBS_GOAL_POS:
+		    std::cout << "OBS_GOAL_POS";
+		    break;
+	    case UNREACH_GOAL:
+		    std::cout << "UNREACH_GOAL";
+		    break;
+	    case UNCERT_GOAL:
+		    std::cout << "UNCERT_GOAL";
+		    break;
+	    case NON_RESP_ARM:
+		    std::cout << "NON_RESP_ARM";
+		    break;
+	    case COLLIDING_ARM:
+		    std::cout << "COLLIDING_ARM";
+		    break;
+	    case NON_RESP_ROVER:
+		    std::cout << "NON_RESP_ROVER";
+		    break;
+	    case EXCESSIVE_DRIFT:
+		    std::cout << "EXCESSIVE_DRIFT";
+		    break;
+	    case UNCERT_HEADING:
+		    std::cout << "UNCERT_HEADING";
+		    break;
+	    case GOAL_TOO_CLOSE:
+		    std::cout << "GOAL_TOO_CLOSE";
+		    break;
+	    case IMPROPER_CALL:
+		    std::cout << "IMPROPER_CALL";
+		    break;
+    }
+    std::cout << std::endl;
 }
 
 MMError MobileManipMotionPlanner::getErrorCode() {
-	// TODO - implement MobileManipMotionPlanner::getErrorCode
-	throw "Not yet implemented";
+	return this->error;
 }
 
 void MobileManipMotionPlanner::start() {
-	// TODO - implement MobileManipMotionPlanner::start
-	cout << "MMPLANNER: starting the execution of the motion plan" << endl;
-	if (this->status == READY_TO_MOVE)
+	if (getStatus() == READY_TO_MOVE)
 	{
-		this->status = EXECUTING_MOTION_PLAN;
+		setStatus(EXECUTING_MOTION_PLAN);
 	}
 	else
 	{
-		cout << "MMPLANNER: start() can only be called in READY_TO_MOVE state " << endl;
+		setError(IMPROPER_CALL);
 	}
 }
 

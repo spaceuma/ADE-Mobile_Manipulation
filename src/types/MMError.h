@@ -3,7 +3,7 @@
 
 enum MMError
 {
-  NO_ERROR,
+  NO_ERROR = 0,
   POOR_DEM,
   POOR_CONFIG,
   OOB_ROVER_POS,
@@ -17,7 +17,8 @@ enum MMError
   NON_RESP_ROVER,
   EXCESSIVE_DRIFT,
   UNCERT_HEADING,
-  IMPROPER_CALL
+  GOAL_TOO_CLOSE, // The goal is too close to the rover
+  IMPROPER_CALL // A function called in an improper time
 };
 
 #endif
