@@ -3,40 +3,40 @@
 
 using namespace std;
 
-MobileManipMotionPlanner::MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */RoverGuidance_Dem navCamDEM) {
+MobileManipMotionPlanner::MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */const RoverGuidance_Dem &navCamDEM) {
 	// TODO - implement MobileManipMotionPlanner::MobileManipMotionPlanner
 	cout << "MMPLANNER: Creating MMMP" << endl;
 	this->status = IDLE;
 	this->error = NO_ERROR;
-	this->currentMap = new MobileManipMap(navCamDEM);	
+	this->currentMap = new MobileManipMap(navCamDEM);
+	this->currentMotionPlan = new MotionPlan(this->currentMap);
+	this->executor = new MobileManipExecutor(this->currentMotionPlan);
 }
 
-void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan) {
-	// TODO - implement MobileManipMotionPlanner::executeMotion
-	throw "Not yet implemented";
-}
-
-void MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample_position, Joints arm_joints) {
+MMError MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample_position, Joints arm_joints) {
 	// TODO - implement MobileManipMotionPlanner::generateMotionPlan
         cout << "MMPLANNER: Generating Motion Plan" << endl;
 	if (this->status == IDLE)
 	{
 	  // TODO - Since for now there is no computation, the state will go to READY_TO_MOVE
 	  this->status = GENERATING_MOTION_PLAN;
-	  this->currentMotionPlan.executeRoverBasePathPlanning(this->currentMap, rover_position, sample_position);
-	  this->currentMotionPlan.shortenPathForFetching();
+	  this->currentMotionPlan->executeRoverBasePathPlanning(rover_position, sample_position);
+          this->currentMotionPlan->shortenPathForFetching();
+	  this->currentMotionPlan->shortenPathForFetching();
 	  this->status = READY_TO_MOVE;
-	  std::vector<base::Waypoint>* roverPath = this->currentMotionPlan.getRoverPath();
+	  std::vector<base::Waypoint>* roverPath = this->currentMotionPlan->getRoverPath();
 	  std::cout << "MMPLANNER: The resulting path has " << roverPath->size() << " Waypoints" << std::endl;
           cout << "MMPLANNER: Ready to move" << endl;
+	  return NO_ERROR;
 	}
 	else
 	{
 		cout << "MMPLANNER: generateMotionPlan() can only be called in IDLE state " << endl;
+		return IMPROPER_CALL;
 	}
 }
 
-MM_status MobileManipMotionPlanner::getStatus() {
+MMStatus MobileManipMotionPlanner::getStatus() {
 	return this->status;
 }
 
@@ -157,7 +157,7 @@ void MobileManipMotionPlanner::resumeError() {
 	throw "Not yet implemented";
 }
 
-MM_error MobileManipMotionPlanner::getErrorCode() {
+MMError MobileManipMotionPlanner::getErrorCode() {
 	// TODO - implement MobileManipMotionPlanner::getErrorCode
 	throw "Not yet implemented";
 }

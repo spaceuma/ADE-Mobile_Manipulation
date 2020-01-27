@@ -1,7 +1,8 @@
 #include "MotionPlan.h"
 
-MotionPlan::MotionPlan()
+MotionPlan::MotionPlan(MobileManipMap * pmmmap_m)
 {
+    this->pmm_map = pmmmap_m;
 }
 
 MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
@@ -27,30 +28,29 @@ MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
 
 }
 
-unsigned int MotionPlan::executeRoverBasePathPlanning(MobileManipMap *inputMap,
-                                              base::Waypoint rover_position,
+unsigned int MotionPlan::executeRoverBasePathPlanning(base::Waypoint rover_position,
                                               base::Waypoint sample)
 {
     std::vector<std::vector<double>> costMap;
-    if (inputMap->isOutside(rover_position))
+    if (this->pmm_map->isOutside(rover_position))
     {
         return 1;
     }
-    if (inputMap->isObstacle(rover_position))
+    if (this->pmm_map->isObstacle(rover_position))
     {
         return 2;
     }
-    if (inputMap->isOutside(sample))
+    if (this->pmm_map->isOutside(sample))
     {
         return 3;
     }
-    if (inputMap->isObstacle(sample))
+    if (this->pmm_map->isObstacle(sample))
     {
         return 4;
     }
-    inputMap->getCostMap(costMap);
+    this->pmm_map->getCostMap(costMap);
     this->bi_fast_marching.planPath(&costMap,
-                                    inputMap->getResolution(),
+                                    this->pmm_map->getResolution(),
                                     rover_position,
                                     sample,
                                     &(this->vw_rover_path));
@@ -68,15 +68,14 @@ int MotionPlan::shortenPathForFetching()
     return endWaypoint;
 }
 
-void MotionPlan::executeEndEffectorPlanning(MobileManipMap *inputMap,
-                                            double zResolution)
+void MotionPlan::executeEndEffectorPlanning(double zResolution)
 {
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
-    inputMap->getElevationMap(elevationMap);
+    this->pmm_map->getElevationMap(elevationMap);
     this->arm_planner.planArmMotion(&(this->vw_rover_path),
                                     &elevationMap,
-                                    inputMap->getResolution(),
+                                    this->pmm_map->getResolution(),
                                     zResolution,
                                     this->w_sample_pos,
                                     &(this->vvd_arm_motion_profile));

@@ -9,7 +9,6 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories(../../src)
 include_directories(data)
-include_directories(mmFileManagerLib)
 set(WP_DIR ../../deps/control-waypoint_navigation)
 
 file(GLOB MM_SRC
@@ -20,6 +19,11 @@ file(GLOB MM_SRC
 file(GLOB MM_types_SRC
     "../../src/types/*.h"
     "../../src/types/*.cpp"
+)
+
+file(GLOB MMML_SRC
+    "../../src/mmFileManagerLib/*.h"
+    "../../src/mmFileManagerLib/*.cpp"
 )
 
 file(GLOB FM_SRC
@@ -43,14 +47,14 @@ add_executable(runUnitTests
 	       MobileManipMapTests.cpp
 	       MotionPlanTests.cpp
 	       MobileManipExecutorTests.cpp
-	       mmFileManagerLib/mmFileManager.h
-	       mmFileManagerLib/mmFileManager.cpp
                ${MM_SRC}
                ${MM_types_SRC}
+	       ${MMML_SRC}
 	       ${FM_SRC}
                ${WP_SRC}
 	       ${CC_SRC})
 target_include_directories(runUnitTests PRIVATE ../../src/types)
+target_include_directories(runUnitTests PRIVATE ../../src/mmFileManagerLib)
 target_include_directories(runUnitTests PRIVATE ../../src/planner)
 target_include_directories(runUnitTests PRIVATE ../../deps/control-waypoint_navigation)
 target_include_directories(runUnitTests PRIVATE ../../deps/coupled_control)

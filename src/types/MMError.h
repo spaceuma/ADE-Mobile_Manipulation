@@ -1,4 +1,7 @@
-enum MM_error
+#ifndef __MMERROR__
+#define __MMERROR__
+
+enum MMError
 {
   NO_ERROR,
   POOR_DEM,
@@ -13,5 +16,8 @@ enum MM_error
   COLLIDING_ARM,
   NON_RESP_ROVER,
   EXCESSIVE_DRIFT,
-  UNCERT_HEADING
+  UNCERT_HEADING,
+  IMPROPER_CALL
 };
+
+#endif

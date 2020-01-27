@@ -14,7 +14,7 @@ TEST(MMExecutorTest, nominal_working_test)
     readPath("test/unit/data/input/MMExecutorTest/path.txt", vw_path);
     readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
                    vvd_arm_motion_profile);
-    MotionPlan dummyPlan(vw_path, vvd_arm_motion_profile);
+    MotionPlan * dummyPlan = new MotionPlan(vw_path, vvd_arm_motion_profile);
 
     Pose robotPose, pose_robot_sim;
 
@@ -140,7 +140,7 @@ TEST(MMExecutorTest, rover_out_of_corridor_test)
     readPath("test/unit/data/input/MMExecutorTest/path.txt", vw_path);
     readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
                    vvd_arm_motion_profile);
-    MotionPlan dummyPlan(vw_path, vvd_arm_motion_profile);
+    MotionPlan * dummyPlan = new MotionPlan(vw_path, vvd_arm_motion_profile);
 
     Pose robotPose;
 

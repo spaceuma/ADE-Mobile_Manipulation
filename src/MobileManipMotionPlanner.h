@@ -1,5 +1,5 @@
-#include "MM_status.h"
-#include "MM_error.h"
+#include "MMStatus.h"
+#include "MMError.h"
 #include "RoverGuidance_Dem.h"
 #include "MotionCommand.h"
 #include "MotionPlan.h"
@@ -20,11 +20,11 @@ private:
 	/**
 	 * The motion plan that is currently available.
 	 */
-	MotionPlan currentMotionPlan;
+	MotionPlan* currentMotionPlan;
 	/**
 	 * Object that run the execution of the planned trajectory.
 	 */
-	MobileManipExecutor executor;
+	MobileManipExecutor* executor;
 	/**
 	 * Status of the motion planner:
 	 * IDLE
@@ -38,15 +38,15 @@ private:
 	 * REPLANNING
 	 * PAUSE
 	 */
-	MM_status status;
+	MMStatus status;
 	/**
 	 * Attribute to indicate the error code
 	 */
-	MM_error error;
+	MMError error;
 	/**
 	 * The status prior to entering to the current one. This is useful for entering and exiting PAUSE status.
 	 */
-	MM_status priorStatus;
+	MMStatus priorStatus;
 	/**
 	 * A variable that indicates which kind of operation shall be performed with the arm (e.g. some atomic operation or sample handling)
 	 */
@@ -68,7 +68,7 @@ public:
 	/**
 	 * Constructor, it receives a DEM and generates the Map object.
 	 */
-	MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */RoverGuidance_Dem navCamDEM);
+	MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */const RoverGuidance_Dem &navCamDEM);
 
 	/**
 	 * Run the execution of the motion
@@ -83,12 +83,12 @@ public:
 	/**
 	 * It generates a motion plan based on the Map, the rover pose and the sample position.
 	 */
-	void generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample_position, Joints arm_joints);
+	MMError generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample_position, Joints arm_joints);
 
 	/**
 	 * It returns the status in which the software is.
 	 */
-	MM_status getStatus();
+	MMStatus getStatus();
 
 	/**
 	 * It serves to perform an operation with only the arm.
@@ -168,7 +168,7 @@ public:
 	/**
 	 * Returns the indication of which error affects the software.
 	 */
-	MM_error getErrorCode();
+	MMError getErrorCode();
 
 	/**
 	 * Serves to actively start moving the rover and arm once a motion plan is available.

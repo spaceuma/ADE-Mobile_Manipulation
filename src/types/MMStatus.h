@@ -1,7 +1,7 @@
-#ifndef __MM_STATUS__
-#define __MM_STATUS__
+#ifndef __MMSTATUS__
+#define __MMSTATUS__
 
-enum MM_status
+enum MMStatus
 {
   IDLE,
   GENERATING_MOTION_PLAN,

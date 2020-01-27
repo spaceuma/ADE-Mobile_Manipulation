@@ -6,9 +6,14 @@ MobileManipExecutor::MobileManipExecutor()
 {
 }
 
-MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan)
+MobileManipExecutor::MobileManipExecutor(MotionPlan* currentMotionPlan)
 {
-    this->p_motion_plan = &currentMotionPlan;
+    this->p_motion_plan = currentMotionPlan;
+    this->updateMotionPlan();
+}
+
+void MobileManipExecutor::updateMotionPlan()
+{
     // Extract the rover path
     std::vector<base::Waypoint> *rover_path = this->p_motion_plan->getRoverPath();
 
@@ -36,11 +41,6 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan &currentMotionPlan)
         this->vvd_arm_motion_profile.push_back(row);
         row.clear();
     }
-}
-
-void MobileManipExecutor::updateMotionPlan(MotionPlan &newMotionPlan)
-{
-    this->p_motion_plan = &newMotionPlan;
 }
 
 bool MobileManipExecutor::isRoverWithinCorridor(Pose rover_pose)

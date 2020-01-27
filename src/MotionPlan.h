@@ -54,12 +54,16 @@ private:
      * Profile of position values per joint and sample
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
+    /**
+     * Pointer to the map class
+     */
+    MobileManipMap * pmm_map;
 
 public:
     /**
      * Class Constructor.
      */
-    MotionPlan();
+    MotionPlan(MobileManipMap * pmmmap_m);
     /**
      * An existing path and profile are introduced into the motion plan 
      */
@@ -84,8 +88,7 @@ public:
     /**
      * The path for the rover base, vw_rover_path, is calculated
      */
-    unsigned int executeRoverBasePathPlanning(MobileManipMap *p_mobile_manip_map_m,
-                                      base::Waypoint w_rover_pos_m,
+    unsigned int executeRoverBasePathPlanning(base::Waypoint w_rover_pos_m,
                                       base::Waypoint w_sample_pos_m);
     /**
      * The path is shortened, ending in the best waypoint to fetch the sample
@@ -94,8 +97,7 @@ public:
     /**
      * Calculates the path of the end effector
      */
-    void executeEndEffectorPlanning(MobileManipMap *p_mobile_manip_map_m,
-                                    double d_z_res_m);
+    void executeEndEffectorPlanning(double d_z_res_m);
 };
 
 #endif

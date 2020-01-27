@@ -59,12 +59,12 @@ public:
     /**
      * Class Constructor using the current motion plan 
      */
-    MobileManipExecutor(MotionPlan &motion_plan_m);
+    MobileManipExecutor(MotionPlan * motion_plan_m);
 
     /**
-     * Updates the current motion plan with a new one 
+     * Update the data extracted from the motion plan 
      */
-    void updateMotionPlan(MotionPlan &motion_plan_m);
+    void updateMotionPlan();
 
     /**
      * Indicates whether the rover is within the corridor or not 
