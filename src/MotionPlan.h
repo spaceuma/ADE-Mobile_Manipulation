@@ -82,6 +82,10 @@ public:
      */
     std::vector<base::Waypoint> * getRoverPath();
     /**
+     * A pointer to the current rover path is returned
+     */
+    unsigned int getNumberWaypoints();
+    /**
      * A pointer to the arm motion profile is returned
      */
     std::vector<std::vector<double>> *getArmMotionProfile();
@@ -97,7 +101,7 @@ public:
     /**
      * The path is shortened, ending in the best waypoint to fetch the sample
      */
-    void shortenPathForFetching();
+    bool shortenPathForFetching();
     /**
      * Calculates the path of the end effector
      */

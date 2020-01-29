@@ -91,7 +91,7 @@ public:
 	/**
 	 * It generates a motion plan based on the Map, the rover pose and the sample position.
 	 */
-	bool generateMotionPlan(/* It should include the estimation error. */base::Waypoint rover_position, /* It should include the estimation error. */base::Waypoint sample_position, Joints arm_joints);
+	bool generateMotionPlan(/* It should include the estimation error. */const base::Waypoint &rover_position, /* It should include the estimation error. */const base::Waypoint &sample_position);
 
 	/**
 	 * It returns the status in which the software is.
@@ -179,6 +179,16 @@ public:
 	MMError getErrorCode();
 
        	/**
+	 * Prints information regarding the resulting path.
+	 */
+        void printRoverPathInfo();
+
+	/**
+	 * Indicates the current status
+	 */
+        void printStatus();
+
+	/**
 	 * Returns the indication of which error affects the software.
 	 */
         void printErrorCode();

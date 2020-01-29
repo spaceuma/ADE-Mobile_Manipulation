@@ -12,6 +12,14 @@ int main()
     readMatrixFile("test/harnessExample/data/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevation_data);
     double res = 0.1; // meters
+    base::Waypoint w_rover_pos, w_sample_pos;
+
+    w_rover_pos.position[0] = 3.0;
+    w_rover_pos.position[1] = 2.0;
+    w_rover_pos.heading = 0.0;
+    w_sample_pos.position[0] = 5.3;
+    w_sample_pos.position[1] = 5.6;
+
 // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem rgd_dummy_dem;
     double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
@@ -28,7 +36,9 @@ int main()
         }
     }  
     MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem);
+    mmmotion_planner.generateMotionPlan(w_rover_pos, w_sample_pos);
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();
+    mmmotion_planner.printStatus();
   return 0;
 }

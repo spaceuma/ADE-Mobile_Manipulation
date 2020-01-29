@@ -101,26 +101,19 @@ MobileManipMap::MobileManipMap(
     this->d_res = d_res_m;
     this->vvd_elevation_map.clear();
     std::vector<double> row;
-    double d_min_elevation = INFINITY;
+    this->d_elevation_min = INFINITY;
     for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
         {
             row.push_back(vvd_elevation_map_m[j][i]);
-            if (vvd_elevation_map_m[j][i] < d_min_elevation)
+            if (vvd_elevation_map_m[j][i] < this->d_elevation_min)
             {
-                d_min_elevation = vvd_elevation_map_m[j][i];
+                this->d_elevation_min = vvd_elevation_map_m[j][i];
             }
         }
         vvd_elevation_map.push_back(row);
         row.clear();
-    }
-    for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
-    {
-        for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
-        {
-            vvd_elevation_map[j][i] = vvd_elevation_map[j][i] - d_min_elevation;
-        }
     }
     this->vvd_cost_map.clear();
     for (uint j = 0; j < vvd_cost_map_m.size(); j++)
@@ -142,6 +135,35 @@ MobileManipMap::MobileManipMap(
     this->ui_num_cols = vvd_elevation_map_m[0].size();
     this->ui_num_rows = vvd_elevation_map_m.size();
 }
+
+void MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
+{
+    try
+    {
+        this->loadSample(w_sample_pos_m);
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while loading the Sample position"
+             << endl;
+        throw e;
+    }
+    try
+    {
+        this->calculateElevationMap();
+        // Compute vvb_obstacle_map
+        this->calculateTraversabilityMap();
+        // Compute vvd_proximity_map
+        this->addSampleFacingObstacles();
+    }
+    catch (exception &e)
+    {
+        cout << " An exception occured while calculating the cost map" << endl;
+        throw e;
+    }
+
+}
+
 
 void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
 {
@@ -245,6 +267,20 @@ void MobileManipMap::getElevationMap(
 {
     vvd_elevation_map_m = this->vvd_elevation_map;
 }
+
+void MobileManipMap::getElevationMapToZero(
+    std::vector<std::vector<double>> &vvd_elevation_map_m)
+{
+    vvd_elevation_map_m = this->vvd_elevation_map;
+    for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
+        {
+            vvd_elevation_map_m[j][i] -= getMinElevation();
+        }
+    }
+}
+
 
 bool MobileManipMap::calculateElevationMap()
 {

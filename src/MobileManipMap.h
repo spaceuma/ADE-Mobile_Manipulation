@@ -85,6 +85,10 @@ public:
                    std::vector<std::vector<double>> &vvd_cost_map_m,
                    double d_res_m);
     /**
+     * Function to introduce the Sample into the costmap using FACE
+     */
+    void computeFACE(base::Waypoint w_sample_pos_m);
+    /**
      * Function to get the current cost map
      */
     void getCostMap(std::vector<std::vector<double>> &vvd_cost_map_m);
@@ -92,6 +96,10 @@ public:
      * Function to get the current elevation map
      */
     void getElevationMap(std::vector<std::vector<double>> &vvd_elevation_map_m);
+    /**
+     * Function to get the current elevation map with its minimum starting at zero
+     */
+    void getElevationMapToZero(std::vector<std::vector<double>> &vvd_elevation_map_m);
     /**
      * Returns the map resolution --> d_res
      */

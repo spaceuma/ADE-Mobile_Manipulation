@@ -14,12 +14,13 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(/* Provided DEM using the sam
 	this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan);
 }
 
-bool MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position, base::Waypoint sample_position, Joints arm_joints) {
+bool MobileManipMotionPlanner::generateMotionPlan(const base::Waypoint &rover_position, const base::Waypoint &sample_position) {
 	if (getStatus() == IDLE)
 	{
             unsigned int ui_code = 0;
 	  // TODO - Since for now there is no computation, the state will go to READY_TO_MOVE
 	  setStatus(GENERATING_MOTION_PLAN);
+	  this->p_mmmap->computeFACE(sample_position);
 	  ui_code = this->p_motionplan->executeRoverBasePathPlanning(rover_position, sample_position);
           switch(ui_code)
 	  {
@@ -38,11 +39,12 @@ bool MobileManipMotionPlanner::generateMotionPlan(base::Waypoint rover_position,
 		  setError(OBS_GOAL_POS);
 		  return false;
 	  }
-	  if(!this->p_motionplan->shortenPathForFetching())
+	  if(!(this->p_motionplan->shortenPathForFetching()))
 	  {
               setError(GOAL_TOO_CLOSE);
 	      return false;
 	  }
+	  printRoverPathInfo();
 	  // TODO - Deal with EndEffectorPlanning errors
           this->p_motionplan->executeEndEffectorPlanning();
 	  setStatus(READY_TO_MOVE);
@@ -230,9 +232,53 @@ void MobileManipMotionPlanner::resumeError() {
     }
 }
 
+void MobileManipMotionPlanner::printRoverPathInfo()
+{
+    std::cout << " The Rover Path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl; 
+}
+
+void MobileManipMotionPlanner::printStatus()
+{
+    std::cout << "Current Status: ";
+    switch(this->status)
+    {
+	    case IDLE:
+		    std::cout << "IDLE";
+		    break;
+	    case GENERATING_MOTION_PLAN:
+		    std::cout << "GENERATING_MOTION_PLAN";
+		    break;
+	    case READY_TO_MOVE:
+		    std::cout << "READY_TO_MOVE";
+		    break;
+	    case EXECUTING_MOTION_PLAN:
+		    std::cout << "EXECUTING_MOTION_PLAN";
+		    break;
+	    case EXECUTING_ARM_OPERATION:
+		    std::cout << "EXECUTING_ARM_OPERATION";
+		    break;
+	    case RETRIEVING_ARM:
+		    std::cout << "RETRIEVING_ARM";
+		    break;
+	    case FINISHED:
+		    std::cout << "FINISHED";
+		    break;
+	    case ERROR:
+		    std::cout << "ERROR";
+		    break;
+	    case REPLANNING:
+		    std::cout << "REPLANNING";
+		    break;
+	    case PAUSE:
+		    std::cout << "PAUSE";
+		    break;
+    }
+    std::cout << std::endl;
+}
+
 void MobileManipMotionPlanner::printErrorCode()
 {
-    std::cout << " Current Error Code is ";
+    std::cout << " Current Error Code: ";
     switch(this->error)
     {
 	    case NO_ERROR:

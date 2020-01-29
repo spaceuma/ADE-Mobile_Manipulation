@@ -80,7 +80,8 @@ void MotionPlan::executeEndEffectorPlanning()
 {
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
-    this->pmm_map->getElevationMap(elevationMap);
+    this->pmm_map->getElevationMapToZero(elevationMap);
+    std::cout << "The resolution in z is " << d_zres << std::endl;
     this->arm_planner.planArmMotion(&(this->vw_rover_path),
                                     &elevationMap,
                                     this->pmm_map->getResolution(),
@@ -93,6 +94,12 @@ std::vector<base::Waypoint> *MotionPlan::getRoverPath()
 {
     return &(this->vw_rover_path);
 }
+
+unsigned int MotionPlan::getNumberWaypoints()
+{
+    return this->vw_rover_path.size();
+}
+
 
 std::vector<std::vector<double>> *MotionPlan::getEndEffectorPath()
 {

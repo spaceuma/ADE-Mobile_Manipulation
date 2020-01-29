@@ -14,54 +14,6 @@ cur=$PWD
 # pip3 install PyQt5
 # sudo apt-get -y install python3-matplotlib
 
-cd $cur/deps/sherpa_tt_api/base-logging
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
-make install
-
-cd $cur/deps/sherpa_tt_api/base-types
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
-make install
-
-cd $cur/deps/sherpa_tt_api/ip_tunnel
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
-make install
-
-cd $cur/deps/sherpa_tt_api/detached_logger
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
-make install
-
-cd $cur/deps/sherpa_tt_api/proxy_library
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
-make install
-
-cd $cur/deps/sherpa_tt_api/proxy_library_sherpa_tt
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
-make install
-
-cd $cur/spike/dummy_lib
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
-make install
-
-cd $cur/spike/plannerExample
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
-make install
-
 cd $cur/test/harnessExample
 #rm -rf build
 mkdir build
