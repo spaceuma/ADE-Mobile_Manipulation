@@ -34,11 +34,29 @@ int main()
             rgd_dummy_dem.p_heightData_m[i + j * vvd_elevation_data[0].size()]
                 = vvd_elevation_data[j][i];
         }
-    }  
-    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem);
+    } 
+
+    MotionCommand mc;
+    std::vector<JointState> vj_current_jointstates;
+    vj_current_jointstates.resize(6);
+    for (uint i = 0; i < 6; i++)
+    {
+        vj_current_jointstates[i].m_position = 0.0;
+        vj_current_jointstates[i].m_speed = 0.0;
+    }
+    Joints j_current_joints(0, vj_current_jointstates);
+
+
+    double d_zres = 0.08;
+
+    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, d_zres);
     mmmotion_planner.generateMotionPlan(w_rover_pos, w_sample_pos);
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();
+    mmmotion_planner.printStatus();
+    mmmotion_planner.pause(j_current_joints, mc);
+    mmmotion_planner.printStatus();
+    mmmotion_planner.resumeOperation();
     mmmotion_planner.printStatus();
   return 0;
 }
