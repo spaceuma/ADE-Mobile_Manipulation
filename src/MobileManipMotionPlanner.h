@@ -79,11 +79,6 @@ public:
 	MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */const RoverGuidance_Dem &navCamDEM);
 
 	/**
-	 * Run the execution of the motion
-	 */
-	void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan);
-
-	/**
 	 * It updates the stored map
 	 */
 	void updateNavCamDEM(/* DEM using the Airbus data struct */RoverGuidance_Dem navCamDEM);
@@ -111,7 +106,7 @@ public:
 	/**
 	 * It provides commands depending on the current position of the rover and the arm joints
 	 */
-	void updateRoverArmPos(/**
+	bool updateRoverArmPos(/**
 	 * Command to compute for the arm.
 	 */
 	Joints& arm_command, /**

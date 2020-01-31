@@ -74,11 +74,6 @@ MMStatus MobileManipMotionPlanner::getStatus() {
 	return this->status;
 }
 
-void MobileManipMotionPlanner::executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan) {
-	// TODO - implement MobileManipMotionPlanner::executeMotion
-	throw "Not yet implemented";
-}
-
 void MobileManipMotionPlanner::updateNavCamDEM(/* DEM using the Airbus data struct */RoverGuidance_Dem navCamDEM) {
 	// TODO - implement MobileManipMotionPlanner::updateNavCamDEM
 	throw "Not yet implemented";
@@ -92,22 +87,33 @@ void MobileManipMotionPlanner::executeAtomicOperation(ArmOperation arm_operation
 void MobileManipMotionPlanner::abort() {
 	switch(getStatus())
 	{
-            case IDLE:
+            case READY_TO_MOVE:
+		    setStatus(IDLE);
 		    break;
-            case GENERATING_MOTION_PLAN:
+            case EXECUTING_MOTION_PLAN:
+		    setStatus(RETRIEVING_ARM);
+		    break;
+	    case EXECUTING_ARM_OPERATION:
+		    setStatus(RETRIEVING_ARM);
+		    break;
+	    case PAUSE:
+		    setStatus(RETRIEVING_ARM);
+		    break;
+	    default:
+		    setError(IMPROPER_CALL);
 		    break;
 
 	}
 }
 
-void MobileManipMotionPlanner::updateRoverArmPos(/* Command to compute for the arm.*/
+bool MobileManipMotionPlanner::updateRoverArmPos(/* Command to compute for the arm.*/
 	Joints& arm_command, /* Command to compute for the rover base.*/
 	MotionCommand& rover_command, /* Current pose of the rover base.*/
 	Pose rover_position, /* Current position of the joints.*/
 	Joints arm_joints)
 {
 	// TODO - implement MobileManipMotionPlanner::updateRoverArmPos
-  if (this->status == RETRIEVING_ARM)
+  if (getStatus() == RETRIEVING_ARM)
   {
     cout << "MMPLANNER: arm is retrieved" << endl;
     this->status = FINISHED;
@@ -117,7 +123,7 @@ void MobileManipMotionPlanner::updateRoverArmPos(/* Command to compute for the a
   {
     
   }
-  if (this->status == EXECUTING_ARM_OPERATION)
+  if (getStatus() == EXECUTING_ARM_OPERATION)
   {
     cout << "MMPLANNER: finished arm operation" << endl;
     this->status = RETRIEVING_ARM;
@@ -127,15 +133,38 @@ void MobileManipMotionPlanner::updateRoverArmPos(/* Command to compute for the a
   {
     
   }
-  if (this->status == EXECUTING_MOTION_PLAN)
+  if (getStatus() == EXECUTING_MOTION_PLAN)
   {
-    cout << "MMPLANNER: reached goal state" << endl;
-    this->status = EXECUTING_ARM_OPERATION;
-    cout << "MMPLANNER: proceeding to execute arm operation" << endl;
+    if (this->p_mmexecutor->isFinished())
+    {
+       setStatus(EXECUTING_ARM_OPERATION);
+       // Indicate p_motionplan to change into arm operation mode
+       return true;
+    }
+    else
+    {
+        unsigned int ui_error_code = this->p_mmexecutor->getRoverCommand(rover_position, rover_command);
+        switch(ui_error_code)
+	{
+            case 0: // Either driving or aligning
+
+		    return true;
+	    case 1: // Target reached
+		    return true;
+	    case 2: // Out of boundaries
+                    setError(EXCESSIVE_DRIFT);
+		    return false;
+	    case 3: // Either no trajectory or no pose
+		    // TODO - Is this situation even possible to reach??
+		    setError(IMPROPER_CALL);
+		    return false;
+	}
+    }
   }
   else
   {
-    
+    setError(IMPROPER_CALL);
+    return false; 
   }
 }
 
