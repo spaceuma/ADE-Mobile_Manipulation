@@ -88,7 +88,7 @@ bool MotionPlan::isSmoothPath()
 	d_norm1 = sqrt(pow(d_segmentX1,2)+pow(d_segmentY1,2));
 	d_norm2 = sqrt(pow(d_segmentX2,2)+pow(d_segmentY2,2));
         d_diffheading = acos((d_segmentX1*d_segmentX2 + d_segmentY1*d_segmentY2)/(d_norm1*d_norm2))*180.0/3.1416;
-        if (d_diffheading > 30.0)
+        if (d_diffheading > 45.0)
         {
             return false; 
         } 
@@ -113,18 +113,25 @@ bool MotionPlan::shortenPathForFetching()
     return true;
 }
 
-void MotionPlan::executeEndEffectorPlanning()
+bool MotionPlan::executeEndEffectorPlanning()
 {
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
     std::cout << "The resolution in z is " << d_zres << std::endl;
-    this->arm_planner.planArmMotion(&(this->vw_rover_path),
+    if(this->arm_planner.planArmMotion(&(this->vw_rover_path),
                                     &elevationMap,
                                     this->pmm_map->getResolution(),
                                     this->d_zres,
                                     this->w_sample_pos,
-                                    &(this->vvd_arm_motion_profile));
+                                    &(this->vvd_arm_motion_profile)))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 std::vector<base::Waypoint> *MotionPlan::getRoverPath()

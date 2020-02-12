@@ -108,7 +108,7 @@ public:
     /**
      * Calculates the path of the end effector
      */
-    void executeEndEffectorPlanning();
+    bool executeEndEffectorPlanning();
 };
 
 #endif

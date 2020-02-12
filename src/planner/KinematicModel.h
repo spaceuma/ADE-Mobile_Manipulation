@@ -3,6 +3,7 @@
 
 #include "Waypoint.hpp"
 #include <vector>
+#include <exception>
 
 namespace KinematicModel_lib
 {

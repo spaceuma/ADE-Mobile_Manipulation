@@ -51,7 +51,7 @@ public:
 
     std::vector<std::vector<std::vector<double>>> * getVolumeCostMap();
     
-    void planArmMotion(std::vector<base::Waypoint> *roverPath,
+    bool planArmMotion(std::vector<base::Waypoint> *roverPath,
                        const std::vector<std::vector<double>> *DEM,
                        double mapResolution,
                        double zResolution,

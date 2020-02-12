@@ -22,7 +22,8 @@ yMap = yMap*res
 path_shadowing_01 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt"), skiprows=0)
 path_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt"), skiprows=0)
 path_no_shadowing_01 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt"), skiprows=0)
-path_no_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt"), skiprows=0)
+#path_no_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt"), skiprows=0)
+path_no_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/sample_outoftunnel_path_01.txt"), skiprows=0)
 
 sample = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/sample_pos.txt"), skiprows = 0)
 rover = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"), skiprows = 0)

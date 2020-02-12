@@ -8,7 +8,7 @@
 using namespace KinematicModel_lib;
 using namespace ArmPlanner_lib;
 
-void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
+bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
                                const std::vector<std::vector<double>> *DEM,
                                double mapResolution,
                                double zResolution,
@@ -179,8 +179,15 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         pitch = (*endEffectorPath6)[eeInd][4];
         yaw = (*endEffectorPath6)[eeInd][5];
         std::vector<double> orientation{roll, pitch, yaw};
-
-        std::vector<double> config = sherpa_tt_arm.getManipJoints(position, orientation, 1, 1);
+        std::vector<double> config;
+	try
+	{
+             config = sherpa_tt_arm.getManipJoints(position, orientation, 1, 1);
+	}
+        catch (std::exception &e)
+	{
+            return false; 
+	}
         // if(config == std::vector<double>(1,0))
         // armJoints->push_back((*armJoints)[armJoints->size()-1]);
         // else
@@ -191,6 +198,7 @@ void ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     clock_t endp = clock();
     double tp = double(endp - inip) / CLOCKS_PER_SEC;
+    return true;
 }
 
 std::vector<std::vector<double>> * ArmPlanner::getEEPath()

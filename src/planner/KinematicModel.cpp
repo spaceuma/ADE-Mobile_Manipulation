@@ -333,7 +333,8 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
         std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
                      "and orientation\033[0m\n";
-        return std::vector<double>(1, 0);
+	throw std::exception();
+        //return std::vector<double>(1, 0);
     }
 
     double beta = acos((pow(d, 2) + pow(l1, 2) - pow(l2, 2)) / (2 * d * l1));
