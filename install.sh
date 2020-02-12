@@ -23,6 +23,7 @@ make
 
 cd $cur/test/unit
 #rm -rf build
+mkdir data/results
 mkdir data/results/MMMapTest
 mkdir data/results/MMMotionPlanTest
 mkdir data/results/MMExecutorTest
