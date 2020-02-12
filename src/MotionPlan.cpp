@@ -56,13 +56,44 @@ unsigned int MotionPlan::executeRoverBasePathPlanning(base::Waypoint rover_posit
                                     sample,
                                     &(this->vw_rover_path)))
     {
-        this->w_sample_pos = sample;
-        return 0;
+        if (isSmoothPath())
+	{
+            this->w_sample_pos = sample;
+            return 0;
+	}
+	else
+	{
+	    return 6;
+	}
     }
     else
     {
         return 5;
     }
+}
+
+bool MotionPlan::isSmoothPath()
+{
+    if (this->vw_rover_path.size() < 3)
+    {
+        return false;
+    }
+    double d_segmentX1, d_segmentY1, d_segmentX2, d_segmentY2, d_norm1, d_norm2, d_diffheading;
+    for (int i = 2; i < vw_rover_path.size()-1; i++) // Final Waypoint is sometimes tricky due to FM computation, so it is left anyways
+    {
+        d_segmentX1 = this->vw_rover_path[i].position[0] - this->vw_rover_path[i-1].position[0]; 
+        d_segmentX2 = this->vw_rover_path[i-1].position[0] - this->vw_rover_path[i-2].position[0]; 
+        d_segmentY1 = this->vw_rover_path[i].position[1] - this->vw_rover_path[i-1].position[1];
+        d_segmentY2 = this->vw_rover_path[i-1].position[1] - this->vw_rover_path[i-2].position[1];
+	d_norm1 = sqrt(pow(d_segmentX1,2)+pow(d_segmentY1,2));
+	d_norm2 = sqrt(pow(d_segmentX2,2)+pow(d_segmentY2,2));
+        d_diffheading = acos((d_segmentX1*d_segmentX2 + d_segmentY1*d_segmentY2)/(d_norm1*d_norm2))*180.0/3.1416;
+        if (d_diffheading > 30.0)
+        {
+            return false; 
+        } 
+    }
+    return true; 
 }
 
 bool MotionPlan::shortenPathForFetching()

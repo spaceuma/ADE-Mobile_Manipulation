@@ -62,7 +62,10 @@ private:
      * Value of Z resolution
      */
     double d_zres;
-
+    /**
+     * Checks if the current path is smooth
+     */
+    bool isSmoothPath();
 public:
     /**
      * Class Constructor.

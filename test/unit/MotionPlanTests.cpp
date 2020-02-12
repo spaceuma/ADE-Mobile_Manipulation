@@ -24,6 +24,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
                                    vvd_cost_map_shadowing));
     double res = 0.1; // meters
     double zRes = 0.08;
+    unsigned int ui_error_code = 0;
+
     MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res), mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res);
 
     // Creating the Motion Plan
@@ -37,8 +39,9 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 1st Case: Without Shadowing
     clock_t ini2D = clock();
-    ASSERT_NO_THROW(mplan_no_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_no_shadowing.executeRoverBasePathPlanning(
         w_rover_pos_01, samplePos));
+    ASSERT_EQ(ui_error_code, 0);
     mplan_no_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
@@ -50,8 +53,9 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 1st Case with Shadowing 
     ini2D = clock();
-    ASSERT_NO_THROW(mplan_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.executeRoverBasePathPlanning(
         w_rover_pos_01, samplePos));
+    ASSERT_EQ(ui_error_code, 0);
     mplan_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
@@ -62,8 +66,9 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 2nd Case without Shadowing
     ini2D = clock();
-    ASSERT_NO_THROW(mplan_no_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_no_shadowing.executeRoverBasePathPlanning(
         w_rover_pos_02, samplePos));
+    ASSERT_EQ(ui_error_code, 0);
     mplan_no_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
@@ -73,8 +78,9 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 2nd Case with Shadowing
     ini2D = clock();
-    ASSERT_NO_THROW(mplan_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.executeRoverBasePathPlanning(
         w_rover_pos_02, samplePos));
+    ASSERT_EQ(ui_error_code, 0);
     mplan_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
@@ -175,4 +181,34 @@ TEST(MMMotionPlanTest, non_reachable_test)
         w_rover_pos, samplePos));
     ASSERT_EQ(ui_error_code, 5)
         << "\033[31m[----------]\033[0m Expected Error Code 5";
+}
+
+TEST(MMMotionPlanTest, nonsmooth_path_test)
+{
+    // Reading the DEM
+    std::vector<std::vector<double>> vvd_cost_map, vvd_elevation_map;
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_splitted_10cmDEM.csv",
+                       vvd_elevation_map));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_discontinuous.txt",
+                                   vvd_cost_map));
+    double res = 0.1; // meters
+    double zRes = 0.08;
+    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
+
+    // Creating the Motion Plan
+    MotionPlan mplan(&mmmap, zRes);
+
+    base::Waypoint w_rover_pos, samplePos;
+    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
+
+
+    // 1st Case: Without Shadowing
+    clock_t ini2D = clock();
+    unsigned int ui_error_code;
+    ASSERT_NO_THROW(ui_error_code = mplan.executeRoverBasePathPlanning(
+        w_rover_pos, samplePos));
+    ASSERT_EQ(ui_error_code, 6)
+        << "\033[31m[----------]\033[0m Expected Error Code 6";
 }
