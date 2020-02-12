@@ -146,3 +146,33 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     ASSERT_EQ(i_error_code, 4)
         << "\033[31m[----------]\033[0m Expected Error Code 4";
 }
+
+TEST(MMMotionPlanTest, non_reachable_test)
+{
+    // Reading the DEM
+    std::vector<std::vector<double>> vvd_cost_map, vvd_elevation_map;
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_splitted_10cmDEM.csv",
+                       vvd_elevation_map));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_splittedMap.txt",
+                                   vvd_cost_map));
+    double res = 0.1; // meters
+    double zRes = 0.08;
+    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
+
+    // Creating the Motion Plan
+    MotionPlan mplan(&mmmap, zRes);
+
+    base::Waypoint w_rover_pos, samplePos;
+    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_03.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_02.txt")) << "Input Sample Waypoint file is missing";
+
+
+    // 1st Case: Without Shadowing
+    clock_t ini2D = clock();
+    unsigned int ui_error_code;
+    ASSERT_NO_THROW(ui_error_code = mplan.executeRoverBasePathPlanning(
+        w_rover_pos, samplePos));
+    ASSERT_EQ(ui_error_code, 5)
+        << "\033[31m[----------]\033[0m Expected Error Code 5";
+}

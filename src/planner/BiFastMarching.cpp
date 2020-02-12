@@ -4,7 +4,7 @@
 
 using namespace FastMarching_lib;
 
-void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
+bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                               double mapResolution,
                               base::Waypoint iniPos,
                               base::Waypoint finalPos,
@@ -24,7 +24,10 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
 
     std::vector<int> *nodeJoin = new std::vector<int>;
 
-    computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin);
+    if(!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
+    {
+        return false;
+    }
 
     std::vector<std::vector<double>> *pathGoal = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *pathStart = new std::vector<std::vector<double>>;
@@ -50,9 +53,10 @@ void BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].position[0] = mapResolution * (*pathGoal)[path->size() - 1][0];
     (*path)[path->size() - 1].position[1] = mapResolution * (*pathGoal)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
+    return true;
 }
 
-void BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
+bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
                                  std::vector<int> goal,
                                  std::vector<int> start,
                                  std::vector<std::vector<double>> *TMapGoal,
@@ -134,7 +138,7 @@ void BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
             if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetGoal;
-                break;
+                return true;
             }
         }
         if ((*closedMapGoal)[nodeTargetStart[1]][nodeTargetStart[0]] == 1)
@@ -146,10 +150,11 @@ void BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
             if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetStart;
-                break;
+                return true;
             }
         }
     }
+    return false;
 }
 
 void BiFastMarching::updateNode(std::vector<int> nodeTarget,

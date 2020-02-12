@@ -50,13 +50,19 @@ unsigned int MotionPlan::executeRoverBasePathPlanning(base::Waypoint rover_posit
         return 4;
     }
     this->pmm_map->getCostMap(costMap);
-    this->bi_fast_marching.planPath(&costMap,
+    if(this->bi_fast_marching.planPath(&costMap,
                                     this->pmm_map->getResolution(),
                                     rover_position,
                                     sample,
-                                    &(this->vw_rover_path));
-    this->w_sample_pos = sample;
-    return 0;
+                                    &(this->vw_rover_path)))
+    {
+        this->w_sample_pos = sample;
+        return 0;
+    }
+    else
+    {
+        return 5;
+    }
 }
 
 bool MotionPlan::shortenPathForFetching()

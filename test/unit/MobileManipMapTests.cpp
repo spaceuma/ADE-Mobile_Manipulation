@@ -81,6 +81,53 @@ TEST(MMMapTest, nominal_working_test)
 
 }
 
+TEST(MMMapTest, nominal_working_test_2)
+{
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data;
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_splitted_10cmDEM.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
+    double res = 0.1; // meters
+
+    // A dummy Rover Guidance based DEM is created
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
+    for (uint j = 0; j < vvd_elevation_data.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
+                = vvd_elevation_data[j][i];
+        }
+    }
+
+    std::vector<std::vector<double>> costMap;
+    costMap.resize(prgd_dummy_dem->rows);
+    for (uint i = 0; i < prgd_dummy_dem->rows; i++)
+    {
+        costMap[i].resize(prgd_dummy_dem->cols);
+    }
+    std::ofstream costMapFile;
+    MobileManipMap mmmap_no_shadowing((*prgd_dummy_dem));
+    costMapFile.open("test/unit/data/results/MMMapTest/costMap_splittedMap.txt");
+    mmmap_no_shadowing.getCostMap(costMap);
+    for (int j = 0; j < costMap.size(); j++)
+    {
+        for (int i = 0; i < costMap[0].size(); i++)
+        {
+            costMapFile << costMap[j][i] << " ";
+        }
+        costMapFile << "\n";
+    }
+
+    costMapFile.close();
+
+}
+
 TEST(MMMapTest, dem_format_error_test)
 {
     // Input Elevation Matrix is read
