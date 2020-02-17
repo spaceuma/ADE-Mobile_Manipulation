@@ -44,7 +44,7 @@ file(GLOB CC_SRC
 # Link runTests with what we want to test and the GTest and pthread library
 add_executable(runUnitTests 
                UnitTests.cpp 
-	       MobileManipMapTests.cpp
+               MobileManipMapTests.cpp
 	       MotionPlanTests.cpp
 	       MobileManipExecutorTests.cpp
                ${MM_SRC}

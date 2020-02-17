@@ -82,7 +82,7 @@ public:
     /**
      * Constructor, it receives a DEM and generates the Map object.
      */
-    MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
+    MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM, const Joints &j_present_readings,
                              double d_zres_m);
 
     /**

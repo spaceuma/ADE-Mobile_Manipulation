@@ -6,12 +6,22 @@
 using namespace waypoint_navigation_lib;
 using namespace coupled_control;
 
+enum ArmExecutionState
+{
+    INITIALIZING = 0,        // 0
+    READY,           // 1
+    COUPLED_MOVING,     // 2
+    SAMPLING_POS,  // 3
+    RETRIEVING      // 4
+};
+
+
 class MobileManipExecutor
 {
 
 private:
     /**
-     * Pointer to the current Motion Plan
+     * Pointer to the present Motion Plan
      */
     MotionPlan *p_motion_plan;
     /**
@@ -19,11 +29,15 @@ private:
      */
     double d_corridor_width;
     /**
+     * Indicates if the arm is initialized or not 
+     */
+    bool b_ArmReady;
+    /**
      * Waypoint Navigation class 
      */
     WaypointNavigation waypoint_navigation;
     /**
-     * Vector of pointers to each waypoint of the current path 
+     * Vector of pointers to each waypoint of the present path 
      */
     std::vector<base::Waypoint *> vpw_path;
     /**
@@ -35,36 +49,48 @@ private:
      */
     coupledControl coupled_control;
     /**
-     * The segment currently followed by the rover 
-     */
-    int i_current_segment;
-    /**
      * The arm motion profile
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
     /**
      * The next configuration to be reached by the arm 
      */
-    std::vector<double> vd_next_arm_config;
+    std::vector<double> vd_arm_present_readings;
+    std::vector<double> vd_arm_present_command;
     /**
-     * The next configuration to be reached by the arm 
+     * The previous arm state 
      */
-    NavigationState navstate_current;
-
-public:
+    std::vector<double> vd_arm_previous_readings;
+    std::vector<double> vd_arm_previous_command;
     /**
-     * Class Constructor 
+     * The present state of the Waypoint Navigation 
      */
-    MobileManipExecutor();
+    ArmExecutionState armstate;
     /**
-     * Class Constructor using the current motion plan 
+     * The present state of the Waypoint Navigation 
      */
-    MobileManipExecutor(MotionPlan * motion_plan_m);
-
+    NavigationState navstate;
     /**
      * Update the data extracted from the motion plan 
      */
     void updateMotionPlan();
+    /**
+     * Arm Variables Initialization 
+     */
+    void initializeArmVariables(const Joints &j_present_readings);
+    /**
+     * Returns a (0,0,0) rover command 
+     */
+    MotionCommand getZeroRoverCommand();
+    /**
+     * Provides the next arm command according to the present situation 
+     */
+    bool getArmCommand(Joints &j_next_arm_command);
+public:
+    /**
+     * Class Constructor using the present motion plan 
+     */
+    MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings);
 
     /**
      * Indicates whether the rover is within the corridor or not 
@@ -77,18 +103,22 @@ public:
     bool isArmColliding();
 
     /**
-     * Indicates whether the execution of the current operation is completed
+     * Indicates whether the execution of the present operation is completed
      * or not
      */
-    bool isFinished();
-
+    bool isRoverFinished();
     /**
-     * Returns the motion command corresponding to the current situation 
+     * Provides the next arm command according to the present situation 
      */
-    unsigned int getRoverCommand(Pose pose_rover, MotionCommand &mc_m);
-
+    unsigned int getCoupledCommand(Pose &rover_pose, const Joints &j_arm_present_readings_m, MotionCommand &mc_m, Joints &j_next_arm_command_m);
     /**
-     * Provides the next arm command according to the current situation 
+     * Checks if the arm is at Ready position 
      */
-    void getArmCommand(Joints &j_next_arm_command);
+    bool isArmReady(const Joints &j_present_joints);
+    /**
+     * Checks if the arm is still following the arm commands 
+     */
+    bool isArmWorking(const Joints &j_present_joints);
+    void getSamplingCommand();
+    void getAtomicCommand();
 };

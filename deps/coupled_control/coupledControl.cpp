@@ -24,7 +24,7 @@ void coupledControl::modifyMotionCommand(double mMaxSpeed,
     modified_rover_command.m_turnRate_rads = vR * R;
 }
 
-void coupledControl::selectNextManipulatorPosition(
+bool coupledControl::selectNextManipulatorPosition(
     int current_waypoint,
     std::vector<std::vector<double>> *armConfig,
     std::vector<double> *nextConfig,
@@ -38,6 +38,9 @@ void coupledControl::selectNextManipulatorPosition(
     {
         nextConfig->at(i) = constrainAngle((*armConfig)[pointer][i], negative);
     }
+
+    // Returns true if it is the last position
+    return pointer == (*armConfig).size();
 }
 
 void coupledControl::manipulatorMotionControl(double gain,

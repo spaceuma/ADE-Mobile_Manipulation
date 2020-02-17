@@ -29,7 +29,7 @@ public:
                              MotionCommand rover_command,
                              MotionCommand &modified_rover_command);
 
-    void selectNextManipulatorPosition(
+    bool selectNextManipulatorPosition(
         int current_waypoint,
         std::vector<std::vector<double>> *armConfig,
         std::vector<double> *nextConfig,

@@ -5,6 +5,7 @@ using namespace std;
 
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
+    const Joints &j_present_readings,
     double d_zres_m)
 {
     cout << "MMPLANNER: Creating MMMP" << endl;
@@ -14,7 +15,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     this->p_mmmap = new MobileManipMap(navCamDEM);
     // Each class contains a pointer to the previous one
     this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m);
-    this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan);
+    this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan, j_present_readings);
 }
 
 bool MobileManipMotionPlanner::generateMotionPlan(
@@ -155,7 +156,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
     switch (getStatus())
     {
         case EXECUTING_MOTION_PLAN:
-            if (this->p_mmexecutor->isFinished())
+            if (this->p_mmexecutor->isRoverFinished())
             {
                 setStatus(EXECUTING_ARM_OPERATION);
                 return true;
@@ -163,8 +164,10 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             else
             {
                 unsigned int ui_error_code
-                    = this->p_mmexecutor->getRoverCommand(rover_position,
-                                                          rover_command);
+                    = this->p_mmexecutor->getCoupledCommand(rover_position,
+				                            arm_joints,
+                                                          rover_command,
+							  arm_command);
                 switch (ui_error_code)
                 {
                     case 0: // Either driving or aligning
@@ -179,8 +182,6 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                         setError(IMPROPER_CALL);
                         return false;
                 }
-		
-                p_mmexecutor->getArmCommand(arm_command);
             }
         case EXECUTING_ARM_OPERATION:
             throw "not finished";
