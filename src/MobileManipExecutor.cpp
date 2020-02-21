@@ -73,6 +73,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     
     // Evaluating state of Rover Path Following
     this->navstate = waypoint_navigation.getNavigationState();
+
     if ((this->navstate != DRIVING)&&(this->navstate != ALIGNING))
     {
 	if (this->navstate == TARGET_REACHED)
@@ -99,6 +100,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
                 this->armstate = READY; 
                 mc_m = this->getZeroRoverCommand();
             }
+	    
 	    return 0;
 	case READY:
             this->armstate = COUPLED_MOVING;
@@ -148,7 +150,7 @@ bool MobileManipExecutor::isArmWorking(const Joints &j_present_joints)
     return isMoving;
 }
 
-void MobileManipExecutor::getSamplingCommand()
+void MobileManipExecutor::getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m)
 {
 
 }
@@ -196,7 +198,6 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
         &(this->vvd_arm_motion_profile),
         &(this->vd_arm_present_readings),
         false);
-
     for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
     {
         j_next_arm_command.m_jointStates[i].m_position

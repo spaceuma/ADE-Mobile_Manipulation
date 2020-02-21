@@ -56,6 +56,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         printRoverPathInfo();
         // TODO - Deal with EndEffectorPlanning errors
         this->p_motionplan->executeEndEffectorPlanning();
+        this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
         return true;
     }
@@ -170,17 +171,24 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
 							  arm_command);
                 switch (ui_error_code)
                 {
-                    case 0: // Either driving or aligning
+		    case 0: // Deploying arm to initial position
+			return true;
+                    case 1: // Either driving or aligning
                         return true;
-                    case 1: // (Rover) Target reached
+                    case 2: // (Rover) Target reached
+			setStatus(EXECUTING_ARM_OPERATION);
                         return true;
-                    case 2: // Out of boundaries
+                    case 3: // Out of boundaries
                         setError(EXCESSIVE_DRIFT);
                         return false;
-                    case 3: // Either no trajectory or no pose
+                    case 4: // Either no trajectory or no pose
                         // TODO - Is this situation even possible to reach??
-                        setError(IMPROPER_CALL);
+			std::cout << "An strange error occurred, there is no pose??" << std::endl;
+			setError(IMPROPER_CALL);
                         return false;
+		    case 5:
+			setError(NON_RESP_ARM);
+			return false;
                 }
             }
         case EXECUTING_ARM_OPERATION:
@@ -311,7 +319,7 @@ void MobileManipMotionPlanner::printStatus()
 
 void MobileManipMotionPlanner::printErrorCode()
 {
-    std::cout << " Current Error Code: ";
+    std::cout << "Current Error Code: ";
     switch (this->error)
     {
         case NO_ERROR:

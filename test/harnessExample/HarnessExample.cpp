@@ -49,7 +49,7 @@ int main()
 
     double d_zres = 0.08;
 
-    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, d_zres);
+    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, j_current_joints, d_zres);
     mmmotion_planner.generateMotionPlan(w_rover_pos, w_sample_pos);
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();

@@ -71,10 +71,6 @@ private:
      */
     NavigationState navstate;
     /**
-     * Update the data extracted from the motion plan 
-     */
-    void updateMotionPlan();
-    /**
      * Arm Variables Initialization 
      */
     void initializeArmVariables(const Joints &j_present_readings);
@@ -91,6 +87,10 @@ public:
      * Class Constructor using the present motion plan 
      */
     MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings);
+    /**
+     * Update the data extracted from the motion plan 
+     */
+    void updateMotionPlan();
 
     /**
      * Indicates whether the rover is within the corridor or not 
@@ -119,6 +119,6 @@ public:
      * Checks if the arm is still following the arm commands 
      */
     bool isArmWorking(const Joints &j_present_joints);
-    void getSamplingCommand();
+    void getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     void getAtomicCommand();
 };
