@@ -70,24 +70,24 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     // Getting Rover Command
     waypoint_navigation.setPose(rover_pose);
     waypoint_navigation.update(mc_m);
-    
+   
+    fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
+
     // Evaluating state of Rover Path Following
     this->navstate = waypoint_navigation.getNavigationState();
 
-    if ((this->navstate != DRIVING)&&(this->navstate != ALIGNING))
+    if ((this->navstate != DRIVING)&&(this->navstate != ALIGNING)&&(this->navstate != TARGET_REACHED))
     {
-	if (this->navstate == TARGET_REACHED)
-	{
-            mc_m = this->getZeroRoverCommand();
-	}
+        mc_m = this->getZeroRoverCommand();
+        j_next_arm_command_m = j_arm_present_readings_m;
 	if (this->navstate == OUT_OF_BOUNDARIES)
 	{
-            j_next_arm_command_m = j_arm_present_readings_m;
-            mc_m = this->getZeroRoverCommand();
             return 3;
 	}
-	j_next_arm_command_m = j_arm_present_readings_m;
-        return 4; 
+	else
+	{
+            return 4; 
+	}
     }
   
     // Getting Arm Command
@@ -95,22 +95,21 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     switch (this->armstate)
     {
         case INITIALIZING:
-            if (this->isArmReady(j_arm_present_readings_m))
+            if (this->isArmReady(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 this->armstate = READY; 
-                mc_m = this->getZeroRoverCommand();
-            }
-	    
+            } 
+            mc_m = this->getZeroRoverCommand();
 	    return 0;
 	case READY:
             this->armstate = COUPLED_MOVING;
 	    return 1;
 	case COUPLED_MOVING:
-            if (!isArmWorking(j_arm_present_readings_m))
+            /*if (!isArmWorking(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 mc_m = this->getZeroRoverCommand();
 	        return 5;
-	    }
+	    }*/
 	    if (b_isFinal)
 	    { 
                 mc_m = this->getZeroRoverCommand();
@@ -123,19 +122,53 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     }
 }
 
-bool MobileManipExecutor::isArmReady(const Joints &j_present_joints)
+void MobileManipExecutor::fixMotionCommand(MotionCommand &mc_m)
+{
+    if ((abs(mc_m.m_speed_ms) < 0.0000001)&&(abs(mc_m.m_turnRate_rads) > 0.0000001))
+    {
+        mc_m.m_manoeuvreType = 1;
+    }
+    else
+    {
+        if ((abs(mc_m.m_speed_ms) > 0.0000001)&&(abs(mc_m.m_turnRate_rads) > 0.0000001))
+        {
+            mc_m.m_curvature_radm = mc_m.m_turnRate_rads / mc_m.m_speed_ms; 
+            mc_m.m_manoeuvreType = 0;
+	}
+	else
+	{
+	    if((abs(mc_m.m_speed_ms) > 0.0000001)&&(abs(mc_m.m_turnRate_rads) < 0.0000001))
+
+	    {
+	        mc_m.m_curvature_radm = 0.0;
+                mc_m.m_manoeuvreType = 0;
+	    }
+	    else
+	    {
+               mc_m = getZeroRoverCommand(); 
+	    }
+	}
+    }
+    
+}
+
+bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints &j_present_joints)
 {
     for (uint i = 0; i < 6; i++)
     {
-        if (abs(this->vd_arm_present_readings[i]-j_present_joints.m_jointStates[i].m_position) > 0.1)
+        if (abs(j_next_command.m_jointStates[i].m_position-j_present_joints.m_jointStates[i].m_position) > 0.05)
 	{
             return false;
 	}	
+    }
+    for (uint i = 0; i<6; i++)
+    {
+	this->vd_arm_previous_command[i] = j_next_command.m_jointStates[i].m_position; 
     } 
     return true;
 }
 
-bool MobileManipExecutor::isArmWorking(const Joints &j_present_joints)
+bool MobileManipExecutor::isArmWorking(const Joints &j_next_command, const Joints &j_present_joints)
 {
     double d_deg2rad = 3.1416/180.0;
     bool isMoving = true;
@@ -145,7 +178,7 @@ bool MobileManipExecutor::isArmWorking(const Joints &j_present_joints)
         {
             isMoving = false;
 	}
-	this->vd_arm_previous_command[i] = vd_arm_present_readings[i];
+	this->vd_arm_previous_command[i] = j_next_command.m_jointStates[i].m_position; 
     }
     return isMoving;
 }
@@ -197,7 +230,7 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
         this->waypoint_navigation.getCurrentSegment(),
         &(this->vvd_arm_motion_profile),
         &(this->vd_arm_present_readings),
-        false);
+        true);
     for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
     {
         j_next_arm_command.m_jointStates[i].m_position

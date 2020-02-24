@@ -192,9 +192,11 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                 }
             }
         case EXECUTING_ARM_OPERATION:
-            throw "not finished";
+	    std::cout << "Status is Executing Arm Operation" << std::endl;
         case RETRIEVING_ARM:
             throw "not finished";
+	case ERROR:
+	    return false;
         default:
             setError(IMPROPER_CALL);
             return false;
@@ -259,6 +261,11 @@ void MobileManipMotionPlanner::resumeError()
             setError(NO_ERROR);
             break;
     }
+}
+
+bool MobileManipMotionPlanner::isStatusError()
+{
+    return this->status == ERROR;
 }
 
 MMError MobileManipMotionPlanner::getErrorCode()

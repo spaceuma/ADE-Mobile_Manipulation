@@ -178,4 +178,9 @@ public:
      * Returns the indication of which error affects the software.
      */
     void printErrorCode();
+
+    /**
+     * Returns if the class is in status ERROR.
+     */
+    bool isStatusError();
 };
