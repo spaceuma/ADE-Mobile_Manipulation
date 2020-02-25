@@ -1,8 +1,11 @@
+#include "Joints.h"
+
 #include "MotionCommand.h"
 #include "MotionPlan.h"
 #include "WaypointNavigation.hpp"
 #include "coupledControl.hpp"
 
+using namespace proxy_library;
 using namespace waypoint_navigation_lib;
 using namespace coupled_control;
 

@@ -1,19 +1,22 @@
+#ifndef __QUATERNION__
+#define __QUATERNION__
+
 #pragma once
 
 #include "BaseType.hpp"
 
 namespace proxy_library{
-    
-class JointState : public BaseType {
-  public:
-    double m_position;
-    double m_speed;
-    double m_acceleration;
-    double m_effort;  
-      
-    JointState();
-    JointState(double m_position, double m_speed, double m_acceleration, double m_effort);
 
+class Quaternion : public BaseType{
+  public:
+    double m_x;
+    double m_y;
+    double m_z;
+    double m_w;  
+
+    Quaternion();
+    Quaternion(double x, double y, double z, double w);
+    
     bool serialize(std::vector<uint8_t>::iterator& it_buffer, uint64_t& buf_size) const;  
     
 
@@ -28,14 +31,14 @@ class JointState : public BaseType {
     }
     
     std::string getTypeName() const {
-        return "JointState";
+        return "Quaternion";
     }
     
     std::string toString() const {
         std::stringstream ss;
-        ss << "m_position: " << m_position << ", m_speed: " << m_speed << 
-                ", m_acceleration: " << m_acceleration << ", m_effort: " << m_effort;
+        ss << "m_x: " << m_x << ", m_y: " << m_y << ", m_z: " << m_z << ", m_w: " << m_w;
         return ss.str();
     }
 };
 } // end namespace proxy_library
+#endif

@@ -1,3 +1,6 @@
+#ifndef __BASE_TYPE__
+#define __BASE_TYPE__
+
 #pragma once
 
 #include <assert.h>
@@ -277,5 +280,5 @@ class BaseType
 };
 
 } // end namespace proxy_library
-
+#endif
 

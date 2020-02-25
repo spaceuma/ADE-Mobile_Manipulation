@@ -21,6 +21,18 @@ file(GLOB MM_types_SRC
     "../../src/types/*.cpp"
 )
 
+file(GLOB MM_types_SRC_base
+    "../../src/types/base/*.h"
+    "../../src/types/base/*.hpp"
+    "../../src/types/base/*.cpp"
+)
+
+file(GLOB MM_types_SRC_proxy_library
+    "../../src/types/proxy_library/*.h"
+    "../../src/types/proxy_library/*.hpp"
+    "../../src/types/proxy_library/*.cpp"
+)
+
 file(GLOB MMML_SRC
     "../../src/mmFileManagerLib/*.h"
     "../../src/mmFileManagerLib/*.cpp"
@@ -45,11 +57,15 @@ add_executable(harnessexample
                HarnessExample.cpp
                ${MM_SRC}
                ${MM_types_SRC}
+               ${MM_types_SRC_base}
+               ${MM_types_SRC_proxy_library}
 	       ${MMML_SRC}
 	       ${FM_SRC}
                ${WP_SRC}
 	       ${CC_SRC})
 target_include_directories(harnessexample PRIVATE ../../src/types)
+target_include_directories(harnessexample PRIVATE ../../src/types/base)
+target_include_directories(harnessexample PRIVATE ../../src/types/proxy_library)
 target_include_directories(harnessexample PRIVATE ../../src/mmFileManagerLib)
 target_include_directories(harnessexample PRIVATE ../../src/planner)
 target_include_directories(harnessexample PRIVATE ../../deps/coupled_control)

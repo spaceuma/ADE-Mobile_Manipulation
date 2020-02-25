@@ -24,7 +24,7 @@
 #include <Eigen/Geometry>
 #include "Waypoint.hpp"
 #include "MotionCommand.h"
-#include "Pose.hpp"
+#include "BasePose.hpp"
 #include "Time.hpp"
 #include <vector>
 

@@ -14,11 +14,14 @@ int main()
     double res = 0.1; // meters
     base::Waypoint w_rover_pos, w_sample_pos;
 
-    w_rover_pos.position[0] = 3.0;
-    w_rover_pos.position[1] = 2.0;
-    w_rover_pos.heading = 0.0;
-    w_sample_pos.position[0] = 5.3;
-    w_sample_pos.position[1] = 5.6;
+
+    proxy_library::Pose plpose_rover;
+    plpose_rover.m_position.m_x = 3.0;
+    plpose_rover.m_position.m_y = 2.0;
+
+
+    double d_sample_pos_x = 5.3;
+    double d_sample_pos_y = 5.6;
 
 // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem rgd_dummy_dem;
@@ -50,7 +53,7 @@ int main()
     double d_zres = 0.08;
 
     MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, j_current_joints, d_zres);
-    mmmotion_planner.generateMotionPlan(w_rover_pos, w_sample_pos);
+    mmmotion_planner.generateMotionPlan(plpose_rover, d_sample_pos_x, d_sample_pos_y);
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();
     mmmotion_planner.printStatus();

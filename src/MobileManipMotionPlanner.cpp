@@ -18,10 +18,21 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan, j_present_readings);
 }
 
-bool MobileManipMotionPlanner::generateMotionPlan(
-    const base::Waypoint &rover_position,
-    const base::Waypoint &sample_position)
+bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m, double d_sample_pos_x, double d_sample_pos_y)
 {
+    base::Pose basepose_dummy;
+    basepose_dummy.orientation = Eigen::Quaterniond(plpose_m.m_orientation.m_w, plpose_m.m_orientation.m_x, plpose_m.m_orientation.m_y, plpose_m.m_orientation.m_z);  
+
+    base::Waypoint rover_position, sample_position;
+    rover_position.position[0] = plpose_m.m_position.m_x;
+    rover_position.position[1] = plpose_m.m_position.m_y;
+    rover_position.position[2] = plpose_m.m_position.m_z;
+ 
+    rover_position.heading = basepose_dummy.getYaw(); 
+
+    sample_position.position[0] = d_sample_pos_x;
+    sample_position.position[1] = d_sample_pos_y;
+
     if (getStatus() == IDLE)
     {
         unsigned int ui_code = 0;
@@ -67,8 +78,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
     }
 }
 
-void MobileManipMotionPlanner::executeAtomicOperation(
-    ArmOperation arm_operation)
+void MobileManipMotionPlanner::executeAtomicOperation()
 {
     // TODO - implement MobileManipMotionPlanner::executeAtomicOperation
     throw "Not yet implemented";
@@ -143,7 +153,7 @@ void MobileManipMotionPlanner::resumeOperation()
 }
 
 void MobileManipMotionPlanner::updateLocCamDEM(RoverGuidance_Dem locCamDEM,
-                                               Pose rover_position,
+                                               proxy_library::Pose rover_position,
                                                Joints arm_joints)
 {
     throw "Not yet implemented";
@@ -151,7 +161,7 @@ void MobileManipMotionPlanner::updateLocCamDEM(RoverGuidance_Dem locCamDEM,
 
 bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                                                  MotionCommand &rover_command,
-                                                 Pose rover_position,
+                                                 proxy_library::Pose rover_position,
                                                  Joints arm_joints)
 {
     switch (getStatus())
@@ -164,11 +174,18 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             }
             else
             {
+
+	        base::Pose basepose;
+	        basepose.position[0] = rover_position.m_position.m_x;
+	        basepose.position[1] = rover_position.m_position.m_y;
+	        basepose.position[2] = rover_position.m_position.m_z;
+	        basepose.orientation = Eigen::Quaterniond(rover_position.m_orientation.m_w, rover_position.m_orientation.m_x, rover_position.m_orientation.m_y, rover_position.m_orientation.m_z);  
+
                 unsigned int ui_error_code
-                    = this->p_mmexecutor->getCoupledCommand(rover_position,
+                    = this->p_mmexecutor->getCoupledCommand(basepose,
 				                            arm_joints,
-                                                          rover_command,
-							  arm_command);
+                                                            rover_command,
+							    arm_command);
                 switch (ui_error_code)
                 {
 		    case 0: // Deploying arm to initial position
@@ -193,6 +210,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             }
         case EXECUTING_ARM_OPERATION:
 	    std::cout << "Status is Executing Arm Operation" << std::endl;
+	    return false;
         case RETRIEVING_ARM:
             throw "not finished";
 	case ERROR:
@@ -203,7 +221,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
     }
 }
 
-void MobileManipMotionPlanner::updateSamplePos(Pose sample)
+void MobileManipMotionPlanner::updateSamplePos(proxy_library::Pose sample)
 {
     throw "Not yet implemented";
 }

@@ -2,10 +2,8 @@
 #define __MOBILE_MANIP_MOTION_PLAN__
 
 // Respect the order of headers
-#include "Joints.h"
 #include "Waypoint.hpp"
 // Must come after
-#include "ArmOperation.h"
 #include "FastMarching.h"
 #include "MobileManipMap.h"
 #include <types/RoverGuidance_Dem.h>
@@ -13,7 +11,6 @@
 #include "ArmPlanner.h"
 #include "FetchingPoseEstimator.h"
 
-using namespace proxy_library;
 using namespace base;
 using namespace FastMarching_lib;
 using namespace FetchingPoseEstimator_lib;
@@ -30,10 +27,6 @@ private:
      * The path that must be followed by the rover, made up by 2d waypoints
      */
     std::vector<Waypoint> vw_rover_path;
-    /**
-     * Profile of joint positions to be followed by the arm.
-     */
-    std::vector<Joints> vj_joints_profile;
     /**
      * Path Planning class that uses bi-Fast Marching
      */

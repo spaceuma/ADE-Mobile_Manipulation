@@ -1,3 +1,6 @@
+#ifndef __JOINTS__
+#define __JOINTS__
+
 #pragma once
 
 #include "BaseType.hpp"
@@ -66,3 +69,5 @@ class Joints : public BaseType {
     }
 };
 } // end namespace proxy_library
+
+#endif

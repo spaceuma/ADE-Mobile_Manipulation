@@ -1,7 +1,7 @@
 #ifndef __BASE_WAYPOINT_HH__
 #define __BASE_WAYPOINT_HH__
 
-#include "Pose.hpp"
+#include "BasePose.hpp"
 #include "Eigen.hpp"
 
 namespace base

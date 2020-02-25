@@ -1,3 +1,6 @@
+#ifndef __MOTION_COMMAND__
+#define __MOTION_COMMAND__
+
 #pragma once
 
 #include "BaseType.hpp"
@@ -38,3 +41,4 @@ class MotionCommand : public BaseType {
 };
 }
 
+#endif

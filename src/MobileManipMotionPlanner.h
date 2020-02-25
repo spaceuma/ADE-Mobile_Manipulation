@@ -6,6 +6,7 @@
 #include "MotionPlan.h"
 #include "RoverGuidance_Dem.h"
 #include "Waypoint.hpp"
+#include "Pose.h"
 
 /**
  * It is the main class that receives all the information from other components,
@@ -52,20 +53,6 @@ private:
      */
     MMStatus priorStatus;
     /**
-     * A variable that indicates which kind of operation shall be performed with
-     * the arm (e.g. some atomic operation or sample handling)
-     */
-    ArmOperation currentArmOperation;
-    /**
-     * The pose of the sample. TODO: CHANGE ITS TYPE BY THE ONE USED BY
-     * MAGELLIUM!!
-     */
-    Pose currentSamplePos;
-    /**
-     * The current pose of the rover.
-     */
-    Pose currentRoverPos;
-    /**
      * The current position of the arm joints.
      */
     // Joints currentJointPositions;
@@ -89,13 +76,12 @@ public:
      * It generates a motion plan based on the Map, the rover pose and the
      * sample position.
      */
-    bool generateMotionPlan(const base::Waypoint &rover_position,
-                            const base::Waypoint &sample_position);
+    bool generateMotionPlan(proxy_library::Pose plpose_m, double d_sample_pos_x, double d_sample_pos_y);
 
     /**
      * It serves to perform an operation with only the arm.
      */
-    void executeAtomicOperation(ArmOperation arm_operation);
+    void executeAtomicOperation();
 
     /**
      * Serves to actively start moving the rover and arm once a motion plan is
@@ -124,7 +110,7 @@ public:
      * It procceses the input LocCamDEM and triggers a replanning if necessary.
      */
     void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
-                         Pose rover_position,
+                         proxy_library::Pose rover_position,
                          Joints arm_joints);
 
     /**
@@ -133,7 +119,7 @@ public:
      */
     bool updateRoverArmPos(Joints &arm_command,
                            MotionCommand &rover_command,
-                           Pose rover_position,
+                           proxy_library::Pose rover_position,
                            Joints arm_joints);
 
     /**
@@ -141,7 +127,7 @@ public:
      * recalculate the motion plan taking into consideration the previously
      * received DEM.
      */
-    void updateSamplePos(Pose sample);
+    void updateSamplePos(proxy_library::Pose sample);
 
     /**
      * It serves to acknowledge by the user that the operation is completely
