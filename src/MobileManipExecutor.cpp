@@ -17,6 +17,7 @@ void MobileManipExecutor::initializeArmVariables(const Joints &j_present_reading
     this->vd_arm_present_command.resize(6);
     this->vd_arm_previous_readings.resize(6);
     this->vd_arm_present_readings.resize(6);
+    this->vd_arm_abs_speed.resize(6);
     for (uint i = 0; i < 6; i++)
     {
         d_val = j_present_readings.m_jointStates[i].m_position; 
@@ -89,7 +90,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             return 4; 
 	}
     }
-  
+    double gain = 1.0;
+    int saturation = 0;
+    double max_speed = 2.0;
+
     // Getting Arm Command
     bool b_isFinal = this->getArmCommand(j_next_arm_command_m);
     switch (this->armstate)
@@ -110,7 +114,14 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
                 mc_m = this->getZeroRoverCommand();
 	        return 5;
 	    }*/
-	    if (b_isFinal)
+
+            this->coupled_control.manipulatorMotionControl(gain, saturation, max_speed, vd_arm_present_command, vd_arm_previous_command, vd_arm_abs_speed); 
+            if (saturation == 1)
+	    {
+                this->coupled_control.modifyMotionCommand(max_speed, vd_arm_abs_speed, mc_m); 
+	    }
+
+	    if ((b_isFinal)&&(this->navstate == TARGET_REACHED))
 	    { 
                 mc_m = this->getZeroRoverCommand();
 		this->armstate = SAMPLING_POS;
@@ -118,6 +129,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	    }
 	    return 1;
 	case SAMPLING_POS:
+            mc_m = this->getZeroRoverCommand();
 	    return 2;
     }
 }

@@ -23,11 +23,9 @@ class coupledControl
 public:
     int findMaxValue(std::vector<float> vect);
 
-    void modifyMotionCommand(double mMaxSpeed,
-                             double maxJW,
-                             std::vector<float> &jW,
-                             MotionCommand rover_command,
-                             MotionCommand &modified_rover_command);
+    void modifyMotionCommand(const double mMaxSpeed,
+                             const std::vector<double> &vd_arm_abs_speed,
+                             MotionCommand &rover_command);
 
     bool selectNextManipulatorPosition(
         int current_waypoint,
@@ -40,7 +38,7 @@ public:
                                   double mMaxSpeed,
                                   std::vector<double> nextConfig,
                                   std::vector<double> lastConfig,
-                                  std::vector<float> &jW);
+                                  std::vector<double> &vd_arm_abs_speed);
 
     double constrainAngle(double angle, int negative);
 };

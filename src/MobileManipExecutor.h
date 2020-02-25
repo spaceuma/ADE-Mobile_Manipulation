@@ -60,6 +60,7 @@ private:
      */
     std::vector<double> vd_arm_present_readings;
     std::vector<double> vd_arm_present_command;
+    std::vector<double> vd_arm_abs_speed;
     /**
      * The previous arm state 
      */

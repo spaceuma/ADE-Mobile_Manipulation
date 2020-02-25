@@ -2,26 +2,22 @@
 
 using namespace coupled_control;
 
-void coupledControl::modifyMotionCommand(double mMaxSpeed,
-                                         double maxJW,
-                                         std::vector<float> &jW,
-                                         MotionCommand rover_command,
-                                         MotionCommand &modified_rover_command)
+void coupledControl::modifyMotionCommand(const double mMaxSpeed,
+                                         const std::vector<double> &vd_arm_abs_speed,
+                                         MotionCommand &rover_command)
 {
-    // Speed adaption relation
-    double R = mMaxSpeed / maxJW;
+    // Speed adaptation ratio
 
-    std::cout << "Conversion relation: " << R << std::endl;
-    // Addapt all the arm motion commands to the maximum speed of the real
-    // motors
-    for (unsigned int i = 0; i < jW.size(); i++)
-        jW.at(i) = jW.at(i) * R;
+    double d_max_abs_speed = *max_element(vd_arm_abs_speed.begin(), vd_arm_abs_speed.end());
+    double R = mMaxSpeed / d_max_abs_speed;
 
     // Addapt the rover global speed to the speed of the arm
-    double vA = rover_command.m_speed_ms;
+    /*double vA = rover_command.m_speed_ms;
     double vR = rover_command.m_turnRate_rads;
     modified_rover_command.m_speed_ms = vA * R;
-    modified_rover_command.m_turnRate_rads = vR * R;
+    modified_rover_command.m_turnRate_rads = vR * R;*/
+    rover_command.m_speed_ms *= R;
+    rover_command.m_turnRate_rads *= R;
 }
 
 bool coupledControl::selectNextManipulatorPosition(
@@ -48,7 +44,7 @@ void coupledControl::manipulatorMotionControl(double gain,
                                               double mMaxSpeed,
                                               std::vector<double> nextConfig,
                                               std::vector<double> lastConfig,
-                                              std::vector<float> &jW)
+                                              std::vector<double> &vd_abs_speed)
 {
     double e;
 
@@ -61,15 +57,12 @@ void coupledControl::manipulatorMotionControl(double gain,
             e = e - 2 * PI;
         else if (e < -PI)
             e = e + 2 * PI;
-
-        std::cout << e << "  ";
-        jW.at(i) = gain * e;
-        if (abs(jW.at(i)) > mMaxSpeed) saturation = 1;
+        vd_abs_speed.at(i) = abs(gain * e);
+        if (abs(vd_abs_speed.at(i)) > mMaxSpeed)
+	{
+	    saturation = 1;
+	}
     }
-    jW.at(0) = -jW.at(0);
-    jW.at(1) = -jW.at(1);
-    jW.at(3) = -jW.at(3);
-    std::cout << std::endl;
 }
 
 int coupledControl::findMaxValue(std::vector<float> vect)
