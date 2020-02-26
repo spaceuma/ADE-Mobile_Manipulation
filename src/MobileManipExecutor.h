@@ -54,7 +54,7 @@ private:
     /**
      * The arm motion profile
      */
-    std::vector<std::vector<double>> vvd_arm_motion_profile;
+    std::vector<std::vector<double>> *pvvd_arm_motion_profile;
     /**
      * The next configuration to be reached by the arm 
      */

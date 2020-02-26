@@ -35,29 +35,19 @@ void MobileManipExecutor::updateMotionPlan()
     std::vector<base::Waypoint> *rover_path = this->p_motion_plan->getRoverPath();
 
     // Set the path into the Waypoint Navigation class
-    this->vpw_path.clear();
+    this->vpw_path.resize(rover_path->size());
     for (size_t i = 0; i < rover_path->size(); i++)
     {
         rover_path->at(i).tol_position = 0.1;
-        this->vpw_path.push_back(&rover_path->at(i));
+        this->vpw_path.at(i) = (&rover_path->at(i));
     }
     this->waypoint_navigation.setTrajectory(this->vpw_path);
 
     // Extract and store the joints profile
-    std::vector<std::vector<double>> *pvvd_arm_motion_profile
+    this->pvvd_arm_motion_profile
         = this->p_motion_plan->getArmMotionProfile();
-    this->vvd_arm_motion_profile.clear();
-    std::vector<double> row;
-    row.clear();
-    for (uint j = 0; j < pvvd_arm_motion_profile->size(); j++)
-    {
-        for (uint i = 0; i < (*pvvd_arm_motion_profile)[0].size(); i++)
-        {
-            row.push_back((*pvvd_arm_motion_profile)[j][i]);
-        }
-        this->vvd_arm_motion_profile.push_back(row);
-        row.clear();
-    }
+
+
 }
 
 
@@ -72,7 +62,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     waypoint_navigation.setPose(rover_pose);
     waypoint_navigation.update(mc_m);
    
-    fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
 
     // Evaluating state of Rover Path Following
     this->navstate = waypoint_navigation.getNavigationState();
@@ -96,6 +85,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 
     // Getting Arm Command
     bool b_isFinal = this->getArmCommand(j_next_arm_command_m);
+    std::cout << "The Current Segment is " << this->waypoint_navigation.getCurrentSegment() << " and the path size is " << this->vpw_path.size() << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
@@ -114,14 +104,25 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
                 mc_m = this->getZeroRoverCommand();
 	        return 5;
 	    }*/
+    	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before MotionControl is (translation speed = " << mc_m.m_speed_ms
+		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
 
             this->coupled_control.manipulatorMotionControl(gain, saturation, max_speed, vd_arm_present_command, vd_arm_previous_command, vd_arm_abs_speed); 
             if (saturation == 1)
 	    {
                 this->coupled_control.modifyMotionCommand(max_speed, vd_arm_abs_speed, mc_m); 
 	    }
-
-	    if ((b_isFinal)&&(this->navstate == TARGET_REACHED))
+    	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before fixing is (translation speed = " << mc_m.m_speed_ms
+		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
+            fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
+    	    std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
+		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
+	    std::cout << "VAlue of b_isfinal is " << b_isFinal << std::endl;
+	    if(this->navstate == TARGET_REACHED)
+	    {
+                mc_m = this->getZeroRoverCommand();
+	    }
+	    if ((b_isFinal)&&(this->navstate == TARGET_REACHED)&&(this->isArmReady(j_next_arm_command_m, j_arm_present_readings_m)))
 	    { 
                 mc_m = this->getZeroRoverCommand();
 		this->armstate = SAMPLING_POS;
@@ -230,7 +231,7 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
             i_pos_index = this->waypoint_navigation.getCurrentSegment();
 	    break;
 	case SAMPLING_POS:
-	    throw "Not yet implemented"; 
+	    return true; 
     }
 
     for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
@@ -240,7 +241,7 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
         
     bool b_isFinal = coupled_control.selectNextManipulatorPosition(
         this->waypoint_navigation.getCurrentSegment(),
-        &(this->vvd_arm_motion_profile),
+        this->pvvd_arm_motion_profile,
         &(this->vd_arm_present_readings),
         true);
     for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6

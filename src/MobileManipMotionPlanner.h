@@ -65,6 +65,8 @@ private:
  */
     void setError(MMError error_m);
 
+    base::Waypoint w_current_rover_position;
+
 public:
     /**
      * Constructor, it receives a DEM and generates the Map object.
@@ -169,4 +171,25 @@ public:
      * Returns if the class is in status ERROR.
      */
     bool isStatusError();
+    /**
+     * Returns the current value of the rover yaw.
+     */
+    double getCurrentRoverYaw();
+    /**
+     * A pointer to the current end effector path is returned
+     */
+    std::vector<std::vector<double>> * getEndEffectorPath();
+    /**
+     * A pointer to the current rover path is returned
+     */
+    std::vector<base::Waypoint> * getRoverPath();
+    /**
+     * A pointer to the arm motion profile is returned
+     */
+    std::vector<std::vector<double>> *getArmMotionProfile();
+    /**
+     * A pointer to the 3d cost map is returned
+     */
+    std::vector<std::vector<std::vector<double>>> * get3DCostMap();
+
 };

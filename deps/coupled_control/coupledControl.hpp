@@ -28,7 +28,7 @@ public:
                              MotionCommand &rover_command);
 
     bool selectNextManipulatorPosition(
-        int current_waypoint,
+        unsigned int current_waypoint,
         std::vector<std::vector<double>> *armConfig,
         std::vector<double> *nextConfig,
         int negative);

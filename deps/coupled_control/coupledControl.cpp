@@ -21,14 +21,14 @@ void coupledControl::modifyMotionCommand(const double mMaxSpeed,
 }
 
 bool coupledControl::selectNextManipulatorPosition(
-    int current_waypoint,
+    unsigned int current_waypoint,
     std::vector<std::vector<double>> *armConfig,
     std::vector<double> *nextConfig,
     int negative)
 {
     // Selection of the next manipulator configuration depending on the current
     // waypoint (current_segment)
-    int pointer = current_waypoint;
+    uint pointer = current_waypoint;
 
     for (unsigned int i = 0; i < nextConfig->size(); i++)
     {
@@ -36,7 +36,7 @@ bool coupledControl::selectNextManipulatorPosition(
     }
 
     // Returns true if it is the last position
-    return pointer == (*armConfig).size();
+    return pointer == (*armConfig).size() - 1;
 }
 
 void coupledControl::manipulatorMotionControl(double gain,

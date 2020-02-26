@@ -23,12 +23,11 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m, 
     base::Pose basepose_dummy;
     basepose_dummy.orientation = Eigen::Quaterniond(plpose_m.m_orientation.m_w, plpose_m.m_orientation.m_x, plpose_m.m_orientation.m_y, plpose_m.m_orientation.m_z);  
 
-    base::Waypoint rover_position, sample_position;
-    rover_position.position[0] = plpose_m.m_position.m_x;
-    rover_position.position[1] = plpose_m.m_position.m_y;
-    rover_position.position[2] = plpose_m.m_position.m_z;
- 
-    rover_position.heading = basepose_dummy.getYaw(); 
+    base::Waypoint sample_position;
+    this->w_current_rover_position.position[0] = plpose_m.m_position.m_x;
+    this->w_current_rover_position.position[1] = plpose_m.m_position.m_y;
+    this->w_current_rover_position.position[2] = plpose_m.m_position.m_z; 
+    this->w_current_rover_position.heading = basepose_dummy.getYaw(); 
 
     sample_position.position[0] = d_sample_pos_x;
     sample_position.position[1] = d_sample_pos_y;
@@ -41,7 +40,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m, 
         setStatus(GENERATING_MOTION_PLAN);
         this->p_mmmap->computeFACE(sample_position);
         ui_code = this->p_motionplan->executeRoverBasePathPlanning(
-            rover_position, sample_position);
+            this->w_current_rover_position, sample_position);
         switch (ui_code)
         {
             case 0:
@@ -161,33 +160,30 @@ void MobileManipMotionPlanner::updateLocCamDEM(RoverGuidance_Dem locCamDEM,
 
 bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                                                  MotionCommand &rover_command,
-                                                 proxy_library::Pose rover_position,
+                                                 proxy_library::Pose plpose_m,
                                                  Joints arm_joints)
 {
     switch (getStatus())
     {
         case EXECUTING_MOTION_PLAN:
-            if (this->p_mmexecutor->isRoverFinished())
             {
-                setStatus(EXECUTING_ARM_OPERATION);
-                return true;
-            }
-            else
-            {
+                base::Pose basepose;
+                basepose.position[0] = plpose_m.m_position.m_x;
+                basepose.position[1] = plpose_m.m_position.m_y;
+                basepose.position[2] = plpose_m.m_position.m_z; 
+                basepose.orientation = Eigen::Quaterniond(plpose_m.m_orientation.m_w, plpose_m.m_orientation.m_x, plpose_m.m_orientation.m_y, plpose_m.m_orientation.m_z);  
 
-	        base::Pose basepose;
-	        basepose.position[0] = rover_position.m_position.m_x;
-	        basepose.position[1] = rover_position.m_position.m_y;
-	        basepose.position[2] = rover_position.m_position.m_z;
-	        basepose.orientation = Eigen::Quaterniond(rover_position.m_orientation.m_w, rover_position.m_orientation.m_x, rover_position.m_orientation.m_y, rover_position.m_orientation.m_z);  
-
-                unsigned int ui_error_code
-                    = this->p_mmexecutor->getCoupledCommand(basepose,
+                this->w_current_rover_position.position[0] = plpose_m.m_position.m_x;
+                this->w_current_rover_position.position[1] = plpose_m.m_position.m_y;
+                this->w_current_rover_position.position[2] = plpose_m.m_position.m_z; 
+                this->w_current_rover_position.heading = basepose.getYaw(); 
+                //TODO: use w_current_rover_position instead of basepose
+		unsigned int ui_error_code = this->p_mmexecutor->getCoupledCommand(basepose,
 				                            arm_joints,
                                                             rover_command,
 							    arm_command);
-                switch (ui_error_code)
-                {
+            switch (ui_error_code)
+            {
 		    case 0: // Deploying arm to initial position
 			return true;
                     case 1: // Either driving or aligning
@@ -206,8 +202,9 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
 		    case 5:
 			setError(NON_RESP_ARM);
 			return false;
-                }
             }
+	    return false;
+	    break;}
         case EXECUTING_ARM_OPERATION:
 	    std::cout << "Status is Executing Arm Operation" << std::endl;
 	    return false;
@@ -413,3 +410,29 @@ void MobileManipMotionPlanner::setStatus(MMStatus status_m)
     this->priorStatus = getStatus();
     this->status = status_m;
 }
+
+double MobileManipMotionPlanner::getCurrentRoverYaw()
+{
+    return this->w_current_rover_position.heading;
+}
+
+std::vector<std::vector<double>> * MobileManipMotionPlanner::getEndEffectorPath()
+{
+    return this->p_motionplan->getEndEffectorPath();
+}
+
+std::vector<base::Waypoint> * MobileManipMotionPlanner::getRoverPath()
+{
+    return this->p_motionplan->getRoverPath();
+}
+
+std::vector<std::vector<double>> * MobileManipMotionPlanner::getArmMotionProfile()
+{
+    return this->p_motionplan->getArmMotionProfile();
+}
+
+std::vector<std::vector<std::vector<double>>> * MobileManipMotionPlanner::get3DCostMap()
+{
+    return this->p_motionplan->get3DCostMap();
+}
+
