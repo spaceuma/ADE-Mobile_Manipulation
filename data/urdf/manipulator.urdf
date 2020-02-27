@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="Sherpa_tt">
     <material name="Yellow">
-        <color rgba="1.0 1.0 0.0 1.0"/>
+        <color rgba="1.0 1.0 0.0 0.5"/>
     </material>
     <material name="Gray">
         <color rgba="0.2 0.2 0.2 1.0"/>
@@ -55,19 +55,35 @@
                 <mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.22 0 0.48" rpy="0 1.570796327 1.570796327"/>
+            <geometry>
+                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
+                <cylinder length="0.45" radius="0.075"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.03 0.0 0.45" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.22" radius="0.08"/>
+                <!--cylinder length="0.24" radius="0.08"/-->
+            </geometry>
+        </visual>
         <collision>
             <material name="Yellow"/>
             <origin xyz="0.22 0 0.48" rpy="0 1.570796327 1.570796327"/>
             <geometry>
                 <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
-                <cylinder length="0.45" radius="0.08"/>
+                <cylinder length="0.45" radius="0.075"/>
             </geometry>
         </collision>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="-0.03 0.0 0.50" rpy="0 1.570796327 0"/>
+            <origin xyz="0.03 0.0 0.45" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.4" radius="0.12"/>
+                <cylinder length="0.22" radius="0.08"/>
                 <!--cylinder length="0.24" radius="0.08"/-->
             </geometry>
         </collision>
@@ -93,18 +109,32 @@
                 <mesh filename="./meshes/manipulator/sherpa_arm_joint_2.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.35 0.0 0.0" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.51" radius="0.04"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.73 0.035 0.075" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.27" radius="0.09"/>
+            </geometry>
+        </visual>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="0.30 0.0 0.0" rpy="0 1.570796327 0"/>
+            <origin xyz="0.35 0.0 0.0" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.72" radius="0.05"/>
+                <cylinder length="0.51" radius="0.04"/>
             </geometry>
         </collision>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="0.725 0.035 0.07" rpy="0 0 0"/>
+            <origin xyz="0.73 0.035 0.075" rpy="0 0 0"/>
             <geometry>
-                <cylinder length="0.25" radius="0.08"/>
+                <cylinder length="0.27" radius="0.09"/>
             </geometry>
         </collision>
     </link>
@@ -130,11 +160,18 @@
                 <mesh filename="./meshes/manipulator/sherpa_arm_joint_3.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.3 0 0.03" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.4" radius="0.057"/>
+            </geometry>
+        </visual>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="0.28 0 0.03" rpy="0 1.570796327 0"/>
+            <origin xyz="0.3 0 0.03" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.5" radius="0.05"/>
+                <cylinder length="0.4" radius="0.057"/>
             </geometry>
         </collision>
     </link>
@@ -159,11 +196,32 @@
                 <mesh filename="./meshes/manipulator/sherpa_arm_joint_4.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="-0.125 0.0 0.001" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.13" radius="0.059"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.2" radius="0.055"/>
+            </geometry>
+        </visual>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="-0.07 0.0 -0.0225" rpy="0 1.570796327 0"/>
+            <origin xyz="-0.125 0.0 0.001" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.24" radius="0.08"/>
+                <cylinder length="0.13" radius="0.059"/>
+            </geometry>
+        </collision>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.2" radius="0.055"/>
             </geometry>
         </collision>
     </link>
@@ -188,11 +246,18 @@
                 <mesh filename="./meshes/manipulator/sherpa_arm_joint_5.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.155 -0.015 0" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.14" radius="0.05"/>
+            </geometry>
+        </visual>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="0.14 -0.015 0" rpy="0 1.570796327 0"/>
+            <origin xyz="0.155 -0.015 0" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.19" radius="0.05"/>
+                <cylinder length="0.14" radius="0.05"/>
             </geometry>
         </collision>
     </link>
@@ -215,6 +280,14 @@
             <origin xyz="0 0 0.0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/manipulator/sherpa_arm_joint_6.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.0 0 -0.04" rpy="0 0 0"/>
+            <geometry>
+                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_6.stl" scale="0.001 0.001 0.001"/-->
+                <box size="0.17 0.15 0.09"/>
             </geometry>
         </visual>
         <collision>
