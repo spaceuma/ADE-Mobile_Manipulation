@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<robot name="Sherpa_tt">
+    <material name="Yellow">
+        <color rgba="1.0 1.0 0.0 1.0"/>
+    </material>
+    <material name="Gray">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+    </material>
+    <material name="Black">
+        <color rgba="0 0 0 1.0"/>
+    </material>
+
+	<!-- Rover -->
+
+    <link name="body">        
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="14.1"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+    </link>
+
+
+    <!-- Manipulator -->
+
+	<!-- Arm mount dummy joint -->
+    <joint name="arm_mount_joint" type="fixed">                
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            <axis xyz="0 0 1" rpy="0 0 0"/>
+            <parent link="body"/>
+            <child link="arm_mount_link"/>
+            <limit lower="-3.1415926535897931" upper="3.1415926535897931" effort="10" velocity="3.1415926535897931"/>
+    </joint>
+
+    <link name="arm_mount_link">
+            <visual>
+                    <material name="Yellow"/>
+                    <origin xyz="0 0 0 " rpy="0 0 0"/>
+                    <geometry>
+                            <cylinder length="0.005" radius="0.05"/>
+                    </geometry>
+            </visual>
+    </link>
+
+    <link name="arm_link_1">
+        <inertial>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.22 0 0.48" rpy="0 1.570796327 1.570796327"/>
+            <geometry>
+                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
+                <cylinder length="0.45" radius="0.08"/>
+            </geometry>
+        </collision>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="-0.03 0.0 0.50" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.4" radius="0.12"/>
+                <!--cylinder length="0.24" radius="0.08"/-->
+            </geometry>
+        </collision>
+    </link>
+    <joint name="arm_joint_1" type="revolute">
+        <parent link="arm_mount_link"/>
+        <child link="arm_link_1"/>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-3.05432" upper="+3.05432" effort="1" velocity="3.1415926535897931"/>
+    </joint>
+
+    <link name="arm_link_2">
+        <inertial>
+            <origin xyz="0 0 0.0" rpy="0 0 0.0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="./meshes/manipulator/sherpa_arm_joint_2.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.30 0.0 0.0" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.72" radius="0.05"/>
+            </geometry>
+        </collision>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.725 0.035 0.07" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.25" radius="0.08"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="arm_joint_2" type="revolute">
+        <parent link="arm_link_1"/>
+        <child link="arm_link_2"/>
+        <origin xyz="0.225 0 0.50" rpy="-1.570796327 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.094395102" upper="+1.047197551" effort="1" velocity="3.1415926535897931"/>
+        
+    </joint>
+
+    <link name="arm_link_3">
+        <inertial>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="./meshes/manipulator/sherpa_arm_joint_3.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.28 0 0.03" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.5" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="arm_joint_3" type="revolute">
+        <parent link="arm_link_2"/>
+        <child link="arm_link_3"/>
+        <origin xyz="0.735 0.030 0" rpy="1.570796327 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-1.919862177" upper="+3.001966313" effort="1" velocity="3.1415926535897931"/>
+    </joint>
+
+    <link name="arm_link_4">
+        <inertial>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="./meshes/manipulator/sherpa_arm_joint_4.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="-0.07 0.0 -0.0225" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.24" radius="0.08"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="arm_joint_4" type="revolute">
+        <parent link="arm_link_3"/>
+        <child link="arm_link_4"/>
+        <origin xyz="0.695 0.0 0.03 " rpy="-1.570796327 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="-3.490658504" upper="+3.490658504" effort="1" velocity="3.1415926535897931"/>
+    </joint>
+
+    <link name="arm_link_5">
+        <inertial>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="./meshes/manipulator/sherpa_arm_joint_5.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.14 -0.015 0" rpy="0 1.570796327 0"/>
+            <geometry>
+                <cylinder length="0.19" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="arm_joint_5" type="revolute">
+        <parent link="arm_link_4"/>
+        <child link="arm_link_5"/>
+        <origin xyz="0.0 0 0.0" rpy="1.570796327 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-2.268928028" upper="+2.268928028" effort="1" velocity="3.1415926535897931"/>
+    </joint>
+
+    <link name="arm_link_6">
+        <inertial>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0 0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="./meshes/manipulator/sherpa_arm_joint_6.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.0 0 -0.04" rpy="0 0 0"/>
+            <geometry>
+                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_6.stl" scale="0.001 0.001 0.001"/-->
+                <box size="0.17 0.15 0.09"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="arm_joint_6" type="revolute">
+        <parent link="arm_link_5"/>
+        <child link="arm_link_6"/>
+        <origin xyz="0.312 0 0.0" rpy="-1.570796327 -1.570796327 -1.570796327"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-3.490658504" upper="+3.490658504" effort="1" velocity="3.1415926535897931"/>
+    </joint>
+</robot>

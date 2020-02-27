@@ -20,10 +20,11 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
 
   // Load urdf models
   dart::utils::DartLoader dl;
+  dl.addPackageDirectory("urdf","/home/ares/ADE-Mobile_Manipulation/data/urdf"); //TODO set this path
   dart::dynamics::SkeletonPtr sherpatt
-      = dl.parseSkeleton("/home/ares/dart/data/sherpaTT/sherpa_tt.urdf");
+      = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
   dart::dynamics::SkeletonPtr manipulator
-      = dl.parseSkeleton("/home/ares/dart/data/sherpaTT/manipulator.urdf");
+      = dl.parseSkeleton("package://urdf/manipulator.urdf");
   sherpatt->setName("sherpatt");
   manipulator->setName("manipulator");
 
