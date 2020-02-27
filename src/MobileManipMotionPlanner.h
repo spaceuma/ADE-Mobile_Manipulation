@@ -4,9 +4,9 @@
 #include "MobileManipMap.h"
 #include "MotionCommand.h"
 #include "MotionPlan.h"
+#include "Pose.h"
 #include "RoverGuidance_Dem.h"
 #include "Waypoint.hpp"
-#include "Pose.h"
 
 /**
  * It is the main class that receives all the information from other components,
@@ -71,14 +71,18 @@ public:
     /**
      * Constructor, it receives a DEM and generates the Map object.
      */
-    MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM, const Joints &j_present_readings,
-                             double d_zres_m);
+    MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
+                             const Joints &j_present_readings,
+                             double d_zres_m,
+			     std::string s_urdf_path_m);
 
     /**
      * It generates a motion plan based on the Map, the rover pose and the
      * sample position.
      */
-    bool generateMotionPlan(proxy_library::Pose plpose_m, double d_sample_pos_x, double d_sample_pos_y);
+    bool generateMotionPlan(proxy_library::Pose plpose_m,
+                            double d_sample_pos_x,
+                            double d_sample_pos_y);
 
     /**
      * It serves to perform an operation with only the arm.
@@ -153,8 +157,8 @@ public:
     MMStatus getStatus();
 
     /**
- * Prints information regarding the resulting path.
- */
+    * Prints information regarding the resulting path.
+    */
     void printRoverPathInfo();
 
     /**
@@ -178,11 +182,11 @@ public:
     /**
      * A pointer to the current end effector path is returned
      */
-    std::vector<std::vector<double>> * getEndEffectorPath();
+    std::vector<std::vector<double>> *getEndEffectorPath();
     /**
      * A pointer to the current rover path is returned
      */
-    std::vector<base::Waypoint> * getRoverPath();
+    std::vector<base::Waypoint> *getRoverPath();
     /**
      * A pointer to the arm motion profile is returned
      */
@@ -190,6 +194,5 @@ public:
     /**
      * A pointer to the 3d cost map is returned
      */
-    std::vector<std::vector<std::vector<double>>> * get3DCostMap();
-
+    std::vector<std::vector<std::vector<double>>> *get3DCostMap();
 };

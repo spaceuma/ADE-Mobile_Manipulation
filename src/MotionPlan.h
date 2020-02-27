@@ -5,6 +5,7 @@
 #include "Waypoint.hpp"
 // Must come after
 #include "FastMarching.h"
+#include "CollisionDetector.h"
 #include "MobileManipMap.h"
 #include <types/RoverGuidance_Dem.h>
 // Must come after
@@ -39,6 +40,8 @@ private:
      * Motion Planner for the arm
      */
     ArmPlanner arm_planner;
+    CollisionDetector collision_detector;
+    std::string s_urdf_path;
     /**
      * Position of the sample in waypoint format
      */
@@ -59,11 +62,12 @@ private:
      * Checks if the current path is smooth
      */
     bool isSmoothPath();
+    bool isArmProfileSafe();
 public:
     /**
      * Class Constructor.
      */
-    MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m);
+    MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s_urdf_path_m);
     /**
      * An existing path and profile are introduced into the motion plan 
      */

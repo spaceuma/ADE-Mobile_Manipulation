@@ -10,5 +10,5 @@ public:
 
   ~CollisionDetector();
 
-  bool isColliding(const std::vector<double> manip_joints);
+  bool isColliding(const std::vector<double> manip_joints, std::string s_urdf_path);
 };

@@ -12,6 +12,9 @@ enum MMError
   OBS_GOAL_POS,
   UNREACH_GOAL,
   UNCERT_GOAL,
+  DEGEN_PATH,
+  UNFEASIBLE_PROFILE, //TODO: distinguish between collision and sample out of tunnel
+  INCOMPLETE_INPUT,
   NON_RESP_ARM,
   COLLIDING_ARM,
   NON_RESP_ROVER,

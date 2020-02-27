@@ -6,7 +6,8 @@ using namespace std;
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
     const Joints &j_present_readings,
-    double d_zres_m)
+    double d_zres_m,
+    string s_urdf_path_m)
 {
     cout << "MMPLANNER: Creating MMMP" << endl;
     this->status = IDLE;
@@ -14,20 +15,26 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     // DEM is introduced into the map class
     this->p_mmmap = new MobileManipMap(navCamDEM);
     // Each class contains a pointer to the previous one
-    this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m);
-    this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan, j_present_readings);
+    this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m, s_urdf_path_m);
+    this->p_mmexecutor
+        = new MobileManipExecutor(this->p_motionplan, j_present_readings);
 }
 
-bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m, double d_sample_pos_x, double d_sample_pos_y)
+bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
+                                                  double d_sample_pos_x,
+                                                  double d_sample_pos_y)
 {
     base::Pose basepose_dummy;
-    basepose_dummy.orientation = Eigen::Quaterniond(plpose_m.m_orientation.m_w, plpose_m.m_orientation.m_x, plpose_m.m_orientation.m_y, plpose_m.m_orientation.m_z);  
+    basepose_dummy.orientation = Eigen::Quaterniond(plpose_m.m_orientation.m_w,
+                                                    plpose_m.m_orientation.m_x,
+                                                    plpose_m.m_orientation.m_y,
+                                                    plpose_m.m_orientation.m_z);
 
     base::Waypoint sample_position;
     this->w_current_rover_position.position[0] = plpose_m.m_position.m_x;
     this->w_current_rover_position.position[1] = plpose_m.m_position.m_y;
-    this->w_current_rover_position.position[2] = plpose_m.m_position.m_z; 
-    this->w_current_rover_position.heading = basepose_dummy.getYaw(); 
+    this->w_current_rover_position.position[2] = plpose_m.m_position.m_z;
+    this->w_current_rover_position.heading = basepose_dummy.getYaw();
 
     sample_position.position[0] = d_sample_pos_x;
     sample_position.position[1] = d_sample_pos_y;
@@ -57,15 +64,23 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m, 
             case 4:
                 setError(OBS_GOAL_POS);
                 return false;
+            case 5:
+                setError(GOAL_TOO_CLOSE);
+                return false;
+            case 6:
+		setError(DEGEN_PATH);
+		return false;
         }
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
             setError(GOAL_TOO_CLOSE);
             return false;
         }
-        printRoverPathInfo();
-        // TODO - Deal with EndEffectorPlanning errors
-        this->p_motionplan->executeEndEffectorPlanning();
+        if (!this->p_motionplan->executeEndEffectorPlanning())
+	{
+            setError(UNFEASIBLE_PROFILE);//TODO - Make it distinguish if it is due to a collision or the sample being out of the tunnel
+            return false;
+	}
         this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
         return true;
@@ -151,9 +166,10 @@ void MobileManipMotionPlanner::resumeOperation()
     }
 }
 
-void MobileManipMotionPlanner::updateLocCamDEM(RoverGuidance_Dem locCamDEM,
-                                               proxy_library::Pose rover_position,
-                                               Joints arm_joints)
+void MobileManipMotionPlanner::updateLocCamDEM(
+    RoverGuidance_Dem locCamDEM,
+    proxy_library::Pose rover_position,
+    Joints arm_joints)
 {
     throw "Not yet implemented";
 }
@@ -166,52 +182,59 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
     switch (getStatus())
     {
         case EXECUTING_MOTION_PLAN:
-            {
-                base::Pose basepose;
-                basepose.position[0] = plpose_m.m_position.m_x;
-                basepose.position[1] = plpose_m.m_position.m_y;
-                basepose.position[2] = plpose_m.m_position.m_z; 
-                basepose.orientation = Eigen::Quaterniond(plpose_m.m_orientation.m_w, plpose_m.m_orientation.m_x, plpose_m.m_orientation.m_y, plpose_m.m_orientation.m_z);  
+        {
+            base::Pose basepose;
+            basepose.position[0] = plpose_m.m_position.m_x;
+            basepose.position[1] = plpose_m.m_position.m_y;
+            basepose.position[2] = plpose_m.m_position.m_z;
+            basepose.orientation
+                = Eigen::Quaterniond(plpose_m.m_orientation.m_w,
+                                     plpose_m.m_orientation.m_x,
+                                     plpose_m.m_orientation.m_y,
+                                     plpose_m.m_orientation.m_z);
 
-                this->w_current_rover_position.position[0] = plpose_m.m_position.m_x;
-                this->w_current_rover_position.position[1] = plpose_m.m_position.m_y;
-                this->w_current_rover_position.position[2] = plpose_m.m_position.m_z; 
-                this->w_current_rover_position.heading = basepose.getYaw(); 
-                //TODO: use w_current_rover_position instead of basepose
-		unsigned int ui_error_code = this->p_mmexecutor->getCoupledCommand(basepose,
-				                            arm_joints,
-                                                            rover_command,
-							    arm_command);
+            this->w_current_rover_position.position[0]
+                = plpose_m.m_position.m_x;
+            this->w_current_rover_position.position[1]
+                = plpose_m.m_position.m_y;
+            this->w_current_rover_position.position[2]
+                = plpose_m.m_position.m_z;
+            this->w_current_rover_position.heading = basepose.getYaw();
+            // TODO: use w_current_rover_position instead of basepose
+            unsigned int ui_error_code = this->p_mmexecutor->getCoupledCommand(
+                basepose, arm_joints, rover_command, arm_command);
             switch (ui_error_code)
             {
-		    case 0: // Deploying arm to initial position
-			return true;
-                    case 1: // Either driving or aligning
-                        return true;
-                    case 2: // (Rover) Target reached
-			setStatus(EXECUTING_ARM_OPERATION);
-                        return true;
-                    case 3: // Out of boundaries
-                        setError(EXCESSIVE_DRIFT);
-                        return false;
-                    case 4: // Either no trajectory or no pose
+                case 0: // Deploying arm to initial position
+                    return true;
+                case 1: // Either driving or aligning
+                    return true;
+                case 2: // (Rover) Target reached
+                    setStatus(EXECUTING_ARM_OPERATION);
+                    return true;
+                case 3: // Out of boundaries
+                    setError(EXCESSIVE_DRIFT);
+                    return false;
+                case 4: // Either no trajectory or no pose
                         // TODO - Is this situation even possible to reach??
-			std::cout << "An strange error occurred, there is no pose??" << std::endl;
-			setError(IMPROPER_CALL);
-                        return false;
-		    case 5:
-			setError(NON_RESP_ARM);
-			return false;
+                    std::cout << "An strange error occurred, there is no pose??"
+                              << std::endl;
+                    setError(INCOMPLETE_INPUT);
+                    return false;
+                case 5:
+                    setError(NON_RESP_ARM);
+                    return false;
             }
-	    return false;
-	    break;}
+            return false;
+            break;
+        }
         case EXECUTING_ARM_OPERATION:
-	    std::cout << "Status is Executing Arm Operation" << std::endl;
-	    return false;
+            std::cout << "Status is Executing Arm Operation" << std::endl;
+            return false;
         case RETRIEVING_ARM:
             throw "not finished";
-	case ERROR:
-	    return false;
+        case ERROR:
+            return false;
         default:
             setError(IMPROPER_CALL);
             return false;
@@ -259,7 +282,11 @@ void MobileManipMotionPlanner::resumeError()
             break;
         case UNCERT_GOAL:
             break;
-        case NON_RESP_ARM:
+	case DEGEN_PATH:
+	    break;
+	case INCOMPLETE_INPUT:
+	    break;
+	case NON_RESP_ARM:
             break;
         case COLLIDING_ARM:
             break;
@@ -371,7 +398,13 @@ void MobileManipMotionPlanner::printErrorCode()
         case UNCERT_GOAL:
             std::cout << "UNCERT_GOAL";
             break;
-        case NON_RESP_ARM:
+	case DEGEN_PATH:
+	    std::cout << "DEGEN_PATH";
+	    break;
+	case INCOMPLETE_INPUT:
+	    std::cout << "INCOMPLETE_INPUT";
+	    break;
+	case NON_RESP_ARM:
             std::cout << "NON_RESP_ARM";
             break;
         case COLLIDING_ARM:
@@ -416,23 +449,24 @@ double MobileManipMotionPlanner::getCurrentRoverYaw()
     return this->w_current_rover_position.heading;
 }
 
-std::vector<std::vector<double>> * MobileManipMotionPlanner::getEndEffectorPath()
+std::vector<std::vector<double>> *MobileManipMotionPlanner::getEndEffectorPath()
 {
     return this->p_motionplan->getEndEffectorPath();
 }
 
-std::vector<base::Waypoint> * MobileManipMotionPlanner::getRoverPath()
+std::vector<base::Waypoint> *MobileManipMotionPlanner::getRoverPath()
 {
     return this->p_motionplan->getRoverPath();
 }
 
-std::vector<std::vector<double>> * MobileManipMotionPlanner::getArmMotionProfile()
+std::vector<std::vector<double>>
+    *MobileManipMotionPlanner::getArmMotionProfile()
 {
     return this->p_motionplan->getArmMotionProfile();
 }
 
-std::vector<std::vector<std::vector<double>>> * MobileManipMotionPlanner::get3DCostMap()
+std::vector<std::vector<std::vector<double>>>
+    *MobileManipMotionPlanner::get3DCostMap()
 {
     return this->p_motionplan->get3DCostMap();
 }
-

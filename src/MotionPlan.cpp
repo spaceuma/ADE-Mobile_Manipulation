@@ -1,9 +1,10 @@
 #include "MotionPlan.h"
 
-MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m)
+MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s_urdf_path_m)
 {
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
+    this->s_urdf_path = s_urdf_path_m;
 }
 
 MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
@@ -118,7 +119,6 @@ bool MotionPlan::executeEndEffectorPlanning()
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
-    std::cout << "The resolution in z is " << d_zres << std::endl;
     if(this->arm_planner.planArmMotion(&(this->vw_rover_path),
                                     &elevationMap,
                                     this->pmm_map->getResolution(),
@@ -126,12 +126,32 @@ bool MotionPlan::executeEndEffectorPlanning()
                                     this->w_sample_pos,
                                     &(this->vvd_arm_motion_profile)))
     {
-        return true;
+       /* if(this->isArmProfileSafe())
+	{
+            return true;
+	}
+	else
+	{
+            return false;
+	}*/
+        return true; //TODO: Fix problem with DART ground.skel
     }
     else
     {
         return false;
     }
+}
+
+bool MotionPlan::isArmProfileSafe()
+{
+    for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
+    {
+        if (this->collision_detector.isColliding(this->vvd_arm_motion_profile[i], this->s_urdf_path))
+	{
+	    return false;
+	}
+    }
+    return true;
 }
 
 std::vector<base::Waypoint> *MotionPlan::getRoverPath()

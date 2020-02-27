@@ -59,7 +59,7 @@ WaypointNavigation::WaypointNavigation()
     pd_initialized = false;
 
     // Velocity
-    translationalVelocity = 0.05;  // [m/s]
+    translationalVelocity = 0.1;  // [m/s]
 
     // Distances
     corridor = .2;

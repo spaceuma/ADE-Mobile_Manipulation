@@ -29,7 +29,19 @@ TEST(MMMotionPlanTest, nominal_working_test)
     MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res), mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res);
 
     // Creating the Motion Plan
-    MotionPlan mplan_no_shadowing(&mmmap_no_shadowing,zRes), mplan_shadowing(&mmmap_shadowing, zRes);
+    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MotionPlan mplan_no_shadowing(&mmmap_no_shadowing,zRes, s_urdf_path), mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path);
 
     base::Waypoint w_rover_pos_01, w_rover_pos_02, samplePos;
     ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
@@ -107,7 +119,19 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
 
     // Creating the Motion Plan
     double zRes = 0.08;
-    MotionPlan mplan_dummy(&dummyMap, zRes);
+    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MotionPlan mplan_dummy(&dummyMap, zRes, s_urdf_path);
 
     base::Waypoint roverPos, samplePos;
     unsigned int i_error_code = 0;
@@ -167,7 +191,19 @@ TEST(MMMotionPlanTest, non_reachable_test)
     MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
 
     // Creating the Motion Plan
-    MotionPlan mplan(&mmmap, zRes);
+    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MotionPlan mplan(&mmmap, zRes, s_urdf_path);
 
     base::Waypoint w_rover_pos, samplePos;
     ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_03.txt")) << "Input Rover Waypoint file is missing";
@@ -197,7 +233,19 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
     MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
 
     // Creating the Motion Plan
-    MotionPlan mplan(&mmmap, zRes);
+    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    } 
+    MotionPlan mplan(&mmmap, zRes, s_urdf_path);
 
     base::Waypoint w_rover_pos, samplePos;
     ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt")) << "Input Rover Waypoint file is missing";
@@ -229,7 +277,19 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
     MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
 
     // Creating the Motion Plan
-    MotionPlan mplan(&mmmap,zRes);
+    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    } 
+    MotionPlan mplan(&mmmap,zRes, s_urdf_path);
 
     base::Waypoint w_rover_pos, samplePos;
     ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";

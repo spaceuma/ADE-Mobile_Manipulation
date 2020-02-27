@@ -51,8 +51,19 @@ int main()
 
 
     double d_zres = 0.08;
-
-    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, j_current_joints, d_zres);
+    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, j_current_joints, d_zres, s_urdf_path);
     mmmotion_planner.generateMotionPlan(plpose_rover, d_sample_pos_x, d_sample_pos_y);
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();

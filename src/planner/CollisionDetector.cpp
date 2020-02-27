@@ -9,7 +9,7 @@ CollisionDetector::~CollisionDetector()
 {
 }
 
-bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
+bool CollisionDetector::isColliding(const std::vector<double> manip_joints, std::string s_urdf_path_m)
 {
   // create and initialize the world
   dart::simulation::WorldPtr mWorld
@@ -20,7 +20,8 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
 
   // Load urdf models
   dart::utils::DartLoader dl;
-  dl.addPackageDirectory("urdf","/home/ares/ADE-Mobile_Manipulation/data/urdf"); //TODO set this path
+  //dl.addPackageDirectory("urdf","/home/ares/ADE-Mobile_Manipulation/data/urdf"); //TODO set this path
+  dl.addPackageDirectory("urdf",s_urdf_path_m); //TODO set this path
   dart::dynamics::SkeletonPtr sherpatt
       = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
   dart::dynamics::SkeletonPtr manipulator
@@ -87,7 +88,7 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
   mWorld->addSkeleton(sherpatt);
   mWorld->addSkeleton(manipulator);
 
-  if(collisionBody)
+  /*if(collisionBody)
   {
     std::cout << "The manipulator is in collision with the body" << std::endl;
   }
@@ -98,8 +99,8 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
   if(!collisionBody&&!collisionManip)
   {
     std::cout << "No collisions detected!" << std::endl;    
-  }
+  }*/
 
   
-  return collisionBody; //TODO real output checks body and manipulator collisions
+  return collisionBody||collisionManip;
 }

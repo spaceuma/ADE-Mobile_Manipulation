@@ -218,6 +218,22 @@ MotionCommand MobileManipExecutor::getZeroRoverCommand()
 
 bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
 {
+    if (j_next_arm_command.m_jointNames.empty())
+    {
+        j_next_arm_command.m_jointNames.resize(6);
+        j_next_arm_command.m_jointNames[0] = "arm_joint_1";
+        j_next_arm_command.m_jointNames[1] = "arm_joint_2";
+        j_next_arm_command.m_jointNames[2] = "arm_joint_3";
+        j_next_arm_command.m_jointNames[3] = "arm_joint_4";
+        j_next_arm_command.m_jointNames[4] = "arm_joint_5";
+        j_next_arm_command.m_jointNames[5] = "arm_joint_6";
+    }
+    if (j_next_arm_command.m_jointStates.empty())
+    {
+        j_next_arm_command.m_jointStates.resize(6);
+    }
+
+
     int i_pos_index;
     switch(this->armstate)
     {
