@@ -5,6 +5,7 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
+    this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
 }
 
 MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
@@ -126,15 +127,15 @@ bool MotionPlan::executeEndEffectorPlanning()
                                     this->w_sample_pos,
                                     &(this->vvd_arm_motion_profile)))
     {
-       /* if(this->isArmProfileSafe())
+        if(this->isArmProfileSafe())
 	{
             return true;
 	}
 	else
 	{
             return false;
-	}*/
-        return true; //TODO: Fix problem with DART ground.skel
+	}
+	//return true;
     }
     else
     {
@@ -146,8 +147,9 @@ bool MotionPlan::isArmProfileSafe()
 {
     for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
     {
-        if (this->collision_detector.isColliding(this->vvd_arm_motion_profile[i], this->s_urdf_path))
+        if (this->p_collision_detector->isColliding(this->vvd_arm_motion_profile[i]))
 	{
+            std::cout << "ERROR at sample " << i << std::endl;
 	    return false;
 	}
     }

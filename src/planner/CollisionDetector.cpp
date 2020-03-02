@@ -1,36 +1,19 @@
 
 #include "CollisionDetector.h"
 
-CollisionDetector::CollisionDetector()
+CollisionDetector::CollisionDetector(std::string s_urdf_path_m)
 {
-}
-
-CollisionDetector::~CollisionDetector()
-{
-}
-
-bool CollisionDetector::isColliding(const std::vector<double> manip_joints, std::string s_urdf_path_m)
-{
-  // Create the world
-  dart::simulation::WorldPtr mWorld
-      = dart::simulation::World::create("Empty");
-
-  //dl.addPackageDirectory("urdf","/home/ares/ADE-Mobile_Manipulation/data/urdf"); //TODO set this path
-  dl.addPackageDirectory("urdf",s_urdf_path_m); //TODO set this path
-
+    mWorld = dart::simulation::World::create("Empty");
+    dl.addPackageDirectory("urdf",s_urdf_path_m); //TODO set this path
   // Load urdf models
-  dart::utils::DartLoader dl;
-  dart::dynamics::SkeletonPtr sherpatt
+    sherpatt
       = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
-  dart::dynamics::SkeletonPtr manipulator
+    manipulator
       = dl.parseSkeleton("package://urdf/manipulator.urdf");
-  sherpatt->setName("sherpatt");
-  manipulator->setName("manipulator");
-
-  // Get sherpa into the desired configuration
-  /* Pan of the whole leg */
-  //sherpatt->getDof("alpha_front_left")->setPosition(0.0 * M_PI / 180.0); 
-
+    sherpatt->setName("sherpatt");
+    manipulator->setName("manipulator");
+    mWorld->addSkeleton(sherpatt);
+    mWorld->addSkeleton(manipulator);
   /* First joint */
   sherpatt->getDof("beta_front_left")->setPosition(-0.46);
   sherpatt->getDof("beta1_fake_front_left")->setPosition(0.0 * M_PI / 180.0);
@@ -65,6 +48,19 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints, std:
   //sherpatt->getDof("gamma1_fake_rear_right")->setPosition(0.61);
   sherpatt->getDof("gamma2_fake_rear_right")->setPosition(0.61);
 
+}
+
+CollisionDetector::~CollisionDetector()
+{
+}
+
+bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
+{
+
+  // Get sherpa into the desired configuration
+  /* Pan of the whole leg */
+  //sherpatt->getDof("alpha_front_left")->setPosition(0.0 * M_PI / 180.0); 
+
   // Get the manipulator into the desired configuration
   manipulator->getDof("arm_joint_1")->setPosition(manip_joints[0]);
   manipulator->getDof("arm_joint_2")->setPosition(manip_joints[1]);
@@ -82,9 +78,6 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints, std:
   dart::collision::CollisionResult result;
   bool collisionBody = sherpaGroup->collide(manipGroup.get(), option, &result);
   bool collisionManip = manipGroup->collide(option, &result); //TODO fix this, always collides
-
-  mWorld->addSkeleton(sherpatt);
-  mWorld->addSkeleton(manipulator);
 
   /*if(collisionBody)
   {

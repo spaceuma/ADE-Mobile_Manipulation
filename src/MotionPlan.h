@@ -40,7 +40,7 @@ private:
      * Motion Planner for the arm
      */
     ArmPlanner arm_planner;
-    CollisionDetector collision_detector;
+    CollisionDetector* p_collision_detector;
     std::string s_urdf_path;
     /**
      * Position of the sample in waypoint format
