@@ -11,15 +11,12 @@ CollisionDetector::~CollisionDetector()
 
 bool CollisionDetector::isColliding(const std::vector<double> manip_joints, std::string s_urdf_path_m)
 {
+  // Create the world
+  dart::simulation::WorldPtr mWorld
+      = dart::simulation::World::create("Empty");
+
   //dl.addPackageDirectory("urdf","/home/ares/ADE-Mobile_Manipulation/data/urdf"); //TODO set this path
   dl.addPackageDirectory("urdf",s_urdf_path_m); //TODO set this path
-
-  // create and initialize the world
-  dart::simulation::WorldPtr mWorld
-      = dart::utils::SkelParser::readWorld("package://urdf/empty.skel");
-  assert(mWorld != nullptr);
-  Eigen::Vector3d gravity(0.0, -9.81, 0.0);
-  mWorld->setGravity(gravity);
 
   // Load urdf models
   dart::utils::DartLoader dl;
