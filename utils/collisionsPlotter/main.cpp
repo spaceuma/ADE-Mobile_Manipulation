@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]) 
 {
-  std::vector<double> manip_joints = {20,0,90,0,30,0};
+  std::vector<double> manip_joints = {20* M_PI / 180.0,0,90* M_PI / 180.0,0,30* M_PI / 180.0,0};
 
   // Create the world
   dart::simulation::WorldPtr mWorld

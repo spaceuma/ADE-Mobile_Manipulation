@@ -61,12 +61,12 @@ bool CollisionPlotter::isColliding(dart::simulation::WorldPtr mWorld,
   sherpatt->getDof("gamma2_fake_rear_right")->setPosition(0.61);
 
   // Get the manipulator into the desired configuration
-  manipulator->getDof("arm_joint_1")->setPosition(manip_joints[0] * M_PI / 180.0);
-  manipulator->getDof("arm_joint_2")->setPosition(manip_joints[1] * M_PI / 180.0);
-  manipulator->getDof("arm_joint_3")->setPosition(manip_joints[2] * M_PI / 180.0);
-  manipulator->getDof("arm_joint_4")->setPosition(manip_joints[3] * M_PI / 180.0);
-  manipulator->getDof("arm_joint_5")->setPosition(manip_joints[4] * M_PI / 180.0);
-  manipulator->getDof("arm_joint_6")->setPosition(manip_joints[5] * M_PI / 180.0);
+  manipulator->getDof("arm_joint_1")->setPosition(manip_joints[0]);
+  manipulator->getDof("arm_joint_2")->setPosition(manip_joints[1]);
+  manipulator->getDof("arm_joint_3")->setPosition(manip_joints[2]);
+  manipulator->getDof("arm_joint_4")->setPosition(manip_joints[3]);
+  manipulator->getDof("arm_joint_5")->setPosition(manip_joints[4]);
+  manipulator->getDof("arm_joint_6")->setPosition(manip_joints[5]);
 
   // Look through the collisions manipulator-sherpaTT and manipulator with itself
   auto collisionEngine = mWorld->getConstraintSolver()->getCollisionDetector();
