@@ -42,16 +42,16 @@
     <link name="box">        
         <visual>
             <material name="Gray"/>
-            <origin xyz="0.42 0 0" rpy="0 0 0"/>
+            <origin xyz="0.52 0 0" rpy="0 0 0"/>
             <geometry>
-				        <box size="0.15 0.3 0.3"/>              
+				        <box size="0.26 0.395 0.39"/>              
             </geometry>
         </visual>
         <collision>
             <material name="Gray"/>
-            <origin xyz="0.42 0 0" rpy="0 0 0"/>
+            <origin xyz="0.52 0 0" rpy="0 0 0"/>
             <geometry>
-				        <box size="0.15 0.3 0.3"/>              
+				        <box size="0.26 0.395 0.39"/>              
             </geometry>
         </collision>
     </link>
@@ -64,16 +64,82 @@
     <link name="mast">        
         <visual>
             <material name="Gray"/>
-            <origin xyz="0.45 0 0.6" rpy="0 0 0"/>
+            <origin xyz="0.415 0 0.755" rpy="0 0 0"/>
             <geometry>
-				      <cylinder length="1.2" radius="0.04"/>
+				        <box size="0.160 0.045 1.118"/>              
             </geometry>
         </visual>
         <collision>
             <material name="Gray"/>
-            <origin xyz="0.45 0 0.6" rpy="0 0 0"/>
+            <origin xyz="0.415 0 0.755" rpy="0 0 0"/>
             <geometry>
-				      <cylinder length="1.2" radius="0.04"/>
+				        <box size="0.160 0.045 1.118"/>              
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="mast_to_nav_cam" type="fixed">
+        <parent link="mast"/>
+        <child link="nav_cam"/>
+    </joint>
+
+    <link name="nav_cam">        
+        <visual>
+            <material name="Gray"/>
+            <origin xyz="0.355 0 1.33" rpy="0 0 0"/>
+            <geometry>
+				        <box size="0.042 0.38 0.034"/>              
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Gray"/>
+            <origin xyz="0.355 0 1.33" rpy="0 0 0"/>
+            <geometry>
+				        <box size="0.042 0.38 0.034"/>              
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="mast_to_loc_cam" type="fixed">
+        <parent link="mast"/>
+        <child link="loc_cam"/>
+    </joint>
+
+    <link name="loc_cam">        
+        <visual>
+            <material name="Gray"/>
+            <origin xyz="0.6 0 0.24" rpy="0 0 0"/>
+            <geometry>
+				        <box size="0.095 0.576 0.1"/>              
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Gray"/>
+            <origin xyz="0.6 0 0.24" rpy="0 0 0"/>
+            <geometry>
+				        <box size="0.095 0.576 0.1"/>              
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="box_to_box_base" type="fixed">
+        <parent link="box"/>
+        <child link="box_base"/>
+    </joint>
+
+    <link name="box_base">        
+        <visual>
+            <material name="Gray"/>
+            <origin xyz="0.52 0 -0.21" rpy="0 0 0"/>
+            <geometry>
+				        <box size="0.355 0.600 0.042"/>              
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Gray"/>
+            <origin xyz="0.52 0 -0.21" rpy="0 0 0"/>
+            <geometry>
+				        <box size="0.355 0.600 0.042"/>              
             </geometry>
         </collision>
     </link>
