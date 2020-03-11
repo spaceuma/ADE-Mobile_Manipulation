@@ -115,7 +115,7 @@ bool MotionPlan::shortenPathForFetching()
     return true;
 }
 
-bool MotionPlan::executeEndEffectorPlanning()
+unsigned int MotionPlan::executeEndEffectorPlanning()
 {
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
@@ -129,30 +129,29 @@ bool MotionPlan::executeEndEffectorPlanning()
     {
         if(this->isArmProfileSafe())
 	{
-            return true;
+            return 0;
 	}
 	else
 	{
-            return false;
+            return 1;
 	}
-	//return true;
     }
     else
     {
-        return false;
+        return 2;
     }
 }
 
 bool MotionPlan::isArmProfileSafe()
 {
-    for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
+/*    for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
     {
         if (this->p_collision_detector->isColliding(this->vvd_arm_motion_profile[i]))
 	{
             std::cout << "ERROR at sample " << i << std::endl;
 	    return false;
 	}
-    }
+    }*/
     return true;
 }
 

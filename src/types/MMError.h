@@ -13,7 +13,9 @@ enum MMError
   UNREACH_GOAL,
   UNCERT_GOAL,
   DEGEN_PATH,
-  UNFEASIBLE_PROFILE, //TODO: distinguish between collision and sample out of tunnel
+  COLLIDING_PROF,
+  DEVIATED_PROF,
+  FORB_ARM_POS,
   INCOMPLETE_INPUT,
   NON_RESP_ARM,
   COLLIDING_ARM,
