@@ -4,7 +4,7 @@
         <color rgba="1.0 1.0 0.0 0.5"/>
     </material>
     <material name="Gray">
-        <color rgba="0.2 0.2 0.2 1.0"/>
+        <color rgba="0.85 0.85 0.85 1.0"/>
     </material>
     <material name="Black">
         <color rgba="0 0 0 1.0"/>
@@ -60,7 +60,23 @@
             <origin xyz="0.22 0 0.48" rpy="0 1.570796327 1.570796327"/>
             <geometry>
                 <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
-                <cylinder length="0.45" radius="0.075"/>
+                <cylinder length="0.25" radius="0.075"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.22 0.176 0.48" rpy="0 1.570796327 1.570796327"/>
+            <geometry>
+                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
+                <cylinder length="0.1" radius="0.045"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.2275 -0.172 0.48" rpy="0 1.570796327 1.570796327"/>
+            <geometry>
+                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
+                <cylinder length="0.09" radius="0.045"/>
             </geometry>
         </visual>
         <visual>
@@ -75,8 +91,21 @@
             <material name="Yellow"/>
             <origin xyz="0.22 0 0.48" rpy="0 1.570796327 1.570796327"/>
             <geometry>
-                <!--mesh filename="./meshes/manipulator/sherpa_arm_joint_1.stl" scale="0.001 0.001 0.001" /-->
-                <cylinder length="0.45" radius="0.075"/>
+                <cylinder length="0.25" radius="0.075"/>
+            </geometry>
+        </collision>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.22 0.176 0.48" rpy="0 1.570796327 1.570796327"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.045"/>
+            </geometry>
+        </collision>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.2275 -0.172 0.48" rpy="0 1.570796327 1.570796327"/>
+            <geometry>
+                <cylinder length="0.09" radius="0.045"/>
             </geometry>
         </collision>
         <collision>

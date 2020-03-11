@@ -4,7 +4,10 @@
         <color rgba="1.0 1.0 0.0 1.0"/>
     </material>
     <material name="Gray">
-        <color rgba="0.2 0.2 0.2 1.0"/>
+        <color rgba="0.85 0.85 0.85 1.0"/>
+    </material>
+    <material name="Brown">
+        <color rgba="0.6 0.31 0.23 0.5"/>
     </material>
     <material name="Black">
         <color rgba="0 0 0 1.0"/>
@@ -32,6 +35,28 @@
 				 <mesh filename="./meshes/body.stl" scale="0.001 0.001 0.001"/>
 			</geometry>
 		</collision>
+    </link>
+
+    <joint name="body_to_ground" type="fixed">
+        <parent link="body"/>
+        <child link="ground"/>
+    </joint>
+
+    <link name="ground">        
+        <visual>
+            <material name="Brown"/>
+            <origin xyz="0 0 -0.5" rpy="0 0 0"/>
+            <geometry>
+				        <box size="10 10 0.01"/>              
+            </geometry>
+        </visual>
+        <collision>
+            <material name="Brown"/>
+            <origin xyz="0 0 -0.5" rpy="0 0 0"/>
+            <geometry>
+				        <box size="10 10 0.01"/>              
+            </geometry>
+        </collision>
     </link>
 
     <joint name="body_to_box" type="fixed">
@@ -64,14 +89,14 @@
     <link name="mast">        
         <visual>
             <material name="Gray"/>
-            <origin xyz="0.415 0 0.755" rpy="0 0 0"/>
+            <origin xyz="0.435 0 0.755" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.160 0.045 1.118"/>              
             </geometry>
         </visual>
         <collision>
             <material name="Gray"/>
-            <origin xyz="0.415 0 0.755" rpy="0 0 0"/>
+            <origin xyz="0.435 0 0.755" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.160 0.045 1.118"/>              
             </geometry>
