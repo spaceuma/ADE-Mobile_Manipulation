@@ -1,5 +1,30 @@
 #include "mmFileManager.h"
 
+void readVectorFile(std::string vector_file,
+                    std::vector<double> &vector)
+{
+    std::ifstream e_file(vector_file.c_str(), std::ios::in);
+
+    vector.clear();
+    if (e_file.is_open())
+    {
+            std::string cell;
+            while (std::getline(e_file, cell, ' '))
+            {
+                double val;
+                std::stringstream numeric_value(cell);
+                numeric_value >> val;
+                vector.push_back(val);
+            }
+            e_file.close();
+    }
+    else
+    {
+        std::cout << "Problem opening the path file" << std::endl;
+	throw std::exception();
+    }
+}
+
 void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData)
 {

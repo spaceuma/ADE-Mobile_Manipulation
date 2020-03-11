@@ -39,7 +39,14 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
 make
 
+cd $cur/utils/collisionsPlotter
+mkdir build
+cd build
+cmake ..
+make
+
 cd $cur
+
 
 echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$install_folder/lib" > env.sh
 echo "export PATH=$PATH:$install_folder/bin:$cur/test/harnessExample/build:$cur/test/unit/build" >> env.sh

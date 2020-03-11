@@ -12,6 +12,8 @@
 
 using namespace base;
 
+void readVectorFile(std::string vector_file,
+                    std::vector<double> &vector);
 void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData);
 void readPath(std::string s_path_file,
