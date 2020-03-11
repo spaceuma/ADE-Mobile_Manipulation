@@ -87,7 +87,7 @@
                 <!--cylinder length="0.24" radius="0.08"/-->
             </geometry>
         </visual>
-        <collision>
+	<collision>
             <material name="Yellow"/>
             <origin xyz="0.22 0 0.48" rpy="0 1.570796327 1.570796327"/>
             <geometry>
@@ -113,9 +113,8 @@
             <origin xyz="0.03 0.0 0.45" rpy="0 1.570796327 0"/>
             <geometry>
                 <cylinder length="0.22" radius="0.08"/>
-                <!--cylinder length="0.24" radius="0.08"/-->
             </geometry>
-        </collision>
+    </collision>
     </link>
     <joint name="arm_joint_1" type="revolute">
         <parent link="arm_mount_link"/>

@@ -7,7 +7,14 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     this->initializeArmVariables(j_present_readings); 
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
-    this->armstate = INITIALIZING;
+    if (isArmSafe(j_present_readings))
+    {
+        this->armstate = INITIALIZING;
+    }
+    else
+    {
+        this->armstate = FORBIDDEN_POS; 
+    }
 }
 
 void MobileManipExecutor::initializeArmVariables(const Joints &j_present_readings)
@@ -95,6 +102,17 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             } 
             mc_m = this->getZeroRoverCommand();
 	    return 0;
+	case FORBIDDEN_POS:
+            mc_m = this->getZeroRoverCommand();
+	    if (this->isArmSafe(j_arm_present_readings_m))
+	    {
+		this->armstate = INITIALIZING;
+		return 0;
+	    }
+	    else
+	    {
+		return 5;
+	    }
 	case READY:
             this->armstate = COUPLED_MOVING;
 	    return 1;
@@ -163,6 +181,25 @@ void MobileManipExecutor::fixMotionCommand(MotionCommand &mc_m)
 	}
     }
     
+}
+
+bool MobileManipExecutor::isArmSafe(const Joints &j_present_joints_m)
+{
+    //TODO: put in other function isColliding to check collisions 
+    if (j_present_joints_m.m_jointStates[0].m_position < 0.35)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool MobileManipExecutor::isArmColliding(const Joints &j_present_joints_m)
+{
+    for (uint i = 0; i < 6; i++)
+    {
+        this->vd_arm_present_readings[i] = j_present_joints_m.m_jointStates[i].m_position;
+    }
+    return this->p_collision_detector->isColliding(this->vd_arm_present_readings);
 }
 
 bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints &j_present_joints)
@@ -240,6 +277,8 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
         case INITIALIZING:
             i_pos_index = this->waypoint_navigation.getCurrentSegment();
 	    break;
+        case FORBIDDEN_POS:
+	    return false;
 	case READY:
 	    i_pos_index = 0;
 	    break;

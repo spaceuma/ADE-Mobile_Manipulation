@@ -4,6 +4,7 @@
 #include "MotionPlan.h"
 #include "WaypointNavigation.hpp"
 #include "coupledControl.hpp"
+#include "CollisionDetector.h"
 
 using namespace proxy_library;
 using namespace waypoint_navigation_lib;
@@ -12,10 +13,11 @@ using namespace coupled_control;
 enum ArmExecutionState
 {
     INITIALIZING = 0,        // 0
-    READY,           // 1
-    COUPLED_MOVING,     // 2
-    SAMPLING_POS,  // 3
-    RETRIEVING      // 4
+    FORBIDDEN_POS, //1
+    READY,           // 2 
+    COUPLED_MOVING,     // 3
+    SAMPLING_POS,  // 4
+    RETRIEVING      // 5
 };
 
 
@@ -51,6 +53,10 @@ private:
      * Coupled Control class 
      */
     coupledControl coupled_control;
+    /**
+     * Collision Detector class 
+     */
+    CollisionDetector* p_collision_detector;
     /**
      * The arm motion profile
      */
@@ -121,6 +127,14 @@ public:
      * Checks if the arm is at Ready position 
      */
     bool isArmReady(const Joints &j_next_command, const Joints &j_present_joints);
+    /**
+     * Checks if the arm is currently colliding 
+     */
+    bool isArmColliding(const Joints &j_present_joints_m);
+    /**
+     * Checks if the arm is not in forbidden workspace 
+     */
+    bool isArmSafe(const Joints &j_present_joints_m);
     /**
      * Checks if the arm is still following the arm commands 
      */

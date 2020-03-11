@@ -76,10 +76,17 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
             setError(GOAL_TOO_CLOSE);
             return false;
         }
-        if (!this->p_motionplan->executeEndEffectorPlanning())
+	ui_code = this->p_motionplan->executeEndEffectorPlanning();
+	switch (ui_code)
 	{
-            setError(UNFEASIBLE_PROFILE);//TODO - Make it distinguish if it is due to a collision or the sample being out of the tunnel
-            return false;
+            case 0:
+                break;
+            case 1:
+		setError(COLLIDING_PROF);
+		return false;
+            case 2:
+		setError(DEVIATED_PROF);
+		return false;
 	}
         this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
@@ -222,7 +229,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                     setError(INCOMPLETE_INPUT);
                     return false;
                 case 5:
-                    setError(NON_RESP_ARM);
+                    setError(FORB_ARM_POS);
                     return false;
             }
             return false;
@@ -283,6 +290,12 @@ void MobileManipMotionPlanner::resumeError()
         case UNCERT_GOAL:
             break;
 	case DEGEN_PATH:
+	    break;
+	case COLLIDING_PROF:
+	    break;
+	case DEVIATED_PROF:
+	    break;
+	case FORB_ARM_POS:
 	    break;
 	case INCOMPLETE_INPUT:
 	    break;
@@ -400,6 +413,15 @@ void MobileManipMotionPlanner::printErrorCode()
             break;
 	case DEGEN_PATH:
 	    std::cout << "DEGEN_PATH";
+	    break;
+	case COLLIDING_PROF:
+	    std::cout << "COLLIDING_PROF";
+	    break;
+	case DEVIATED_PROF:
+	    std::cout << "DEVIATED_PROF";
+	    break;
+	case FORB_ARM_POS:
+	    std::cout << "FORB_ARM_POS";
 	    break;
 	case INCOMPLETE_INPUT:
 	    std::cout << "INCOMPLETE_INPUT";
