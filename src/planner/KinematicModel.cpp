@@ -336,6 +336,14 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
 	throw std::exception();
         //return std::vector<double>(1, 0);
     }
+    else if (d < l1-l2)
+    {
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+                     "position is too close, unreachable position "
+                     "and orientation\033[0m\n";*/
+	throw std::exception();
+        //return std::vector<double>(1, 0);
+    }
 
     double beta = acos((pow(d, 2) + pow(l1, 2) - pow(l2, 2)) / (2 * d * l1));
     double gamma = acos((pow(l1, 2) + pow(l2, 2) - pow(d, 2)) / (2 * l1 * l2));
@@ -636,4 +644,69 @@ std::vector<std::vector<double>> Manipulator::getJacobianMatrix(std::vector<doub
         }
 
     return J;
+}
+
+void Manipulator::computeReachabilityMap(std::vector<std::vector<std::vector<double>>> &reachabilityMap,
+                                         const double resXY,
+                                         const double resZ)
+{
+    double res4 = 30*M_PI/180;
+    double res5 = 20*M_PI/180;
+    double res6 = 30*M_PI/180;
+
+    double maxXY = a1+a2+d4;
+    double minXY = -a1-a2-d4;
+    double maxZ = d0+a2+d4;
+    double minZ = d0-a2-d4;
+
+    int sizeXY = (int)((maxXY-minXY)/(resXY/2));
+    int sizeZ = (int)((maxZ-minZ)/(resZ/2));
+    std::cout<<"Size xy: "<<sizeXY<<", size z: "<<sizeZ<<std::endl;
+    std::cout<<"Res xy: "<<resXY/2<<", res z: "<<resZ/2<<std::endl;
+    std::cout<<"Min xy: "<<minXY<<", min z: "<<minZ<<std::endl;
+    std::cout<<"Max xy: "<<maxXY<<", max z: "<<maxZ<<std::endl;
+    reachabilityMap.resize(sizeXY, std::vector<std::vector<double>>(sizeXY, std::vector<double>(sizeZ,0)));
+    std::vector<double> position;
+    std::vector<double> orientation = {0, 90*M_PI/180, 0};
+    std::vector<double> config;
+    CollisionDetector* p_collision_detector = new CollisionDetector("/home/ares/ADE-Mobile_Manipulation/data/urdf/");
+  
+    std::cout<<"Starting reachability map computation...\n";
+    for(int i = 0; i < sizeXY; i++)
+        for(int j = 0; j < sizeXY; j++)
+            for(int k = 0; k < sizeZ; k++)
+            {
+                std::cout << "\rProgress: [" << 100*i/sizeXY << "%, " << 100*j/sizeXY << "%, "<< 100*k/sizeZ << "%]";
+                position = {minXY+i*resXY/2+d6, minXY+j*resXY/2, minZ+k*resZ/2};
+              try{
+                config = getManipJoints(position, orientation);
+
+                for(int l = 0; l < 6; l++)
+                {
+                    config[3] = l*res4;
+                    for(int m = 0; m < 12; m++)
+                    {
+                        config[4] = -110*M_PI/180 + m*res5;
+                        for(int n = 0; n < 3; n++)
+                        {
+                            config[5] = n*res6;
+                            //std::cout << ". Config: ["<<config[0]<<", "<<config[1]<<", "<<config[2]<<", "<<config[3]<<", "<<config[4]<<", "<<config[5]<<"]";
+                            std::cout<<std::flush;
+                            
+                            if(p_collision_detector->isColliding(config))
+                            {
+                                reachabilityMap[i][j][k] = 1;
+                                break;
+                            }  
+                        }
+                        if(reachabilityMap[i][j][k]) break;
+                    }
+                    if(reachabilityMap[i][j][k]) break;
+                }
+                }
+              catch(std::exception &e){reachabilityMap[i][j][k] = 1;}
+            }
+
+    std::cout<<"...done!"<<std::flush<<std::endl;
+    saveVolume(&reachabilityMap,"/home/ares/ADE-Mobile_Manipulation/data/reachabilityMap.txt");
 }

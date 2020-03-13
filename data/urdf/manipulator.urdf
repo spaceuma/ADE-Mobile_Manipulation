@@ -139,30 +139,44 @@
         </visual>
         <visual>
             <material name="Yellow"/>
-            <origin xyz="0.35 0.0 0.0" rpy="0 1.570796327 0"/>
+            <origin xyz="0.37 0.0 0.0" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.51" radius="0.04"/>
+                <cylinder length="0.555" radius="0.04"/>
             </geometry>
         </visual>
         <visual>
             <material name="Yellow"/>
-            <origin xyz="0.73 0.035 0.075" rpy="0 0 0"/>
+            <origin xyz="0.73 0.03 0.015" rpy="0 0 0"/>
             <geometry>
-                <cylinder length="0.27" radius="0.09"/>
+                <cylinder length="0.148" radius="0.07"/>
+            </geometry>
+        </visual>
+        <visual>
+            <material name="Yellow"/>
+            <origin xyz="0.73 0.03 0.142" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.05"/>
             </geometry>
         </visual>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="0.35 0.0 0.0" rpy="0 1.570796327 0"/>
+            <origin xyz="0.37 0.0 0.0" rpy="0 1.570796327 0"/>
             <geometry>
-                <cylinder length="0.51" radius="0.04"/>
+                <cylinder length="0.555" radius="0.04"/>
             </geometry>
         </collision>
         <collision>
             <material name="Yellow"/>
-            <origin xyz="0.73 0.035 0.075" rpy="0 0 0"/>
+            <origin xyz="0.73 0.03 0.015" rpy="0 0 0"/>
             <geometry>
-                <cylinder length="0.27" radius="0.09"/>
+                <cylinder length="0.148" radius="0.07"/>
+            </geometry>
+        </collision>
+        <collision>
+            <material name="Yellow"/>
+            <origin xyz="0.73 0.03 0.142" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.05"/>
             </geometry>
         </collision>
     </link>

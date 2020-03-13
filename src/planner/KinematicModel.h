@@ -4,7 +4,8 @@
 #include "Waypoint.hpp"
 #include <vector>
 #include <exception>
-
+#include "CollisionDetector.h"
+#include "mmFileManager.h"
 namespace KinematicModel_lib
 {
 
@@ -64,6 +65,10 @@ public:
                                        std::vector<double> previousConfig);
 
     std::vector<std::vector<double>> getJacobianMatrix(std::vector<double> manipulatorJoints);
+
+    void computeReachabilityMap(std::vector<std::vector<std::vector<double>>> &reachabilityMap,
+                                         const double resXY,
+                                         const double resZ);
 };
 } // namespace KinematicModel_lib
 #endif

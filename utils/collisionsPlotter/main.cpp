@@ -1,12 +1,23 @@
 #include "MyWindow.hpp"
 
+#include "KinematicModel.h"
 #include "CollisionDetector.h"
 #include "mmFileManager.h"
 
 
 int main(int argc, char* argv[]) 
 {
+
+  std::vector<double> position;
+  readVectorFile("../position.txt", position);
+  position[0] += 0.300;
+
+  std::vector<double> orientation;
+  readVectorFile("../orientation.txt", orientation);
+
   std::vector<double> manip_joints; 
+  KinematicModel_lib::Manipulator manip;
+  //manip_joints = manip.getManipJoints(position, orientation,1,1);
   readVectorFile("../configuration.txt", manip_joints);
 
   std::ifstream if_urdf_path("../../../data/urdfmodel_path.txt", std::ios::in);
