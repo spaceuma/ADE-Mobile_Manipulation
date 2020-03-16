@@ -183,6 +183,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
        TODO a new function is needed to compute the last three joints inverse kinematics
        in function of the wrist and goal orientations*/
     // Computing inverse kinematics
+    
+    sherpa_tt_arm.computeReachabilityMap(mapResolution/2, zResolution/2);
 
     for (int i = 0; i < interpolatedRoverPath->size(); i++)
     {

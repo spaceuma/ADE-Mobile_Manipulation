@@ -730,10 +730,8 @@ std::vector<std::vector<double>> Manipulator::getJacobianMatrix(
     return J;
 }
 
-void Manipulator::computeReachabilityMap(
-    std::vector<std::vector<std::vector<double>>> &reachabilityMap,
-    const double resXY,
-    const double resZ)
+void Manipulator::computeReachabilityMap(const double resXY,
+                                         const double resZ)
 {
     double res4 = 30 * M_PI / 180;
     double res5 = 20 * M_PI / 180;
@@ -741,17 +739,23 @@ void Manipulator::computeReachabilityMap(
 
     double maxXY = a1 + a2 + d4;
     double minXY = -a1 - a2 - d4;
+
     double maxZ = d0 + a2 + d4;
     double minZ = d0 - a2 - d4;
 
-    int sizeXY = (int)((maxXY - minXY) / (resXY / 2));
-    int sizeZ = (int)((maxZ - minZ) / (resZ / 2));
+    std::vector<double> resolutions = {resXY, resXY, resZ};    
+    std::vector<double> minValues = {minXY, minXY, minZ};    
+
+    int sizeXY = (int)((maxXY - minXY) / resXY);
+    int sizeZ = (int)((maxZ - minZ) / resZ);
+
     std::cout << "Size xy: " << sizeXY << ", size z: " << sizeZ << std::endl;
-    std::cout << "Res xy: " << resXY / 2 << ", res z: " << resZ / 2
+    std::cout << "Res xy: " << resXY  << ", res z: " << resZ 
               << std::endl;
     std::cout << "Min xy: " << minXY << ", min z: " << minZ << std::endl;
     std::cout << "Max xy: " << maxXY << ", max z: " << maxZ << std::endl;
-    reachabilityMap.resize(sizeXY,
+
+    std::vector<std::vector<std::vector<double>>> reachabilityMap(sizeXY,
                            std::vector<std::vector<double>>(
                                sizeXY, std::vector<double>(sizeZ, 0)));
     std::vector<double> position;
@@ -768,9 +772,9 @@ void Manipulator::computeReachabilityMap(
                 std::cout << "\rProgress: [" << 100 * i / sizeXY << "%, "
                           << 100 * j / sizeXY << "%, " << 100 * k / sizeZ
                           << "%]";
-                position = {minXY + i * resXY / 2 + d6,
-                            minXY + j * resXY / 2,
-                            minZ + k * resZ / 2};
+                position = {minXY + i * resXY + d6,
+                            minXY + j * resXY,
+                            minZ + k * resZ};
                 try
                 {
                     config = getManipJoints(position, orientation);
@@ -808,6 +812,6 @@ void Manipulator::computeReachabilityMap(
             }
 
     std::cout << "...done!" << std::flush << std::endl;
-    saveVolume(&reachabilityMap,
+    saveVolume(&reachabilityMap, &resolutions, &minValues,
                "/home/ares/ADE-Mobile_Manipulation/data/reachabilityMap.txt");
 }

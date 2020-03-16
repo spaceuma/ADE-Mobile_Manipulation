@@ -5,14 +5,16 @@ import matplotlib.pyplot as plt
 from mayavi import mlab
 
 sizes = np.loadtxt(open("../data/reachabilityMap.txt",'r'), max_rows=1)
-reachabilityMap2D = np.loadtxt(open("../data/reachabilityMap.txt",'r'), skiprows=1)
+resolutions = np.loadtxt(open("../data/reachabilityMap.txt",'r'), skiprows = 1, max_rows=1)
+minValues = np.loadtxt(open("../data/reachabilityMap.txt",'r'), skiprows = 2, max_rows=1)
+reachabilityMap2D = np.loadtxt(open("../data/reachabilityMap.txt",'r'), skiprows=3)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
 zsize = int(sizes[2])
 
-resXY = 0.01
-resZ = 0.01
+resXY = resolutions[0]
+resZ = resolutions[2]
 
 reachabilityMap3D = np.zeros([xsize, ysize, zsize])
 c = 0
@@ -27,8 +29,8 @@ for i in range(2, xsize):
         if c > zsize-1:
             c = 0
             k += 1
+
 fig1 = mlab.figure()
-print(1-reachabilityMap3D[45,17,55])
 mlab.contour3d(reachabilityMap3D, contours = 2, opacity = 1, transparent = False)
 mlab.quiver3d(np.array([xsize/2]), np.array([ysize/2]), np.array([zsize/2]), np.array([20]), np.array([0]), np.array([0]), scale_factor = 0.3, color = (1,0,0))
 mlab.quiver3d(np.array([xsize/2]), np.array([ysize/2]), np.array([zsize/2]), np.array([0]), np.array([20]), np.array([0]), scale_factor = 0.3, color = (0,1,0))

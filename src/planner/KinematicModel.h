@@ -74,9 +74,9 @@ public:
         = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
     // TODO set parameter properly
-    std::vector<double> initialConfiguration = {1.03316, -1.71559, 2.95979, 3.12678, 1.24423, -3.13684};
-    std::vector<double> iniEEorientation
-        = {0, pi / 2, pi / 3};
+    std::vector<double> initialConfiguration
+        = {1.03316, -1.71559, 2.95979, 3.12678, 1.24423, -3.13684};
+    std::vector<double> iniEEorientation = {0, pi / 2, pi / 3};
 
     // -- FUNCTIONS --
     std::vector<std::vector<double>> getEETransform(
@@ -97,10 +97,7 @@ public:
     std::vector<std::vector<double>> getJacobianMatrix(
         std::vector<double> manipulatorJoints);
 
-    void computeReachabilityMap(
-        std::vector<std::vector<std::vector<double>>> &reachabilityMap,
-        const double resXY,
-        const double resZ);
+    void computeReachabilityMap(const double resXY, const double resZ);
 };
 } // namespace KinematicModel_lib
 #endif
