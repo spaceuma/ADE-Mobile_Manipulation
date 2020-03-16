@@ -25,7 +25,10 @@ public:
     double heightGround2BCS = 0.645;
     double fetchingZDistance = 0.1;
 
-    double maxFetchingDistance = a1 + sqrt(pow(a2 + d4, 2) - pow(heightGround2BCS + d0 - d6 - fetchingZDistance, 2));
+    double maxFetchingDistance
+        = a1
+          + sqrt(pow(a2 + d4, 2)
+                 - pow(heightGround2BCS + d0 - d6 - fetchingZDistance, 2));
     double minFetchingDistance = 0.7;
 
     // -- FUNCTIONS --
