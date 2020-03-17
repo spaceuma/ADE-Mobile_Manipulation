@@ -262,6 +262,17 @@ double KinematicModel_lib::getNorm(std::vector<double> a)
     return sqrt(sum);
 }
 
+Manipulator::Manipulator()
+{
+    reachabilityMap = new std::vector<std::vector<std::vector<double>>>;
+    resolutions = new std::vector<double>;
+    minValues = new std::vector<double>;
+
+    readReachabilityMap("data/reachabilityMap.txt", reachabilityMap, resolutions, minValues);
+}
+
+Manipulator::~Manipulator(){;}
+
 std::vector<std::vector<double>> Manipulator::getEETransform(
     std::vector<double> manipulatorJoints)
 {
@@ -912,9 +923,8 @@ void Manipulator::computeReachabilityMap(const double resXY,
 
     std::vector<std::vector<std::vector<double>>> reachabilityMap(sizeXY,
                            std::vector<std::vector<double>>(
-                               sizeXY, std::vector<double>(sizeZ, 0)));
+                               sizeXY, std::vector<double>(sizeZ, 1)));
     std::vector<double> position;
-    std::vector<double> config;
     CollisionDetector *p_collision_detector = new CollisionDetector(
         "/home/ares/ADE-Mobile_Manipulation/data/urdf/");
 
@@ -931,17 +941,18 @@ void Manipulator::computeReachabilityMap(const double resXY,
                             minZ + k * resZ};
                 try
                 {
-                    config = getPositionJoints(position,1,1);
+                    std::vector<double> config = getPositionJoints(position,1,1);
+                    config.resize(6);
 
                     for (int l = 0; l < 6; l++)
                     {
-                        config.push_back(l * res4);
+                        config[3] = l * res4;
                         for (int m = 0; m < 12; m++)
                         {
-                            config.push_back(-110 * M_PI / 180 + m * res5);
+                            config[4] = -110 * M_PI / 180 + m * res5;
                             for (int n = 0; n < 3; n++)
                             {
-                                config.push_back(n * res6);
+                                config[5] = n * res6;
                                 // std::cout << ". Config: ["<<config[0]<<",
                                 // "<<config[1]<<", "<<config[2]<<",
                                 // "<<config[3]<<", "<<config[4]<<",
@@ -950,22 +961,38 @@ void Manipulator::computeReachabilityMap(const double resXY,
 
                                 if (p_collision_detector->isColliding(config))
                                 {
-                                    reachabilityMap[i][j][k] = 1;
+                                    reachabilityMap[i][j][k] = 0;
                                     break;
                                 }
                             }
-                            if (reachabilityMap[i][j][k]) break;
+                            if (!reachabilityMap[i][j][k]) break;
                         }
-                        if (reachabilityMap[i][j][k]) break;
+                        if (!reachabilityMap[i][j][k]) break;
                     }
                 }
                 catch (std::exception &e)
                 {
-                    reachabilityMap[i][j][k] = 1;
+                    reachabilityMap[i][j][k] = 0;
                 }
             }
 
     std::cout << "...done!" << std::flush << std::endl;
     saveVolume(&reachabilityMap, &resolutions, &minValues,
-               "/home/ares/ADE-Mobile_Manipulation/data/reachabilityMap.txt");
+               "data/reachabilityMap.txt");
+}
+
+bool Manipulator::isReachable(std::vector<double> position)
+{
+    int ix = (int)((position[0]-(*minValues)[0])/(*resolutions)[0]+0.5);
+    int iy = (int)((position[1]-(*minValues)[1])/(*resolutions)[1]+0.5);
+    int iz = (int)((position[2]-(*minValues)[2])/(*resolutions)[2]+0.5);
+
+    std::cout<<"ix: "<<ix<<", iy: "<<iy<<", iz: "<<iz<<std::endl;
+    
+    if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityMap->size() - 1 && iy < (*reachabilityMap)[0].size() - 1 && iz < (*reachabilityMap)[0][0].size() - 1)
+        return (*reachabilityMap)[ix][iy][iz];
+    else
+    {
+        return false;
+    }
 }

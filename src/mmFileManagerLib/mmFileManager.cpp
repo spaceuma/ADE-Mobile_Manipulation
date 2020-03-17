@@ -69,49 +69,46 @@ void readReachabilityMap(std::string map_file,
                          std::vector<double> * resolutions,
                          std::vector<double> * minValues)
 {
+
     std::vector<double> *sizes = new std::vector<double>;
-    resolutions = new std::vector<double>;
-    minValues = new std::vector<double>;
 
     std::string line;
     std::ifstream e_file(map_file.c_str(), std::ios::in);
 
-    for(int i = 0; i < 3; i++)
-    {
-        std::getline(e_file, line);
-        std::stringstream ss(line);
-        std::string cell;
-
-        while (std::getline(ss, cell, ' '))
-        {
-            double val;
-            std::stringstream numeric_value(cell);
-            numeric_value >> val;
-            switch(i)
-            {
-                case 0:
-                    sizes->push_back(val);
-                    break;
-                case 1:
-                    resolutions->push_back(val);
-                    break;
-                case 2:
-                    minValues->push_back(val);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-
-    reachabilityMap->clear();
-    reachabilityMap->resize((*sizes)[0], std::vector<std::vector<double>>((*sizes)[1], std::vector<double>((*sizes)[2])));
-
-    int layer = 0, column = 0;
     if (e_file.is_open())
     {
-        for(int row = 3; row < (*sizes)[0]; row++)
+        for(int i = 0; i < 3; i++)
+        {
+            std::getline(e_file, line);
+            std::stringstream ss(line);
+            std::string cell;
+
+            while (std::getline(ss, cell, ' '))
+            {
+                double val;
+                std::stringstream numeric_value(cell);
+                numeric_value >> val;
+                switch(i)
+                {
+                    case 0:
+                        sizes->push_back(val);
+                        break;
+                    case 1:
+                        resolutions->push_back(val);
+                        break;
+                    case 2:
+                        minValues->push_back(val);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        reachabilityMap->resize((*sizes)[0], std::vector<std::vector<double>>((*sizes)[1], std::vector<double>((*sizes)[2])));
+
+        int layer = 0, column = 0;
+        for(int row = 0; row < (*sizes)[0]; row++)
         {
             layer = 0;
             column = 0;

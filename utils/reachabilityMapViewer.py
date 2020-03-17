@@ -24,7 +24,7 @@ for i in range(2, xsize):
     c = 0
     k = 0
     for j in range(0, ysize*zsize):
-        reachabilityMap3D[i][k][c] = 1-reachabilityMap2D[i][j]
+        reachabilityMap3D[i][k][c] = reachabilityMap2D[i][j]
         c += 1
         if c > zsize-1:
             c = 0

@@ -73,12 +73,21 @@ public:
     double optimalArmRadius
         = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
-    // TODO set parameter properly
     std::vector<double> initialConfiguration
         = {1.03316, -1.71559, 2.95979, 3.12678, 1.24423, -3.13684};
+
     std::vector<double> iniEEorientation = {0, pi / 2, pi / 3};
 
+    // -- VARIABLES --
+    std::vector<std::vector<std::vector<double>>> *reachabilityMap;
+    std::vector<double> *resolutions;
+    std::vector<double> *minValues;
+
     // -- FUNCTIONS --
+    Manipulator();
+
+    ~Manipulator();
+
     std::vector<std::vector<double>> getEETransform(
         std::vector<double> manipulatorJoints);
 
@@ -105,6 +114,8 @@ public:
         std::vector<double> manipulatorJoints);
 
     void computeReachabilityMap(const double resXY, const double resZ);
+
+    bool isReachable(std::vector<double> position);
 };
 } // namespace KinematicModel_lib
 #endif
