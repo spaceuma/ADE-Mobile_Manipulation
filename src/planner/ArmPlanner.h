@@ -27,12 +27,12 @@ public:
     std::vector<double> finalEEorientation = {-pi, 0, -pi};
 
     std::vector<std::vector<double>> *roverPath6;
-    std::vector<std::vector<double>> *endEffectorPath6;
+    std::vector<std::vector<double>> *wristPath6;
 
     // -- FUNCTIONS --
     std::vector<base::Waypoint> *getInterpolatedRoverPath();
 
-    std::vector<std::vector<double>> *getEEPath();
+    std::vector<std::vector<double>> *getWristPath();
 
     std::vector<std::vector<std::vector<double>>> *getVolumeCostMap();
 
@@ -54,7 +54,7 @@ public:
 
     void computeWaypointAssignment(
         const std::vector<std::vector<double>> *roverPath6,
-        const std::vector<std::vector<double>> *endEffectorPath6,
+        const std::vector<std::vector<double>> *wristPath6,
         std::vector<int> *pathsAssignment);
 
     void computeWaypointInterpolation(

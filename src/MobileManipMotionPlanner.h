@@ -182,7 +182,7 @@ public:
     /**
      * A pointer to the current end effector path is returned
      */
-    std::vector<std::vector<double>> *getEndEffectorPath();
+    std::vector<std::vector<double>> *getWristPath();
     /**
      * A pointer to the current rover path is returned
      */

@@ -19,7 +19,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     roverPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
 
-    endEffectorPath6 = new std::vector<std::vector<double>>;
+    wristPath6 = new std::vector<std::vector<double>>;
 
     std::vector<double> heading, smoothedHeading;
 
@@ -128,7 +128,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     // TODO now this is wrist path planning
     // End effector path planning
     FastMarching_lib::FastMarching3D pathPlanner3D;
-    std::vector<base::Waypoint> *endEffectorPath
+    std::vector<base::Waypoint> *wristPath
         = new std::vector<base::Waypoint>;
 
     clock_t inip = clock();
@@ -137,35 +137,35 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
                            zResolution,
                            iniPos,
                            samplePos,
-                           endEffectorPath);
+                           wristPath);
 
     //TODO check this, could be a problem
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
-    endEffectorPath6->resize(endEffectorPath->size(), std::vector<double>(6));
+    wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
-    for (int i = 0; i < endEffectorPath->size(); i++)
+    for (int i = 0; i < wristPath->size(); i++)
     {
-        (*endEffectorPath6)[i][0] = (*endEffectorPath)[i].position[0];
-        (*endEffectorPath6)[i][1] = (*endEffectorPath)[i].position[1];
-        (*endEffectorPath6)[i][2] = (*endEffectorPath)[i].position[2];
+        (*wristPath6)[i][0] = (*wristPath)[i].position[0];
+        (*wristPath6)[i][1] = (*wristPath)[i].position[1];
+        (*wristPath6)[i][2] = (*wristPath)[i].position[2];
 
-        (*endEffectorPath6)[i][3]
+        (*wristPath6)[i][3]
             = sherpa_tt_arm.iniEEorientation[0]
               + i * (finalEEorientation[0] - sherpa_tt_arm.iniEEorientation[0])
-                    / (endEffectorPath->size() - 1);
-        (*endEffectorPath6)[i][4]
+                    / (wristPath->size() - 1);
+        (*wristPath6)[i][4]
             = sherpa_tt_arm.iniEEorientation[1]
               + i * (finalEEorientation[1] - sherpa_tt_arm.iniEEorientation[1])
-                    / (endEffectorPath->size() - 1);
-        (*endEffectorPath6)[i][5]
+                    / (wristPath->size() - 1);
+        (*wristPath6)[i][5]
             = sherpa_tt_arm.iniEEorientation[2]
               + i * (finalEEorientation[2] - sherpa_tt_arm.iniEEorientation[2])
-                    / (endEffectorPath->size() - 1);
+                    / (wristPath->size() - 1);
     }
 
     // Paths inbetween assignment
     std::vector<int> *pathsAssignment = new std::vector<int>;
-    computeWaypointAssignment(roverPath6, endEffectorPath6, pathsAssignment);
+    computeWaypointAssignment(roverPath6, wristPath6, pathsAssignment);
 
     // Waypoint interpolation to smooth the movements of the arm joints
     interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
@@ -177,21 +177,18 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
                                  interpolatedAssignment);
 
     //TODO Now, computing inverse kinematics for the wrist and then for the EE
-    /* First, we compute the inverse kinematics of the wrist for all the path
+       /*First, we compute the inverse kinematics of the wrist for all the path
        Then, according to the orientation commanded, which is relative, we compute
-       the last three joints of the arm, using the transform of the wrist. 
-       TODO a new function is needed to compute the last three joints inverse kinematics
-       in function of the wrist and goal orientations*/
-    // Computing inverse kinematics
-    
-    sherpa_tt_arm.computeReachabilityMap(mapResolution/2, zResolution/2);
+       the last three joints of the arm, using the transform of the wrist. */
+
+    // Computing inverse kinematics    
 
     for (int i = 0; i < interpolatedRoverPath->size(); i++)
     {
-        int eeInd = (*interpolatedAssignment)[i];
+        int wristInd = (*interpolatedAssignment)[i];
         std::vector<std::vector<double>> TW2BCS(4, std::vector<double>(4));
-        std::vector<std::vector<double>> TW2EE(4, std::vector<double>(4));
-        std::vector<std::vector<double>> TBCS2EE(4, std::vector<double>(4));
+        std::vector<std::vector<double>> TW2Wrist(4, std::vector<double>(4));
+        std::vector<std::vector<double>> TBCS2Wrist(4, std::vector<double>(4));
 
         double x = (*interpolatedRoverPath)[i].position[0];
         double y = (*interpolatedRoverPath)[i].position[1];
@@ -204,30 +201,33 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         TW2BCS = dot(getTraslation(position),
                      dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
-        position[0] = (*endEffectorPath6)[eeInd][0];
-        position[1] = (*endEffectorPath6)[eeInd][1];
-        position[2] = (*endEffectorPath6)[eeInd][2];
-        roll = (*endEffectorPath6)[eeInd][3];
-        pitch = (*endEffectorPath6)[eeInd][4];
-        yaw = (*endEffectorPath6)[eeInd][5];
+        position[0] = (*wristPath6)[wristInd][0];
+        position[1] = (*wristPath6)[wristInd][1];
+        position[2] = (*wristPath6)[wristInd][2];
 
-        TW2EE = dot(getTraslation(position),
-                    dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+        TW2Wrist = getTraslation(position);
 
-        TBCS2EE = dot(getInverse(&TW2BCS), TW2EE);
+        TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
 
-        position[0] = TBCS2EE[0][3];
-        position[1] = TBCS2EE[1][3];
-        position[2] = TBCS2EE[2][3];
-        // TODO change the orientation from absolute to relative
-        roll = (*endEffectorPath6)[eeInd][3];
-        pitch = (*endEffectorPath6)[eeInd][4];
-        yaw = (*endEffectorPath6)[eeInd][5];
-        std::vector<double> orientation{roll, pitch, yaw};
+        position[0] = TBCS2Wrist[0][3];
+        position[1] = TBCS2Wrist[1][3];
+        position[2] = TBCS2Wrist[2][3];
+
         std::vector<double> config;
+
         try
         {
-            config = sherpa_tt_arm.getManipJoints(position, orientation, 1, 1);
+            config = sherpa_tt_arm.getPositionJoints(position,1,1);
+
+            roll = (*wristPath6)[wristInd][3];
+            pitch = (*wristPath6)[wristInd][4];
+            yaw = (*wristPath6)[wristInd][5];
+
+            std::vector<double> orientation{roll, pitch, yaw};
+
+            std::vector<double> wristJoints = sherpa_tt_arm.getWristJoints(config,orientation);
+
+            config.insert(config.end(), wristJoints.begin(), wristJoints.end());
         }
         catch (std::exception &e)
         {
@@ -246,9 +246,9 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     return true;
 }
 
-std::vector<std::vector<double>> *ArmPlanner::getEEPath()
+std::vector<std::vector<double>> *ArmPlanner::getWristPath()
 {
-    return endEffectorPath6;
+    return wristPath6;
 }
 
 std::vector<base::Waypoint> *ArmPlanner::getInterpolatedRoverPath()
@@ -445,7 +445,7 @@ void ArmPlanner::generateTunnel(
 
 void ArmPlanner::computeWaypointAssignment(
     const std::vector<std::vector<double>> *roverPath6,
-    const std::vector<std::vector<double>> *endEffectorPath6,
+    const std::vector<std::vector<double>> *wristPath6,
     std::vector<int> *pathsAssignment)
 {
     std::vector<double> armBasePos;
@@ -455,9 +455,9 @@ void ArmPlanner::computeWaypointAssignment(
     {
         armBasePos = (*roverPath6)[i];
         armBasePos[2] += sherpa_tt_arm.d0;
-        for (int j = endEffectorPath6->size() - 1; j > -1; j--)
+        for (int j = wristPath6->size() - 1; j > -1; j--)
         {
-            if (getDist3(armBasePos, (*endEffectorPath6)[j])
+            if (getDist3(armBasePos, (*wristPath6)[j])
                 < sherpa_tt_arm.maxArmOptimalDistance)
             {
                 (*pathsAssignment)[i] = j;
@@ -471,7 +471,7 @@ void ArmPlanner::computeWaypointAssignment(
             (*pathsAssignment)[i - 1] = (*pathsAssignment)[i];
 
     (*pathsAssignment)[0] = 0;
-    (*pathsAssignment)[roverPath6->size() - 1] = endEffectorPath6->size() - 1;
+    (*pathsAssignment)[roverPath6->size() - 1] = wristPath6->size() - 1;
 }
 
 void ArmPlanner::computeWaypointInterpolation(

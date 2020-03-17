@@ -90,6 +90,13 @@ public:
                                        int shoulder,
                                        int elbow);
 
+    std::vector<double> getPositionJoints(std::vector<double> position,
+                                          int shoulder,
+                                          int elbow);
+
+    std::vector<double> getWristJoints(std::vector<double> positionJoints,
+                                       std::vector<double> orientation);
+
     std::vector<double> getManipJoints(std::vector<double> position,
                                        std::vector<double> orientation,
                                        std::vector<double> previousConfig);

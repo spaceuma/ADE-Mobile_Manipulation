@@ -364,7 +364,7 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
     {
         std::cout
             << "\033[1;31mWARNING [Manipulator::getManipJoints]: shoulder "
-               "value have to be 1 or -1, shoulder "
+               "value has to be 1 or -1, shoulder "
                "will be considered as 1\033[0m\n";
         shoulder = 1;
     }
@@ -373,7 +373,7 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
     {
         std::cout
             << "\033[1;31mWARNING [Manipulator::getManipJoints]: elbow value "
-               "have to be 1 or -1, it will be "
+               "has to be 1 or -1, it will be "
                "considered as 1\033[0m\n";
         elbow = 1;
     }
@@ -476,6 +476,161 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
     }
 
     for (int i = 0; i < 6; i++)
+    {
+        if (q[i] > pi) q[i] -= 2 * pi;
+        if (q[i] < -pi) q[i] += 2 * pi;
+        if (abs(q[i]) < 1e-4) q[i] = 0;
+    }
+
+    return q;
+}
+
+std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
+                                                   int shoulder = 1,
+                                                   int elbow = 1)
+{
+    // This function uses a geometric Inverse Kinematics Model to obtain the
+    // needed configuration of the arm to reach a certain cartesian position and
+    // orientation.
+
+    std::vector<double> q(3, 0);
+
+    double xm = position[0];
+    double ym = position[1];
+    double zm = position[2];
+
+    if (abs(shoulder) != 1)
+    {
+        std::cout
+            << "\033[1;31mWARNING [Manipulator::getManipJoints]: shoulder "
+               "value has to be 1 or -1, shoulder "
+               "will be considered as 1\033[0m\n";
+        shoulder = 1;
+    }
+
+    if (abs(elbow) != 1)
+    {
+        std::cout
+            << "\033[1;31mWARNING [Manipulator::getManipJoints]: elbow value "
+               "has to be 1 or -1, it will be "
+               "considered as 1\033[0m\n";
+        elbow = 1;
+    }
+
+    q[0] = atan2(ym, xm) - pi / 2 + shoulder * pi / 2;
+
+    double r = sqrt(pow(xm, 2) + pow(ym, 2)) - shoulder * a1;
+
+    double alpha = atan2(zm - d0, r);
+    double d = sqrt(pow(zm - d0, 2) + pow(r, 2));
+    double l1 = sqrt(pow(c2, 2) + pow(a2, 2));
+    double l2 = sqrt(pow(a3, 2) + pow(d4, 2));
+
+    if (d > l1 + l2)
+    {
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+                     "position is too far, unreachable position "
+                     "and orientation\033[0m\n";*/
+        throw std::exception();
+        // return std::vector<double>(1, 0);
+    }
+    else if (d < l1 - l2)
+    {
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+                     "position is too close, unreachable position "
+                     "and orientation\033[0m\n";*/
+        throw std::exception();
+        // return std::vector<double>(1, 0);
+    }
+
+    double beta = acos((pow(d, 2) + pow(l1, 2) - pow(l2, 2)) / (2 * d * l1));
+    double gamma = acos((pow(l1, 2) + pow(l2, 2) - pow(d, 2)) / (2 * l1 * l2));
+
+    double theta2ini = atan2(c2, a2);
+    double theta3ini = atan2(a3, d4);
+
+    q[1] = 3 * pi / 2 + shoulder * pi / 2 - shoulder * alpha - elbow * beta
+           - theta2ini;
+    q[2] = pi - elbow * gamma + (theta2ini + theta3ini);
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (q[i] > pi) q[i] -= 2 * pi;
+        if (q[i] < -pi) q[i] += 2 * pi;
+        if (abs(q[i]) < 1e-4) q[i] = 0;
+    }
+
+    return q;
+}
+
+std::vector<double> Manipulator::getWristJoints(std::vector<double> positionJoints,
+                                                std::vector<double> orientation)
+{
+    
+    std::vector<double> q(3, 0);
+
+    double roll = orientation[0];
+    double pitch = orientation[1];
+    double yaw = orientation[2];
+
+    std::vector<std::vector<double>> Torientation
+        = dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll)));
+
+    std::vector<double> a01{a1, 0, 0};
+    std::vector<std::vector<double>> T01
+        = dot(getZrot(positionJoints[0]), dot(getTraslation(a01), getXrot(-pi / 2)));
+
+    std::vector<double> a12{a2, c2, 0};
+    std::vector<std::vector<double>> T12
+        = dot(getZrot(positionJoints[1]), getTraslation(a12));
+
+    std::vector<double> a23{0, -a3, 0};
+    std::vector<std::vector<double>> T23
+        = dot(getZrot(positionJoints[2]),
+              dot(getTraslation(a23), dot(getXrot(pi / 2), getYrot(pi / 2))));
+
+    std::vector<std::vector<double>> T03 = dot(T01, dot(T12, T23));
+
+    std::vector<std::vector<double>> T36 = dot(getInverse(&T03), Torientation);
+
+    double c5 = T36[2][2];
+    double s5 = sqrt(pow(T36[0][2], 2) + pow(T36[1][2], 2));
+
+    if (abs(s5) >= 1e-4)
+    {
+        double c4 = T36[0][2] / s5;
+        double s4 = T36[1][2] / s5;
+
+        double c6 = -T36[2][0] / s5;
+        double s6 = T36[2][1] / s5;
+
+        q[0] = atan2(s4, c4);
+        q[1] = atan2(s5, c5);
+        q[2] = atan2(s6, c6);
+    }
+    else
+    {
+        if (c5 > 0)
+        {
+            double s46 = T36[1][0];
+            double c46 = T36[1][1];
+
+            q[0] = 0;
+            q[1] = atan2(s5, c5);
+            q[2] = atan2(s46, c46);
+        }
+        else
+        {
+            double s64 = T36[1][0];
+            double c64 = T36[1][1];
+
+            q[0] = 0;
+            q[1] = atan2(s5, c5);
+            q[2] = atan2(s64, c64);
+        }
+    }
+
+    for (int i = 0; i < 3; i++)
     {
         if (q[i] > pi) q[i] -= 2 * pi;
         if (q[i] < -pi) q[i] += 2 * pi;
@@ -759,7 +914,6 @@ void Manipulator::computeReachabilityMap(const double resXY,
                            std::vector<std::vector<double>>(
                                sizeXY, std::vector<double>(sizeZ, 0)));
     std::vector<double> position;
-    std::vector<double> orientation = {0, 90 * M_PI / 180, 0};
     std::vector<double> config;
     CollisionDetector *p_collision_detector = new CollisionDetector(
         "/home/ares/ADE-Mobile_Manipulation/data/urdf/");
@@ -772,22 +926,22 @@ void Manipulator::computeReachabilityMap(const double resXY,
                 std::cout << "\rProgress: [" << 100 * i / sizeXY << "%, "
                           << 100 * j / sizeXY << "%, " << 100 * k / sizeZ
                           << "%]";
-                position = {minXY + i * resXY + d6,
+                position = {minXY + i * resXY,
                             minXY + j * resXY,
                             minZ + k * resZ};
                 try
                 {
-                    config = getManipJoints(position, orientation);
+                    config = getPositionJoints(position,1,1);
 
                     for (int l = 0; l < 6; l++)
                     {
-                        config[3] = l * res4;
+                        config.push_back(l * res4);
                         for (int m = 0; m < 12; m++)
                         {
-                            config[4] = -110 * M_PI / 180 + m * res5;
+                            config.push_back(-110 * M_PI / 180 + m * res5);
                             for (int n = 0; n < 3; n++)
                             {
-                                config[5] = n * res6;
+                                config.push_back(n * res6);
                                 // std::cout << ". Config: ["<<config[0]<<",
                                 // "<<config[1]<<", "<<config[2]<<",
                                 // "<<config[3]<<", "<<config[4]<<",
