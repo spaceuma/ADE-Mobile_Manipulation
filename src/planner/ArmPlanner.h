@@ -26,10 +26,18 @@ public:
     double fetchingZDistance = 0.4;
     std::vector<double> finalEEorientation = {-pi, 0, -pi};
 
+    // -- VARIABLES --
     std::vector<std::vector<double>> *roverPath6;
     std::vector<std::vector<double>> *wristPath6;
 
+    double mapResolution;
+    double zResolution;
+    const std::vector<std::vector<double>> *DEM;
+
     // -- FUNCTIONS --
+    ArmPlanner();
+    ~ArmPlanner();
+
     std::vector<base::Waypoint> *getInterpolatedRoverPath();
 
     std::vector<std::vector<double>> *getWristPath();
@@ -44,24 +52,15 @@ public:
                        std::vector<std::vector<double>> *armJoints);
 
     void generateTunnel(
-        const std::vector<std::vector<double>> *roverPath6,
-        const std::vector<std::vector<double>> *DEM,
-        double mapResolution,
-        double zResolution,
         base::Waypoint iniPos,
         base::Waypoint samplePos,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
 
-    void computeWaypointAssignment(
-        const std::vector<std::vector<double>> *roverPath6,
-        const std::vector<std::vector<double>> *wristPath6,
-        std::vector<int> *pathsAssignment);
+    void computeWaypointAssignment(std::vector<int> *pathsAssignment);
 
-    void computeWaypointInterpolation(
-        const std::vector<std::vector<double>> *roverPath6,
-        const std::vector<int> *pathsAssignment,
-        std::vector<base::Waypoint> *newRoverPath,
-        std::vector<int> *newAssignment);
+    void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
+                                      std::vector<base::Waypoint> *newRoverPath,
+                                      std::vector<int> *newAssignment);
 
     std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,
                                                       base::Waypoint waypoint1,
