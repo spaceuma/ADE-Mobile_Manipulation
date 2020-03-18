@@ -267,9 +267,15 @@ Manipulator::Manipulator()
     reachabilityMap = new std::vector<std::vector<std::vector<double>>>;
     resolutions = new std::vector<double>;
     minValues = new std::vector<double>;
+    maxValues = new std::vector<double>;
 
     readReachabilityMap(
         "data/reachabilityMap.txt", reachabilityMap, resolutions, minValues);
+
+    maxValues->resize(3);
+    (*maxValues)[0] = (*minValues)[0]+reachabilityMap->size()*(*resolutions)[0];
+    (*maxValues)[1] = (*minValues)[1]+(*reachabilityMap)[0].size()*(*resolutions)[1];
+    (*maxValues)[2] = (*minValues)[2]+(*reachabilityMap)[0][0].size()*(*resolutions)[2];
 }
 
 Manipulator::~Manipulator()
@@ -907,11 +913,11 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     double res5 = 20 * M_PI / 180;
     double res6 = 30 * M_PI / 180;
 
-    double maxXY = a1 + a2 + d4;
-    double minXY = -a1 - a2 - d4;
+    double maxXY = (a1 + a2 + d4)*1.1;
+    double minXY = (-a1 - a2 - d4)*1.1;
 
-    double maxZ = d0 + a2 + d4;
-    double minZ = d0 - a2 - d4;
+    double maxZ = (d0 + a2 + d4)*1.1;
+    double minZ = (d0 - a2 - d4)*1.1;
 
     std::vector<double> resolutions = {resXY, resXY, resZ};
     std::vector<double> minValues = {minXY, minXY, minZ};
@@ -990,8 +996,6 @@ bool Manipulator::isReachable(std::vector<double> position)
     int ix = (int)((position[0] - (*minValues)[0]) / (*resolutions)[0] + 0.5);
     int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
     int iz = (int)((position[2] - (*minValues)[2]) / (*resolutions)[2] + 0.5);
-
-    std::cout << "ix: " << ix << ", iy: " << iy << ", iz: " << iz << std::endl;
 
     if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityMap->size() - 1
         && iy < (*reachabilityMap)[0].size() - 1

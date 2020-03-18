@@ -133,9 +133,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     clock_t init = clock();
 
     // Generating the reachability tunnel surrounding the rover path
-    // TODO Generate new tunnel
-    generateTunnel(iniPos, samplePos, volume_cost_map);
-
+    generateTunnel(iniPos, samplePos, horizonDistance, volume_cost_map);
     clock_t endt = clock();
     double t = double(endt - init) / CLOCKS_PER_SEC;
 
@@ -176,7 +174,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     // Paths inbetween assignment
     std::vector<int> *pathsAssignment = new std::vector<int>;
-    computeWaypointAssignment(pathsAssignment);
+    computeWaypointAssignment(horizonDistance, pathsAssignment);
 
     // Waypoint interpolation to smooth the movements of the arm joints
     interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
@@ -272,6 +270,7 @@ std::vector<std::vector<std::vector<double>>> *ArmPlanner::getVolumeCostMap()
 void ArmPlanner::generateTunnel(
     base::Waypoint iniPos,
     base::Waypoint samplePos,
+    double horizonDistance,
     std::vector<std::vector<std::vector<double>>> *costMap3D)
 {
     int n = roverPath6->size();
@@ -292,169 +291,215 @@ void ArmPlanner::generateTunnel(
     goal[2] = (int)(samplePos.position[2] / zResolution + 0.5);
     (*costMap3D)[goal[1]][goal[0]][goal[2]] = 1;
 
-    int tunnelSizeY = (int)(sherpa_tt_arm.maxXYArm / mapResolution + 0.5);
-    int tunnelSizeZ
-        = (int)((sherpa_tt_arm.maxZArm - sherpa_tt_arm.d0) / zResolution + 0.5);
+    std::vector<double> *minValues = sherpa_tt_arm.minValues;
+    std::vector<double> *maxValues = sherpa_tt_arm.maxValues;
 
-    for (int i = 0; i < n; i++)
+    double optimalDistance = sherpa_tt_arm.maxArmDistance*2 / 3;
+
+    // Tunnel in the first waypoint
+    int tunnelSizeX = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+    int tunnelSizeY = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+    int tunnelSizeZ = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
+
+    std::vector<double> pos{
+        (*roverPath6)[0][0], (*roverPath6)[0][1], (*roverPath6)[0][2]};
+    double roll = (*roverPath6)[0][3];
+    double pitch = (*roverPath6)[0][4];
+    double yaw = (*roverPath6)[0][5];
+    std::vector<std::vector<double>> TW2BCS
+        = dot(getTraslation(pos),
+              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+    for (int i = 0; i < tunnelSizeX; i++)
+        for (int j = 0; j < tunnelSizeY; j++)
+            for (int k = 0; k < tunnelSizeZ; k++)
+            {
+                double x = (*minValues)[0] + mapResolution * i;
+                double y = (*minValues)[1] + mapResolution * j;
+                double z = (*minValues)[2] + zResolution * k;
+                double dist = sqrt(pow(x, 2) + pow(y, 2) + pow(z - sherpa_tt_arm.d0, 2));
+                if (dist < sherpa_tt_arm.maxArmDistance)
+                {
+                    std::vector<std::vector<double>> TBCS2Node
+                        = {{1, 0, 0, x},
+                           {0, 1, 0, y},
+                           {0, 0, 1, z},
+                           {0, 0, 0, 1}};
+
+                    pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
+
+                    if(sherpa_tt_arm.isReachable(pos))
+                    {
+                        std::vector<std::vector<double>> TW2Node
+                            = dot(TW2BCS, TBCS2Node);
+
+                        int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
+                        int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
+                        int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
+                        double cost
+                            = 1 + abs(dist - optimalDistance);
+
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
+                            && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix][iz])
+                                (*costMap3D)[iy][ix][iz] = cost;
+
+                        if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                        if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                        if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy + 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                        if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy - 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                                (*costMap3D)[iy - 1][ix][iz] = cost;
+                    }
+                }
+            }
+
+    // Tunnel during the rover movement    
+    tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
+    tunnelSizeZ = (int)(abs((*maxValues)[2] - 0) / zResolution + 0.5);
+
+    for (int i = 1; i < n; i++)
     {
-        std::vector<double> pos{
-            (*roverPath6)[i][0], (*roverPath6)[i][1], (*roverPath6)[i][2]};
-        double roll = (*roverPath6)[i][3];
-        double pitch = (*roverPath6)[i][4];
-        double yaw = (*roverPath6)[i][5];
-        std::vector<std::vector<double>> TW2BCS
-            = dot(getTraslation(pos),
+        pos = {(*roverPath6)[i][0], (*roverPath6)[i][1], (*roverPath6)[i][2]};
+        roll = (*roverPath6)[i][3];
+        pitch = (*roverPath6)[i][4];
+        yaw = (*roverPath6)[i][5];
+        TW2BCS = dot(getTraslation(pos),
                   dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
         for (int j = 0; j < tunnelSizeY; j++)
             for (int k = 0; k < tunnelSizeZ; k++)
             {
-                double dist
-                    = sqrt(pow(mapResolution * j, 2) + pow(zResolution * k, 2));
+                double x = horizonDistance;
+                double y = 0 + mapResolution * j;
+                double z = 0 + zResolution * k;
+                double dist = sqrt(pow(x, 2) + pow(y, 2) + pow(z - sherpa_tt_arm.d0, 2));
                 if (dist < sherpa_tt_arm.maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node
-                        = {{1, 0, 0, 0},
-                           {0, 1, 0, mapResolution * j},
-                           {0, 0, 1, sherpa_tt_arm.d0 + zResolution * k},
+                        = {{1, 0, 0, x},
+                           {0, 1, 0, y},
+                           {0, 0, 1, z},
                            {0, 0, 0, 1}};
 
-                    std::vector<std::vector<double>> TW2Node
-                        = dot(TW2BCS, TBCS2Node);
+                    pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
-                    int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
-                    int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
-                    double cost
-                        = 1
-                          + abs(sqrt(pow(mapResolution * j
-                                             - sherpa_tt_arm.maxArmDistance / 2,
-                                         2)
-                                     + pow(zResolution * k
-                                               - sherpa_tt_arm.maxArmDistance
-                                                     / 2,
-                                           2))
-                                / (sherpa_tt_arm.maxArmDistance / 2));
+                    if(sherpa_tt_arm.isReachable(pos))
+                    {
+                        std::vector<std::vector<double>> TW2Node
+                            = dot(TW2BCS, TBCS2Node);
 
-                    if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
-                        && iz < sz - 1)
-                        if (isinf((*costMap3D)[iy][ix][iz]))
-                            (*costMap3D)[iy][ix][iz] = cost;
+                        int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
+                        int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
+                        int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
+                        double cost
+                            = 1 + abs(dist - optimalDistance);
 
-                    if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
-                        && iy < sy - 1 && iz < sz - 1)
-                        if (isinf((*costMap3D)[iy][ix + 1][iz]))
-                            (*costMap3D)[iy][ix + 1][iz] = cost;
-                    if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
-                        && iy < sy - 1 && iz < sz - 1)
-                        if (isinf((*costMap3D)[iy][ix - 1][iz]))
-                            (*costMap3D)[iy][ix - 1][iz] = cost;
-                    if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
-                        && iy + 1 < sy - 1 && iz < sz - 1)
-                        if (isinf((*costMap3D)[iy + 1][ix][iz]))
-                            (*costMap3D)[iy + 1][ix][iz] = cost;
-                    if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
-                        && iy - 1 < sy - 1 && iz < sz - 1)
-                        if (isinf((*costMap3D)[iy - 1][ix][iz]))
-                            (*costMap3D)[iy - 1][ix][iz] = cost;
-                }
-            }
-    }
-
-    // Last stretch of the tunnel
-    double iRes, iDis;
-    int numExtraWayp = (int)(30 * 0.1 / zResolution + 0.5);
-    for (int i = 0; i < numExtraWayp; i++)
-    {
-        std::vector<double> pos{(*roverPath6)[n - 1][0],
-                                (*roverPath6)[n - 1][1],
-                                (*roverPath6)[n - 1][2]};
-        double roll = (*roverPath6)[n - 1][3];
-        double pitch = (*roverPath6)[n - 1][4];
-        double yaw = (*roverPath6)[n - 1][5];
-        std::vector<std::vector<double>> TW2BCS
-            = dot(getTraslation(pos),
-                  dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
-
-        double pitchEnd = i * pi / 2 / numExtraWayp - (*roverPath6)[n - 1][4];
-        std::vector<double> desp1{
-            -sin(pitchEnd) * heightGround2BCS, 0, -heightGround2BCS};
-        std::vector<double> desp2{0, 0, heightGround2BCS};
-        std::vector<std::vector<double>> TBCS2NewWayp = dot(
-            getTraslation(desp1), dot(getYrot(pitchEnd), getTraslation(desp2)));
-
-        std::vector<std::vector<double>> TW2NewWayp = dot(TW2BCS, TBCS2NewWayp);
-
-        iRes = zResolution + sin(pitchEnd) * (mapResolution - zResolution);
-        iDis = sherpa_tt_arm.d0
-               + sin(pitchEnd) * (sherpa_tt_arm.a1 - sherpa_tt_arm.d0);
-
-        for (int j = 0; j < 2 * tunnelSizeY; j++)
-            for (int k = 0;
-                 k < 2 * (int)(tunnelSizeZ * zResolution / iRes + 0.5);
-                 k++)
-            {
-                double dist = sqrt(pow(mapResolution * j / 2, 2)
-                                   + pow(zResolution * k / 2, 2));
-                if (dist < sherpa_tt_arm.maxArmDistance)
-                {
-                    std::vector<std::vector<double>> TNewWayp2Node
-                        = {{1, 0, 0, 0},
-                           {0, 1, 0, mapResolution * j / 2},
-                           {0, 0, 1, iDis + iRes * k / 2},
-                           {0, 0, 0, 1}};
-
-                    std::vector<std::vector<double>> TW2Node
-                        = dot(TW2NewWayp, TNewWayp2Node);
-
-                    int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
-                    int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
-                    int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
-
-                    double cost
-                        = 1
-                          + abs(sqrt(pow(mapResolution * j / 2
-                                             - sherpa_tt_arm.maxArmDistance / 2,
-                                         2)
-                                     + pow(zResolution * k / 2
-                                               - sherpa_tt_arm.maxArmDistance
-                                                     / 2,
-                                           2))
-                                / (sherpa_tt_arm.maxArmDistance / 2));
-
-                    if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
-                        && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy][ix])
-                            if (isinf((*costMap3D)[iy][ix][iz]))
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
+                            && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix][iz])
                                 (*costMap3D)[iy][ix][iz] = cost;
 
-                    if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
-                        && iy < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy][ix + 1])
-                            if (isinf((*costMap3D)[iy][ix + 1][iz]))
+                        if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix+1][iz])
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
-                    if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
-                        && iy < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy][ix - 1])
-                            if (isinf((*costMap3D)[iy][ix - 1][iz]))
+                        if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix-1][iz])
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
-                    if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
-                        && iy + 1 < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy + 1][ix])
-                            if (isinf((*costMap3D)[iy + 1][ix][iz]))
+                        if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy + 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy+1][ix][iz])
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
-                    if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
-                        && iy - 1 < sy - 1 && iz < sz - 1)
-                        if (TW2Node[2][3] > (*DEM)[iy - 1][ix])
-                            if (isinf((*costMap3D)[iy - 1][ix][iz]))
+                        if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy - 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy-1][ix][iz])
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
+                    }
                 }
             }
     }
+
+    // Tunnel in the last waypoint
+    tunnelSizeX = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+    tunnelSizeY = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+    tunnelSizeZ = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
+
+    pos = {(*roverPath6)[roverPath6->size()-1][0], (*roverPath6)[roverPath6->size()-1][1], (*roverPath6)[roverPath6->size()-1][2]};
+    roll = (*roverPath6)[roverPath6->size()-1][3];
+    pitch = (*roverPath6)[roverPath6->size()-1][4];
+    yaw = (*roverPath6)[roverPath6->size()-1][5];
+    TW2BCS = dot(getTraslation(pos),
+              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+    for (int i = 0; i < tunnelSizeX; i++)
+        for (int j = 0; j < tunnelSizeY; j++)
+            for (int k = 0; k < tunnelSizeZ; k++)
+            {
+                double x = (*minValues)[0] + mapResolution * i;
+                double y = (*minValues)[1] + mapResolution * j;
+                double z = (*minValues)[2] + zResolution * k;
+                double dist = sqrt(pow(x, 2) + pow(y, 2) + pow(z - sherpa_tt_arm.d0, 2));
+                if (dist < sherpa_tt_arm.maxArmDistance)
+                {
+                    std::vector<std::vector<double>> TBCS2Node
+                        = {{1, 0, 0, x},
+                           {0, 1, 0, y},
+                           {0, 0, 1, z},
+                           {0, 0, 0, 1}};
+
+                    pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
+
+                    if(sherpa_tt_arm.isReachable(pos))
+                    {
+                        std::vector<std::vector<double>> TW2Node
+                            = dot(TW2BCS, TBCS2Node);
+
+                        int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
+                        int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
+                        int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
+                        double cost
+                            = 1 + abs(dist - optimalDistance);
+
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
+                            && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix][iz])
+                                (*costMap3D)[iy][ix][iz] = cost;
+
+                        if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                        if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                        if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy + 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                        if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy - 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                                (*costMap3D)[iy - 1][ix][iz] = cost;
+                    }
+                }
+            }
 }
 
-void ArmPlanner::computeWaypointAssignment(std::vector<int> *pathsAssignment)
+void ArmPlanner::computeWaypointAssignment(double horizonDistance,
+                                           std::vector<int> *pathsAssignment)
 {
     std::vector<double> armBasePos;
     (*pathsAssignment) = std::vector<int>(roverPath6->size(), 0);

@@ -74,14 +74,15 @@ public:
         = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
     std::vector<double> initialConfiguration
-        = {1.03316, -1.71559, 2.95979, 3.12678, 1.24423, -3.13684};
+        = {0.785398, -1.62075, 2.3405, -3.14159, 0.719747, 3.14159};
 
-    std::vector<double> iniEEorientation = {0, pi / 2, pi / 3};
+    std::vector<double> iniEEorientation = {0, pi / 2, pi / 4};
 
     // -- VARIABLES --
     std::vector<std::vector<std::vector<double>>> *reachabilityMap;
     std::vector<double> *resolutions;
     std::vector<double> *minValues;
+    std::vector<double> *maxValues;
 
     // -- FUNCTIONS --
     Manipulator();

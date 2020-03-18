@@ -22,9 +22,11 @@ public:
     // -- PARAMETERS --
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
-    double optimalLeftDeviation = sherpa_tt_arm.maxArmDistance / 3;
+    double optimalLeftDeviation = sherpa_tt_arm.maxArmDistance / 4;
     double fetchingZDistance = 0.4;
     std::vector<double> finalEEorientation = {-pi, 0, -pi};
+
+    double horizonDistance = 0.4;
 
     // -- VARIABLES --
     std::vector<std::vector<double>> *roverPath6;
@@ -54,9 +56,11 @@ public:
     void generateTunnel(
         base::Waypoint iniPos,
         base::Waypoint samplePos,
+        double horizonDistance,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
 
-    void computeWaypointAssignment(std::vector<int> *pathsAssignment);
+    void computeWaypointAssignment(double horizonDistance,
+                                   std::vector<int> *pathsAssignment);
 
     void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
                                       std::vector<base::Waypoint> *newRoverPath,
