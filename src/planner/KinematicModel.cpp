@@ -265,12 +265,15 @@ double KinematicModel_lib::getNorm(std::vector<double> a)
 Manipulator::Manipulator()
 {
     reachabilityMap = new std::vector<std::vector<std::vector<double>>>;
+    reachabilityDistances = new std::vector<std::vector<std::vector<double>>>;
     resolutions = new std::vector<double>;
     minValues = new std::vector<double>;
     maxValues = new std::vector<double>;
 
     readReachabilityMap(
         "data/reachabilityMap.txt", reachabilityMap, resolutions, minValues);
+    readReachabilityMap(
+        "data/reachabilityDistances.txt", reachabilityDistances, resolutions, minValues);
 
     maxValues->resize(3);
     (*maxValues)[0] = (*minValues)[0]+reachabilityMap->size()*(*resolutions)[0];
@@ -1004,5 +1007,21 @@ bool Manipulator::isReachable(std::vector<double> position)
     else
     {
         return false;
+    }
+}
+
+double Manipulator::getDistanceToCollision(std::vector<double> position)
+{
+    int ix = (int)((position[0] - (*minValues)[0]) / (*resolutions)[0] + 0.5);
+    int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
+    int iz = (int)((position[2] - (*minValues)[2]) / (*resolutions)[2] + 0.5);
+
+    if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityDistances->size() - 1
+        && iy < (*reachabilityDistances)[0].size() - 1
+        && iz < (*reachabilityDistances)[0][0].size() - 1)
+        return (*reachabilityDistances)[ix][iy][iz];
+    else
+    {
+        return 0;
     }
 }

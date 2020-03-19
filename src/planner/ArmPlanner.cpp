@@ -294,7 +294,7 @@ void ArmPlanner::generateTunnel(
     std::vector<double> *minValues = sherpa_tt_arm.minValues;
     std::vector<double> *maxValues = sherpa_tt_arm.maxValues;
 
-    double optimalDistance = sherpa_tt_arm.maxArmDistance*2 / 3;
+    double slope = 0.2;
 
     // Tunnel in the first waypoint
     int tunnelSizeX = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
@@ -337,7 +337,7 @@ void ArmPlanner::generateTunnel(
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
                         double cost
-                            = 1 + abs(dist - optimalDistance);
+                            = 1 + slope/sherpa_tt_arm.getDistanceToCollision(pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
                             && iz < sz - 1)
@@ -403,7 +403,7 @@ void ArmPlanner::generateTunnel(
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
                         double cost
-                            = 1 + abs(dist - optimalDistance);
+                            = 1 + slope/sherpa_tt_arm.getDistanceToCollision(pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
                             && iz < sz - 1)
@@ -470,7 +470,7 @@ void ArmPlanner::generateTunnel(
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
                         double cost
-                            = 1 + abs(dist - optimalDistance);
+                            = 1 + slope/sherpa_tt_arm.getDistanceToCollision(pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
                             && iz < sz - 1)

@@ -23,7 +23,7 @@ public:
     double d6 = 0.300;
 
     double heightGround2BCS = 0.645;
-    double fetchingZDistance = 0.1;
+    double fetchingZDistance = 0.4;
 
     double maxFetchingDistance
         = a1

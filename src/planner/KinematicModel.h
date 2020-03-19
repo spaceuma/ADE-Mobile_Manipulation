@@ -80,6 +80,7 @@ public:
 
     // -- VARIABLES --
     std::vector<std::vector<std::vector<double>>> *reachabilityMap;
+    std::vector<std::vector<std::vector<double>>> *reachabilityDistances;
     std::vector<double> *resolutions;
     std::vector<double> *minValues;
     std::vector<double> *maxValues;
@@ -117,6 +118,8 @@ public:
     void computeReachabilityMap(const double resXY, const double resZ);
 
     bool isReachable(std::vector<double> position);
+
+    double getDistanceToCollision(std::vector<double> position);
 };
 } // namespace KinematicModel_lib
 #endif

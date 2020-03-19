@@ -22,7 +22,7 @@ public:
     // -- PARAMETERS --
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
-    double optimalLeftDeviation = sherpa_tt_arm.maxArmDistance / 4;
+    double optimalLeftDeviation = 0.4;
     double fetchingZDistance = 0.4;
     std::vector<double> finalEEorientation = {-pi, 0, -pi};
 
