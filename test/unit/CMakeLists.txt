@@ -50,8 +50,8 @@ file(GLOB WP_SRC
 )  
 
 file(GLOB CC_SRC
-    "../../deps/coupled_control/coupledControl.hpp"
-    "../../deps/coupled_control/coupledControl.cpp"
+    "../../deps/control-coupled_control/src/coupledControl.hpp"
+    "../../deps/control-coupled_control/src/coupledControl.cpp"
 )  
 
 # Link runTests with what we want to test and the GTest and pthread library
@@ -74,5 +74,5 @@ target_include_directories(runUnitTests PRIVATE ../../src/types/proxy_library)
 target_include_directories(runUnitTests PRIVATE ../../src/mmFileManagerLib)
 target_include_directories(runUnitTests PRIVATE ../../src/planner)
 target_include_directories(runUnitTests PRIVATE ../../deps/control-waypoint_navigation)
-target_include_directories(runUnitTests PRIVATE ../../deps/coupled_control)
+target_include_directories(runUnitTests PRIVATE ../../deps/control-coupled_control/src)
 target_link_libraries(runUnitTests ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread Eigen3::Eigen dart dart-utils-urdf dart-gui)

@@ -50,8 +50,8 @@ file(GLOB WP_SRC
 )  
 
 file(GLOB CC_SRC
-    "../../deps/coupled_control/coupledControl.hpp"
-    "../../deps/coupled_control/coupledControl.cpp"
+    "../../deps/control-coupled_control/src/coupledControl.hpp"
+    "../../deps/control-coupled_control/src/coupledControl.cpp"
 )  
 
 add_executable(harnessexample
@@ -69,7 +69,7 @@ target_include_directories(harnessexample PRIVATE ../../src/types/base)
 target_include_directories(harnessexample PRIVATE ../../src/types/proxy_library)
 target_include_directories(harnessexample PRIVATE ../../src/mmFileManagerLib)
 target_include_directories(harnessexample PRIVATE ../../src/planner)
-target_include_directories(harnessexample PRIVATE ../../deps/coupled_control)
+target_include_directories(harnessexample PRIVATE ../../deps/control-coupled_control/src)
 target_include_directories(harnessexample PRIVATE ../../deps/control-waypoint_navigation)
 target_link_libraries (harnessexample ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread Eigen3::Eigen dart dart-utils-urdf dart-gui)
 
