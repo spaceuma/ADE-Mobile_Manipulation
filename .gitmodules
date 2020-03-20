@@ -1,0 +1,3 @@
+[submodule "deps/control-waypoint_navigation"]
+	path = deps/control-waypoint_navigation
+	url = https://github.com/spaceuma/control-waypoint_navigation.git
