@@ -57,7 +57,7 @@ TEST(MMExecutorTest, nominal_working_test)
 	pose_robot_sim.position.y() += d_pos_error_y;
         pose_robot_sim.orientation = robotPose.orientation;
         ui_error_code = dummyExecutor.getCoupledCommand(pose_robot_sim, j_current_joints, mc, j_next_joints);
-//	ASSERT_LE(ui_error_code,1);
+	ASSERT_LE(ui_error_code,2);
         
 	Eigen::AngleAxisd toWCF, robotRot;
         toWCF = Eigen::AngleAxisd(robotPose.getYaw(), Eigen::Vector3d::UnitZ());
@@ -248,7 +248,7 @@ TEST(MMExecutorTest, armnotworking_test)
 	pose_robot_sim.position.y() += d_pos_error_y;
         pose_robot_sim.orientation = robotPose.orientation;
         ui_error_code = dummyExecutor.getCoupledCommand(pose_robot_sim, j_current_joints, mc, j_next_joints);
-//	ASSERT_LE(ui_error_code,1);
+	ASSERT_FALSE(ui_error_code==5);
         
 	Eigen::AngleAxisd toWCF, robotRot;
         toWCF = Eigen::AngleAxisd(robotPose.getYaw(), Eigen::Vector3d::UnitZ());
@@ -316,7 +316,7 @@ TEST(MMExecutorTest, armnotworking_test)
 	// Joints positions are now the ones commanded
         if (ui_loop_counter > 200)
 	{
-	    ASSERT_EQ(ui_error_code,5) << "\033[31m[----------]\033[0m Motion Command is ( transl = " << mc.m_speed_ms << ", rot = " << mc.m_turnRate_rads << ") ";
+	    ASSERT_EQ(ui_error_code,6) << "\033[31m[----------]\033[0m Motion Command is ( transl = " << mc.m_speed_ms << ", rot = " << mc.m_turnRate_rads << ") ";
 	    break;
 	}
 	if (ui_loop_counter < 2)

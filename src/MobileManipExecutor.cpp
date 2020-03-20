@@ -93,6 +93,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     // Getting Arm Command
     bool b_isFinal = this->getArmCommand(j_next_arm_command_m);
     std::cout << "The Current Segment is " << this->waypoint_navigation.getCurrentSegment() << " and the path size is " << this->vpw_path.size() << std::endl;
+    std::cout << "The state is " << this->armstate << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
@@ -120,7 +121,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             /*if (!isArmWorking(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 mc_m = this->getZeroRoverCommand();
-	        return 5;
+	        return 6;
 	    }*/
     	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before MotionControl is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;

@@ -231,6 +231,9 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                 case 5:
                     setError(FORB_ARM_POS);
                     return false;
+		case 6:
+		    setError(COLLIDING_ARM);
+		    return false;
             }
             return false;
             break;
