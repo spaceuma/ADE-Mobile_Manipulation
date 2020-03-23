@@ -26,7 +26,7 @@ public:
     double fetchingZDistance = 0.4;
     std::vector<double> finalEEorientation = {-pi, 0, -pi};
 
-    double horizonDistance = 0.4;
+    double horizonDistance = 1;
 
     // -- VARIABLES --
     std::vector<std::vector<double>> *roverPath6;

@@ -297,9 +297,12 @@ void ArmPlanner::generateTunnel(
     double slope = 0.2;
 
     // Tunnel in the first waypoint
-    int tunnelSizeX = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
-    int tunnelSizeY = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
-    int tunnelSizeZ = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
+    int tunnelSizeX
+        = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+    int tunnelSizeY
+        = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+    int tunnelSizeZ
+        = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
     std::vector<double> pos{
         (*roverPath6)[0][0], (*roverPath6)[0][1], (*roverPath6)[0][2]};
@@ -317,18 +320,16 @@ void ArmPlanner::generateTunnel(
                 double x = (*minValues)[0] + mapResolution * i;
                 double y = (*minValues)[1] + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
-                double dist = sqrt(pow(x, 2) + pow(y, 2) + pow(z - sherpa_tt_arm.d0, 2));
+                double dist = sqrt(pow(x, 2) + pow(y, 2)
+                                   + pow(z - sherpa_tt_arm.d0, 2));
                 if (dist < sherpa_tt_arm.maxArmDistance)
                 {
-                    std::vector<std::vector<double>> TBCS2Node
-                        = {{1, 0, 0, x},
-                           {0, 1, 0, y},
-                           {0, 0, 1, z},
-                           {0, 0, 0, 1}};
+                    std::vector<std::vector<double>> TBCS2Node = {
+                        {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if(sherpa_tt_arm.isReachable(pos))
+                    if (sherpa_tt_arm.isReachable(pos))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -337,34 +338,36 @@ void ArmPlanner::generateTunnel(
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
                         double cost
-                            = 1 + slope/sherpa_tt_arm.getDistanceToCollision(pos);
+                            = 1
+                              + slope
+                                    / sherpa_tt_arm.getDistanceToCollision(pos);
 
-                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
-                            && iz < sz - 1)
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                                 (*costMap3D)[iy][ix][iz] = cost;
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            if (cost < (*costMap3D)[iy][ix + 1][iz])
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            if (cost < (*costMap3D)[iy][ix - 1][iz])
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            if (cost < (*costMap3D)[iy + 1][ix][iz])
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            if (cost < (*costMap3D)[iy - 1][ix][iz])
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                     }
                 }
             }
 
-    // Tunnel during the rover movement    
+    // Tunnel during the rover movement
     tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     tunnelSizeZ = (int)(abs((*maxValues)[2] - 0) / zResolution + 0.5);
 
@@ -375,7 +378,7 @@ void ArmPlanner::generateTunnel(
         pitch = (*roverPath6)[i][4];
         yaw = (*roverPath6)[i][5];
         TW2BCS = dot(getTraslation(pos),
-                  dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+                     dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
         for (int j = 0; j < tunnelSizeY; j++)
             for (int k = 0; k < tunnelSizeZ; k++)
@@ -383,18 +386,16 @@ void ArmPlanner::generateTunnel(
                 double x = horizonDistance;
                 double y = 0 + mapResolution * j;
                 double z = 0 + zResolution * k;
-                double dist = sqrt(pow(x, 2) + pow(y, 2) + pow(z - sherpa_tt_arm.d0, 2));
+                double dist = sqrt(pow(x, 2) + pow(y, 2)
+                                   + pow(z - sherpa_tt_arm.d0, 2));
                 if (dist < sherpa_tt_arm.maxArmDistance)
                 {
-                    std::vector<std::vector<double>> TBCS2Node
-                        = {{1, 0, 0, x},
-                           {0, 1, 0, y},
-                           {0, 0, 1, z},
-                           {0, 0, 0, 1}};
+                    std::vector<std::vector<double>> TBCS2Node = {
+                        {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if(sherpa_tt_arm.isReachable(pos))
+                    if (sherpa_tt_arm.isReachable(pos))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -403,28 +404,30 @@ void ArmPlanner::generateTunnel(
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
                         double cost
-                            = 1 + slope/sherpa_tt_arm.getDistanceToCollision(pos);
+                            = 1
+                              + slope
+                                    / sherpa_tt_arm.getDistanceToCollision(pos);
 
-                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
-                            && iz < sz - 1)
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                                 (*costMap3D)[iy][ix][iz] = cost;
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            if (cost < (*costMap3D)[iy][ix + 1][iz])
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            if (cost < (*costMap3D)[iy][ix - 1][iz])
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            if (cost < (*costMap3D)[iy + 1][ix][iz])
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            if (cost < (*costMap3D)[iy - 1][ix][iz])
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                     }
                 }
@@ -432,16 +435,21 @@ void ArmPlanner::generateTunnel(
     }
 
     // Tunnel in the last waypoint
-    tunnelSizeX = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
-    tunnelSizeY = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
-    tunnelSizeZ = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
+    tunnelSizeX
+        = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+    tunnelSizeY
+        = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+    tunnelSizeZ
+        = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
-    pos = {(*roverPath6)[roverPath6->size()-1][0], (*roverPath6)[roverPath6->size()-1][1], (*roverPath6)[roverPath6->size()-1][2]};
-    roll = (*roverPath6)[roverPath6->size()-1][3];
-    pitch = (*roverPath6)[roverPath6->size()-1][4];
-    yaw = (*roverPath6)[roverPath6->size()-1][5];
+    pos = {(*roverPath6)[roverPath6->size() - 1][0],
+           (*roverPath6)[roverPath6->size() - 1][1],
+           (*roverPath6)[roverPath6->size() - 1][2]};
+    roll = (*roverPath6)[roverPath6->size() - 1][3];
+    pitch = (*roverPath6)[roverPath6->size() - 1][4];
+    yaw = (*roverPath6)[roverPath6->size() - 1][5];
     TW2BCS = dot(getTraslation(pos),
-              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+                 dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
     for (int i = 0; i < tunnelSizeX; i++)
         for (int j = 0; j < tunnelSizeY; j++)
@@ -450,18 +458,16 @@ void ArmPlanner::generateTunnel(
                 double x = (*minValues)[0] + mapResolution * i;
                 double y = (*minValues)[1] + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
-                double dist = sqrt(pow(x, 2) + pow(y, 2) + pow(z - sherpa_tt_arm.d0, 2));
+                double dist = sqrt(pow(x, 2) + pow(y, 2)
+                                   + pow(z - sherpa_tt_arm.d0, 2));
                 if (dist < sherpa_tt_arm.maxArmDistance)
                 {
-                    std::vector<std::vector<double>> TBCS2Node
-                        = {{1, 0, 0, x},
-                           {0, 1, 0, y},
-                           {0, 0, 1, z},
-                           {0, 0, 0, 1}};
+                    std::vector<std::vector<double>> TBCS2Node = {
+                        {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if(sherpa_tt_arm.isReachable(pos))
+                    if (sherpa_tt_arm.isReachable(pos))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -470,28 +476,30 @@ void ArmPlanner::generateTunnel(
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
                         double cost
-                            = 1 + slope/sherpa_tt_arm.getDistanceToCollision(pos);
+                            = 1
+                              + slope
+                                    / sherpa_tt_arm.getDistanceToCollision(pos);
 
-                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1 && iy < sy - 1
-                            && iz < sz - 1)
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                                 (*costMap3D)[iy][ix][iz] = cost;
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            if (cost < (*costMap3D)[iy][ix + 1][iz])
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            if (cost < (*costMap3D)[iy][ix - 1][iz])
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            if (cost < (*costMap3D)[iy + 1][ix][iz])
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            if (cost < (*costMap3D)[iy - 1][ix][iz])
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                     }
                 }
@@ -506,12 +514,32 @@ void ArmPlanner::computeWaypointAssignment(double horizonDistance,
 
     for (int i = 0; i < roverPath6->size(); i++)
     {
-        armBasePos = (*roverPath6)[i];
-        armBasePos[2] += sherpa_tt_arm.d0;
+        std::vector<double> pos{
+            (*roverPath6)[i][0], (*roverPath6)[i][1], (*roverPath6)[i][2]};
+        double roll = (*roverPath6)[i][3];
+        double pitch = (*roverPath6)[i][4];
+        double yaw = (*roverPath6)[i][5];
+
+        std::vector<std::vector<double>> TW2BCS
+            = dot(getTraslation(pos),
+                  dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
         for (int j = wristPath6->size() - 1; j > -1; j--)
         {
-            if (getDist3(armBasePos, (*wristPath6)[j])
-                < sherpa_tt_arm.maxArmOptimalDistance)
+            pos = {
+                (*wristPath6)[j][0], (*wristPath6)[j][1], (*wristPath6)[j][2]};
+            roll = (*wristPath6)[j][3];
+            pitch = (*wristPath6)[j][4];
+            yaw = (*wristPath6)[j][5];
+
+            std::vector<std::vector<double>> TW2Wrist
+                = dot(getTraslation(pos),
+                      dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+            std::vector<std::vector<double>> TBCS2Wrist
+                = dot(getInverse(&TW2BCS), TW2Wrist);
+
+            if (TBCS2Wrist[0][3] < horizonDistance)
             {
                 (*pathsAssignment)[i] = j;
                 break;
