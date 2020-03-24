@@ -24,7 +24,7 @@ public:
     double heightGround2BCS = 0.645;
     double optimalLeftDeviation = 0.4;
     double fetchingZDistance = 0.4;
-    std::vector<double> finalEEorientation = {-pi, 0, -pi};
+    std::vector<double> finalEEorientation = {pi, 0, 0};
 
     double horizonDistance = 1;
 
@@ -65,6 +65,10 @@ public:
     void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
                                       std::vector<base::Waypoint> *newRoverPath,
                                       std::vector<int> *newAssignment);
+
+    std::vector<base::Waypoint> getLinearInterpolation(base::Waypoint waypoint0,
+                                                      base::Waypoint waypoint1,
+                                                      int numberIntWaypoints);
 
     std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,
                                                       base::Waypoint waypoint1,

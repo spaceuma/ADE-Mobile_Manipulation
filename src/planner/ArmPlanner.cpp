@@ -29,6 +29,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     this->DEM = _DEM;
 
     // Rover z coordinate and heading computation
+    (*roverPath)[roverPath->size()-1].heading = atan2(samplePos.position[1]-(*roverPath)[roverPath->size()-1].position[1], samplePos.position[0]-(*roverPath)[roverPath->size()-1].position[0]);
+
     roverPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
 
@@ -68,6 +70,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         heading.push_back((*roverPath)[i].heading + offset);
     }
 
+    
+
     double sigma = 2;
     int samples = 5;
     smoothedHeading = getGaussSmoothen(heading, sigma, samples);
@@ -95,18 +99,36 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     iniPos.position[1] = world2Wrist[1][3];
     iniPos.position[2] = world2Wrist[2][3];
 
-    // The sample position is slightly changed to avoid possible collisions with
-    // the mast
-    samplePos.position[0]
-        += optimalLeftDeviation
-           * cos((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
-    samplePos.position[1]
-        += optimalLeftDeviation
-           * sin((*roverPath6)[roverPath6->size() - 1][5] + pi / 2);
+    // The sample position is slightly changed to fit in the reachability area
+    // of the manipulator
     samplePos.position[2]
         = (*DEM)[(int)(samplePos.position[1] / mapResolution + 0.5)]
                 [(int)(samplePos.position[0] / mapResolution + 0.5)]
           + fetchingZDistance + sherpa_tt_arm.d6; // Adding d6 to find wrist pos
+
+    std::vector<double> pos{(*roverPath6)[roverPath6->size() - 1][0],
+                            (*roverPath6)[roverPath6->size() - 1][1],
+                            (*roverPath6)[roverPath6->size() - 1][2]};
+    double roll = (*roverPath6)[roverPath6->size() - 1][3];
+    double pitch = (*roverPath6)[roverPath6->size() - 1][4];
+    double yaw = (*roverPath6)[roverPath6->size() - 1][5];
+
+    std::vector<std::vector<double>> TW2BCS
+        = dot(getTraslation(pos),
+              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+    pos = {samplePos.position[0], samplePos.position[1], samplePos.position[2]};
+
+    std::vector<std::vector<double>> TW2Sample = getTraslation(pos);
+
+    std::vector<std::vector<double>> TBCS2Sample
+        = dot(getInverse(&TW2BCS), TW2Sample);
+    TBCS2Sample[1][3] += optimalLeftDeviation;
+
+    TW2Sample = dot(TW2BCS, TBCS2Sample);
+    
+    samplePos.position[0] = TW2Sample[0][3];
+    samplePos.position[1] = TW2Sample[1][3];
 
     // Cost map 3D computation
     int n = DEM->size();
@@ -217,7 +239,6 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         position[0] = TBCS2Wrist[0][3];
         position[1] = TBCS2Wrist[1][3];
         position[2] = TBCS2Wrist[2][3];
-
         std::vector<double> config;
 
         try
@@ -237,6 +258,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         }
         catch (std::exception &e)
         {
+            std::cout<<"Inverse kinematics failed at waypoint "<<i<<"!"<<std::endl;
             return false;
         }
         // if(config == std::vector<double>(1,0))
@@ -294,13 +316,13 @@ void ArmPlanner::generateTunnel(
     std::vector<double> *minValues = sherpa_tt_arm.minValues;
     std::vector<double> *maxValues = sherpa_tt_arm.maxValues;
 
-    double slope = 0.2;
+    double slope = 0.5;
 
     // Tunnel in the first waypoint
     int tunnelSizeX
         = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
     int tunnelSizeY
-        = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+        = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     int tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
@@ -318,7 +340,7 @@ void ArmPlanner::generateTunnel(
             for (int k = 0; k < tunnelSizeZ; k++)
             {
                 double x = (*minValues)[0] + mapResolution * i;
-                double y = (*minValues)[1] + mapResolution * j;
+                double y = 0 + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
                                    + pow(z - sherpa_tt_arm.d0, 2));
@@ -438,7 +460,7 @@ void ArmPlanner::generateTunnel(
     tunnelSizeX
         = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
     tunnelSizeY
-        = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+        = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
@@ -456,7 +478,7 @@ void ArmPlanner::generateTunnel(
             for (int k = 0; k < tunnelSizeZ; k++)
             {
                 double x = (*minValues)[0] + mapResolution * i;
-                double y = (*minValues)[1] + mapResolution * j;
+                double y = 0 + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
                                    + pow(z - sherpa_tt_arm.d0, 2));
@@ -539,7 +561,11 @@ void ArmPlanner::computeWaypointAssignment(double horizonDistance,
             std::vector<std::vector<double>> TBCS2Wrist
                 = dot(getInverse(&TW2BCS), TW2Wrist);
 
-            if (TBCS2Wrist[0][3] < horizonDistance)
+            pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+            std::vector<double> basePos = {0, 0, sherpa_tt_arm.d0};
+            double dist = getDist3(basePos, pos);
+
+            if (TBCS2Wrist[0][3] < horizonDistance && dist < sherpa_tt_arm.maxArmOptimalDistance)
             {
                 (*pathsAssignment)[i] = j;
                 break;
@@ -576,7 +602,7 @@ void ArmPlanner::computeWaypointInterpolation(
         int diff = (*newAssignment)[i] - (*newAssignment)[i - 1];
         if (diff > 5)
         {
-            std::vector<base::Waypoint> newWaypoints = getCubicInterpolation(
+            std::vector<base::Waypoint> newWaypoints = getLinearInterpolation(
                 (*newRoverPath)[i - 1], (*newRoverPath)[i], diff - 1);
             newRoverPath->insert(newRoverPath->begin() + i,
                                  newWaypoints.begin(),
@@ -588,6 +614,68 @@ void ArmPlanner::computeWaypointInterpolation(
         }
         i++;
     }
+}
+
+std::vector<base::Waypoint> ArmPlanner::getLinearInterpolation(
+    base::Waypoint waypoint0,
+    base::Waypoint waypoint1,
+    int numberIntWaypoints)
+{
+    double x0 = waypoint0.position[0];
+    double y0 = waypoint0.position[1];
+    double yaw0 = waypoint0.heading;
+
+    double x1 = waypoint1.position[0];
+    double y1 = waypoint1.position[1];
+    double yaw1 = waypoint1.heading;
+
+    if (yaw1 - yaw0 > pi)
+        yaw1 -= 2*pi;
+    else if (yaw1 - yaw0 < -pi)
+        yaw1 += 2*pi;
+
+    double l;
+    std::vector<double> xi(10002, 0);
+    std::vector<double> yi(10002, 0);
+    std::vector<double> heading(10002, 0);
+    std::vector<double> laccum(10002, 0);
+
+    xi[0] = x0;
+    yi[0] = y0;
+    heading[0] = yaw0;
+
+    for (int i = 1; i < 10002; i++)
+    {
+        xi[i] = x0 + i * (x1 - x0) / 10001;
+        yi[i] = y0 + i * (y1 - y0) / 10001;
+        heading[i] = yaw0 + i * (yaw1 - yaw0) / 10001;
+        
+        while (heading[i] > pi)
+            heading[i] -= 2 * pi;
+        while (heading[i] < -pi)
+            heading[i] += 2 * pi;
+
+        l = sqrt((xi[i] - xi[i - 1]) * (xi[i] - xi[i - 1])
+                 + (yi[i] - yi[i - 1]) * (yi[i] - yi[i - 1]));
+        laccum[i] = laccum[i - 1] + l;
+    }
+    double d = laccum[10001] / (numberIntWaypoints + 1);
+    
+    std::vector<base::Waypoint> newWaypoints(numberIntWaypoints);
+    for (int i = 0; i < numberIntWaypoints; i++)
+        for (int j = 0; j < 10002; j++)
+            if (laccum[j] > (i + 1) * d)
+            {
+                newWaypoints[i].position[0] = xi[j];
+                newWaypoints[i].position[1] = yi[j];
+                newWaypoints[i].position[2]
+                    = (waypoint0.position[2] + waypoint1.position[2]) / 2;
+                newWaypoints[i].heading = heading[j];
+
+                break;
+            }
+
+    return newWaypoints;
 }
 
 std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(
@@ -619,40 +707,44 @@ std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(
     double l;
     std::vector<double> xi(10002, 0);
     std::vector<double> yi(10002, 0);
+    std::vector<double> heading(10002, 0);
     std::vector<double> laccum(10002, 0);
 
     xi[0] = x0;
     yi[0] = y0;
+    heading[0] = yaw0;
     for (int i = 1; i < 10002; i++)
     {
         xi[i] = x0 + i * (x1 - x0) / 10001;
         yi[i] = a * xi[i] * xi[i] * xi[i] + b * xi[i] * xi[i] + c * xi[i] + d;
+        heading[i] = yaw0 + i * (yaw1 - yaw0) / 10001;
+        
+        while (heading[i] > pi)
+            heading[i] -= 2 * pi;
+        while (heading[i] < -pi)
+            heading[i] += 2 * pi;
+
         l = sqrt((xi[i] - xi[i - 1]) * (xi[i] - xi[i - 1])
                  + (yi[i] - yi[i - 1]) * (yi[i] - yi[i - 1]));
         laccum[i] = laccum[i - 1] + l;
     }
-
-    d = laccum[10001] / (numberIntWaypoints + 1);
+    double dist = laccum[10001] / (numberIntWaypoints + 1);
 
     std::vector<base::Waypoint> newWaypoints(numberIntWaypoints);
     for (int i = 0; i < numberIntWaypoints; i++)
+    {
         for (int j = 0; j < 10002; j++)
-            if (laccum[j] > (i + 1) * d)
+            if (laccum[j] > (i + 1) * dist)
             {
                 newWaypoints[i].position[0] = xi[j];
                 newWaypoints[i].position[1] = yi[j];
                 newWaypoints[i].position[2]
                     = (waypoint0.position[2] + waypoint1.position[2]) / 2;
-                if (abs(waypoint0.heading - waypoint1.heading) > pi)
-                    newWaypoints[i].heading
-                        = (waypoint0.heading + waypoint1.heading + 2 * pi) / 2;
-                if (newWaypoints[i].heading > pi)
-                    newWaypoints[i].heading -= 2 * pi;
-                else
-                    newWaypoints[i].heading
-                        = (waypoint0.heading + waypoint1.heading) / 2;
+                newWaypoints[i].heading = heading[j];
+                
                 break;
             }
+    }
     return newWaypoints;
 }
 

@@ -552,17 +552,17 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
 
     if (d > l1 + l2)
     {
-        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
-                     "and orientation\033[0m\n";*/
+                     "and orientation\033[0m\n";
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
     else if (d < l1 - l2)
     {
-        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too close, unreachable position "
-                     "and orientation\033[0m\n";*/
+                     "and orientation\033[0m\n";
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
