@@ -468,7 +468,7 @@ void MobileManipMap::calculateCostValues()
                 {
                     this->vvd_cost_map[j][i]
                         = 1.0
-                          + 9.0
+                          + 14.0
                                 * (1.0 - (double)this->vvd_proximity_map[j][i]);
                 }
                 else

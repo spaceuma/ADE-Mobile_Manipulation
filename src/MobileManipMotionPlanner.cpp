@@ -185,6 +185,8 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                                                  proxy_library::Pose plpose_m,
                                                  Joints arm_joints)
 {
+
+    unsigned int ui_retrieval_code; 
     switch (getStatus())
     {
         case EXECUTING_MOTION_PLAN:
@@ -198,7 +200,6 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                                      plpose_m.m_orientation.m_x,
                                      plpose_m.m_orientation.m_y,
                                      plpose_m.m_orientation.m_z);
-
             this->w_current_rover_position.position[0]
                 = plpose_m.m_position.m_x;
             this->w_current_rover_position.position[1]
@@ -237,11 +238,18 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             return false;
             break;
         }
+        case RETRIEVING_ARM:
+	    ui_retrieval_code = this->p_mmexecutor->getRetrievalCommand(arm_joints, arm_command);
+	    if (ui_retrieval_code == 2)
+	    {
+                return false;
+	    }
+            return true;
+	    break;
         case EXECUTING_ARM_OPERATION:
             std::cout << "Status is Executing Arm Operation" << std::endl;
-            return false;
-        case RETRIEVING_ARM:
-            throw "not finished";
+	    setStatus(RETRIEVING_ARM);
+            return true;
         case ERROR:
             return false;
         default:

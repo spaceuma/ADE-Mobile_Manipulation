@@ -16,6 +16,22 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     {
         this->armstate = FORBIDDEN_POS; 
     }
+    this->b_first_retrieval_point_reached = false;
+    this->b_second_retrieval_point_reached = false;
+    this->j_first_retrieval_position.m_jointStates.resize(6);
+    this->j_second_retrieval_position.m_jointStates.resize(6);
+    this->j_first_retrieval_position.m_jointStates[0].m_position = 0.5;
+    this->j_first_retrieval_position.m_jointStates[1].m_position = -1.3;
+    this->j_first_retrieval_position.m_jointStates[2].m_position = 1.8;
+    this->j_first_retrieval_position.m_jointStates[3].m_position = 0.0;
+    this->j_first_retrieval_position.m_jointStates[4].m_position = -0.5;
+    this->j_first_retrieval_position.m_jointStates[5].m_position = 2.3562;
+    this->j_second_retrieval_position.m_jointStates[0].m_position = 0.39;
+    this->j_second_retrieval_position.m_jointStates[1].m_position = -1.83;
+    this->j_second_retrieval_position.m_jointStates[2].m_position = 2.79;
+    this->j_second_retrieval_position.m_jointStates[3].m_position = 0.0;
+    this->j_second_retrieval_position.m_jointStates[4].m_position = -0.5;
+    this->j_second_retrieval_position.m_jointStates[5].m_position = 2.3562;
 }
 
 void MobileManipExecutor::initializeArmVariables(const Joints &j_present_readings)
@@ -55,6 +71,8 @@ void MobileManipExecutor::updateMotionPlan()
     this->pvvd_arm_motion_profile
         = this->p_motion_plan->getArmMotionProfile();
 
+    this->b_first_retrieval_point_reached = false;
+    this->b_second_retrieval_point_reached = false;
 
 }
 
@@ -154,6 +172,67 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	    return 2;
     }
 }
+
+unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m)
+{
+    if (j_next_arm_command_m.m_jointNames.empty())
+    {
+        j_next_arm_command_m.m_jointNames.resize(6);
+        j_next_arm_command_m.m_jointNames[0] = "arm_joint_1";
+        j_next_arm_command_m.m_jointNames[1] = "arm_joint_2";
+        j_next_arm_command_m.m_jointNames[2] = "arm_joint_3";
+        j_next_arm_command_m.m_jointNames[3] = "arm_joint_4";
+        j_next_arm_command_m.m_jointNames[4] = "arm_joint_5";
+        j_next_arm_command_m.m_jointNames[5] = "arm_joint_6";
+    }
+    //TODO - Improve this method
+   if (this->b_first_retrieval_point_reached)
+   {
+        if (this->b_second_retrieval_point_reached)
+	{
+	    return 2;
+	}
+        if (isArmReady(this->j_second_retrieval_position, j_arm_present_readings_m))
+	{
+            this->b_second_retrieval_point_reached = true;
+	    std::cout << "Second Retrieval Point Reached!" << std::endl;
+	    return 1;
+	}
+	else
+	{
+            for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+            {
+                j_next_arm_command_m.m_jointStates[i].m_position
+                    = this->j_second_retrieval_position.m_jointStates[i].m_position;
+            }
+            return 1;
+        }
+   }
+   else
+   {
+      if (isArmReady(this->j_first_retrieval_position,j_arm_present_readings_m))
+      {
+        this->b_first_retrieval_point_reached = true;
+	std::cout << "First Retrieval Point Reached!" << std::endl;
+        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+            {
+                j_next_arm_command_m.m_jointStates[i].m_position
+                    = this->j_second_retrieval_position.m_jointStates[i].m_position;
+            }
+	return 1;
+      }
+      else
+      {
+        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+            {
+                j_next_arm_command_m.m_jointStates[i].m_position
+                    = this->j_first_retrieval_position.m_jointStates[i].m_position;
+            }
+	return 0;
+      } 
+   }
+}
+
 
 void MobileManipExecutor::fixMotionCommand(MotionCommand &mc_m)
 {

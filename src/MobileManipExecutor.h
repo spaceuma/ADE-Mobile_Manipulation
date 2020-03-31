@@ -26,6 +26,13 @@ class MobileManipExecutor
 
 private:
     /**
+     * Adhoc variables to make arm retrieval
+     */
+    Joints j_first_retrieval_position;
+    Joints j_second_retrieval_position;
+    bool b_first_retrieval_point_reached;
+    bool b_second_retrieval_point_reached;
+    /**
      * Pointer to the present Motion Plan
      */
     MotionPlan *p_motion_plan;
@@ -141,4 +148,5 @@ public:
     bool isArmWorking(const Joints &j_next_command, const Joints &j_present_joints);
     void getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     void getAtomicCommand();
+    unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
 };
