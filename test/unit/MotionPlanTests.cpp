@@ -60,7 +60,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_no_shadowing.executeEndEffectorPlanning();
     saveProfile(mplan_no_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt");
     savePath(mplan_no_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt");
-    saveProfile(mplan_no_shadowing.getEndEffectorPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt");
+    saveProfile(mplan_no_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt");
     saveVolume(mplan_no_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt");
 
     // 1st Case with Shadowing 
@@ -74,7 +74,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_shadowing.executeEndEffectorPlanning();
     saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
-    saveProfile(mplan_shadowing.getEndEffectorPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
+    saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
 
     // 2nd Case without Shadowing
     ini2D = clock();
