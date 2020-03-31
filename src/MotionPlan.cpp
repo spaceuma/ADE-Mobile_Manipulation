@@ -166,9 +166,9 @@ unsigned int MotionPlan::getNumberWaypoints()
 }
 
 
-std::vector<std::vector<double>> *MotionPlan::getEndEffectorPath()
+std::vector<std::vector<double>> *MotionPlan::getWristPath()
 {
-    return this->arm_planner.getEEPath();
+    return this->arm_planner.getWristPath();
 }
 
 std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()

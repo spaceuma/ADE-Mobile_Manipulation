@@ -474,9 +474,9 @@ double MobileManipMotionPlanner::getCurrentRoverYaw()
     return this->w_current_rover_position.heading;
 }
 
-std::vector<std::vector<double>> *MobileManipMotionPlanner::getEndEffectorPath()
+std::vector<std::vector<double>> *MobileManipMotionPlanner::getWristPath()
 {
-    return this->p_motionplan->getEndEffectorPath();
+    return this->p_motionplan->getWristPath();
 }
 
 std::vector<base::Waypoint> *MobileManipMotionPlanner::getRoverPath()

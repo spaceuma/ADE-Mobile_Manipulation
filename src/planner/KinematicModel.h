@@ -1,17 +1,22 @@
 #ifndef __KINEMATIC_MODEL__
 #define __KINEMATIC_MODEL__
 
-#include "Waypoint.hpp"
-#include <vector>
-#include <exception>
 #include "CollisionDetector.h"
+#include "Waypoint.hpp"
 #include "mmFileManager.h"
+#include <exception>
+#include <vector>
+
+#define pi 3.14159265359
+
 namespace KinematicModel_lib
 {
 
-std::vector<std::vector<double>> dot(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B);
+std::vector<std::vector<double>> dot(std::vector<std::vector<double>> A,
+                                     std::vector<std::vector<double>> B);
 
-std::vector<double> dot(std::vector<std::vector<double>> A, std::vector<double> b);
+std::vector<double> dot(std::vector<std::vector<double>> A,
+                        std::vector<double> b);
 
 std::vector<double> dot(double n, std::vector<double> a);
 
@@ -25,13 +30,19 @@ std::vector<std::vector<double>> getZrot(double angle);
 
 double getDeterminant(const std::vector<std::vector<double>> *A);
 
-std::vector<std::vector<double>> getCofactor(const std::vector<std::vector<double>> *A, int row, int col);
+std::vector<std::vector<double>> getCofactor(
+    const std::vector<std::vector<double>> *A,
+    int row,
+    int col);
 
-std::vector<std::vector<double>> getAdjoint(const std::vector<std::vector<double>> *A);
+std::vector<std::vector<double>> getAdjoint(
+    const std::vector<std::vector<double>> *A);
 
-std::vector<std::vector<double>> getInverse(const std::vector<std::vector<double>> *A);
+std::vector<std::vector<double>> getInverse(
+    const std::vector<std::vector<double>> *A);
 
-std::vector<double> getCrossProduct(std::vector<double> a, std::vector<double> b);
+std::vector<double> getCrossProduct(std::vector<double> a,
+                                    std::vector<double> b);
 
 std::vector<double> getSum(std::vector<double> a, std::vector<double> b);
 
@@ -52,23 +63,63 @@ public:
     double d4 = 0.695;
     double d6 = 0.300;
 
+    // Manipulator Workspace
+    double maxArmDistance = a2 + d4 + d6;
+    double maxZArm = maxArmDistance + d0;
+    double maxXYArm = maxArmDistance + a1;
+    double maxArmOptimalDistance = maxArmDistance - d6;
+    double minArmOptimalDistance = d6;
+    double minArmDistance = 0.0;
+    double optimalArmRadius
+        = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
+
+    std::vector<double> initialConfiguration
+        = {0.785398, -1.52075, 2.4405, 0, 0, 0};
+
+    std::vector<double> iniEEorientation = {pi, -pi / 2, 0};
+
+    // -- VARIABLES --
+    std::vector<std::vector<std::vector<double>>> *reachabilityMap;
+    std::vector<std::vector<std::vector<double>>> *reachabilityDistances;
+    std::vector<double> *resolutions;
+    std::vector<double> *minValues;
+    std::vector<double> *maxValues;
+
     // -- FUNCTIONS --
-    std::vector<std::vector<double>> getEEtransform(std::vector<double> manipulatorJoints);
+    Manipulator();
+
+    ~Manipulator();
+
+    std::vector<std::vector<double>> getEETransform(
+        std::vector<double> manipulatorJoints);
+
+    std::vector<std::vector<double>> getWristTransform(
+        std::vector<double> manipulatorJoints);
 
     std::vector<double> getManipJoints(std::vector<double> position,
                                        std::vector<double> orientation,
                                        int shoulder,
                                        int elbow);
 
+    std::vector<double> getPositionJoints(std::vector<double> position,
+                                          int shoulder,
+                                          int elbow);
+
+    std::vector<double> getWristJoints(std::vector<double> positionJoints,
+                                       std::vector<double> orientation);
+
     std::vector<double> getManipJoints(std::vector<double> position,
                                        std::vector<double> orientation,
                                        std::vector<double> previousConfig);
 
-    std::vector<std::vector<double>> getJacobianMatrix(std::vector<double> manipulatorJoints);
+    std::vector<std::vector<double>> getJacobianMatrix(
+        std::vector<double> manipulatorJoints);
 
-    void computeReachabilityMap(std::vector<std::vector<std::vector<double>>> &reachabilityMap,
-                                         const double resXY,
-                                         const double resZ);
+    void computeReachabilityMap(const double resXY, const double resZ);
+
+    bool isReachable(std::vector<double> position);
+
+    double getDistanceToCollision(std::vector<double> position);
 };
 } // namespace KinematicModel_lib
 #endif

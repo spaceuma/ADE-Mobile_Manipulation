@@ -13,44 +13,39 @@ namespace ArmPlanner_lib
 class ArmPlanner
 {
 private:
-    std::vector<base::Waypoint> * interpolatedRoverPath;
-    std::vector<std::vector<std::vector<double>>> * volume_cost_map;
+    std::vector<base::Waypoint> *interpolatedRoverPath;
+    std::vector<std::vector<std::vector<double>>> *volume_cost_map;
+
 public:
+    KinematicModel_lib::Manipulator sherpa_tt_arm;
+
     // -- PARAMETERS --
-
-    // SHERPA_TT
-    double d0 = 0.500;
-    double a1 = 0.225;
-    double a2 = 0.735;
-    double c2 = 0.030;
-    double a3 = 0.030;
-    double d4 = 0.695;
-    double d6 = 0.300;
-
-    // Manipulator Workspace
-    double maxArmDistance = a2 + d4 + d6;
-    double maxZArm = maxArmDistance + d0;
-    double maxXYArm = maxArmDistance + a1;
-    double maxArmOptimalDistance = maxArmDistance - d6;
-    double minArmOptimalDistance = d6;
-    double minArmDistance = 0.0;
-    double optimalArmRadius = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
-
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
-    double optimalLeftDeviation = maxArmDistance / 3;
+    double optimalLeftDeviation = 0.4;
     double fetchingZDistance = 0.4;
-    std::vector<double> BCS2iniEEpos = {0.738, 0, 0.550};       // TODO set parameter properly
-    std::vector<double> iniEEorientation = {0, pi / 2, pi / 3}; // TODO set parameter properly
-    std::vector<std::vector<double>> *endEffectorPath6;
+    std::vector<double> finalEEorientation = {pi, 0, 0};
+
+    double horizonDistance = 1;
+
+    // -- VARIABLES --
+    std::vector<std::vector<double>> *roverPath6;
+    std::vector<std::vector<double>> *wristPath6;
+
+    double mapResolution;
+    double zResolution;
+    const std::vector<std::vector<double>> *DEM;
 
     // -- FUNCTIONS --
-    std::vector<base::Waypoint> * getInterpolatedRoverPath();
+    ArmPlanner();
+    ~ArmPlanner();
 
-    std::vector<std::vector<double>> * getEEPath();
+    std::vector<base::Waypoint> *getInterpolatedRoverPath();
 
-    std::vector<std::vector<std::vector<double>>> * getVolumeCostMap();
-    
+    std::vector<std::vector<double>> *getWristPath();
+
+    std::vector<std::vector<std::vector<double>>> *getVolumeCostMap();
+
     bool planArmMotion(std::vector<base::Waypoint> *roverPath,
                        const std::vector<std::vector<double>> *DEM,
                        double mapResolution,
@@ -58,22 +53,22 @@ public:
                        base::Waypoint samplePos,
                        std::vector<std::vector<double>> *armJoints);
 
-    void generateTunnel(const std::vector<std::vector<double>> *roverPath6,
-                        const std::vector<std::vector<double>> *DEM,
-                        double mapResolution,
-                        double zResolution,
-                        base::Waypoint iniPos,
-                        base::Waypoint samplePos,
-                        std::vector<std::vector<std::vector<double>>> *costMap3D);
+    void generateTunnel(
+        base::Waypoint iniPos,
+        base::Waypoint samplePos,
+        double horizonDistance,
+        std::vector<std::vector<std::vector<double>>> *costMap3D);
 
-    void computeWaypointAssignment(const std::vector<std::vector<double>> *roverPath6,
-                                   const std::vector<std::vector<double>> *endEffectorPath6,
+    void computeWaypointAssignment(double horizonDistance,
                                    std::vector<int> *pathsAssignment);
 
-    void computeWaypointInterpolation(const std::vector<std::vector<double>> *roverPath6,
-                                      const std::vector<int> *pathsAssignment,
+    void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
                                       std::vector<base::Waypoint> *newRoverPath,
                                       std::vector<int> *newAssignment);
+
+    std::vector<base::Waypoint> getLinearInterpolation(base::Waypoint waypoint0,
+                                                      base::Waypoint waypoint1,
+                                                      int numberIntWaypoints);
 
     std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,
                                                       base::Waypoint waypoint1,
@@ -85,7 +80,9 @@ public:
 
     std::vector<double> getGaussKernel(int samples, double sigma);
 
-    std::vector<double> getGaussSmoothen(std::vector<double> values, double sigma, int samples);
+    std::vector<double> getGaussSmoothen(std::vector<double> values,
+                                         double sigma,
+                                         int samples);
 };
 } // namespace ArmPlanner_lib
 #endif

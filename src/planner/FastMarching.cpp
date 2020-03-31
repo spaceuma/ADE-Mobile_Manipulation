@@ -19,11 +19,13 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
 
-    std::vector<std::vector<double>> *TMap = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *TMap
+        = new std::vector<std::vector<double>>;
 
     computeTMap(costMap, goal, start, TMap);
 
-    std::vector<std::vector<double>> *pathPos = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *pathPos
+        = new std::vector<std::vector<double>>;
 
     computePathGDM(TMap, start, goal, 0.5, pathPos);
 
@@ -35,20 +37,23 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     {
         (*path)[i].position[0] = mapResolution * (*pathPos)[i][0];
         (*path)[i].position[1] = mapResolution * (*pathPos)[i][1];
-        (*path)[i].heading
-            = atan2((*pathPos)[i + 1][1] - (*pathPos)[i - 1][1], (*pathPos)[i + 1][0] - (*pathPos)[i - 1][0]);
+        (*path)[i].heading = atan2((*pathPos)[i + 1][1] - (*pathPos)[i - 1][1],
+                                   (*pathPos)[i + 1][0] - (*pathPos)[i - 1][0]);
     }
     (*path)[0].heading = (*path)[1].heading;
 
-    (*path)[path->size() - 1].position[0] = mapResolution * (*pathPos)[path->size() - 1][0];
-    (*path)[path->size() - 1].position[1] = mapResolution * (*pathPos)[path->size() - 1][1];
+    (*path)[path->size() - 1].position[0]
+        = mapResolution * (*pathPos)[path->size() - 1][0];
+    (*path)[path->size() - 1].position[1]
+        = mapResolution * (*pathPos)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
 }
 
-void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacle_map,
-				      double d_map_resolution,
-				      double d_max_distance,
-				      base::Waypoint finalPos)
+void FastMarching::getShadowedCostMap(
+    std::vector<std::vector<int>> &vvi_obstacle_map,
+    double d_map_resolution,
+    double d_max_distance,
+    base::Waypoint finalPos)
 {
     std::vector<int> vi_goal(2, 0);
     vi_goal[0] = (int)(finalPos.position[0] / d_map_resolution + 0.5);
@@ -56,25 +61,30 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacl
 
     std::vector<std::vector<double>> vvd_clear_costmap;
     std::vector<std::vector<double>> vvd_obstacle_costmap;
-    std::vector<std::vector<double>> *pvvd_clear_totalcostmap = new std::vector<std::vector<double>>;
-    std::vector<std::vector<double>> *pvvd_obstacle_totalcostmap = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *pvvd_clear_totalcostmap
+        = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *pvvd_obstacle_totalcostmap
+        = new std::vector<std::vector<double>>;
 
     vvd_clear_costmap.clear();
     vvd_obstacle_costmap.clear();
 
     std::vector<double> clear_row, obstacle_row;
     double value;
-    for ( int j = 0; j < vvi_obstacle_map.size(); j++ )
+    for (int j = 0; j < vvi_obstacle_map.size(); j++)
     {
-        for ( int i = 0; i < vvi_obstacle_map[0].size(); i++)
+        for (int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
-	    if (( i == 0 )||( j == 0 )||( i == vvi_obstacle_map[0].size() - 1)||( j == vvi_obstacle_map.size() - 1 )||
-			    (sqrt(pow(((float)i - vi_goal[0]),2)+pow(((float)j - vi_goal[1]),2)) > d_max_distance/d_map_resolution))
-	    {
+            if ((i == 0) || (j == 0) || (i == vvi_obstacle_map[0].size() - 1)
+                || (j == vvi_obstacle_map.size() - 1)
+                || (sqrt(pow(((float)i - vi_goal[0]), 2)
+                         + pow(((float)j - vi_goal[1]), 2))
+                    > d_max_distance / d_map_resolution))
+            {
                 clear_row.push_back(INFINITY);
-		obstacle_row.push_back(INFINITY);
-	    }
-	    else
+                obstacle_row.push_back(INFINITY);
+            }
+            else
             {
                 clear_row.push_back(1.0);
                 if (vvi_obstacle_map[j][i] == 0)
@@ -83,43 +93,48 @@ void FastMarching::getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacl
                 }
                 else
                 {
-		    vvi_obstacle_map[j][i] = 2;
+                    vvi_obstacle_map[j][i] = 2;
                     obstacle_row.push_back(1.0);
                 }
-	    }
+            }
         }
         vvd_clear_costmap.push_back(clear_row);
         vvd_obstacle_costmap.push_back(obstacle_row);
         clear_row.clear();
-	obstacle_row.clear();
+        obstacle_row.clear();
     }
 
     computeEntireTMap(&vvd_clear_costmap, vi_goal, pvvd_clear_totalcostmap);
-    computeEntireTMap(&vvd_obstacle_costmap, vi_goal, pvvd_obstacle_totalcostmap);
+    computeEntireTMap(
+        &vvd_obstacle_costmap, vi_goal, pvvd_obstacle_totalcostmap);
 
-    for ( int j = 0; j < vvi_obstacle_map.size(); j++ )
+    for (int j = 0; j < vvi_obstacle_map.size(); j++)
     {
-        for ( int i = 0; i < vvi_obstacle_map[0].size(); i++)
+        for (int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
-	    if (fabs((*pvvd_clear_totalcostmap)[j][i] - (*pvvd_obstacle_totalcostmap)[j][i]) > 0.1)
-	    {
-	       vvi_obstacle_map[j][i] = 0; 
+            if (fabs((*pvvd_clear_totalcostmap)[j][i]
+                     - (*pvvd_obstacle_totalcostmap)[j][i])
+                > 0.1)
+            {
+                vvi_obstacle_map[j][i] = 0;
             }
-	}
+        }
     }
 }
 
-//ToDo: this can be mixed with the function below
-void FastMarching::computeEntireTMap(const std::vector<std::vector<double>> *costMap,
-                                     std::vector<int> goal,
-                                     std::vector<std::vector<double>> *TMap)
+// ToDo: this can be mixed with the function below
+void FastMarching::computeEntireTMap(
+    const std::vector<std::vector<double>> *costMap,
+    std::vector<int> goal,
+    std::vector<std::vector<double>> *TMap)
 {
     int n = costMap->size();
     int m = costMap[0].size();
 
     std::vector<int> nodeTarget = goal;
 
-    std::vector<std::vector<double>> *closedMap = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *closedMap
+        = new std::vector<std::vector<double>>;
 
     closedMap->resize(n, std::vector<double>(m));
 
@@ -170,7 +185,8 @@ void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
 
     std::vector<int> nodeTarget = goal;
 
-    std::vector<std::vector<double>> *closedMap = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *closedMap
+        = new std::vector<std::vector<double>>;
 
     closedMap->resize(n, std::vector<double>(m));
 
@@ -256,13 +272,15 @@ void FastMarching::updateNode(std::vector<int> nodeTarget,
             double TVer2 = (*TMap)[nodeChild[1] - 1][nodeChild[0]];
             double TVer = std::min(TVer1, TVer2);
 
-            double T = getEikonal(THor, TVer, (*costMap)[nodeChild[1]][nodeChild[0]]);
+            double T = getEikonal(
+                THor, TVer, (*costMap)[nodeChild[1]][nodeChild[0]]);
             if (isinf((*TMap)[nodeChild[1]][nodeChild[0]]))
             {
                 int index = getInsertIndex(nbT, T);
                 std::vector<double>::iterator indexT = nbT->begin() + index;
                 nbT->insert(indexT, T);
-                std::vector<std::vector<int>>::iterator indexN = nbNodes->begin() + index;
+                std::vector<std::vector<int>>::iterator indexN
+                    = nbNodes->begin() + index;
                 nbNodes->insert(indexN, nodeChild);
                 (*TMap)[nodeChild[1]][nodeChild[0]] = T;
             }
@@ -285,7 +303,8 @@ void FastMarching::updateNode(std::vector<int> nodeTarget,
                 index = getInsertIndex(nbT, T);
                 std::vector<double>::iterator indexT = nbT->begin() + index;
                 nbT->insert(indexT, T);
-                std::vector<std::vector<int>>::iterator indexN = nbNodes->begin() + index;
+                std::vector<std::vector<int>>::iterator indexN
+                    = nbNodes->begin() + index;
                 nbNodes->insert(indexN, nodeChild);
                 (*TMap)[nodeChild[1]][nodeChild[0]] = T;
             }
@@ -305,7 +324,8 @@ double FastMarching::getEikonal(double THor, double TVer, double cost)
     else if (cost < abs(THor - TVer))
         return std::min(THor, TVer) + cost;
     else
-        return 0.5 * (THor + TVer + sqrt(2 * pow(cost, 2) - pow(THor - TVer, 2)));
+        return 0.5
+               * (THor + TVer + sqrt(2 * pow(cost, 2) - pow(THor - TVer, 2)));
 }
 
 int FastMarching::getInsertIndex(std::vector<double> *nbT, double T)
@@ -358,14 +378,19 @@ void FastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap,
                 if (path->size() > 0)
                 {
                     std::vector<double> distVector;
-                    distVector.push_back((*path)[path->size() - 1][0] - (double)nearNode[0]);
-                    distVector.push_back((*path)[path->size() - 1][1] - (double)nearNode[1]);
-                    while (sqrt(pow(distVector[0], 2) + pow(distVector[1], 2)) < 1)
+                    distVector.push_back((*path)[path->size() - 1][0]
+                                         - (double)nearNode[0]);
+                    distVector.push_back((*path)[path->size() - 1][1]
+                                         - (double)nearNode[1]);
+                    while (sqrt(pow(distVector[0], 2) + pow(distVector[1], 2))
+                           < 1)
                     {
                         path->erase(path->end());
                         if (path->size() == 0) break;
-                        distVector[0] = (*path)[path->size() - 1][0] - (double)nearNode[0];
-                        distVector[1] = (*path)[path->size() - 1][1] - (double)nearNode[1];
+                        distVector[0] = (*path)[path->size() - 1][0]
+                                        - (double)nearNode[0];
+                        distVector[1] = (*path)[path->size() - 1][1]
+                                        - (double)nearNode[1];
                     }
                 }
 
@@ -408,7 +433,8 @@ void FastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap,
             }
             catch (std::exception &e)
             {
-                std::cout << "Exception was caught during GDM, with message " << e.what() << std::endl;
+                std::cout << "Exception was caught during GDM, with message "
+                          << e.what() << std::endl;
                 break;
             }
         }
@@ -497,7 +523,8 @@ void FastMarching::computeGradient(const std::vector<std::vector<double>> *TMap,
                         if (isinf((*TMap)[j - 1][i]))
                             Gy[j][i] = (*TMap)[j + 1][i] - (*TMap)[j][i];
                         else
-                            Gy[j][i] = ((*TMap)[j + 1][i] - (*TMap)[j - 1][i]) / 2;
+                            Gy[j][i]
+                                = ((*TMap)[j + 1][i] - (*TMap)[j - 1][i]) / 2;
                     }
                 }
             }
@@ -522,7 +549,8 @@ void FastMarching::computeGradient(const std::vector<std::vector<double>> *TMap,
                         if (isinf((*TMap)[j][i - 1]))
                             Gx[j][i] = (*TMap)[j][i + 1] - (*TMap)[j][i];
                         else
-                            Gx[j][i] = ((*TMap)[j][i + 1] - (*TMap)[j][i - 1]) / 2;
+                            Gx[j][i]
+                                = ((*TMap)[j][i + 1] - (*TMap)[j][i - 1]) / 2;
                     }
                 }
             }
@@ -532,7 +560,9 @@ void FastMarching::computeGradient(const std::vector<std::vector<double>> *TMap,
         }
 }
 
-double FastMarching::getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<double>> *mapI)
+double FastMarching::getInterpolatedPoint(
+    std::vector<double> point,
+    const std::vector<std::vector<double>> *mapI)
 {
     int i = (int)point[0];
     int j = (int)point[1];
@@ -560,7 +590,8 @@ double FastMarching::getInterpolatedPoint(std::vector<double> point, const std::
             double a00 = (*mapI)[j][i];
             double a10 = (*mapI)[j][i + 1] - (*mapI)[j][i];
             double a01 = (*mapI)[j + 1][i] - (*mapI)[j][i];
-            double a11 = (*mapI)[j + 1][i + 1] + (*mapI)[j][i] - (*mapI)[j][i + 1] - (*mapI)[j + 1][i];
+            double a11 = (*mapI)[j + 1][i + 1] + (*mapI)[j][i]
+                         - (*mapI)[j][i + 1] - (*mapI)[j + 1][i];
             if (a == 0)
             {
                 if (b == 0)

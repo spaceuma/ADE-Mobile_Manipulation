@@ -64,6 +64,81 @@ void readMatrixFile(std::string map_file,
     }
 }
 
+void readReachabilityMap(std::string map_file,
+                         std::vector<std::vector<std::vector<double>>> * reachabilityMap,
+                         std::vector<double> * resolutions,
+                         std::vector<double> * minValues)
+{
+
+    std::vector<double> *sizes = new std::vector<double>;
+
+    std::string line;
+    std::ifstream e_file(map_file.c_str(), std::ios::in);
+
+    if (e_file.is_open())
+    {
+        for(int i = 0; i < 3; i++)
+        {
+            std::getline(e_file, line);
+            std::stringstream ss(line);
+            std::string cell;
+
+            while (std::getline(ss, cell, ' '))
+            {
+                double val;
+                std::stringstream numeric_value(cell);
+                numeric_value >> val;
+                switch(i)
+                {
+                    case 0:
+                        sizes->push_back(val);
+                        break;
+                    case 1:
+                        resolutions->push_back(val);
+                        break;
+                    case 2:
+                        minValues->push_back(val);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        reachabilityMap->resize((*sizes)[0], std::vector<std::vector<double>>((*sizes)[1], std::vector<double>((*sizes)[2])));
+
+        int layer = 0, column = 0;
+        for(int row = 0; row < (*sizes)[0]; row++)
+        {
+            layer = 0;
+            column = 0;
+            std::getline(e_file, line);
+            std::stringstream ss(line);
+            std::string cell;
+            for(int i = 0; i < (*sizes)[1]*(*sizes)[2]; i++)
+            {
+                std::getline(ss, cell, ' ');
+                double val;
+                std::stringstream numeric_value(cell);
+                numeric_value >> val;
+                (*reachabilityMap)[row][column][layer] = val;
+                layer++;
+                if(layer > (*sizes)[2]-1)
+                {
+                    layer = 0;
+                    column++;
+                }
+            }
+        }
+        e_file.close();
+    }
+    else
+    {
+        std::cout << "Problem opening the path file" << std::endl;
+	throw std::exception();
+    }
+}
+
 void readPath(std::string s_path_file,
 	      std::vector<Waypoint> &vw_path)
 {
@@ -174,6 +249,30 @@ void saveVolume(std::vector<std::vector<std::vector<double>>> * pvvvd_volume, st
     f_volume.open(s_path_file);
 
     f_volume << (*pvvvd_volume).size() << " " << (*pvvvd_volume)[0].size() << " " << (*pvvvd_volume)[0][0].size() << "\n";
+    for (int j = 0; j < pvvvd_volume->size(); j++)
+    {
+        for (int i = 0; i < (*pvvvd_volume)[0].size(); i++)
+        {
+            for (int k = 0; k < (*pvvvd_volume)[0][0].size(); k++)
+            {
+                f_volume << (*pvvvd_volume)[j][i][k] << " ";
+            }
+        }
+        f_volume << "\n";
+    }
+
+    f_volume.close();
+
+}
+
+void saveVolume(std::vector<std::vector<std::vector<double>>> * pvvvd_volume, std::vector<double> *resolutions, std::vector<double> *minValues, std::string s_path_file)
+{
+    std::ofstream f_volume;
+    f_volume.open(s_path_file);
+
+    f_volume << (*pvvvd_volume).size() << " " << (*pvvvd_volume)[0].size() << " " << (*pvvvd_volume)[0][0].size() << "\n";
+    f_volume << (*resolutions)[0] << " " << (*resolutions)[1] << " " << (*resolutions)[2] << "\n";
+    f_volume << (*minValues)[0] << " " << (*minValues)[1] << " " << (*minValues)[2] << "\n";
     for (int j = 0; j < pvvvd_volume->size(); j++)
     {
         for (int i = 0; i < (*pvvvd_volume)[0].size(); i++)

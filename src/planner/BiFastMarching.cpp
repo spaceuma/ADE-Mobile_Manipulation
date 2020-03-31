@@ -19,23 +19,28 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
 
-    std::vector<std::vector<double>> *TMapGoal = new std::vector<std::vector<double>>;
-    std::vector<std::vector<double>> *TMapStart = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *TMapGoal
+        = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *TMapStart
+        = new std::vector<std::vector<double>>;
 
     std::vector<int> *nodeJoin = new std::vector<int>;
 
-    if(!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
+    if (!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
     {
         return false;
     }
 
-    std::vector<std::vector<double>> *pathGoal = new std::vector<std::vector<double>>;
-    std::vector<std::vector<double>> *pathStart = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *pathGoal
+        = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *pathStart
+        = new std::vector<std::vector<double>>;
 
     computePathGDM(TMapGoal, (*nodeJoin), goal, 0.5, pathGoal);
     computePathGDM(TMapStart, (*nodeJoin), start, 0.5, pathStart);
 
-    pathGoal->insert(pathGoal->begin(), pathStart->rbegin(), pathStart->rend() - 1);
+    pathGoal->insert(
+        pathGoal->begin(), pathStart->rbegin(), pathStart->rend() - 1);
 
     path->resize(pathGoal->size());
     (*path)[0].position[0] = mapResolution * (*pathGoal)[0][0];
@@ -46,22 +51,26 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
         (*path)[i].position[0] = mapResolution * (*pathGoal)[i][0];
         (*path)[i].position[1] = mapResolution * (*pathGoal)[i][1];
         (*path)[i].heading
-            = atan2((*pathGoal)[i + 1][1] - (*pathGoal)[i - 1][1], (*pathGoal)[i + 1][0] - (*pathGoal)[i - 1][0]);
+            = atan2((*pathGoal)[i + 1][1] - (*pathGoal)[i - 1][1],
+                    (*pathGoal)[i + 1][0] - (*pathGoal)[i - 1][0]);
     }
     (*path)[0].heading = (*path)[1].heading;
 
-    (*path)[path->size() - 1].position[0] = mapResolution * (*pathGoal)[path->size() - 1][0];
-    (*path)[path->size() - 1].position[1] = mapResolution * (*pathGoal)[path->size() - 1][1];
+    (*path)[path->size() - 1].position[0]
+        = mapResolution * (*pathGoal)[path->size() - 1][0];
+    (*path)[path->size() - 1].position[1]
+        = mapResolution * (*pathGoal)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
     return true;
 }
 
-bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
-                                 std::vector<int> goal,
-                                 std::vector<int> start,
-                                 std::vector<std::vector<double>> *TMapGoal,
-                                 std::vector<std::vector<double>> *TMapStart,
-                                 std::vector<int> *nodeJoin)
+bool BiFastMarching::computeTMap(
+    const std::vector<std::vector<double>> *costMap,
+    std::vector<int> goal,
+    std::vector<int> start,
+    std::vector<std::vector<double>> *TMapGoal,
+    std::vector<std::vector<double>> *TMapStart,
+    std::vector<int> *nodeJoin)
 {
     int n = costMap->size();
     int m = costMap[0].size();
@@ -69,8 +78,10 @@ bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
     std::vector<int> nodeTargetGoal = goal;
     std::vector<int> nodeTargetStart = start;
 
-    std::vector<std::vector<double>> *closedMapGoal = new std::vector<std::vector<double>>;
-    std::vector<std::vector<double>> *closedMapStart = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *closedMapGoal
+        = new std::vector<std::vector<double>>;
+    std::vector<std::vector<double>> *closedMapStart
+        = new std::vector<std::vector<double>>;
 
     closedMapGoal->resize(n, std::vector<double>(m));
     closedMapStart->resize(n, std::vector<double>(m));
@@ -104,12 +115,20 @@ bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
     (*TMapStart)[nodeTargetStart[1]][nodeTargetStart[0]] = 0;
 
     std::vector<double> *nbTGoal = new std::vector<double>;
-    std::vector<std::vector<int>> *nbNodesGoal = new std::vector<std::vector<int>>;
+    std::vector<std::vector<int>> *nbNodesGoal
+        = new std::vector<std::vector<int>>;
     std::vector<double> *nbTStart = new std::vector<double>;
-    std::vector<std::vector<int>> *nbNodesStart = new std::vector<std::vector<int>>;
+    std::vector<std::vector<int>> *nbNodesStart
+        = new std::vector<std::vector<int>>;
 
-    updateNode(nodeTargetGoal, costMap, TMapGoal, nbTGoal, nbNodesGoal, closedMapGoal);
-    updateNode(nodeTargetStart, costMap, TMapStart, nbTStart, nbNodesStart, closedMapStart);
+    updateNode(
+        nodeTargetGoal, costMap, TMapGoal, nbTGoal, nbNodesGoal, closedMapGoal);
+    updateNode(nodeTargetStart,
+               costMap,
+               TMapStart,
+               nbTStart,
+               nbNodesStart,
+               closedMapStart);
 
     while ((nbTGoal->size() > 0) || (nbTStart->size() > 0))
     {
@@ -119,7 +138,12 @@ bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
             nbNodesGoal->erase(nbNodesGoal->begin());
             nbTGoal->erase(nbTGoal->begin());
             (*closedMapGoal)[nodeTargetGoal[1]][nodeTargetGoal[0]] = 1;
-            updateNode(nodeTargetGoal, costMap, TMapGoal, nbTGoal, nbNodesGoal, closedMapGoal);
+            updateNode(nodeTargetGoal,
+                       costMap,
+                       TMapGoal,
+                       nbTGoal,
+                       nbNodesGoal,
+                       closedMapGoal);
         }
         if (nbTStart->size() > 0)
         {
@@ -127,7 +151,12 @@ bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
             nbNodesStart->erase(nbNodesStart->begin());
             nbTStart->erase(nbTStart->begin());
             (*closedMapStart)[nodeTargetStart[1]][nodeTargetStart[0]] = 1;
-            updateNode(nodeTargetStart, costMap, TMapStart, nbTStart, nbNodesStart, closedMapStart);
+            updateNode(nodeTargetStart,
+                       costMap,
+                       TMapStart,
+                       nbTStart,
+                       nbNodesStart,
+                       closedMapStart);
         }
         if ((*closedMapStart)[nodeTargetGoal[1]][nodeTargetGoal[0]] == 1)
         {
@@ -157,12 +186,13 @@ bool BiFastMarching::computeTMap(const std::vector<std::vector<double>> *costMap
     return false;
 }
 
-void BiFastMarching::updateNode(std::vector<int> nodeTarget,
-                                const std::vector<std::vector<double>> *costMap,
-                                std::vector<std::vector<double>> *TMap,
-                                std::vector<double> *nbT,
-                                std::vector<std::vector<int>> *nbNodes,
-                                const std::vector<std::vector<double>> *closedMap)
+void BiFastMarching::updateNode(
+    std::vector<int> nodeTarget,
+    const std::vector<std::vector<double>> *costMap,
+    std::vector<std::vector<double>> *TMap,
+    std::vector<double> *nbT,
+    std::vector<std::vector<int>> *nbNodes,
+    const std::vector<std::vector<double>> *closedMap)
 {
     std::vector<int> nodeChild(2, 0);
     for (int i = 1; i < 4 + 1; i++)
@@ -197,13 +227,15 @@ void BiFastMarching::updateNode(std::vector<int> nodeTarget,
             double TVer2 = (*TMap)[nodeChild[1] - 1][nodeChild[0]];
             double TVer = std::min(TVer1, TVer2);
 
-            double T = getEikonal(THor, TVer, (*costMap)[nodeChild[1]][nodeChild[0]]);
+            double T = getEikonal(
+                THor, TVer, (*costMap)[nodeChild[1]][nodeChild[0]]);
             if (isinf((*TMap)[nodeChild[1]][nodeChild[0]]))
             {
                 int index = getInsertIndex(nbT, T);
                 std::vector<double>::iterator indexT = nbT->begin() + index;
                 nbT->insert(indexT, T);
-                std::vector<std::vector<int>>::iterator indexN = nbNodes->begin() + index;
+                std::vector<std::vector<int>>::iterator indexN
+                    = nbNodes->begin() + index;
                 nbNodes->insert(indexN, nodeChild);
                 (*TMap)[nodeChild[1]][nodeChild[0]] = T;
             }
@@ -226,7 +258,8 @@ void BiFastMarching::updateNode(std::vector<int> nodeTarget,
                 index = getInsertIndex(nbT, T);
                 std::vector<double>::iterator indexT = nbT->begin() + index;
                 nbT->insert(indexT, T);
-                std::vector<std::vector<int>>::iterator indexN = nbNodes->begin() + index;
+                std::vector<std::vector<int>>::iterator indexN
+                    = nbNodes->begin() + index;
                 nbNodes->insert(indexN, nodeChild);
                 (*TMap)[nodeChild[1]][nodeChild[0]] = T;
             }
@@ -246,7 +279,8 @@ double BiFastMarching::getEikonal(double THor, double TVer, double cost)
     else if (cost < abs(THor - TVer))
         return std::min(THor, TVer) + cost;
     else
-        return 0.5 * (THor + TVer + sqrt(2 * pow(cost, 2) - pow(THor - TVer, 2)));
+        return 0.5
+               * (THor + TVer + sqrt(2 * pow(cost, 2) - pow(THor - TVer, 2)));
 }
 
 int BiFastMarching::getInsertIndex(std::vector<double> *nbT, double T)
@@ -257,11 +291,12 @@ int BiFastMarching::getInsertIndex(std::vector<double> *nbT, double T)
     return i;
 }
 
-void BiFastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap,
-                                    std::vector<int> initNode,
-                                    std::vector<int> endNode,
-                                    double tau,
-                                    std::vector<std::vector<double>> *path)
+void BiFastMarching::computePathGDM(
+    const std::vector<std::vector<double>> *TMap,
+    std::vector<int> initNode,
+    std::vector<int> endNode,
+    double tau,
+    std::vector<std::vector<double>> *path)
 {
     std::vector<double> auxVector;
     auxVector.push_back((double)initNode[0]);
@@ -299,14 +334,19 @@ void BiFastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap
                 if (path->size() > 0)
                 {
                     std::vector<double> distVector;
-                    distVector.push_back((*path)[path->size() - 1][0] - (double)nearNode[0]);
-                    distVector.push_back((*path)[path->size() - 1][1] - (double)nearNode[1]);
-                    while (sqrt(pow(distVector[0], 2) + pow(distVector[1], 2)) < 1)
+                    distVector.push_back((*path)[path->size() - 1][0]
+                                         - (double)nearNode[0]);
+                    distVector.push_back((*path)[path->size() - 1][1]
+                                         - (double)nearNode[1]);
+                    while (sqrt(pow(distVector[0], 2) + pow(distVector[1], 2))
+                           < 1)
                     {
                         path->erase(path->end());
                         if (path->size() == 0) break;
-                        distVector[0] = (*path)[path->size() - 1][0] - (double)nearNode[0];
-                        distVector[1] = (*path)[path->size() - 1][1] - (double)nearNode[1];
+                        distVector[0] = (*path)[path->size() - 1][0]
+                                        - (double)nearNode[0];
+                        distVector[1] = (*path)[path->size() - 1][1]
+                                        - (double)nearNode[1];
                     }
                 }
 
@@ -349,7 +389,8 @@ void BiFastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap
             }
             catch (std::exception &e)
             {
-                std::cout << "Exception was caught during GDM, with message " << e.what() << std::endl;
+                std::cout << "Exception was caught during GDM, with message "
+                          << e.what() << std::endl;
                 break;
             }
         }
@@ -384,10 +425,11 @@ void BiFastMarching::computePathGDM(const std::vector<std::vector<double>> *TMap
     path->push_back(auxVector);
 }
 
-void BiFastMarching::computeGradient(const std::vector<std::vector<double>> *TMap,
-                                     std::vector<double> point,
-                                     std::vector<std::vector<double>> *Gnx,
-                                     std::vector<std::vector<double>> *Gny)
+void BiFastMarching::computeGradient(
+    const std::vector<std::vector<double>> *TMap,
+    std::vector<double> point,
+    std::vector<std::vector<double>> *Gnx,
+    std::vector<std::vector<double>> *Gny)
 {
     int n = TMap->size();
     int m = (*TMap)[0].size();
@@ -438,7 +480,8 @@ void BiFastMarching::computeGradient(const std::vector<std::vector<double>> *TMa
                         if (isinf((*TMap)[j - 1][i]))
                             Gy[j][i] = (*TMap)[j + 1][i] - (*TMap)[j][i];
                         else
-                            Gy[j][i] = ((*TMap)[j + 1][i] - (*TMap)[j - 1][i]) / 2;
+                            Gy[j][i]
+                                = ((*TMap)[j + 1][i] - (*TMap)[j - 1][i]) / 2;
                     }
                 }
             }
@@ -463,7 +506,8 @@ void BiFastMarching::computeGradient(const std::vector<std::vector<double>> *TMa
                         if (isinf((*TMap)[j][i - 1]))
                             Gx[j][i] = (*TMap)[j][i + 1] - (*TMap)[j][i];
                         else
-                            Gx[j][i] = ((*TMap)[j][i + 1] - (*TMap)[j][i - 1]) / 2;
+                            Gx[j][i]
+                                = ((*TMap)[j][i + 1] - (*TMap)[j][i - 1]) / 2;
                     }
                 }
             }
@@ -473,10 +517,11 @@ void BiFastMarching::computeGradient(const std::vector<std::vector<double>> *TMa
         }
 }
 
-void BiFastMarching::computeGradient(const std::vector<std::vector<double>> *TMap,
-                                     const std::vector<int> point,
-                                     double *Gnx,
-                                     double *Gny)
+void BiFastMarching::computeGradient(
+    const std::vector<std::vector<double>> *TMap,
+    const std::vector<int> point,
+    double *Gnx,
+    double *Gny)
 {
     int n = TMap->size();
     int m = (*TMap)[0].size();
@@ -540,7 +585,9 @@ void BiFastMarching::computeGradient(const std::vector<std::vector<double>> *TMa
     (*Gny) = Gy / sqrt(pow(Gx, 2) + pow(Gy, 2));
 }
 
-double BiFastMarching::getInterpolatedPoint(std::vector<double> point, const std::vector<std::vector<double>> *mapI)
+double BiFastMarching::getInterpolatedPoint(
+    std::vector<double> point,
+    const std::vector<std::vector<double>> *mapI)
 {
     int i = (int)point[0];
     int j = (int)point[1];
@@ -568,7 +615,8 @@ double BiFastMarching::getInterpolatedPoint(std::vector<double> point, const std
             double a00 = (*mapI)[j][i];
             double a10 = (*mapI)[j][i + 1] - (*mapI)[j][i];
             double a01 = (*mapI)[j + 1][i] - (*mapI)[j][i];
-            double a11 = (*mapI)[j + 1][i + 1] + (*mapI)[j][i] - (*mapI)[j][i + 1] - (*mapI)[j + 1][i];
+            double a11 = (*mapI)[j + 1][i + 1] + (*mapI)[j][i]
+                         - (*mapI)[j][i + 1] - (*mapI)[j + 1][i];
             if (a == 0)
             {
                 if (b == 0)
