@@ -8,9 +8,9 @@
 using namespace KinematicModel_lib;
 using namespace ArmPlanner_lib;
 
-ArmPlanner::ArmPlanner()
+ArmPlanner::ArmPlanner(std::string s_data_path_m)
 {
-    ;
+   sherpa_tt_arm = new Manipulator(s_data_path_m); 
 }
 ArmPlanner::~ArmPlanner()
 {
@@ -87,7 +87,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     // Initial arm pos computation
     std::vector<std::vector<double>> initialBCS2Wrist
-        = sherpa_tt_arm.getWristTransform(sherpa_tt_arm.initialConfiguration);
+        = sherpa_tt_arm->getWristTransform(sherpa_tt_arm->initialConfiguration);
     std::vector<double> roverIniPos{
         (*roverPath6)[0][0], (*roverPath6)[0][1], (*roverPath6)[0][2]};
     std::vector<std::vector<double>> world2Wrist
@@ -104,7 +104,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     samplePos.position[2]
         = (*DEM)[(int)(samplePos.position[1] / mapResolution + 0.5)]
                 [(int)(samplePos.position[0] / mapResolution + 0.5)]
-          + fetchingZDistance + sherpa_tt_arm.d6; // Adding d6 to find wrist pos
+          + fetchingZDistance + sherpa_tt_arm->d6; // Adding d6 to find wrist pos
 
     std::vector<double> pos{(*roverPath6)[roverPath6->size() - 1][0],
                             (*roverPath6)[roverPath6->size() - 1][1],
@@ -140,7 +140,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
             if ((*DEM)[i][j] > maxz) maxz = (*DEM)[i][j];
 
     int l
-        = (int)((maxz + heightGround2BCS + sherpa_tt_arm.maxZArm) / zResolution
+        = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution
                 + 0.5);
 
     volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
@@ -181,16 +181,16 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         (*wristPath6)[i][2] = (*wristPath)[i].position[2];
 
         (*wristPath6)[i][3]
-            = sherpa_tt_arm.iniEEorientation[0]
-              + i * (finalEEorientation[0] - sherpa_tt_arm.iniEEorientation[0])
+            = sherpa_tt_arm->iniEEorientation[0]
+              + i * (finalEEorientation[0] - sherpa_tt_arm->iniEEorientation[0])
                     / (wristPath->size() - 1);
         (*wristPath6)[i][4]
-            = sherpa_tt_arm.iniEEorientation[1]
-              + i * (finalEEorientation[1] - sherpa_tt_arm.iniEEorientation[1])
+            = sherpa_tt_arm->iniEEorientation[1]
+              + i * (finalEEorientation[1] - sherpa_tt_arm->iniEEorientation[1])
                     / (wristPath->size() - 1);
         (*wristPath6)[i][5]
-            = sherpa_tt_arm.iniEEorientation[2]
-              + i * (finalEEorientation[2] - sherpa_tt_arm.iniEEorientation[2])
+            = sherpa_tt_arm->iniEEorientation[2]
+              + i * (finalEEorientation[2] - sherpa_tt_arm->iniEEorientation[2])
                     / (wristPath->size() - 1);
     }
 
@@ -243,7 +243,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
         try
         {
-            config = sherpa_tt_arm.getPositionJoints(position, 1, 1);
+            config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
 
             roll = (*wristPath6)[wristInd][3];
             pitch = (*wristPath6)[wristInd][4];
@@ -252,7 +252,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
             std::vector<double> orientation{roll, pitch, yaw};
 
             std::vector<double> wristJoints
-                = sherpa_tt_arm.getWristJoints(config, orientation);
+                = sherpa_tt_arm->getWristJoints(config, orientation);
 
             config.insert(config.end(), wristJoints.begin(), wristJoints.end());
         }
@@ -313,8 +313,8 @@ void ArmPlanner::generateTunnel(
     goal[2] = (int)(samplePos.position[2] / zResolution + 0.5);
     (*costMap3D)[goal[1]][goal[0]][goal[2]] = 1;
 
-    std::vector<double> *minValues = sherpa_tt_arm.minValues;
-    std::vector<double> *maxValues = sherpa_tt_arm.maxValues;
+    std::vector<double> *minValues = sherpa_tt_arm->minValues;
+    std::vector<double> *maxValues = sherpa_tt_arm->maxValues;
 
     double slope = 0.5;
 
@@ -343,15 +343,15 @@ void ArmPlanner::generateTunnel(
                 double y = 0 + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
-                                   + pow(z - sherpa_tt_arm.d0, 2));
-                if (dist < sherpa_tt_arm.maxArmDistance)
+                                   + pow(z - sherpa_tt_arm->d0, 2));
+                if (dist < sherpa_tt_arm->maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node = {
                         {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm.isReachable(pos))
+                    if (sherpa_tt_arm->isReachable(pos))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -362,7 +362,7 @@ void ArmPlanner::generateTunnel(
                         double cost
                             = 1
                               + slope
-                                    / sherpa_tt_arm.getDistanceToCollision(pos);
+                                    / sherpa_tt_arm->getDistanceToCollision(pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
@@ -409,15 +409,15 @@ void ArmPlanner::generateTunnel(
                 double y = 0 + mapResolution * j;
                 double z = 0 + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
-                                   + pow(z - sherpa_tt_arm.d0, 2));
-                if (dist < sherpa_tt_arm.maxArmDistance)
+                                   + pow(z - sherpa_tt_arm->d0, 2));
+                if (dist < sherpa_tt_arm->maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node = {
                         {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm.isReachable(pos))
+                    if (sherpa_tt_arm->isReachable(pos))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -428,7 +428,7 @@ void ArmPlanner::generateTunnel(
                         double cost
                             = 1
                               + slope
-                                    / sherpa_tt_arm.getDistanceToCollision(pos);
+                                    / sherpa_tt_arm->getDistanceToCollision(pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
@@ -481,15 +481,15 @@ void ArmPlanner::generateTunnel(
                 double y = 0 + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
-                                   + pow(z - sherpa_tt_arm.d0, 2));
-                if (dist < sherpa_tt_arm.maxArmDistance)
+                                   + pow(z - sherpa_tt_arm->d0, 2));
+                if (dist < sherpa_tt_arm->maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node = {
                         {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm.isReachable(pos))
+                    if (sherpa_tt_arm->isReachable(pos))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -500,7 +500,7 @@ void ArmPlanner::generateTunnel(
                         double cost
                             = 1
                               + slope
-                                    / sherpa_tt_arm.getDistanceToCollision(pos);
+                                    / sherpa_tt_arm->getDistanceToCollision(pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
@@ -562,10 +562,10 @@ void ArmPlanner::computeWaypointAssignment(double horizonDistance,
                 = dot(getInverse(&TW2BCS), TW2Wrist);
 
             pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-            std::vector<double> basePos = {0, 0, sherpa_tt_arm.d0};
+            std::vector<double> basePos = {0, 0, sherpa_tt_arm->d0};
             double dist = getDist3(basePos, pos);
 
-            if (TBCS2Wrist[0][3] < horizonDistance && dist < sherpa_tt_arm.maxArmOptimalDistance)
+            if (TBCS2Wrist[0][3] < horizonDistance && dist < sherpa_tt_arm->maxArmOptimalDistance)
             {
                 (*pathsAssignment)[i] = j;
                 break;

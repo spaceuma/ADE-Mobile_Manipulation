@@ -17,7 +17,7 @@ private:
     std::vector<std::vector<std::vector<double>>> *volume_cost_map;
 
 public:
-    KinematicModel_lib::Manipulator sherpa_tt_arm;
+    KinematicModel_lib::Manipulator *sherpa_tt_arm;
 
     // -- PARAMETERS --
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
@@ -37,7 +37,7 @@ public:
     const std::vector<std::vector<double>> *DEM;
 
     // -- FUNCTIONS --
-    ArmPlanner();
+    ArmPlanner(std::string s_data_path_m);
     ~ArmPlanner();
 
     std::vector<base::Waypoint> *getInterpolatedRoverPath();

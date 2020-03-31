@@ -262,8 +262,9 @@ double KinematicModel_lib::getNorm(std::vector<double> a)
     return sqrt(sum);
 }
 
-Manipulator::Manipulator()
+Manipulator::Manipulator(std::string _s_data_path_m)
 {
+    s_data_path_m = _s_data_path_m;
     reachabilityMap = new std::vector<std::vector<std::vector<double>>>;
     reachabilityDistances = new std::vector<std::vector<std::vector<double>>>;
     resolutions = new std::vector<double>;
@@ -271,9 +272,9 @@ Manipulator::Manipulator()
     maxValues = new std::vector<double>;
 
     readReachabilityMap(
-        "data/reachabilityMap.txt", reachabilityMap, resolutions, minValues);
+        s_data_path_m+"/reachabilityMap.txt", reachabilityMap, resolutions, minValues);
     readReachabilityMap(
-        "data/reachabilityDistances.txt", reachabilityDistances, resolutions, minValues);
+        s_data_path_m+"/reachabilityDistances.txt", reachabilityDistances, resolutions, minValues);
 
     maxValues->resize(3);
     (*maxValues)[0] = (*minValues)[0]+reachabilityMap->size()*(*resolutions)[0];
@@ -991,7 +992,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
 
     std::cout << "...done!" << std::flush << std::endl;
     saveVolume(
-        &reachabilityMap, &resolutions, &minValues, "data/reachabilityMap.txt");
+        &reachabilityMap, &resolutions, &minValues, s_data_path_m+"/reachabilityMap.txt");
 }
 
 bool Manipulator::isReachable(std::vector<double> position)

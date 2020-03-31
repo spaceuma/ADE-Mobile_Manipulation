@@ -5,6 +5,7 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m); 
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
 }
 
@@ -120,7 +121,7 @@ unsigned int MotionPlan::executeEndEffectorPlanning()
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
-    if(this->arm_planner.planArmMotion(&(this->vw_rover_path),
+    if(this->p_arm_planner->planArmMotion(&(this->vw_rover_path),
                                     &elevationMap,
                                     this->pmm_map->getResolution(),
                                     this->d_zres,
@@ -168,7 +169,7 @@ unsigned int MotionPlan::getNumberWaypoints()
 
 std::vector<std::vector<double>> *MotionPlan::getWristPath()
 {
-    return this->arm_planner.getWristPath();
+    return this->p_arm_planner->getWristPath();
 }
 
 std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
@@ -178,5 +179,5 @@ std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
 
 std::vector<std::vector<std::vector<double>>> * MotionPlan::get3DCostMap()
 {
-    return this->arm_planner.getVolumeCostMap();
+    return this->p_arm_planner->getVolumeCostMap();
 }

@@ -85,8 +85,9 @@ public:
     std::vector<double> *minValues;
     std::vector<double> *maxValues;
 
+    std::string s_data_path_m;
     // -- FUNCTIONS --
-    Manipulator();
+    Manipulator(std::string _s_data_path_m);
 
     ~Manipulator();
 

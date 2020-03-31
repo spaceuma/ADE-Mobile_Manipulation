@@ -16,9 +16,6 @@ int main(int argc, char* argv[])
   readVectorFile("../orientation.txt", orientation);
 
   std::vector<double> manip_joints; 
-  KinematicModel_lib::Manipulator manip;
-  //manip_joints = manip.getManipJoints(position, orientation,1,1);
-  readVectorFile("../configuration.txt", manip_joints);
 
   std::ifstream if_urdf_path("../../../data/urdfmodel_path.txt", std::ios::in);
   std::string s_urdf_path;
@@ -27,6 +24,10 @@ int main(int argc, char* argv[])
     std::getline(if_urdf_path, s_urdf_path);
     std::cout << "urdf path is read from " << s_urdf_path << std::endl;
   }
+
+  KinematicModel_lib::Manipulator *manip = new KinematicModel_lib::Manipulator(s_urdf_path);
+  //manip_joints = manip->getManipJoints(position, orientation,1,1);
+  readVectorFile("../configuration.txt", manip_joints);
 
   CollisionDetector* p_collision_detector = new CollisionDetector(s_urdf_path);
 
