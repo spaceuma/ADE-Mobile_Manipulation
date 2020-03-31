@@ -73,7 +73,6 @@ public:
      */
     MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
                              const Joints &j_present_readings,
-                             double d_zres_m,
 			     std::string s_urdf_path_m);
 
     /**

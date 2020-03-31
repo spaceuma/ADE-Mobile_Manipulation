@@ -11,7 +11,6 @@ int main()
     std::vector<std::vector<double>> vvd_elevation_data;
     readMatrixFile("test/harnessExample/data/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevation_data);
-    double res = 0.1; // meters
     base::Waypoint w_rover_pos, w_sample_pos;
 
 
@@ -63,7 +62,7 @@ int main()
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, j_current_joints, d_zres, s_urdf_path);
+    MobileManipMotionPlanner mmmotion_planner(rgd_dummy_dem, j_current_joints, s_urdf_path);
     mmmotion_planner.generateMotionPlan(plpose_rover, d_sample_pos_x, d_sample_pos_y);
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();

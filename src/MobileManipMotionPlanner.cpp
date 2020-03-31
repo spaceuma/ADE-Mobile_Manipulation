@@ -6,16 +6,16 @@ using namespace std;
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
     const Joints &j_present_readings,
-    double d_zres_m,
-    string s_urdf_path_m)
+    string s_configfile_path_m)
 {
     cout << "MMPLANNER: Creating MMMP" << endl;
+    double d_zres_m = 0.8;//TODO: this must come from an external config file
     this->status = IDLE;
     this->error = NO_ERROR;
     // DEM is introduced into the map class
     this->p_mmmap = new MobileManipMap(navCamDEM);
     // Each class contains a pointer to the previous one
-    this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m, s_urdf_path_m);
+    this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m, s_configfile_path_m);
     this->p_mmexecutor
         = new MobileManipExecutor(this->p_motionplan, j_present_readings);
 }
