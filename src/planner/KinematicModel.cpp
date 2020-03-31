@@ -553,17 +553,17 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
 
     if (d > l1 + l2)
     {
-        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
-                     "and orientation\033[0m\n";
+                     "and orientation\033[0m\n";*/
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
     else if (d < l1 - l2)
     {
-        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too close, unreachable position "
-                     "and orientation\033[0m\n";
+                     "and orientation\033[0m\n";*/
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
@@ -939,8 +939,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
         std::vector<std::vector<double>>(sizeXY,
                                          std::vector<double>(sizeZ, 1)));
     std::vector<double> position;
-    CollisionDetector *p_collision_detector = new CollisionDetector(
-        "/home/ares/ADE-Mobile_Manipulation/data/urdf/");
+    CollisionDetector *p_collision_detector = new CollisionDetector(s_data_path_m);
 
     std::cout << "Starting reachability map computation...\n";
     for (int i = 0; i < sizeXY; i++)
