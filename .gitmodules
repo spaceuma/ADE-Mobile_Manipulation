@@ -1,3 +1,6 @@
 [submodule "deps/ESA-Trajectory_Control"]
 	path = deps/ESA-Trajectory_Control
 	url = https://github.com/spaceuma/ESA-Trajectory_Control.git
+[submodule "deps/UMA-Coupled_Control"]
+	path = deps/UMA-Coupled_Control
+	url = https://github.com/spaceuma/UMA-Coupled_Control.git
