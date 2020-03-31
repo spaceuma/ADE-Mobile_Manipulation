@@ -1,6 +1,6 @@
-[submodule "deps/control-waypoint_navigation"]
-	path = deps/control-waypoint_navigation
-	url = https://github.com/spaceuma/control-waypoint_navigation.git
+[submodule "deps/ESA-Trajectory_Control"]
+	path = deps/ESA-Trajectory_Control
+	url = https://github.com/spaceuma/ESA-Trajectory_Control.git
 [submodule "deps/control-coupled_control"]
 	path = deps/control-coupled_control
 	url = https://github.com/spaceuma/control-coupled_control.git
