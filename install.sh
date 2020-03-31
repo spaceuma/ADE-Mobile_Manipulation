@@ -44,6 +44,12 @@ cd build
 cmake ..
 make
 
+cd $cur/utils/reachabilityComputing
+mkdir build
+cd build
+cmake ..
+make
+
 cd $cur
 
 

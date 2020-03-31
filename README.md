@@ -1,6 +1,13 @@
 # ADE_Mobile-Manipulation
 C++ code for European H2020 Project ADE
 
+## Installation
+
+In order to get this repository together with its submodules, use the following command ([Source](https://www.vogella.com/tutorials/GitSubmodules/article.html)):
+
+```
+git clone --recursive ADE-Mobile_Manipulation
+```
 
 ## Folder Structure
 
