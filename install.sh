@@ -17,7 +17,7 @@ cur=$PWD
 mkdir data
 cd data
 rm urdfmodel_path.txt
-echo "$cur/data/urdf" >> urdfmodel_path.txt
+echo "$cur/data/planner" >> urdfmodel_path.txt
 mkdir results
 
 
