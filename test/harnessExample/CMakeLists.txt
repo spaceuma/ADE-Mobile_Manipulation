@@ -10,7 +10,7 @@ find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories(../../src)
 include_directories(data)
-set(WP_DIR ../../deps/control-waypoint_navigation)
+set(WP_DIR ../../deps/ESA-Trajectory_Control)
 
 file(GLOB MM_SRC
     "../../src/*.h"
@@ -40,18 +40,18 @@ file(GLOB MMML_SRC
 )
 
 file(GLOB FM_SRC
-    "../../src/planner/*.h"
-    "../../src/planner/*.cpp"
+    "../../deps/UMA-PathAndMotion_Planning/*.h"
+    "../../deps/UMA-PathAndMotion_Planning/*.cpp"
 )
 
 file(GLOB WP_SRC
-    "../../deps/control-waypoint_navigation/WaypointNavigation.hpp"
-    "../../deps/control-waypoint_navigation/WaypointNavigation.cpp"
+    "../../deps/ESA-Trajectory_Control/WaypointNavigation.hpp"
+    "../../deps/ESA-Trajectory_Control/WaypointNavigation.cpp"
 )  
 
 file(GLOB CC_SRC
-    "../../deps/control-coupled_control/src/coupledControl.hpp"
-    "../../deps/control-coupled_control/src/coupledControl.cpp"
+    "../../deps/UMA-Coupled_Control/src/coupledControl.hpp"
+    "../../deps/UMA-Coupled_Control/src/coupledControl.cpp"
 )  
 
 add_executable(harnessexample
@@ -68,8 +68,8 @@ target_include_directories(harnessexample PRIVATE ../../src/types)
 target_include_directories(harnessexample PRIVATE ../../src/types/base)
 target_include_directories(harnessexample PRIVATE ../../src/types/proxy_library)
 target_include_directories(harnessexample PRIVATE ../../src/mmFileManagerLib)
-target_include_directories(harnessexample PRIVATE ../../src/planner)
-target_include_directories(harnessexample PRIVATE ../../deps/control-coupled_control/src)
-target_include_directories(harnessexample PRIVATE ../../deps/control-waypoint_navigation)
+target_include_directories(harnessexample PRIVATE ../../deps/UMA-PathAndMotion_Planning)
+target_include_directories(harnessexample PRIVATE ../../deps/UMA-Coupled_Control/src)
+target_include_directories(harnessexample PRIVATE ../../deps/ESA-Trajectory_Control)
 target_link_libraries (harnessexample ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread Eigen3::Eigen dart dart-utils-urdf dart-gui)
 

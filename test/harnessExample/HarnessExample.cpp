@@ -67,7 +67,7 @@ int main()
     mmmotion_planner.start();
     mmmotion_planner.printErrorCode();
     mmmotion_planner.printStatus();
-    mmmotion_planner.pause(j_current_joints, mc);
+    mmmotion_planner.pause(mc);
     mmmotion_planner.printStatus();
     mmmotion_planner.resumeOperation();
     mmmotion_planner.printStatus();

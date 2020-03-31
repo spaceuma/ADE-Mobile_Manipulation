@@ -92,24 +92,24 @@ public:
      * Serves to actively start moving the rover and arm once a motion plan is
      * available.
      */
-    void start();
+    bool start();
 
     /**
      * It makes the software finish immediately.
      */
-    void abort();
+    bool abort();
 
     /**
      * It makes the software enter into the PAUSE state, first creating commands
-     * to stop the rover base and arm.
+     * to stop the rover base.
      */
-    void pause(Joints &arm_command, MotionCommand &rover_command);
+    bool pause(MotionCommand &rover_command);
 
     /**
      * It returns to the state indicated by priorStatus. Useful to exit the
      * PAUSE state.
      */
-    void resumeOperation();
+    bool resumeOperation();
 
     /**
      * It procceses the input LocCamDEM and triggers a replanning if necessary.

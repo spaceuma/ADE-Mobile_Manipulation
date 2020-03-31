@@ -12,7 +12,7 @@ find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 
 include_directories(../../src)
 include_directories(data)
-set(WP_DIR ../../deps/control-waypoint_navigation)
+set(WP_DIR ../../deps/ESA-Trajectory_Control)
 
 file(GLOB srcs "*.cpp" "*.hpp")
 file(GLOB MM_SRC
@@ -43,18 +43,18 @@ file(GLOB MMML_SRC
 )
 
 file(GLOB FM_SRC
-    "../../src/planner/*.h"
-    "../../src/planner/*.cpp"
+    "../../deps/UMA-PathAndMotion_Planning/*.h"
+    "../../deps/UMA-PathAndMotion_Planning/*.cpp"
 )
 
 file(GLOB WP_SRC
-    "../../deps/control-waypoint_navigation/WaypointNavigation.hpp"
-    "../../deps/control-waypoint_navigation/WaypointNavigation.cpp"
+    "../../deps/ESA-Trajectory_Control/WaypointNavigation.hpp"
+    "../../deps/ESA-Trajectory_Control/WaypointNavigation.cpp"
 )  
 
 file(GLOB CC_SRC
-    "../../deps/coupled_control/coupledControl.hpp"
-    "../../deps/coupled_control/coupledControl.cpp"
+	"../../deps/UMA-Coupled_Control/coupledControl.hpp"
+	"../../deps/UMA-Coupled_Control/coupledControl.cpp"
 )  
 add_executable(${PROJECT_NAME} ${srcs}
                #${MM_SRC}
@@ -70,7 +70,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ../../src/types)
 target_include_directories(${PROJECT_NAME} PRIVATE ../../src/types/base)
 target_include_directories(${PROJECT_NAME} PRIVATE ../../src/types/proxy_library)
 target_include_directories(${PROJECT_NAME} PRIVATE ../../src/mmFileManagerLib)
-target_include_directories(${PROJECT_NAME} PRIVATE ../../src/planner)
-target_include_directories(${PROJECT_NAME} PRIVATE ../../deps/control-waypoint_navigation)
-#target_include_directories(${PROJECT_NAME} PRIVATE ../../deps/coupled_control)
+target_include_directories(${PROJECT_NAME} PRIVATE ../../deps/UMA-PathAndMotion_Planning)
+target_include_directories(${PROJECT_NAME} PRIVATE ../../deps/ESA-Trajectory_Control)
+#target_include_directories(${PROJECT_NAME} PRIVATE ../../deps/UMA-Coupled_Control)
 target_link_libraries(${PROJECT_NAME} PUBLIC dart dart-utils-urdf dart-gui)

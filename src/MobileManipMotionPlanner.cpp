@@ -104,71 +104,71 @@ void MobileManipMotionPlanner::executeAtomicOperation()
     throw "Not yet implemented";
 }
 
-void MobileManipMotionPlanner::start()
+bool MobileManipMotionPlanner::start()
 {
     if (getStatus() == READY_TO_MOVE)
     {
         setStatus(EXECUTING_MOTION_PLAN);
+	return true;
     }
     else
     {
         setError(IMPROPER_CALL);
+	return false;
     }
 }
 
-void MobileManipMotionPlanner::abort()
+bool MobileManipMotionPlanner::abort()
 {
     switch (getStatus())
     {
         case READY_TO_MOVE:
             setStatus(IDLE);
-            break;
+	    return true;
         case EXECUTING_MOTION_PLAN:
             setStatus(RETRIEVING_ARM);
-            break;
+            return true;
         case EXECUTING_ARM_OPERATION:
             setStatus(RETRIEVING_ARM);
-            break;
+            return true;
         case PAUSE:
             setStatus(RETRIEVING_ARM);
-            break;
+            return true;
         default:
             setError(IMPROPER_CALL);
-            break;
+            return false;
     }
 }
 
-void MobileManipMotionPlanner::pause(Joints &arm_command,
-                                     MotionCommand &rover_command)
+bool MobileManipMotionPlanner::pause(MotionCommand &rover_command)
 {
     if ((getStatus() == EXECUTING_MOTION_PLAN)
         || (getStatus() == EXECUTING_ARM_OPERATION)
         || (getStatus() == RETRIEVING_ARM))
     {
         setStatus(PAUSE);
-        for (uint i = 0; i < 6; i++)
-        {
-            arm_command.m_jointStates[i].m_position = 0.0;
-            arm_command.m_jointStates[i].m_speed = 0.0;
-        }
         rover_command.m_speed_ms = 0.0;
         rover_command.m_turnRate_rads = 0.0;
+	return true;
     }
     else
     {
         setError(IMPROPER_CALL);
+	return false;
     }
 }
 
-void MobileManipMotionPlanner::resumeOperation()
+bool MobileManipMotionPlanner::resumeOperation()
 {
     if (getStatus() == PAUSE)
     {
         setStatus(this->priorStatus);
+	return true;
     }
     else
     {
         setError(IMPROPER_CALL);
+	return false;
     }
 }
 
