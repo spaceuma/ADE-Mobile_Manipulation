@@ -98,7 +98,7 @@ public:
     /**
      * Class Constructor using the present motion plan 
      */
-    MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings);
+    MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings, std::string s_urdf_path_m);
     /**
      * Update the data extracted from the motion plan 
      */

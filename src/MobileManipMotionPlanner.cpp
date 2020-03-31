@@ -8,8 +8,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     const Joints &j_present_readings,
     string s_configfile_path_m)
 {
-    cout << "MMPLANNER: Creating MMMP" << endl;
-    double d_zres_m = 0.8;//TODO: this must come from an external config file
+    double d_zres_m = 0.08;//TODO: this must come from an external config file
     this->status = IDLE;
     this->error = NO_ERROR;
     // DEM is introduced into the map class
@@ -17,7 +16,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     // Each class contains a pointer to the previous one
     this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m, s_configfile_path_m);
     this->p_mmexecutor
-        = new MobileManipExecutor(this->p_motionplan, j_present_readings);
+        = new MobileManipExecutor(this->p_motionplan, j_present_readings, s_configfile_path_m);
 }
 
 bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,

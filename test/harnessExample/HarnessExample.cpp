@@ -12,7 +12,7 @@ int main()
     readMatrixFile("test/harnessExample/data/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevation_data);
     base::Waypoint w_rover_pos, w_sample_pos;
-
+    double res = 0.1;
 
     proxy_library::Pose plpose_rover;
     plpose_rover.m_position.m_x = 3.0;

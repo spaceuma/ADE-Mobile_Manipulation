@@ -33,9 +33,15 @@ TEST(MMExecutorTest, nominal_working_test)
     vj_current_jointstates.resize(6);
     for (uint i = 0; i < 6; i++)
     {
-        vj_current_jointstates[i].m_position = 0.0;
         vj_current_jointstates[i].m_speed = 0.0;
     }
+
+    vj_current_jointstates[0].m_position = 0.39;
+    vj_current_jointstates[1].m_position = -1.83;
+    vj_current_jointstates[2].m_position = 2.79;
+    vj_current_jointstates[3].m_position = 0.0;
+    vj_current_jointstates[4].m_position = -0.5;
+    vj_current_jointstates[5].m_position = 2.3562;
 
     Joints j_current_joints(0, vj_current_jointstates);
     Joints j_next_joints(0, vj_current_jointstates);
@@ -44,7 +50,19 @@ TEST(MMExecutorTest, nominal_working_test)
     robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
     robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt");
 
-    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints, s_urdf_path);
  
     while (!dummyExecutor.isRoverFinished())
     {
@@ -154,14 +172,32 @@ TEST(MMExecutorTest, rover_out_of_corridor_test)
     vj_current_jointstates.resize(6);
     for (uint i = 0; i < 6; i++)
     {
-        vj_current_jointstates[i].m_position = 0.0;
         vj_current_jointstates[i].m_speed = 0.0;
     }
+
+    vj_current_jointstates[0].m_position = 0.39;
+    vj_current_jointstates[1].m_position = -1.83;
+    vj_current_jointstates[2].m_position = 2.79;
+    vj_current_jointstates[3].m_position = 0.0;
+    vj_current_jointstates[4].m_position = -0.5;
+    vj_current_jointstates[5].m_position = 2.3562;
 
     Joints j_current_joints(0, vj_current_jointstates);
     Joints j_next_joints(0, vj_current_jointstates);
 
-    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints, s_urdf_path);
     
     // Robot out of the corridor from the start
     robotPose.position.x()+=1.0;
@@ -224,9 +260,15 @@ TEST(MMExecutorTest, armnotworking_test)
     vj_current_jointstates.resize(6);
     for (uint i = 0; i < 6; i++)
     {
-        vj_current_jointstates[i].m_position = 0.0;
         vj_current_jointstates[i].m_speed = 0.0;
     }
+
+    vj_current_jointstates[0].m_position = 0.39;
+    vj_current_jointstates[1].m_position = -1.83;
+    vj_current_jointstates[2].m_position = 2.79;
+    vj_current_jointstates[3].m_position = 0.0;
+    vj_current_jointstates[4].m_position = -0.5;
+    vj_current_jointstates[5].m_position = 2.3562;
 
     Joints j_current_joints(0, vj_current_jointstates);
     Joints j_next_joints(0, vj_current_jointstates);
@@ -235,7 +277,20 @@ TEST(MMExecutorTest, armnotworking_test)
     robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
     robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt");
 
-    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints, s_urdf_path);
+
     uint ui_loop_counter = 0; 
     while (!dummyExecutor.isRoverFinished())
     {

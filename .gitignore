@@ -5,4 +5,4 @@ env.sh
 test/unit/data/results/*
 *.swp
 *.swo
-data/urdfmodel_path.txt
+data/planner/urdfmodel_path.txt

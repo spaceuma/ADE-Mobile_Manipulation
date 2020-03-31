@@ -29,7 +29,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res), mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res);
 
     // Creating the Motion Plan
-    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
     if (if_urdf_path.is_open())
     {
@@ -119,7 +119,7 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
 
     // Creating the Motion Plan
     double zRes = 0.08;
-    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
     if (if_urdf_path.is_open())
     {
@@ -191,7 +191,7 @@ TEST(MMMotionPlanTest, non_reachable_test)
     MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
 
     // Creating the Motion Plan
-    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
     if (if_urdf_path.is_open())
     {
@@ -233,7 +233,7 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
     MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
 
     // Creating the Motion Plan
-    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
     if (if_urdf_path.is_open())
     {
@@ -277,7 +277,7 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
     MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res);
 
     // Creating the Motion Plan
-    std::ifstream if_urdf_path("data/urdfmodel_path.txt", std::ios::in);
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
     if (if_urdf_path.is_open())
     {

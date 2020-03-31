@@ -2,12 +2,13 @@
 #include "MotionCommand.h"
 #include "MotionPlan.h"
 
-MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings)
+MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings, std::string s_urdf_path_m )
 {
     this->initializeArmVariables(j_present_readings); 
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
-    if (isArmSafe(j_present_readings))
+    this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
+    if (!isArmColliding(j_present_readings))
     {
         this->armstate = INITIALIZING;
     }
@@ -105,7 +106,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	    return 0;
 	case FORBIDDEN_POS:
             mc_m = this->getZeroRoverCommand();
-	    if (this->isArmSafe(j_arm_present_readings_m))
+	    if (!this->isArmColliding(j_arm_present_readings_m))
 	    {
 		this->armstate = INITIALIZING;
 		return 0;

@@ -14,8 +14,7 @@ cur=$PWD
 # pip3 install PyQt5
 # sudo apt-get -y install python3-matplotlib
 
-mkdir data
-cd data
+cd data/planner
 rm urdfmodel_path.txt
 echo "$cur/data/planner" >> urdfmodel_path.txt
 mkdir results
