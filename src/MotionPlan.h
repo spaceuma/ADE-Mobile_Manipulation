@@ -39,7 +39,7 @@ private:
     /**
      * Motion Planner for the arm
      */
-    ArmPlanner arm_planner;
+    ArmPlanner* p_arm_planner;
     CollisionDetector* p_collision_detector;
     std::string s_urdf_path;
     /**
