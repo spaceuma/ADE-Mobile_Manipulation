@@ -8,6 +8,16 @@
 
 #define pi 3.14159265359
 
+#define CONSERVATIVE 1
+#define PERMISSIVE 0
+
+#define END 1
+#define TRAJECTORY 0
+#define BEGINNING -1
+
+#define MAX_HORIZON 1.3
+#define MIN_HORIZON 0.3
+
 namespace ArmPlanner_lib
 {
 class ArmPlanner
@@ -26,8 +36,6 @@ public:
     double fetchingZDistance = 0.4;
     std::vector<double> finalEEorientation = {pi, 0, 0};
 
-    double horizonDistance = 1;
-
     // -- VARIABLES --
     std::vector<std::vector<double>> *roverPath6;
     std::vector<std::vector<double>> *wristPath6;
@@ -36,8 +44,14 @@ public:
     double zResolution;
     const std::vector<std::vector<double>> *DEM;
 
+    bool approach, varyingHorizon = false;
+    int deployment;
+    double horizonDistance;
+
     // -- FUNCTIONS --
-    ArmPlanner(std::string s_data_path_m);
+    ArmPlanner(std::string s_data_path_m,
+               bool _approach = CONSERVATIVE,
+               int _deployment = TRAJECTORY);
     ~ArmPlanner();
 
     std::vector<base::Waypoint> *getInterpolatedRoverPath();
@@ -56,19 +70,17 @@ public:
     void generateTunnel(
         base::Waypoint iniPos,
         base::Waypoint samplePos,
-        double horizonDistance,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
 
-    void computeWaypointAssignment(double horizonDistance,
-                                   std::vector<int> *pathsAssignment);
+    void computeWaypointAssignment(std::vector<int> *pathsAssignment);
 
     void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
                                       std::vector<base::Waypoint> *newRoverPath,
                                       std::vector<int> *newAssignment);
 
     std::vector<base::Waypoint> getLinearInterpolation(base::Waypoint waypoint0,
-                                                      base::Waypoint waypoint1,
-                                                      int numberIntWaypoints);
+                                                       base::Waypoint waypoint1,
+                                                       int numberIntWaypoints);
 
     std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,
                                                       base::Waypoint waypoint1,
