@@ -8,9 +8,29 @@
 using namespace KinematicModel_lib;
 using namespace ArmPlanner_lib;
 
-ArmPlanner::ArmPlanner(std::string s_data_path_m)
+ArmPlanner::ArmPlanner(std::string s_data_path_m,
+                       bool _approach,
+                       int _deployment)
 {
-   sherpa_tt_arm = new Manipulator(s_data_path_m); 
+    sherpa_tt_arm = new Manipulator(s_data_path_m);
+
+    approach = _approach;
+    deployment = _deployment;
+
+    switch (deployment)
+    {
+        case END:
+            horizonDistance = MIN_HORIZON;
+            break;
+        case TRAJECTORY:
+            varyingHorizon = true;
+            break;
+        case BEGINNING:
+            horizonDistance = MAX_HORIZON;
+            break;
+        default:
+            break;
+    }
 }
 ArmPlanner::~ArmPlanner()
 {
@@ -29,7 +49,10 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     this->DEM = _DEM;
 
     // Rover z coordinate and heading computation
-    (*roverPath)[roverPath->size()-1].heading = atan2(samplePos.position[1]-(*roverPath)[roverPath->size()-1].position[1], samplePos.position[0]-(*roverPath)[roverPath->size()-1].position[0]);
+    (*roverPath)[roverPath->size() - 1].heading = atan2(
+        samplePos.position[1] - (*roverPath)[roverPath->size() - 1].position[1],
+        samplePos.position[0]
+            - (*roverPath)[roverPath->size() - 1].position[0]);
 
     roverPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
@@ -70,8 +93,6 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         heading.push_back((*roverPath)[i].heading + offset);
     }
 
-    
-
     double sigma = 2;
     int samples = 5;
     smoothedHeading = getGaussSmoothen(heading, sigma, samples);
@@ -104,7 +125,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     samplePos.position[2]
         = (*DEM)[(int)(samplePos.position[1] / mapResolution + 0.5)]
                 [(int)(samplePos.position[0] / mapResolution + 0.5)]
-          + fetchingZDistance + sherpa_tt_arm->d6; // Adding d6 to find wrist pos
+          + fetchingZDistance
+          + sherpa_tt_arm->d6; // Adding d6 to find wrist pos
 
     std::vector<double> pos{(*roverPath6)[roverPath6->size() - 1][0],
                             (*roverPath6)[roverPath6->size() - 1][1],
@@ -126,7 +148,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     TBCS2Sample[1][3] += optimalLeftDeviation;
 
     TW2Sample = dot(TW2BCS, TBCS2Sample);
-    
+
     samplePos.position[0] = TW2Sample[0][3];
     samplePos.position[1] = TW2Sample[1][3];
 
@@ -155,7 +177,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     clock_t init = clock();
 
     // Generating the reachability tunnel surrounding the rover path
-    generateTunnel(iniPos, samplePos, horizonDistance, volume_cost_map);
+    generateTunnel(iniPos, samplePos, volume_cost_map);
     clock_t endt = clock();
     double t = double(endt - init) / CLOCKS_PER_SEC;
 
@@ -196,7 +218,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     // Paths inbetween assignment
     std::vector<int> *pathsAssignment = new std::vector<int>;
-    computeWaypointAssignment(horizonDistance, pathsAssignment);
+    computeWaypointAssignment(pathsAssignment);
 
     // Waypoint interpolation to smooth the movements of the arm joints
     interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
@@ -258,7 +280,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         }
         catch (std::exception &e)
         {
-            std::cout<<"Inverse kinematics failed at waypoint "<<i<<"!"<<std::endl;
+            std::cout << "Inverse kinematics failed at waypoint " << i << "!"
+                      << std::endl;
             return false;
         }
         // if(config == std::vector<double>(1,0))
@@ -292,7 +315,6 @@ std::vector<std::vector<std::vector<double>>> *ArmPlanner::getVolumeCostMap()
 void ArmPlanner::generateTunnel(
     base::Waypoint iniPos,
     base::Waypoint samplePos,
-    double horizonDistance,
     std::vector<std::vector<std::vector<double>>> *costMap3D)
 {
     int n = roverPath6->size();
@@ -316,13 +338,12 @@ void ArmPlanner::generateTunnel(
     std::vector<double> *minValues = sherpa_tt_arm->minValues;
     std::vector<double> *maxValues = sherpa_tt_arm->maxValues;
 
-    double slope = 0.5;
+    double slope = 0.2 + 0.3 * approach;
 
     // Tunnel in the first waypoint
     int tunnelSizeX
         = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
-    int tunnelSizeY
-        = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
+    int tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     int tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
@@ -362,7 +383,8 @@ void ArmPlanner::generateTunnel(
                         double cost
                             = 1
                               + slope
-                                    / sherpa_tt_arm->getDistanceToCollision(pos);
+                                    / sherpa_tt_arm->getDistanceToCollision(
+                                          pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
@@ -391,7 +413,8 @@ void ArmPlanner::generateTunnel(
 
     // Tunnel during the rover movement
     tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
-    tunnelSizeZ = (int)(abs((*maxValues)[2] - 0) / zResolution + 0.5);
+    tunnelSizeZ
+        = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
     for (int i = 1; i < n; i++)
     {
@@ -405,9 +428,13 @@ void ArmPlanner::generateTunnel(
         for (int j = 0; j < tunnelSizeY; j++)
             for (int k = 0; k < tunnelSizeZ; k++)
             {
+                if (varyingHorizon)
+                    horizonDistance
+                        = (MAX_HORIZON - MIN_HORIZON) * i / roverPath6->size()
+                          + MIN_HORIZON;
                 double x = horizonDistance;
                 double y = 0 + mapResolution * j;
-                double z = 0 + zResolution * k;
+                double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
                                    + pow(z - sherpa_tt_arm->d0, 2));
                 if (dist < sherpa_tt_arm->maxArmDistance)
@@ -428,7 +455,8 @@ void ArmPlanner::generateTunnel(
                         double cost
                             = 1
                               + slope
-                                    / sherpa_tt_arm->getDistanceToCollision(pos);
+                                    / sherpa_tt_arm->getDistanceToCollision(
+                                          pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
@@ -459,8 +487,7 @@ void ArmPlanner::generateTunnel(
     // Tunnel in the last waypoint
     tunnelSizeX
         = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
-    tunnelSizeY
-        = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
+    tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
 
@@ -500,7 +527,8 @@ void ArmPlanner::generateTunnel(
                         double cost
                             = 1
                               + slope
-                                    / sherpa_tt_arm->getDistanceToCollision(pos);
+                                    / sherpa_tt_arm->getDistanceToCollision(
+                                          pos);
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
@@ -528,14 +556,18 @@ void ArmPlanner::generateTunnel(
             }
 }
 
-void ArmPlanner::computeWaypointAssignment(double horizonDistance,
-                                           std::vector<int> *pathsAssignment)
+void ArmPlanner::computeWaypointAssignment(std::vector<int> *pathsAssignment)
 {
     std::vector<double> armBasePos;
     (*pathsAssignment) = std::vector<int>(roverPath6->size(), 0);
 
     for (int i = 0; i < roverPath6->size(); i++)
     {
+        if (varyingHorizon)
+            horizonDistance
+                = (MAX_HORIZON - MIN_HORIZON) * i / roverPath6->size()
+                  + MIN_HORIZON;
+
         std::vector<double> pos{
             (*roverPath6)[i][0], (*roverPath6)[i][1], (*roverPath6)[i][2]};
         double roll = (*roverPath6)[i][3];
@@ -565,7 +597,8 @@ void ArmPlanner::computeWaypointAssignment(double horizonDistance,
             std::vector<double> basePos = {0, 0, sherpa_tt_arm->d0};
             double dist = getDist3(basePos, pos);
 
-            if (TBCS2Wrist[0][3] < horizonDistance && dist < sherpa_tt_arm->maxArmOptimalDistance)
+            if (TBCS2Wrist[0][3] < horizonDistance
+                && dist < sherpa_tt_arm->maxArmOptimalDistance)
             {
                 (*pathsAssignment)[i] = j;
                 break;
@@ -630,9 +663,9 @@ std::vector<base::Waypoint> ArmPlanner::getLinearInterpolation(
     double yaw1 = waypoint1.heading;
 
     if (yaw1 - yaw0 > pi)
-        yaw1 -= 2*pi;
+        yaw1 -= 2 * pi;
     else if (yaw1 - yaw0 < -pi)
-        yaw1 += 2*pi;
+        yaw1 += 2 * pi;
 
     double l;
     std::vector<double> xi(10002, 0);
@@ -649,7 +682,7 @@ std::vector<base::Waypoint> ArmPlanner::getLinearInterpolation(
         xi[i] = x0 + i * (x1 - x0) / 10001;
         yi[i] = y0 + i * (y1 - y0) / 10001;
         heading[i] = yaw0 + i * (yaw1 - yaw0) / 10001;
-        
+
         while (heading[i] > pi)
             heading[i] -= 2 * pi;
         while (heading[i] < -pi)
@@ -660,7 +693,7 @@ std::vector<base::Waypoint> ArmPlanner::getLinearInterpolation(
         laccum[i] = laccum[i - 1] + l;
     }
     double d = laccum[10001] / (numberIntWaypoints + 1);
-    
+
     std::vector<base::Waypoint> newWaypoints(numberIntWaypoints);
     for (int i = 0; i < numberIntWaypoints; i++)
         for (int j = 0; j < 10002; j++)
@@ -718,7 +751,7 @@ std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(
         xi[i] = x0 + i * (x1 - x0) / 10001;
         yi[i] = a * xi[i] * xi[i] * xi[i] + b * xi[i] * xi[i] + c * xi[i] + d;
         heading[i] = yaw0 + i * (yaw1 - yaw0) / 10001;
-        
+
         while (heading[i] > pi)
             heading[i] -= 2 * pi;
         while (heading[i] < -pi)
@@ -741,7 +774,7 @@ std::vector<base::Waypoint> ArmPlanner::getCubicInterpolation(
                 newWaypoints[i].position[2]
                     = (waypoint0.position[2] + waypoint1.position[2]) / 2;
                 newWaypoints[i].heading = heading[j];
-                
+
                 break;
             }
     }

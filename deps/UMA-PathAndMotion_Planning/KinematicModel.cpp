@@ -271,15 +271,22 @@ Manipulator::Manipulator(std::string _s_data_path_m)
     minValues = new std::vector<double>;
     maxValues = new std::vector<double>;
 
-    readReachabilityMap(
-        s_data_path_m+"/reachabilityMap.txt", reachabilityMap, resolutions, minValues);
-    readReachabilityMap(
-        s_data_path_m+"/reachabilityDistances.txt", reachabilityDistances, resolutions, minValues);
+    readReachabilityMap(s_data_path_m + "/reachabilityMap.txt",
+                        reachabilityMap,
+                        resolutions,
+                        minValues);
+    readReachabilityMap(s_data_path_m + "/reachabilityDistances.txt",
+                        reachabilityDistances,
+                        resolutions,
+                        minValues);
 
     maxValues->resize(3);
-    (*maxValues)[0] = (*minValues)[0]+reachabilityMap->size()*(*resolutions)[0];
-    (*maxValues)[1] = (*minValues)[1]+(*reachabilityMap)[0].size()*(*resolutions)[1];
-    (*maxValues)[2] = (*minValues)[2]+(*reachabilityMap)[0][0].size()*(*resolutions)[2];
+    (*maxValues)[0]
+        = (*minValues)[0] + reachabilityMap->size() * (*resolutions)[0];
+    (*maxValues)[1]
+        = (*minValues)[1] + (*reachabilityMap)[0].size() * (*resolutions)[1];
+    (*maxValues)[2]
+        = (*minValues)[2] + (*reachabilityMap)[0][0].size() * (*resolutions)[2];
 }
 
 Manipulator::~Manipulator()
@@ -917,11 +924,11 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     double res5 = 20 * M_PI / 180;
     double res6 = 30 * M_PI / 180;
 
-    double maxXY = (a1 + a2 + d4)*1.1;
-    double minXY = (-a1 - a2 - d4)*1.1;
+    double maxXY = (a1 + a2 + d4) * 1.1;
+    double minXY = (-a1 - a2 - d4) * 1.1;
 
-    double maxZ = (d0 + a2 + d4)*1.1;
-    double minZ = (d0 - a2 - d4)*1.1;
+    double maxZ = (d0 + a2 + d4) * 1.1;
+    double minZ = (d0 - a2 - d4) * 1.1;
 
     std::vector<double> resolutions = {resXY, resXY, resZ};
     std::vector<double> minValues = {minXY, minXY, minZ};
@@ -939,7 +946,8 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
         std::vector<std::vector<double>>(sizeXY,
                                          std::vector<double>(sizeZ, 1)));
     std::vector<double> position;
-    CollisionDetector *p_collision_detector = new CollisionDetector(s_data_path_m);
+    CollisionDetector *p_collision_detector
+        = new CollisionDetector(s_data_path_m);
 
     std::cout << "Starting reachability map computation...\n";
     for (int i = 0; i < sizeXY; i++)
@@ -990,8 +998,10 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
             }
 
     std::cout << "...done!" << std::flush << std::endl;
-    saveVolume(
-        &reachabilityMap, &resolutions, &minValues, s_data_path_m+"/reachabilityMap.txt");
+    saveVolume(&reachabilityMap,
+               &resolutions,
+               &minValues,
+               s_data_path_m + "/reachabilityMap.txt");
 }
 
 bool Manipulator::isReachable(std::vector<double> position)
