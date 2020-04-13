@@ -51,12 +51,12 @@ chmod u+x install.sh
 | ├── MotionPlan.h | The Plan to move both arm and rover            |
 | ├── MobileManipExecutor.h | Class to provide commands during execution|
 | ├── mmFileManagerLib/ | Library to read external files|
-| │   ├──  mmFileManager.h | Functions to read from external text files|
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ├──  mmFileManager.h | Functions to read from external text files|
 | ├── types/ | All types used by the component|
-| │   ├──  MMError.h | MM Error Codes|
-| │   ├──  MMStatus.h | MM Status Codes|
-| │   ├──  RoverGuidance_Dem.h | DEM type used by Rover Guidance|
-| │   ├──  base/ | Types using base namespace|
-| │   ├──  proxy_library/ | Types using proxy_library namespace|
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├──  MMError.h | MM Error Codes|
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ├──  MMStatus.h | MM Status Codes|
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ├──  RoverGuidance_Dem.h | DEM type used by Rover Guidance|
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ├──  base/ | Types using base namespace|
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  ├──  proxy_library/ | Types using proxy_library namespace|
 | test/             | Test files                                    |
 | UML/              | UML Project files                             |
