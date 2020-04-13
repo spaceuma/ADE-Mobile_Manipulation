@@ -375,7 +375,7 @@ bool MobileManipMap::calculateTraversabilityMap()
 bool MobileManipMap::addSampleFacingObstacles()
 {
     this->fm_sample_facing.getShadowedCostMap(
-        this->vvi_traversability_map, this->d_res, 1.5, this->w_sample_pos);
+        this->vvi_traversability_map, this->d_res, 1.5, 1.8, this->w_sample_pos);
 
     this->calculateProximityToObstaclesMap();
 
@@ -389,29 +389,12 @@ bool MobileManipMap::addSampleFacingObstacles()
             }
             else
             {
-                if ((this->vvd_proximity_map[j][i] < 1.0)
-                    && (vvi_traversability_map[j][i]
-                        < 2)) // ToDo: this is a adhoc risk distance value!!
+                if (this->vvd_proximity_map[j][i] < 0.5)
                 {
                     this->vvd_cost_map[j][i]
                         = 1.0
-                          + 20.0
-                                * (1.0 - (double)this->vvd_proximity_map[j][i]);
-                }
-                else
-                {
-                    if (this->vvd_proximity_map[j][i] < 1.01 * this->d_res)
-                    {
-                        this->vvd_cost_map[j][i]
-                            = 1.0
-                              + 20.0
-                                    * (1.0
-                                       - (double)this->vvd_proximity_map[j][i]);
-                    }
-                    else
-                    {
-                        this->vvd_cost_map[j][i] = 1.0;
-                    }
+                          + 10.0
+                                * (0.5 - (double)this->vvd_proximity_map[j][i])/0.5;
                 }
             }
         }
@@ -464,12 +447,10 @@ void MobileManipMap::calculateCostValues()
             else
             {
                 if (this->vvd_proximity_map[j][i]
-                    < 1.0) // ToDo: this is a adhoc risk distance value!!
+                    < 0.5) // ToDo: this is a adhoc risk distance value!!
                 {
                     this->vvd_cost_map[j][i]
-                        = 1.0
-                          + 14.0
-                                * (1.0 - (double)this->vvd_proximity_map[j][i]);
+                        = 1.0 + 10.0* (0.5 - (double)this->vvd_proximity_map[j][i])/0.5;
                 }
                 else
                 {

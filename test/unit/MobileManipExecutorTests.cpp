@@ -274,8 +274,8 @@ TEST(MMExecutorTest, armnotworking_test)
     Joints j_next_joints(0, vj_current_jointstates);
 
     std::ofstream robotPoseFile, robotSimPoseFile;
-    robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
-    robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt");
+    robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos_armnotworking.txt");
+    robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos_armnotworking.txt");
 
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;

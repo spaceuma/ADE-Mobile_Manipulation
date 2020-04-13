@@ -21,6 +21,7 @@ public:
 
     void getShadowedCostMap(std::vector<std::vector<int>> &vvi_obstacle_map,
                             double mapResolution,
+                            double d_min_distance,
                             double d_max_distance,
                             base::Waypoint finalPos);
 

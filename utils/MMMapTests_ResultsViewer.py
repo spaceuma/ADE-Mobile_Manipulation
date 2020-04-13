@@ -23,7 +23,7 @@ sample = np.loadtxt(open("../test/unit/data/input/MMMapTest/sample_pos.txt"), sk
 fig1, (ax1,ax2) = plt.subplots(1,2,constrained_layout=True)
 fig1.suptitle('Unit Test 01 - MMMap Class', fontsize=16)
 
-plot1 = ax1.contourf(xMap, yMap, costMap_no_shadowing, 40, cmap = 'Reds')
+plot1 = ax1.contourf(xMap, yMap, costMap_shadowing, 40, cmap = 'Reds')
 ax1.set_aspect('equal')
 ax1.set_xlabel('X-axis (m)')
 ax1.set_ylabel('Y-axis (m)')
