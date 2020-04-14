@@ -37,11 +37,11 @@ private:
     /**
      * Radius of sampling outter ring
      */
-    double d_outter_sampling_dist = 1.8;
+    double d_outter_sampling_dist;
     /**
      * Radius of sampling inner ring
      */
-    double d_inner_sampling_dist = 1.5;
+    double d_inner_sampling_dist;
     /**
      * Avoidance distance for risk area
      */

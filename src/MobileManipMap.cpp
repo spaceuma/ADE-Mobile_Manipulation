@@ -102,6 +102,8 @@ MobileManipMap::MobileManipMap(
     this->vvd_elevation_map.clear();
     std::vector<double> row;
     this->d_elevation_min = INFINITY;
+    this->d_inner_sampling_dist = this->d_avoid_dist + 0.94;//TODO - 0.94 should come from max reachability 
+    this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res;
     for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
@@ -193,6 +195,8 @@ void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     this->ui_num_rows = dem.rows;
     this->rg_dem = dem;
     this->d_res = dem.nodeSize_m;
+    this->d_inner_sampling_dist = this->d_avoid_dist + 0.94;//TODO - 0.94 should come from max reachability 
+    this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res;
 }
 
 void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
