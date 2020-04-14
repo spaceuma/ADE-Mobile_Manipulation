@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
   std::vector<double> manip_joints; 
 
-  std::ifstream if_urdf_path("../../../data/urdfmodel_path.txt", std::ios::in);
+  std::ifstream if_urdf_path("../../../data/planner/urdfmodel_path.txt", std::ios::in);
   std::string s_urdf_path;
   if (if_urdf_path.is_open())
   {

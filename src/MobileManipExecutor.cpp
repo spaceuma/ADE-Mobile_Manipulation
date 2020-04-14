@@ -116,7 +116,13 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     switch (this->armstate)
     {
         case INITIALIZING:
-            if (this->isArmReady(j_next_arm_command_m, j_arm_present_readings_m))
+            if (this->isArmColliding(j_arm_present_readings_m))
+	    {
+                mc_m = this->getZeroRoverCommand();
+		this->armstate = FORBIDDEN_POS;
+		return 6;
+	    }
+	    if (this->isArmReady(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 this->armstate = READY; 
             } 
@@ -137,6 +143,12 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             this->armstate = COUPLED_MOVING;
 	    return 1;
 	case COUPLED_MOVING:
+	    if (this->isArmColliding(j_arm_present_readings_m))
+	    {
+                mc_m = this->getZeroRoverCommand();
+		this->armstate = FORBIDDEN_POS;
+		return 6;
+	    }
             /*if (!isArmWorking(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 mc_m = this->getZeroRoverCommand();

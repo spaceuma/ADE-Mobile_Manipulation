@@ -35,6 +35,18 @@ private:
      */
     double d_res;
     /**
+     * Radius of sampling outter ring
+     */
+    double d_outter_sampling_dist = 1.8;
+    /**
+     * Radius of sampling inner ring
+     */
+    double d_inner_sampling_dist = 1.5;
+    /**
+     * Avoidance distance for risk area
+     */
+    double d_avoid_dist = 1.0;
+    /**
      * Map minimal value of elevation in meters
      */
     double d_elevation_min;

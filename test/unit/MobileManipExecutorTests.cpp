@@ -118,7 +118,7 @@ TEST(MMExecutorTest, nominal_working_test)
                       << pose_robot_sim.getYaw() << "\n";
 
 
-/*        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
+        std::cout << "\033[32m[----------]\033[0m [INFO] Rover Position is (" << robotPose.position.x() << ", "
                   << robotPose.position.y() << ", " << robotPose.position.z()
                   << ") meters, with yaw " << robotPose.getYaw() * 180 / M_PI << " degrees"
                   << std::endl;
@@ -137,7 +137,7 @@ TEST(MMExecutorTest, nominal_working_test)
                       << j_next_joints.m_jointStates[i].m_position << " degrees" << std::endl;
         }
         std::cout << std::endl;
-	std::cout << std::endl;*/
+	std::cout << std::endl;
 //        usleep(100000);
 
 	// Joints positions are now the ones commanded
@@ -369,19 +369,20 @@ TEST(MMExecutorTest, armnotworking_test)
 //        usleep(100000);
 
 	// Joints positions are now the ones commanded
-        if (ui_loop_counter > 200)
+        if (ui_loop_counter > 201)
 	{
 	    ASSERT_EQ(ui_error_code,6) << "\033[31m[----------]\033[0m Motion Command is ( transl = " << mc.m_speed_ms << ", rot = " << mc.m_turnRate_rads << ") ";
 	    break;
 	}
-	if (ui_loop_counter < 2)
+	if (ui_loop_counter > 200)
 	{
             for (uint i = 0; i < 6; i++)
             {
                 j_current_joints.m_jointStates[i].m_position
                     = j_next_joints.m_jointStates[i].m_position;
             }
-
+            
+            j_current_joints.m_jointStates[0].m_position = 0.0;
 	}
 	ui_loop_counter++;
     }

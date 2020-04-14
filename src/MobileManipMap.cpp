@@ -375,7 +375,7 @@ bool MobileManipMap::calculateTraversabilityMap()
 bool MobileManipMap::addSampleFacingObstacles()
 {
     this->fm_sample_facing.getShadowedCostMap(
-        this->vvi_traversability_map, this->d_res, 1.5, 1.8, this->w_sample_pos);
+        this->vvi_traversability_map, this->d_res, this->d_inner_sampling_dist, this->d_outter_sampling_dist, this->w_sample_pos);
 
     this->calculateProximityToObstaclesMap();
 
@@ -387,16 +387,17 @@ bool MobileManipMap::addSampleFacingObstacles()
             {
                 this->vvd_cost_map[j][i] = INFINITY;
             }
-            else
+            else if (this->vvd_proximity_map[j][i] < this->d_avoid_dist)
             {
-                if (this->vvd_proximity_map[j][i] < 0.5)
-                {
-                    this->vvd_cost_map[j][i]
+                this->vvd_cost_map[j][i]
                         = 1.0
                           + 10.0
-                                * (0.5 - (double)this->vvd_proximity_map[j][i])/0.5;
-                }
+                                * (this->d_avoid_dist - (double)this->vvd_proximity_map[j][i])/this->d_avoid_dist;
             }
+	    else
+            {
+                this->vvd_cost_map[j][i] = 1.0;
+	    }
         }
     }
     return true;
@@ -447,10 +448,10 @@ void MobileManipMap::calculateCostValues()
             else
             {
                 if (this->vvd_proximity_map[j][i]
-                    < 0.5) // ToDo: this is a adhoc risk distance value!!
+                    < this->d_avoid_dist) // ToDo: this is a adhoc risk distance value!!
                 {
                     this->vvd_cost_map[j][i]
-                        = 1.0 + 10.0* (0.5 - (double)this->vvd_proximity_map[j][i])/0.5;
+                        = 1.0 + 10.0* (this->d_avoid_dist - (double)this->vvd_proximity_map[j][i])/this->d_avoid_dist;
                 }
                 else
                 {

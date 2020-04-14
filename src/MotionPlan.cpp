@@ -5,7 +5,7 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m); 
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,-1); 
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
 }
 
@@ -145,14 +145,20 @@ unsigned int MotionPlan::executeEndEffectorPlanning()
 
 bool MotionPlan::isArmProfileSafe()
 {
-/*    for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
+    for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
     {
         if (this->p_collision_detector->isColliding(this->vvd_arm_motion_profile[i]))
 	{
             std::cout << "ERROR at sample " << i << std::endl;
+            std::cout << " Joint 1 = " << this->vvd_arm_motion_profile[i][0];
+            std::cout << " Joint 2 = " << this->vvd_arm_motion_profile[i][1];
+            std::cout << " Joint 3 = " << this->vvd_arm_motion_profile[i][2];
+            std::cout << " Joint 4 = " << this->vvd_arm_motion_profile[i][3];
+            std::cout << " Joint 5 = " << this->vvd_arm_motion_profile[i][4];
+            std::cout << " Joint 6 = " << this->vvd_arm_motion_profile[i][5];
 	    return false;
 	}
-    }*/
+    }
     return true;
 }
 

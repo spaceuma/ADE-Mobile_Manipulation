@@ -57,7 +57,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_no_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_no_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_no_shadowing.executeEndEffectorPlanning();
+    EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_no_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_01.txt");
     savePath(mplan_no_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt");
     saveProfile(mplan_no_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt");
@@ -71,7 +72,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_shadowing.executeEndEffectorPlanning();
+    EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
     saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
@@ -84,7 +86,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_no_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_no_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_no_shadowing.executeEndEffectorPlanning();
+    EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_no_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_profile_02.txt");
     savePath(mplan_no_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_02.txt");
 
@@ -96,7 +99,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
     mplan_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    mplan_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_shadowing.executeEndEffectorPlanning();
+    EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
 }
