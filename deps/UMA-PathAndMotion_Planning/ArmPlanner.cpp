@@ -341,8 +341,10 @@ void ArmPlanner::generateTunnel(
     double slope = 0.2 + 0.3 * approach;
 
     // Tunnel in the first waypoint
+    if (varyingHorizon) horizonDistance = MIN_HORIZON;
+
     int tunnelSizeX
-        = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+        = (int)(abs(horizonDistance - (*minValues)[0]) / mapResolution + 0.5);
     int tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     int tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
@@ -486,7 +488,7 @@ void ArmPlanner::generateTunnel(
 
     // Tunnel in the last waypoint
     tunnelSizeX
-        = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+        = (int)(abs((*maxValues)[0] - 0) / mapResolution + 0.5);
     tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
@@ -504,7 +506,7 @@ void ArmPlanner::generateTunnel(
         for (int j = 0; j < tunnelSizeY; j++)
             for (int k = 0; k < tunnelSizeZ; k++)
             {
-                double x = (*minValues)[0] + mapResolution * i;
+                double x = 0 + mapResolution * i;
                 double y = 0 + mapResolution * j;
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
