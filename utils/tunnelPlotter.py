@@ -6,15 +6,15 @@ import math
 from numpy import dot
 import moviepy.editor as mpy
 
-cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), skiprows=1)
+cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt",'r'), skiprows=1)
 cMap2d[np.where(cMap2d == 0)] = 0.0001
 cMap2d[np.isinf(cMap2d)] = 0
 
-sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), max_rows=1)
+sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_path_01.txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_eepath_01.txt",'r'), skiprows=0)
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt",'r'), skiprows=0)
 
 xsize = int(sizes[1])
 ysize = int(sizes[0])

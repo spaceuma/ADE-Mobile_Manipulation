@@ -63,10 +63,18 @@ private:
      */
     std::vector<std::vector<double>> vvd_elevation_map;
     /**
-     * Matrix containing values regarding traversability
+     * Matrix containing values regarding obstacles
      * 0 => obstacle
-     * 1 => traversable (far from sample)
-     * 2 => traversable (near sample)
+     * 1 => safe
+     */
+    std::vector<std::vector<int>> vvi_obstacle_map;
+    /**
+     * Matrix containing values regarding traversability
+     * 0 => Area occupied by obstacles
+     * 1 => Dilatation of obstacles, neither rover or sample can be placed here
+     * 2 => Second dilatation of obstacles, the sampling area can remove part of this
+     * 3 => Possible locations for the rover and the sampling area
+     * 4 => Sampling Area 
      */
     std::vector<std::vector<int>> vvi_traversability_map;
     /**
@@ -85,12 +93,6 @@ public:
      */
     MobileManipMap(const RoverGuidance_Dem &rg_dem_m);
     /**
-     * Constructor that receives the map, process it and generates the cost and
-     * obstacles maps
-     */
-    MobileManipMap(const RoverGuidance_Dem &rg_dem_m,
-                   base::Waypoint w_sample_pos_m);
-    /**
      * Constructor that introduces pre-computed elevation and cost maps
      */
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
@@ -100,6 +102,10 @@ public:
      * Function to introduce the Sample into the costmap using FACE
      */
     void computeFACE(base::Waypoint w_sample_pos_m);
+    /**
+     * Function to get the current traversability map
+     */
+    void getTraversabilityMap(std::vector<std::vector<int>> &vvi_traversability_map_m);
     /**
      * Function to get the current cost map
      */

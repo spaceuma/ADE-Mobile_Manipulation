@@ -304,12 +304,12 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
     return theta1, theta2, theta3, theta4, theta5, theta6
 
 #path = np.loadtxt(open("../test/unit/data/results/roverPath.txt",'r'), skiprows=0)
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt",'r'), skiprows=0)
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt",'r'), skiprows=0)
 #path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt",'r'), skiprows=0)
 
 #armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
-armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt",'r'), skiprows=0)
+armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt",'r'), skiprows=0)
 
 sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
@@ -321,7 +321,7 @@ zsize = int(sizes[2])
 res = resolutions[0]
 resz = resolutions[1]
 
-DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_smaller_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_Nominal_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz

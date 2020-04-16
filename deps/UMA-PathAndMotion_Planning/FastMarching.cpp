@@ -90,7 +90,7 @@ void FastMarching::getShadowedCostMap(
                 clear_row.push_back(1.0);
                 if (vvi_obstacle_map[j][i] == 0)
                 {//Obstacle inside sampling area
-                    obstacle_row.push_back(1000000.0);
+                    obstacle_row.push_back(sqrt(2));
                 }
                 else
                 {//Sampling Area

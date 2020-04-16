@@ -168,8 +168,12 @@ void readPath(std::string s_path_file,
 	    std::getline(ss, cell, ' ');
             std::stringstream numeric_value2(cell);
             numeric_value2 >> val;
-            w_current.heading = val;
+            w_current.position[2] = val;
 
+	    std::getline(ss, cell, ' ');
+            std::stringstream numeric_value3(cell);
+            numeric_value3 >> val;
+            w_current.heading = val;
 
 	    vw_path.push_back(w_current);
 	    n_row++;

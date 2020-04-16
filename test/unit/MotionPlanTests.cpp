@@ -16,9 +16,9 @@ TEST(MMMotionPlanTest, nominal_working_test)
     // Reading the DEM
     std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_cost_map_no_shadowing, vvd_elevation_map;
     ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv",
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
                        vvd_elevation_map));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
                                    vvd_cost_map_shadowing));
     double res = 0.1; // meters
     double zRes = 0.08;
@@ -67,9 +67,9 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     // Reading the DEM
     std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_cost_map_no_shadowing, vvd_elevation_map;
     ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv",
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
                        vvd_elevation_map));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
                                    vvd_cost_map_shadowing));
     double res = 0.1; // meters
     double zRes = 0.08;
@@ -105,7 +105,8 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
-   
+    saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
+    saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt");
 }
 
 TEST(MMMotionPlanTest, colliding_profile_test)

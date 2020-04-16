@@ -2,11 +2,11 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_Shadowing.txt"), skiprows=0)
-costMap_no_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_noShadowing.txt"), skiprows=0)
+costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
+traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 costMap_splitted = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_splittedMap.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
-costMap_no_shadowing[np.where(costMap_no_shadowing==np.inf)] = np.nan
+traversabilityMap[np.where(traversabilityMap==np.inf)] = np.nan
 costMap_splitted[np.where(costMap_splitted==np.inf)] = np.nan
 
 res = 0.1
@@ -33,15 +33,16 @@ cb1.ax.set_title('Cost')
 ax1.set_facecolor('k')
 s1 = ax1.plot(sample[0], sample[1], 'ob')
 
-plot2 = ax2.contourf(costMap_no_shadowing, 40, cmap = 'Reds')
+plot2 = ax2.scatter(xMap, yMap,c = traversabilityMap, cmap = 'Set1', s = 20)
 ax2.set_aspect('equal')
 ax2.set_xlabel('X-axis')
 ax2.set_ylabel('Y-axis')
-ax2.set_title('Cost Map without Shadowing')
+ax2.set_title('Traversability Map')
 cb2 = fig1.colorbar(plot2, ax = ax2, orientation = 'horizontal')
 cb2.ax.set_title('Cost')
-s2 = ax2.plot(sample[0]*10, sample[1]*10, 'ob')
-
+s2 = ax2.plot(sample[0], sample[1], 'ob')
+ax2.set_xlim([xMap[0,0],xMap[0,-1]])
+ax2.set_ylim([yMap[0,0],yMap[-1,0]])
 
 
 fig2, ax3 = plt.subplots(constrained_layout=True)

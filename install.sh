@@ -41,13 +41,13 @@ make
 cd $cur/utils/collisionsPlotter
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
 make
 
 cd $cur/utils/reachabilityComputing
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
 make
 
 cd $cur

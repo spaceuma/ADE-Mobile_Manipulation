@@ -7,7 +7,7 @@ res = 0.1
 
 elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv"), skiprows=0)
 
-costMap_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt"), skiprows=0)
+costMap_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap.txt"), skiprows=0)
 costMap_no_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap_noShadowing.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
 costMap_no_shadowing[np.where(costMap_no_shadowing==np.inf)] = np.nan
@@ -95,6 +95,7 @@ p31 = ax3.plot(path_shadowing_02[:,0],path_shadowing_02[:,1],'c')
 s3 = ax3.plot(sample[0], sample[1], 'or')
 s31 = ax3.plot(rover[0], rover[1], 'oy')
 s31 = ax3.plot(rover_02[0], rover_02[1], 'oy')
+c1 = ax3.add_artist(plt.Circle((rover[0],rover[1]),1.7, color = 'b',alpha = .5))
 s14 = ax3.plot(path_shadowing_01[-1,0], path_shadowing_01[-1,1], 'oc')
 s14 = ax3.plot(path_shadowing_02[-1,0], path_shadowing_02[-1,1], 'oc')
 s33 = ax3.plot(path_no_shadowing_01[-1,0], path_no_shadowing_01[-1,1], 'o',color = 'lime')

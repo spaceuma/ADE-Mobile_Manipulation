@@ -65,8 +65,8 @@ void MobileManipExecutor::updateMotionPlan()
         rover_path->at(i).tol_position = 0.1;
         this->vpw_path.at(i) = (&rover_path->at(i));
     }
+    this->waypoint_navigation.configureTol(0.1,45.0/180.0*3.1416);//tolpos,tolheading
     this->waypoint_navigation.setTrajectory(this->vpw_path);
-
     // Extract and store the joints profile
     this->pvvd_arm_motion_profile
         = this->p_motion_plan->getArmMotionProfile();

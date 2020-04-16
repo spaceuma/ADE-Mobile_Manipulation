@@ -26,7 +26,7 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
         cout << " An exception occured while reading DEM" << endl;
         throw e;
     }
-
+/*
     try
     {
         this->calculateElevationMap();
@@ -41,56 +41,7 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
     {
         cout << " An exception occured while calculating the cost map" << endl;
         throw e;
-    }
-}
-
-MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
-                               base::Waypoint w_sample_pos_m)
-{
-    try
-    {
-        // Assignation of DEM parameters
-        this->loadDEM(dem);
-        // Initialization of vector matrices
-        this->initializeMatrices();
-    }
-    catch (bad_alloc &ba)
-    {
-        cout
-            << ba.what()
-            << " exception occured while allocating memory for the map matrices"
-            << endl;
-        throw ba;
-    }
-    catch (exception &e)
-    {
-        cout << " An exception occured while reading DEM" << endl;
-        throw e;
-    }
-
-    try
-    {
-        this->loadSample(w_sample_pos_m);
-    }
-    catch (exception &e)
-    {
-        cout << " An exception occured while loading the Sample position"
-             << endl;
-        throw e;
-    }
-    try
-    {
-        this->calculateElevationMap();
-        // Compute vvb_obstacle_map
-        this->calculateTraversabilityMap();
-        // Compute vvd_proximity_map
-        this->addSampleFacingObstacles();
-    }
-    catch (exception &e)
-    {
-        cout << " An exception occured while calculating the cost map" << endl;
-        throw e;
-    }
+    }*/
 }
 
 MobileManipMap::MobileManipMap(
@@ -247,6 +198,7 @@ bool MobileManipMap::isObstacle(const base::Waypoint w_pos_m)
 void MobileManipMap::initializeMatrices()
 {
     this->vvd_elevation_map.clear();
+    this->vvi_obstacle_map.clear();
     this->vvi_traversability_map.clear();
     this->vvd_cost_map.clear();
     this->vvd_proximity_map.clear();
@@ -255,15 +207,23 @@ void MobileManipMap::initializeMatrices()
     for (uint j = 0; j < this->ui_num_rows; j++)
     {
         this->vvd_elevation_map.push_back(vd_row);
+        this->vvi_obstacle_map.push_back(vi_row);
         this->vvi_traversability_map.push_back(vi_row);
         this->vvd_cost_map.push_back(vd_row);
         this->vvd_proximity_map.push_back(vd_row);
     }
 }
+
 void MobileManipMap::getCostMap(
     std::vector<std::vector<double>> &vvd_cost_map_m)
 {
     vvd_cost_map_m = this->vvd_cost_map;
+}
+
+void MobileManipMap::getTraversabilityMap(
+    std::vector<std::vector<int>> &vvi_traversability_map_m)
+{
+    vvi_traversability_map_m = this->vvi_traversability_map;
 }
 
 void MobileManipMap::getElevationMap(
@@ -312,13 +272,15 @@ double MobileManipMap::getMinElevation()
 
 bool MobileManipMap::calculateTraversabilityMap()
 {
+    // TODO - Detect whether the sample is at a distance from obstacles too close, being UNREACHABLE
     Mat mat_elevation_map
         = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_64F);
     Mat mat_obstacle_map
         = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_32FC1);
     Mat mat_slope_map
         = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_32FC1);
-    Mat dx, dy, elev;
+    Mat dx, dy, elev, angle, mag, mat_proximity_map;
+    
     double scale = 0.125; // 1/8 to normalize sobel filter
     double delta = 0;
 
@@ -335,7 +297,6 @@ bool MobileManipMap::calculateTraversabilityMap()
     mat_elevation_map.convertTo(elev, CV_32F, 1.0, 0);
     Sobel(elev, dx, CV_32F, 1, 0, 3, scale, delta, BORDER_DEFAULT);
     Sobel(elev, dy, CV_32F, 0, 1, 3, scale, delta, BORDER_DEFAULT);
-    Mat angle, mag, mat_proximity_map;
     cartToPolar(dx, dy, mag, angle);
 
     for (int j = 0; j < mat_slope_map.rows; j++)
@@ -348,29 +309,63 @@ bool MobileManipMap::calculateTraversabilityMap()
         }
     }
 
-    threshold(mat_slope_map, mat_obstacle_map, 20.0, 255, THRESH_BINARY_INV);
-
+    // Obstacle Mat is computed
+    threshold(mat_slope_map, mat_obstacle_map, 30.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
     mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
 
+    // Preliminar Proximity map is computed
     distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
     mat_proximity_map = mat_proximity_map * this->d_res;
-    threshold(mat_proximity_map, mat_proximity_map, 0.5, 0, THRESH_TOZERO);
 
-    // Borders are considered obstacles
+    // Traversability and Obstacle maps are computed
     for (int j = 0; j < this->ui_num_rows; j++)
     {
         for (int i = 0; i < this->ui_num_cols; i++)
         {
-            if ((mat_proximity_map.at<float>(j, i) == 0) || (i == 0) || (j == 0)
+            if (mat_proximity_map.at<float>(j, i) <= 0.0)
+	    {
+                this->vvi_obstacle_map[j][i] = 0;
+                this->vvi_traversability_map[j][i] = 0;
+	    }
+	    else if ((mat_proximity_map.at<float>(j, i) <= 0.94) ||//TODO-Include configurable distance 
+			    (i == 0) || (j == 0)
                 || (i == this->ui_num_cols - 1)
                 || (j == this->ui_num_rows - 1))
             {
-                this->vvi_traversability_map[j][i] = 0;
-            }
-            else
-            {
+                this->vvi_obstacle_map[j][i] = 0;
                 this->vvi_traversability_map[j][i] = 1;
             }
+            else if (mat_proximity_map.at<float>(j, i) <= 2.0)
+            {
+                if (sqrt(pow((double)i*this->d_res - 
+			       this->w_sample_pos.position[0],2)+pow((double)j*this->d_res - 
+				       this->w_sample_pos.position[1],2)) > 0.94)
+		{
+                    this->vvi_obstacle_map[j][i] = 0;
+                    this->vvi_traversability_map[j][i] = 2;
+		}
+		else
+		{
+                    this->vvi_obstacle_map[j][i] = 1;
+                    this->vvi_traversability_map[j][i] = 4;
+		}
+
+	    }
+            else
+	    {
+		if (sqrt(pow((double)i*this->d_res - 
+			       this->w_sample_pos.position[0],2)+pow((double)j*this->d_res - 
+				       this->w_sample_pos.position[1],2)) > 0.94)
+		{
+                    this->vvi_obstacle_map[j][i] = 1;
+                    this->vvi_traversability_map[j][i] = 3;
+		}
+		else
+		{
+                    this->vvi_obstacle_map[j][i] = 1;
+                    this->vvi_traversability_map[j][i] = 4;
+		}
+	    }	    
         }
     }
     return true;
@@ -378,8 +373,7 @@ bool MobileManipMap::calculateTraversabilityMap()
 
 bool MobileManipMap::addSampleFacingObstacles()
 {
-    this->fm_sample_facing.getShadowedCostMap(
-        this->vvi_traversability_map, this->d_res, this->d_inner_sampling_dist, this->d_outter_sampling_dist, this->w_sample_pos);
+    this->fm_sample_facing.getShadowedCostMap(this->vvi_obstacle_map, this->d_res, this->d_inner_sampling_dist, this->d_outter_sampling_dist, this->w_sample_pos);
 
     this->calculateProximityToObstaclesMap();
 
@@ -416,7 +410,7 @@ bool MobileManipMap::calculateProximityToObstaclesMap()
     {
         for (int i = 0; i < this->ui_num_cols; i++)
         {
-            if (vvi_traversability_map[j][i] == 0)
+            if (vvi_obstacle_map[j][i] == 0)
             {
                 mat_obstacle_map.at<float>(j, i) = 0;
             }
@@ -433,7 +427,7 @@ bool MobileManipMap::calculateProximityToObstaclesMap()
     {
         for (int i = 0; i < this->ui_num_cols; i++)
         {
-            vvd_proximity_map[j][i] = mat_proximity_map.at<float>(j, i);
+            this->vvd_proximity_map[j][i] = mat_proximity_map.at<float>(j, i);
         }
     }
     return true;

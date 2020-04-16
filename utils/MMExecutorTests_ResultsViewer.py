@@ -28,7 +28,7 @@ ax.set_ylabel('Y-axis (m)')
 cb3 = fig.colorbar(plot3, ax = ax, orientation = 'vertical')
 cb3.ax.set_title('Elevation (m)')
 for i in range(path.shape[0]):
-     c1 = ax.add_artist(plt.Circle((path[i,0],path[i,1]),0.2, color = 'b'))
+     c1 = ax.add_artist(plt.Circle((path[i,0],path[i,1]),0.3, color = 'b'))
 p1 = ax.plot(path[:,0],path[:,1],'oc')
 p3 = ax.plot(rover_loc_pos[:,0], rover_loc_pos[:,1], 'or')
 p2 = ax.plot(rover_pos[:,0], rover_pos[:,1], 'oy')
