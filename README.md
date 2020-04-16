@@ -1,6 +1,11 @@
 # ADE_Mobile-Manipulation
 C++ code for European H2020 Project ADE
 
+## Table of Contents
+  * [Installation](#installation)
+  * [External Packages](#external-packages)
+  * [Folder Structure](#installation)
+
 ## Installation
 
 In order to get this repository together with its submodules, use the following command ([Source](https://www.vogella.com/tutorials/GitSubmodules/article.html)):
@@ -16,7 +21,7 @@ cd ~/ADE-Mobile_Manipulation
 chmod u+x install.sh
 ```
 
-## External packages
+## External Packages
 
 ### Required (the indicated version is the one used)
 
@@ -60,3 +65,4 @@ chmod u+x install.sh
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  ├──  proxy_library/ | Types using proxy_library namespace|
 | test/             | Test files                                    |
 | UML/              | UML Project files                             |
+
