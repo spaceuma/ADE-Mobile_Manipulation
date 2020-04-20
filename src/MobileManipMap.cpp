@@ -381,7 +381,7 @@ bool MobileManipMap::addSampleFacingObstacles()
     {
         for (uint i = 0; i < this->ui_num_cols; i++)
         {
-            if (this->vvd_proximity_map[j][i] < this->d_res)
+            if ((this->vvd_proximity_map[j][i] < this->d_res)||(this->vvi_traversability_map[j][i] <= 2))
             {
                 this->vvd_cost_map[j][i] = INFINITY;
             }

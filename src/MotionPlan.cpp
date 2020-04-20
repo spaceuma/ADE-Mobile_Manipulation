@@ -110,8 +110,30 @@ bool MotionPlan::shortenPathForFetching()
     }
     else
     {
-        this->vw_rover_path.erase(this->vw_rover_path.begin() + endWaypoint + 1,
+        int i_eraseIndex = endWaypoint + 1;
+	std::cout << "The path size is " << this->vw_rover_path.size() << std::endl;
+	std::cout << "The endWaypoint is " << endWaypoint << std::endl;
+	if (endWaypoint < this->vw_rover_path.size()-3)
+        {
+	    double d_segmentX = this->vw_rover_path[i_eraseIndex].position[0] - this->vw_rover_path[endWaypoint].position[0];
+	    double d_segmentY = this->vw_rover_path[i_eraseIndex].position[1] - this->vw_rover_path[endWaypoint].position[1];
+	    double d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
+            while ((i_eraseIndex < this->vw_rover_path.size() - 2)&&(d_norm < 0.1))//TODO-Introduce here configurable position tolerance
+	    {
+                i_eraseIndex += 1;
+                d_segmentX = this->vw_rover_path[i_eraseIndex].position[0] - this->vw_rover_path[endWaypoint].position[0];
+                d_segmentY = this->vw_rover_path[i_eraseIndex].position[1] - this->vw_rover_path[endWaypoint].position[1];
+                d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
+	    }
+	    std::cout << "The erase index is " << i_eraseIndex << std::endl;
+            this->vw_rover_path.erase(this->vw_rover_path.begin() + i_eraseIndex,
                               this->vw_rover_path.end());
+        }
+	else
+        {
+            this->vw_rover_path.erase(this->vw_rover_path.begin() + endWaypoint + 1,
+                              this->vw_rover_path.end());
+        }
     }
     return true;
 }

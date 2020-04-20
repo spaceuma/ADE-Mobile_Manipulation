@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 res = 0.1
-elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv"), skiprows=0)
+elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv"), skiprows=0)
 cost_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt"), skiprows=0)
 
 path = np.loadtxt(open("../test/unit/data/input/MMExecutorTest/path.txt"), skiprows=0)
