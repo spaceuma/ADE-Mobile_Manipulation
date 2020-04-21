@@ -96,16 +96,16 @@ public:
     /**
      * The path for the rover base, vw_rover_path, is calculated
      */
-    unsigned int executeRoverBasePathPlanning(base::Waypoint w_rover_pos_m,
+    unsigned int computeRoverBasePathPlanning(base::Waypoint w_rover_pos_m,
                                       base::Waypoint w_sample_pos_m);
     /**
      * The path is shortened, ending in the best waypoint to fetch the sample
      */
     bool shortenPathForFetching();
     /**
-     * Calculates the path of the end effector
+     * Calculates the profile of positions for the arm
      */
-    unsigned int executeEndEffectorPlanning();
+    unsigned int computeArmProfilePlanning();
 };
 
 #endif

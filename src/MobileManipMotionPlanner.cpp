@@ -3,22 +3,25 @@
 
 using namespace std;
 
+//--CONSTRUCTOR
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
     const Joints &j_present_readings,
     string s_configfile_path_m)
 {
-    double d_zres_m = 0.08;//TODO: this must come from an external config file
+    double d_zres_m = 0.08; // TODO: this must come from an external config file
     this->status = IDLE;
     this->error = NO_ERROR;
     // DEM is introduced into the map class
     this->p_mmmap = new MobileManipMap(navCamDEM);
     // Each class contains a pointer to the previous one
-    this->p_motionplan = new MotionPlan(this->p_mmmap, d_zres_m, s_configfile_path_m);
-    this->p_mmexecutor
-        = new MobileManipExecutor(this->p_motionplan, j_present_readings, s_configfile_path_m);
+    this->p_motionplan
+        = new MotionPlan(this->p_mmmap, d_zres_m, s_configfile_path_m);
+    this->p_mmexecutor = new MobileManipExecutor(
+        this->p_motionplan, j_present_readings, s_configfile_path_m);
 }
 
+//-- Generate Motion Plan
 bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
                                                   double d_sample_pos_x,
                                                   double d_sample_pos_y)
@@ -38,14 +41,17 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
     sample_position.position[0] = d_sample_pos_x;
     sample_position.position[1] = d_sample_pos_y;
 
+    // Can only be called in IDLE state
     if (getStatus() == IDLE)
     {
         unsigned int ui_code = 0;
         // TODO - Since for now there is no computation, the state will go to
         // READY_TO_MOVE
         setStatus(GENERATING_MOTION_PLAN);
+	// The cost map must be computed based on FACE method
         this->p_mmmap->computeFACE(sample_position);
-        ui_code = this->p_motionplan->executeRoverBasePathPlanning(
+	// To compute the path for the rover base
+        ui_code = this->p_motionplan->computeRoverBasePathPlanning(
             this->w_current_rover_position, sample_position);
         switch (ui_code)
         {
@@ -67,26 +73,28 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
                 setError(GOAL_TOO_CLOSE);
                 return false;
             case 6:
-		setError(DEGEN_PATH);
-		return false;
+                setError(DEGEN_PATH);
+                return false;
         }
+	// The rover base path is shortened to stop near the sample
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
             setError(GOAL_TOO_CLOSE);
             return false;
         }
-	ui_code = this->p_motionplan->executeEndEffectorPlanning();
-	switch (ui_code)
-	{
+	// The arm positions profile is to be computed
+        ui_code = this->p_motionplan->computeArmProfilePlanning();
+        switch (ui_code)
+        {
             case 0:
                 break;
             case 1:
-		setError(COLLIDING_PROF);
-		return false;
+                setError(COLLIDING_PROF);
+                return false;
             case 2:
-		setError(DEVIATED_PROF);
-		return false;
-	}
+                setError(DEVIATED_PROF);
+                return false;
+        }
         this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
         return true;
@@ -98,23 +106,17 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
     }
 }
 
-void MobileManipMotionPlanner::executeAtomicOperation()
-{
-    // TODO - implement MobileManipMotionPlanner::executeAtomicOperation
-    throw "Not yet implemented";
-}
-
 bool MobileManipMotionPlanner::start()
 {
     if (getStatus() == READY_TO_MOVE)
     {
         setStatus(EXECUTING_MOTION_PLAN);
-	return true;
+        return true;
     }
     else
     {
         setError(IMPROPER_CALL);
-	return false;
+        return false;
     }
 }
 
@@ -124,7 +126,7 @@ bool MobileManipMotionPlanner::abort()
     {
         case READY_TO_MOVE:
             setStatus(IDLE);
-	    return true;
+            return true;
         case EXECUTING_MOTION_PLAN:
             setStatus(RETRIEVING_ARM);
             return true;
@@ -149,12 +151,12 @@ bool MobileManipMotionPlanner::pause(MotionCommand &rover_command)
         setStatus(PAUSE);
         rover_command.m_speed_ms = 0.0;
         rover_command.m_turnRate_rads = 0.0;
-	return true;
+        return true;
     }
     else
     {
         setError(IMPROPER_CALL);
-	return false;
+        return false;
     }
 }
 
@@ -163,12 +165,12 @@ bool MobileManipMotionPlanner::resumeOperation()
     if (getStatus() == PAUSE)
     {
         setStatus(this->priorStatus);
-	return true;
+        return true;
     }
     else
     {
         setError(IMPROPER_CALL);
-	return false;
+        return false;
     }
 }
 
@@ -186,7 +188,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                                                  Joints arm_joints)
 {
 
-    unsigned int ui_retrieval_code; 
+    unsigned int ui_retrieval_code;
     switch (getStatus())
     {
         case EXECUTING_MOTION_PLAN:
@@ -223,7 +225,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                     setError(EXCESSIVE_DRIFT);
                     return false;
                 case 4: // Either no trajectory or no pose
-                        // TODO - Is this situation even possible to reach??
+                    // TODO - Is this situation even possible to reach??
                     std::cout << "An strange error occurred, there is no pose??"
                               << std::endl;
                     setError(INCOMPLETE_INPUT);
@@ -231,24 +233,25 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                 case 5:
                     setError(FORB_ARM_POS);
                     return false;
-		case 6:
-		    setError(COLLIDING_ARM);
-		    return false;
+                case 6:
+                    setError(COLLIDING_ARM);
+                    return false;
             }
             return false;
             break;
         }
         case RETRIEVING_ARM:
-	    ui_retrieval_code = this->p_mmexecutor->getRetrievalCommand(arm_joints, arm_command);
-	    if (ui_retrieval_code == 2)
-	    {
+            ui_retrieval_code = this->p_mmexecutor->getRetrievalCommand(
+                arm_joints, arm_command);
+            if (ui_retrieval_code == 2)
+            {
                 return false;
-	    }
+            }
             return true;
-	    break;
+            break;
         case EXECUTING_ARM_OPERATION:
             std::cout << "Status is Executing Arm Operation" << std::endl;
-	    setStatus(RETRIEVING_ARM);
+            setStatus(RETRIEVING_ARM);
             return true;
         case ERROR:
             return false;
@@ -299,17 +302,17 @@ void MobileManipMotionPlanner::resumeError()
             break;
         case UNCERT_GOAL:
             break;
-	case DEGEN_PATH:
-	    break;
-	case COLLIDING_PROF:
-	    break;
-	case DEVIATED_PROF:
-	    break;
-	case FORB_ARM_POS:
-	    break;
-	case INCOMPLETE_INPUT:
-	    break;
-	case NON_RESP_ARM:
+        case DEGEN_PATH:
+            break;
+        case COLLIDING_PROF:
+            break;
+        case DEVIATED_PROF:
+            break;
+        case FORB_ARM_POS:
+            break;
+        case INCOMPLETE_INPUT:
+            break;
+        case NON_RESP_ARM:
             break;
         case COLLIDING_ARM:
             break;
@@ -421,22 +424,22 @@ void MobileManipMotionPlanner::printErrorCode()
         case UNCERT_GOAL:
             std::cout << "UNCERT_GOAL";
             break;
-	case DEGEN_PATH:
-	    std::cout << "DEGEN_PATH";
-	    break;
-	case COLLIDING_PROF:
-	    std::cout << "COLLIDING_PROF";
-	    break;
-	case DEVIATED_PROF:
-	    std::cout << "DEVIATED_PROF";
-	    break;
-	case FORB_ARM_POS:
-	    std::cout << "FORB_ARM_POS";
-	    break;
-	case INCOMPLETE_INPUT:
-	    std::cout << "INCOMPLETE_INPUT";
-	    break;
-	case NON_RESP_ARM:
+        case DEGEN_PATH:
+            std::cout << "DEGEN_PATH";
+            break;
+        case COLLIDING_PROF:
+            std::cout << "COLLIDING_PROF";
+            break;
+        case DEVIATED_PROF:
+            std::cout << "DEVIATED_PROF";
+            break;
+        case FORB_ARM_POS:
+            std::cout << "FORB_ARM_POS";
+            break;
+        case INCOMPLETE_INPUT:
+            std::cout << "INCOMPLETE_INPUT";
+            break;
+        case NON_RESP_ARM:
             std::cout << "NON_RESP_ARM";
             break;
         case COLLIDING_ARM:
@@ -502,3 +505,10 @@ std::vector<std::vector<std::vector<double>>>
 {
     return this->p_motionplan->get3DCostMap();
 }
+
+void MobileManipMotionPlanner::executeAtomicOperation()
+{
+    // TODO - implement MobileManipMotionPlanner::executeAtomicOperation
+    throw "Not yet implemented";
+}
+

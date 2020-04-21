@@ -55,14 +55,13 @@ private:
     /**
      * The current position of the arm joints.
      */
-    // Joints currentJointPositions;
     /**
- * Set the current status
- */
+     * Set the current status
+     */
     void setStatus(MMStatus status_m);
     /**
- * Set an error code
- */
+    * Set an error code
+    */
     void setError(MMError error_m);
 
     base::Waypoint w_current_rover_position;
@@ -82,11 +81,6 @@ public:
     bool generateMotionPlan(proxy_library::Pose plpose_m,
                             double d_sample_pos_x,
                             double d_sample_pos_y);
-
-    /**
-     * It serves to perform an operation with only the arm.
-     */
-    void executeAtomicOperation();
 
     /**
      * Serves to actively start moving the rover and arm once a motion plan is
@@ -110,13 +104,6 @@ public:
      * PAUSE state.
      */
     bool resumeOperation();
-
-    /**
-     * It procceses the input LocCamDEM and triggers a replanning if necessary.
-     */
-    void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
-                         proxy_library::Pose rover_position,
-                         Joints arm_joints);
 
     /**
      * It provides commands depending on the current position of the rover and
@@ -194,4 +181,16 @@ public:
      * A pointer to the 3d cost map is returned
      */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
+    /**
+     * It procceses the input LocCamDEM and triggers a replanning if necessary.
+     */
+    void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
+                         proxy_library::Pose rover_position,
+                         Joints arm_joints);
+
+    /**
+     * It serves to perform an operation with only the arm.
+     */
+    void executeAtomicOperation();
+
 };

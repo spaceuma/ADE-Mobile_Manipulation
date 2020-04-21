@@ -48,13 +48,13 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 1st Case with Shadowing 
     clock_t ini2D = clock();
-    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
         w_rover_pos_01, samplePos));
     ASSERT_EQ(ui_error_code, 0);
     mplan_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    ui_error_code = mplan_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
@@ -95,13 +95,13 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
     // 2nd Case with Shadowing
     clock_t ini2D = clock();
-    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
         w_rover_pos_02, samplePos));
     ASSERT_EQ(ui_error_code, 0);
     mplan_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    ui_error_code = mplan_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
@@ -142,13 +142,13 @@ TEST(MMMotionPlanTest, colliding_profile_test)
     ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
     clock_t ini2D = clock();
-    ASSERT_NO_THROW(ui_error_code = mplan_no_shadowing.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan_no_shadowing.computeRoverBasePathPlanning(
         w_rover_pos_01, samplePos));
     ASSERT_EQ(ui_error_code, 0);
     mplan_no_shadowing.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
-    ui_error_code = mplan_no_shadowing.executeEndEffectorPlanning();
+    ui_error_code = mplan_no_shadowing.computeArmProfilePlanning();
     ASSERT_EQ(ui_error_code, 1);
 
 }
@@ -194,7 +194,7 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     roverPos.position[1] = 2.0;
     samplePos.position[0] = 5.3;
     samplePos.position[1] = 5.6;
-    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
         roverPos, samplePos);
     ASSERT_EQ(i_error_code, 1)
         << "\033[31m[----------]\033[0m Expected Error Code 1";
@@ -204,7 +204,7 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     roverPos.position[1] = 2.0;
     samplePos.position[0] = 5.3;
     samplePos.position[1] = 5.6;
-    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
         roverPos, samplePos);
     ASSERT_EQ(i_error_code, 2)
         << "\033[31m[----------]\033[0m Expected Error Code 2";
@@ -214,7 +214,7 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     roverPos.position[1] = 2.0;
     samplePos.position[0] = -5.3;
     samplePos.position[1] = 5.6;
-    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
         roverPos, samplePos);
     ASSERT_EQ(i_error_code, 3)
         << "\033[31m[----------]\033[0m Expected Error Code 3";
@@ -224,7 +224,7 @@ TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
     roverPos.position[1] = 2.0;
     samplePos.position[0] = 6.0;
     samplePos.position[1] = 2.0;
-    i_error_code = mplan_dummy.executeRoverBasePathPlanning(
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
         roverPos, samplePos);
     ASSERT_EQ(i_error_code, 4)
         << "\033[31m[----------]\033[0m Expected Error Code 4";
@@ -266,7 +266,7 @@ TEST(MMMotionPlanTest, non_reachable_test)
     // 1st Case: Without Shadowing
     clock_t ini2D = clock();
     unsigned int ui_error_code;
-    ASSERT_NO_THROW(ui_error_code = mplan.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan.computeRoverBasePathPlanning(
         w_rover_pos, samplePos));
     ASSERT_EQ(ui_error_code, 5)
         << "\033[31m[----------]\033[0m Expected Error Code 5";
@@ -308,7 +308,7 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
     // 1st Case: Without Shadowing
     clock_t ini2D = clock();
     unsigned int ui_error_code;
-    ASSERT_NO_THROW(ui_error_code = mplan.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan.computeRoverBasePathPlanning(
         w_rover_pos, samplePos));
     ASSERT_EQ(ui_error_code, 6)
         << "\033[31m[----------]\033[0m Expected Error Code 6";
@@ -351,14 +351,14 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
 
     // 1st Case: Without Shadowing
     clock_t ini2D = clock();
-    ASSERT_NO_THROW(ui_error_code = mplan.executeRoverBasePathPlanning(
+    ASSERT_NO_THROW(ui_error_code = mplan.computeRoverBasePathPlanning(
         w_rover_pos, samplePos));
     ASSERT_EQ(ui_error_code, 0);
     mplan.shortenPathForFetching();
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     savePath(mplan.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/sample_outoftunnel_path_01.txt");
-    ASSERT_FALSE(mplan.executeEndEffectorPlanning());
+    ASSERT_FALSE(mplan.computeArmProfilePlanning());
 }
 
 

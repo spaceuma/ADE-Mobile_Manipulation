@@ -32,7 +32,7 @@ MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
 
 }
 
-unsigned int MotionPlan::executeRoverBasePathPlanning(base::Waypoint rover_position,
+unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_position,
                                               base::Waypoint sample)
 {
     std::vector<std::vector<double>> costMap;
@@ -138,7 +138,7 @@ bool MotionPlan::shortenPathForFetching()
     return true;
 }
 
-unsigned int MotionPlan::executeEndEffectorPlanning()
+unsigned int MotionPlan::computeArmProfilePlanning()
 {
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
