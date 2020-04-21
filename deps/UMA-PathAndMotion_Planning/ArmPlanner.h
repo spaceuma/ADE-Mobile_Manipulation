@@ -95,6 +95,10 @@ public:
     std::vector<double> getGaussSmoothen(std::vector<double> values,
                                          double sigma,
                                          int samples);
+
+    void checkIntersections(std::vector<std::vector<std::vector<int>>> *tunnelLabel,
+                            std::vector<std::vector<std::vector<double>>> *tunnelCost,
+                            int ix, int iy, int iz, int threshold);
 };
 } // namespace ArmPlanner_lib
 #endif

@@ -322,6 +322,10 @@ void ArmPlanner::generateTunnel(
     int sy = (*costMap3D)[0].size();
     int sz = (*costMap3D)[0][0].size();
 
+    std::vector<std::vector<std::vector<int>>> *tunnelLabel = new std::vector<std::vector<std::vector<int>>>;
+    tunnelLabel->resize(
+        sx, std::vector<std::vector<int>>(sy, std::vector<int>(sz,2*n)));
+
     std::vector<int> goal(3, 0);
     std::vector<int> start(3, 0);
 
@@ -329,11 +333,13 @@ void ArmPlanner::generateTunnel(
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
     start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
     (*costMap3D)[start[1]][start[0]][start[2]] = 1;
+    (*tunnelLabel)[start[1]][start[0]][start[2]] = n;
 
     goal[0] = (int)(samplePos.position[0] / mapResolution + 0.5);
     goal[1] = (int)(samplePos.position[1] / mapResolution + 0.5);
     goal[2] = (int)(samplePos.position[2] / zResolution + 0.5);
     (*costMap3D)[goal[1]][goal[0]][goal[2]] = 1;
+    (*tunnelLabel)[goal[1]][goal[0]][goal[2]] = n;
 
     std::vector<double> *minValues = sherpa_tt_arm->minValues;
     std::vector<double> *maxValues = sherpa_tt_arm->maxValues;
@@ -391,24 +397,39 @@ void ArmPlanner::generateTunnel(
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
+                            {
                                 (*costMap3D)[iy][ix][iz] = cost;
+                                (*tunnelLabel)[iy][ix][iz] = 1;
+                            }
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
+                            {
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
+                                (*tunnelLabel)[iy][ix + 1][iz] = 1;
+                            }
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
+                            {
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
+                                (*tunnelLabel)[iy][ix - 1][iz] = 1;
+                            }
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
+                            {
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
+                                (*tunnelLabel)[iy + 1][ix][iz] = 1;
+                            }
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
+                            {
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
+                                (*tunnelLabel)[iy - 1][ix][iz] = 1;
+                            }
                     }
                 }
             }
@@ -463,24 +484,44 @@ void ArmPlanner::generateTunnel(
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix, iy, iz, i-20);
                                 (*costMap3D)[iy][ix][iz] = cost;
+                                (*tunnelLabel)[iy][ix][iz] = i;
+                            }
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix + 1][iz])
-                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix+1, iy, iz, i-20);
+                                (*costMap3D)[iy][ix+1][iz] = cost;
+                                (*tunnelLabel)[iy][ix+1][iz] = i;
+                            }
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix - 1][iz])
-                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix-1, iy, iz, i-20);
+                                (*costMap3D)[iy][ix-1][iz] = cost;
+                                (*tunnelLabel)[iy][ix-1][iz] = i;
+                            }
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy + 1][ix][iz])
-                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix, iy+1, iz, i-20);
+                                (*costMap3D)[iy+1][ix][iz] = cost;
+                                (*tunnelLabel)[iy+1][ix][iz] = i;
+                            }
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy - 1][ix][iz])
-                                (*costMap3D)[iy - 1][ix][iz] = cost;
+                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix, iy-1, iz, i-20);
+                                (*costMap3D)[iy-1][ix][iz] = cost;
+                                (*tunnelLabel)[iy-1][ix][iz] = i;
+                            }
                     }
                 }
             }
@@ -535,24 +576,44 @@ void ArmPlanner::generateTunnel(
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix, iy, iz, n/2);
                                 (*costMap3D)[iy][ix][iz] = cost;
+                                (*tunnelLabel)[iy][ix][iz] = n;
+                            }
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix + 1][iz])
-                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix+1, iy, iz, n/2);
+                                (*costMap3D)[iy][ix+1][iz] = cost;
+                                (*tunnelLabel)[iy][ix+1][iz] = n;
+                            }
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix - 1][iz])
-                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix-1, iy, iz, n/2);
+                                (*costMap3D)[iy][ix-1][iz] = cost;
+                                (*tunnelLabel)[iy][ix-1][iz] = n;
+                            }
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy + 1][ix][iz])
-                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix, iy+1, iz, n/2);
+                                (*costMap3D)[iy+1][ix][iz] = cost;
+                                (*tunnelLabel)[iy+1][ix][iz] = n;
+                            }
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy - 1][ix][iz])
-                                (*costMap3D)[iy - 1][ix][iz] = cost;
+                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            {
+                                checkIntersections(tunnelLabel, costMap3D, ix, iy-1, iz, n/2);
+                                (*costMap3D)[iy-1][ix][iz] = cost;
+                                (*tunnelLabel)[iy-1][ix][iz] = n;
+                            }
                     }
                 }
             }
@@ -859,4 +920,38 @@ std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values,
         out.push_back(smoothed * samples);
     }
     return out;
+}
+
+void ArmPlanner::checkIntersections(std::vector<std::vector<std::vector<int>>> *tunnelLabel,
+                                    std::vector<std::vector<std::vector<double>>> *tunnelCost,
+                                    int ix, int iy, int iz, int threshold)
+{
+    int sx = (*tunnelLabel).size();
+    int sy = (*tunnelLabel)[0].size();
+    int sz = (*tunnelLabel)[0][0].size();
+
+    if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
+        && iy < sy - 1 && iz < sz - 1)
+        if((*tunnelLabel)[iy][ix + 1][iz] < threshold)
+            (*tunnelCost)[iy][ix + 1][iz] = INFINITY;
+    if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
+        && iy < sy - 1 && iz < sz - 1)
+        if((*tunnelLabel)[iy][ix-1][iz] < threshold)
+            (*tunnelCost)[iy][ix - 1][iz] = INFINITY;
+    if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
+        && iy + 1 < sy - 1 && iz < sz - 1)
+        if((*tunnelLabel)[iy+1][ix][iz] < threshold)
+            (*tunnelCost)[iy+1][ix][iz] = INFINITY;
+    if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
+        && iy - 1 < sy - 1 && iz < sz - 1)
+        if((*tunnelLabel)[iy-1][ix][iz] < threshold)
+            (*tunnelCost)[iy-1][ix][iz] = INFINITY;
+    if (ix > 0 && iy > 0 && iz + 1 > 0 && ix < sx - 1
+        && iy < sy - 1 && iz + 1 < sz - 1)
+        if((*tunnelLabel)[iy][ix][iz+1] < threshold)
+            (*tunnelCost)[iy][ix][iz+1] = INFINITY;
+    if (ix > 0 && iy > 0 && iz - 1 > 0 && ix < sx - 1
+        && iy < sy - 1 && iz - 1 < sz - 1)
+        if((*tunnelLabel)[iy][ix][iz-1] < threshold)
+            (*tunnelCost)[iy][ix][iz-1] = INFINITY;
 }
