@@ -49,7 +49,21 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
         // READY_TO_MOVE
         setStatus(GENERATING_MOTION_PLAN);
 	// The cost map must be computed based on FACE method
-        this->p_mmmap->computeFACE(sample_position);
+        ui_code = this->p_mmmap->computeFACE(sample_position);
+	switch (ui_code)
+	{
+            case 0:
+		break;
+	    case 1:
+                setError(POOR_DEM);
+		return false;
+	    case 2:
+		setError(OOB_GOAL_POS);
+		return false;
+	    case 3:
+		setError(OBS_GOAL_POS);
+		return false;
+	}
 	// To compute the path for the rover base
         ui_code = this->p_motionplan->computeRoverBasePathPlanning(
             this->w_current_rover_position, sample_position);

@@ -80,7 +80,7 @@ private:
     std::vector<double> vd_arm_previous_readings;
     std::vector<double> vd_arm_previous_command;
     /**
-     * The present state of the Waypoint Navigation 
+     * The present state of the Executor Class 
      */
     ArmExecutionState armstate;
     /**

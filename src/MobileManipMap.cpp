@@ -6,12 +6,14 @@ using namespace cv;
 
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
 {
+    mapstate = NO_DEM;
     try
     {
         // Assignation of DEM parameters
         this->loadDEM(dem);
         // Initialization of vector matrices
         this->initializeMatrices();
+	mapstate = DEM_LOADED;
     }
     catch (bad_alloc &ba)
     {
@@ -19,29 +21,15 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
             << ba.what()
             << " exception occured while allocating memory for the map matrices"
             << endl;
+	mapstate = NO_DEM;
         throw ba;
     }
     catch (exception &e)
     {
         cout << " An exception occured while reading DEM" << endl;
+	mapstate = NO_DEM;
         throw e;
     }
-/*
-    try
-    {
-        this->calculateElevationMap();
-        // Compute vvb_obstacle_map
-        this->calculateTraversabilityMap();
-        // Compute vvd_proximity_map
-        this->calculateProximityToObstaclesMap();
-        // Compute vvd_cost_map
-        this->calculateCostValues();
-    }
-    catch (exception &e)
-    {
-        cout << " An exception occured while calculating the cost map" << endl;
-        throw e;
-    }*/
 }
 
 MobileManipMap::MobileManipMap(
@@ -89,17 +77,19 @@ MobileManipMap::MobileManipMap(
     this->ui_num_rows = vvd_elevation_map_m.size();
 }
 
-void MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
+unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
 {
-    try
+    if (mapstate == NO_DEM)
     {
-        this->loadSample(w_sample_pos_m);
+        return 1; // Error: there is no existing DEM
     }
-    catch (exception &e)
+    else
     {
-        cout << " An exception occured while loading the Sample position"
-             << endl;
-        throw e;
+        mapstate = DEM_LOADED;
+    }
+    if(!this->loadSample(w_sample_pos_m))
+    {
+        return 2; // Error: sample out of the DEM
     }
     try
     {
@@ -108,13 +98,15 @@ void MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
         this->calculateTraversabilityMap();
         // Compute vvd_proximity_map
         this->addSampleFacingObstacles();
+	// TODO - Return 3 if sample is on obstacle area!!
     }
     catch (exception &e)
     {
         cout << " An exception occured while calculating the cost map" << endl;
         throw e;
     }
-
+    mapstate = FACE_COMPUTED;
+    return 0;
 }
 
 
@@ -150,16 +142,17 @@ void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res;
 }
 
-void MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
+bool MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
 {
     if (isOutside(w_sample_pos_m))
     {
-        cout << " MobileManipMap Constructor EXCEPTION: the sample is out of "
-                "the map"
-             << endl;
-        throw exception();
+        return false;
     }
-    this->w_sample_pos = w_sample_pos_m;
+    else
+    {
+        this->w_sample_pos = w_sample_pos_m;
+	return true;
+    }
 }
 
 bool MobileManipMap::isOutside(const base::Waypoint &w_sample_pos_m)

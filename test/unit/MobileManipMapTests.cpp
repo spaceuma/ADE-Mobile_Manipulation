@@ -224,26 +224,27 @@ TEST(MMMapTest, sample_pos_error_test)
     w_sample_four.position[1] = 100;
     
     MobileManipMap dummyMap((*prgd_dummy_dem));
-
+    unsigned int ui_error_code = 0;
     // Error with the sample waypoints
-    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - First Sample"
               << std::endl;
-    ASSERT_THROW(dummyMap.computeFACE(w_sample_one),
-                 std::exception);
-    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_one),
+                 2);
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Second Sample"
               << std::endl;
-    ASSERT_THROW(dummyMap.computeFACE(w_sample_two),
-                 std::exception);
-    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_two),
+                 2);
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Third Sample"
               << std::endl;
-    ASSERT_THROW(dummyMap.computeFACE(w_sample_three),
-                 std::exception);
-    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with waypoint "
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_three),
+                 2);
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Fourth Sample"
               << std::endl;
-    ASSERT_THROW(dummyMap.computeFACE(w_sample_four),
-                 std::exception);
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_four),
+                 2);
+     
 }

@@ -9,6 +9,15 @@
 
 using namespace cv;
 using namespace FastMarching_lib;
+
+enum MMMapState
+{
+    NO_DEM,
+    DEM_LOADED,
+    FACE_COMPUTED
+};
+
+
 /**
  * This class includes all information concerning the map (elevation, cost...)
  */
@@ -85,7 +94,7 @@ private:
      * Matrix containing minimum distance to obstacles
      */
     std::vector<std::vector<double>> vvd_proximity_map;
-
+    MMMapState mapstate;
 public:
     /**
      * Constructor that receives the map, process it and generates the cost and
@@ -101,7 +110,7 @@ public:
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
-    void computeFACE(base::Waypoint w_sample_pos_m);
+    unsigned int computeFACE(base::Waypoint w_sample_pos_m);
     /**
      * Function to get the current traversability map
      */
@@ -143,7 +152,7 @@ private:
     /**
      * RG DEM is checked and loaded into MobileManipMap
      */
-    void loadSample(const base::Waypoint &w_sample_pos_m);
+    bool loadSample(const base::Waypoint &w_sample_pos_m);
     /**
      * Memory is reserved for the matrices
      */
