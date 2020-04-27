@@ -35,7 +35,7 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
 MobileManipMap::MobileManipMap(
     std::vector<std::vector<double>> &vvd_elevation_map_m,
     std::vector<std::vector<double>> &vvd_cost_map_m,
-    double d_res_m)
+    double d_res_m, base::Waypoint w_sample_pos_m)
 {
     this->d_res = d_res_m;
     this->vvd_elevation_map.clear();
@@ -75,6 +75,8 @@ MobileManipMap::MobileManipMap(
     }
     this->ui_num_cols = vvd_elevation_map_m[0].size();
     this->ui_num_rows = vvd_elevation_map_m.size();
+    this->loadSample(w_sample_pos_m);
+    this->mapstate = FACE_COMPUTED; 
 }
 
 unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
@@ -135,6 +137,10 @@ void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
              << dem.rows << endl;
         throw exception();
     }
+    for (unsigned int i = 0; i < 3; i++)
+    {
+        this->vd_global_offset[i] = dem.mapOrigin_m_Mlg[i];
+    }
     this->ui_num_rows = dem.rows;
     this->rg_dem = dem;
     this->d_res = dem.nodeSize_m;
@@ -144,24 +150,28 @@ void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
 
 bool MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
 {
-    if (isOutside(w_sample_pos_m))
+    base::Waypoint w_sample_localpos;
+    w_sample_localpos.position[0] = w_sample_pos_m.position[0] - this->vd_global_offset[0];
+    w_sample_localpos.position[1] = w_sample_pos_m.position[1] - this->vd_global_offset[1];
+    w_sample_localpos.position[2] = w_sample_pos_m.position[2];
+    if (isOutside(w_sample_localpos))
     {
         return false;
     }
     else
     {
-        this->w_sample_pos = w_sample_pos_m;
+        this->w_sample_pos = w_sample_localpos;
 	return true;
     }
 }
 
-bool MobileManipMap::isOutside(const base::Waypoint &w_sample_pos_m)
+bool MobileManipMap::isOutside(const base::Waypoint &w_sample_localpos_m)
 {
-    if ((w_sample_pos_m.position[0] < this->d_res)
-        || (w_sample_pos_m.position[1] < this->d_res)
-        || (w_sample_pos_m.position[0]
+    if ((w_sample_localpos_m.position[0] < this->d_res)
+        || (w_sample_localpos_m.position[1] < this->d_res)
+        || (w_sample_localpos_m.position[0]
             > ((double)this->ui_num_cols - 2) * this->d_res)
-        || (w_sample_pos_m.position[1]
+        || (w_sample_localpos_m.position[1]
             > ((double)this->ui_num_rows - 2) * this->d_res))
     {
         return true;
@@ -172,11 +182,11 @@ bool MobileManipMap::isOutside(const base::Waypoint &w_sample_pos_m)
     }
 }
 
-bool MobileManipMap::isObstacle(const base::Waypoint w_pos_m)
+bool MobileManipMap::isObstacle(const base::Waypoint w_localpos_m)
 {
     std::vector<int> vi_pos(2, 0);
-    vi_pos[0] = (int)(w_pos_m.position[0] / this->d_res + 0.5);
-    vi_pos[1] = (int)(w_pos_m.position[1] / this->d_res + 0.5);
+    vi_pos[0] = (int)(w_localpos_m.position[0] / this->d_res + 0.5);
+    vi_pos[1] = (int)(w_localpos_m.position[1] / this->d_res + 0.5);
     // TODO - take care of exceptions regarding unvalid indexes
     if (this->vvd_cost_map[vi_pos[1]][vi_pos[0]] == INFINITY)
     {
@@ -186,6 +196,11 @@ bool MobileManipMap::isObstacle(const base::Waypoint w_pos_m)
     {
         return false;
     }
+}
+
+bool MobileManipMap::isSampleLoaded()
+{
+    return this->mapstate == FACE_COMPUTED; 
 }
 
 void MobileManipMap::initializeMatrices()
@@ -205,6 +220,11 @@ void MobileManipMap::initializeMatrices()
         this->vvd_cost_map.push_back(vd_row);
         this->vvd_proximity_map.push_back(vd_row);
     }
+}
+
+base::Waypoint MobileManipMap::getSample()
+{
+    return this->w_sample_pos;
 }
 
 void MobileManipMap::getCostMap(

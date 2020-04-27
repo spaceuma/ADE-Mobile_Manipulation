@@ -66,7 +66,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
 	}
 	// To compute the path for the rover base
         ui_code = this->p_motionplan->computeRoverBasePathPlanning(
-            this->w_current_rover_position, sample_position);
+            this->w_current_rover_position);
         switch (ui_code)
         {
             case 0:
@@ -78,15 +78,12 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
                 setError(OBS_ROVER_POS);
                 return false;
             case 3:
-                setError(OOB_GOAL_POS);
+                setError(PLAN_WO_SAMPLE);
                 return false;
             case 4:
-                setError(OBS_GOAL_POS);
-                return false;
-            case 5:
                 setError(GOAL_TOO_CLOSE);
                 return false;
-            case 6:
+            case 5:
                 setError(DEGEN_PATH);
                 return false;
         }
@@ -108,6 +105,9 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
             case 2:
                 setError(DEVIATED_PROF);
                 return false;
+	    case 3:
+		setError(PLAN_WO_SAMPLE);
+		return false;
         }
         this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
@@ -208,6 +208,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
         case EXECUTING_MOTION_PLAN:
         {
             base::Pose basepose;
+	    // TODO - Path is in local coordinates, the rover position may be in global!
             basepose.position[0] = plpose_m.m_position.m_x;
             basepose.position[1] = plpose_m.m_position.m_y;
             basepose.position[2] = plpose_m.m_position.m_z;
@@ -312,6 +313,8 @@ void MobileManipMotionPlanner::resumeError()
             break;
         case OBS_GOAL_POS:
             break;
+	case PLAN_WO_SAMPLE:
+	    break;
         case UNREACH_GOAL:
             break;
         case UNCERT_GOAL:
@@ -428,6 +431,9 @@ void MobileManipMotionPlanner::printErrorCode()
             break;
         case OBS_ROVER_POS:
             std::cout << "OBS_ROVER_POS";
+            break;
+        case PLAN_WO_SAMPLE:
+            std::cout << "PLAN_WO_SAMPLE";
             break;
         case OBS_GOAL_POS:
             std::cout << "OBS_GOAL_POS";

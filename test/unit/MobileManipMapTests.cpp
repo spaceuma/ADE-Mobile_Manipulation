@@ -23,6 +23,9 @@ TEST(MMMapTest, nominal_working_test)
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
     prgd_dummy_dem->nodeSize_m = res;
+    prgd_dummy_dem->mapOrigin_m_Mlg[0] = 0.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[1] = 0.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[2] = 0.0;
     for (uint j = 0; j < vvd_elevation_data.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_data[0].size(); i++)

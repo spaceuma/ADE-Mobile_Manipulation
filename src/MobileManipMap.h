@@ -60,6 +60,10 @@ private:
      */
     double d_elevation_min;
     /**
+     * Global offset of bottom left node (local frame origin)
+     */
+    std::vector<double> vd_global_offset{0,0,0};
+    /**
      * Sample position in waypoint format
      */
     base::Waypoint w_sample_pos;
@@ -106,11 +110,15 @@ public:
      */
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
                    std::vector<std::vector<double>> &vvd_cost_map_m,
-                   double d_res_m);
+                   double d_res_m, base::Waypoint w_sample_pos_m);
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
     unsigned int computeFACE(base::Waypoint w_sample_pos_m);
+    /**
+     * Function to get the current sample in local coordinates
+     */
+    base::Waypoint getSample();
     /**
      * Function to get the current traversability map
      */
@@ -143,6 +151,10 @@ public:
      * Checks if the waypoint position is within obstacle area
      */
     bool isObstacle(const base::Waypoint w_pos_m);
+    /**
+     * Checks if the sample is loaded and FACE is computed
+     */
+    bool isSampleLoaded();
 
 private:
     /**

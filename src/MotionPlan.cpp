@@ -32,8 +32,7 @@ MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
 
 }
 
-unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_position,
-                                              base::Waypoint sample)
+unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_position)
 {
     std::vector<std::vector<double>> costMap;
     if (this->pmm_map->isOutside(rover_position))
@@ -44,34 +43,29 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_posit
     {
         return 2;
     }
-    if (this->pmm_map->isOutside(sample))
+    if (!this->pmm_map->isSampleLoaded())
     {
         return 3;
-    }
-    if (this->pmm_map->isObstacle(sample))
-    {
-        return 4;
     }
     this->pmm_map->getCostMap(costMap);
     if(this->bi_fast_marching.planPath(&costMap,
                                     this->pmm_map->getResolution(),
                                     rover_position,
-                                    sample,
+                                    this->pmm_map->getSample(),
                                     &(this->vw_rover_path)))
     {
         if (isSmoothPath())
 	{
-            this->w_sample_pos = sample;
             return 0;
 	}
 	else
 	{
-	    return 6;
+	    return 5;
 	}
     }
     else
     {
-        return 5;
+        return 4;
     }
 }
 
@@ -140,6 +134,11 @@ bool MotionPlan::shortenPathForFetching()
 
 unsigned int MotionPlan::computeArmProfilePlanning()
 {
+  //TODO - Create here several profiles: init, coupled, sweeping and retrieval
+    if (!this->pmm_map->isSampleLoaded())
+    {
+        return 3;
+    }
     this->vvd_arm_motion_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
@@ -147,7 +146,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                     &elevationMap,
                                     this->pmm_map->getResolution(),
                                     this->d_zres,
-                                    this->w_sample_pos,
+                                    this->pmm_map->getSample(),
                                     &(this->vvd_arm_motion_profile)))
     {
         if(this->isArmProfileSafe())

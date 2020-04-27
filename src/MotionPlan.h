@@ -43,10 +43,6 @@ private:
     CollisionDetector* p_collision_detector;
     std::string s_urdf_path;
     /**
-     * Position of the sample in waypoint format
-     */
-    Waypoint w_sample_pos;
-    /**
      * Profile of position values per joint and sample
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
@@ -96,8 +92,7 @@ public:
     /**
      * The path for the rover base, vw_rover_path, is calculated
      */
-    unsigned int computeRoverBasePathPlanning(base::Waypoint w_rover_pos_m,
-                                      base::Waypoint w_sample_pos_m);
+    unsigned int computeRoverBasePathPlanning(base::Waypoint w_rover_pos_m);
     /**
      * The path is shortened, ending in the best waypoint to fetch the sample
      */
