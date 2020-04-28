@@ -65,7 +65,7 @@ private:
     void setError(MMError error_m);
 
     base::Waypoint w_current_rover_position;
-
+    double d_zres = 0.08;
 public:
     /**
      * Constructor, it receives a DEM and generates the Map object.
@@ -181,6 +181,9 @@ public:
      * A pointer to the 3d cost map is returned
      */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
+    
+    bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM);
+    
     /**
      * It procceses the input LocCamDEM and triggers a replanning if necessary.
      */

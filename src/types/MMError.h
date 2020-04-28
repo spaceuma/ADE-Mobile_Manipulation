@@ -24,6 +24,7 @@ enum MMError
   EXCESSIVE_DRIFT,
   UNCERT_HEADING,
   GOAL_TOO_CLOSE, // The goal is too close to the rover
+  BAD_DEM_ALLOC,
   IMPROPER_CALL // A function called in an improper time
 };
 

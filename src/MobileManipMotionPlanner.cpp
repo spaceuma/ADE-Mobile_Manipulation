@@ -4,21 +4,50 @@
 using namespace std;
 
 //--CONSTRUCTOR
+
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
     const Joints &j_present_readings,
     string s_configfile_path_m)
 {
-    double d_zres_m = 0.08; // TODO: this must come from an external config file
     this->status = IDLE;
     this->error = NO_ERROR;
     // DEM is introduced into the map class
-    this->p_mmmap = new MobileManipMap(navCamDEM);
+    unsigned int ui_error_code = 0;
+    this->p_mmmap = new MobileManipMap();
+    updateNavCamDEM(navCamDEM);
     // Each class contains a pointer to the previous one
     this->p_motionplan
-        = new MotionPlan(this->p_mmmap, d_zres_m, s_configfile_path_m);
+        = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
     this->p_mmexecutor = new MobileManipExecutor(
         this->p_motionplan, j_present_readings, s_configfile_path_m);
+}
+
+
+bool MobileManipMotionPlanner::updateNavCamDEM(const RoverGuidance_Dem &navCamDEM)
+{
+    unsigned int ui_error_code = 0;
+    ui_error_code = this->p_mmmap->loadDEM(navCamDEM);
+    switch(ui_error_code)
+    {
+        case 0:
+	    return true;
+	case 1:
+            setError(POOR_DEM);
+	    return false;
+        case 2:
+	    setError(POOR_DEM);
+	    return false;
+        case 3:
+	    setError(POOR_DEM);
+	    return false;
+        case 4:
+	    setError(POOR_DEM);
+	    return false;
+        case 5:
+	    setError(BAD_DEM_ALLOC);
+	    return false;
+    }
 }
 
 //-- Generate Motion Plan
@@ -341,6 +370,8 @@ void MobileManipMotionPlanner::resumeError()
             break;
         case GOAL_TOO_CLOSE:
             break;
+	case BAD_DEM_ALLOC:
+	    break;
         case IMPROPER_CALL:
             setStatus(priorStatus);
             setError(NO_ERROR);
@@ -476,6 +507,9 @@ void MobileManipMotionPlanner::printErrorCode()
             break;
         case GOAL_TOO_CLOSE:
             std::cout << "GOAL_TOO_CLOSE";
+            break;
+        case BAD_DEM_ALLOC:
+            std::cout << "BAD_DEM_ALLOC";
             break;
         case IMPROPER_CALL:
             std::cout << "IMPROPER_CALL";

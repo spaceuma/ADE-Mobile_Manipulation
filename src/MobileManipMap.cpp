@@ -4,31 +4,19 @@
 using namespace std;
 using namespace cv;
 
-MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem)
+MobileManipMap::MobileManipMap()
 {
     mapstate = NO_DEM;
-    try
+}
+
+
+MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem, unsigned int &ui_isDEM_loaded)
+{
+    mapstate = NO_DEM;
+    ui_isDEM_loaded = this->loadDEM(dem);
+    if (ui_isDEM_loaded == 0)
     {
-        // Assignation of DEM parameters
-        this->loadDEM(dem);
-        // Initialization of vector matrices
-        this->initializeMatrices();
-	mapstate = DEM_LOADED;
-    }
-    catch (bad_alloc &ba)
-    {
-        cout
-            << ba.what()
-            << " exception occured while allocating memory for the map matrices"
-            << endl;
-	mapstate = NO_DEM;
-        throw ba;
-    }
-    catch (exception &e)
-    {
-        cout << " An exception occured while reading DEM" << endl;
-	mapstate = NO_DEM;
-        throw e;
+        mapstate = DEM_LOADED;
     }
 }
 
@@ -112,40 +100,72 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
 }
 
 
-void MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
+unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
 {
+    this->mapstate = NO_DEM;
+    // Check Resolution
     if (dem.nodeSize_m <= 0)
     {
-        cout << " MobileManipMap Constructor EXCEPTION: DEM node size is "
-                "nonvalid with value = "
-             << dem.nodeSize_m << endl;
-        throw exception();
+        return 1;
     }
     this->d_res = dem.nodeSize_m;
-    if (dem.cols < 5)
-    {
-        cout << " MobileManipMap Constructor EXCEPTION: DEM number of columns "
-                "is nonvalid with value = "
-             << dem.cols << endl;
-        throw exception();
-    }
-    this->ui_num_cols = dem.cols;
+    // Check Rows
     if (dem.rows < 5)
     {
-        cout << " MobileManipMap Constructor EXCEPTION: DEM number of rows is "
-                "nonvalid with value = "
-             << dem.rows << endl;
-        throw exception();
-    }
-    for (unsigned int i = 0; i < 3; i++)
-    {
-        this->vd_global_offset[i] = dem.mapOrigin_m_Mlg[i];
+        return 2;
     }
     this->ui_num_rows = dem.rows;
+    // Check Columns
+    if (dem.cols < 5)
+    {
+        return 3;
+    }
+    this->ui_num_cols = dem.cols;
+    // The offset is read, it is supposed to be a 3-element array
+    try
+    {
+        for (unsigned int i = 0; i < 3; i++)
+        {
+            this->vd_global_offset[i] = dem.mapOrigin_m_Mlg[i];
+        }
+    }
+    catch (exception &e)
+    {
+        return 4;
+    }
+
+    // DEM is stored
     this->rg_dem = dem;
-    this->d_res = dem.nodeSize_m;
+    // FACE distances
     this->d_inner_sampling_dist = this->d_avoid_dist + 0.94;//TODO - 0.94 should come from max reachability 
     this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res;
+   
+    // Initialization of matrices
+    try
+    {
+        this->vvd_elevation_map.clear();
+        this->vvi_obstacle_map.clear();
+        this->vvi_traversability_map.clear();
+        this->vvd_cost_map.clear();
+        this->vvd_proximity_map.clear();
+        std::vector<double> vd_row(this->ui_num_cols);
+        std::vector<int> vi_row(this->ui_num_cols);
+        for (uint j = 0; j < this->ui_num_rows; j++)
+        {
+            this->vvd_elevation_map.push_back(vd_row);
+            this->vvi_obstacle_map.push_back(vi_row);
+            this->vvi_traversability_map.push_back(vi_row);
+            this->vvd_cost_map.push_back(vd_row);
+            this->vvd_proximity_map.push_back(vd_row);
+        }        // Assignation of DEM parameters
+	mapstate = DEM_LOADED;
+    }
+    catch (bad_alloc &ba)
+    {
+	mapstate = NO_DEM;
+	return 5;
+    }    
+    return 0;
 }
 
 bool MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
@@ -201,25 +221,6 @@ bool MobileManipMap::isObstacle(const base::Waypoint w_localpos_m)
 bool MobileManipMap::isSampleLoaded()
 {
     return this->mapstate == FACE_COMPUTED; 
-}
-
-void MobileManipMap::initializeMatrices()
-{
-    this->vvd_elevation_map.clear();
-    this->vvi_obstacle_map.clear();
-    this->vvi_traversability_map.clear();
-    this->vvd_cost_map.clear();
-    this->vvd_proximity_map.clear();
-    std::vector<double> vd_row(this->ui_num_cols);
-    std::vector<int> vi_row(this->ui_num_cols);
-    for (uint j = 0; j < this->ui_num_rows; j++)
-    {
-        this->vvd_elevation_map.push_back(vd_row);
-        this->vvi_obstacle_map.push_back(vi_row);
-        this->vvi_traversability_map.push_back(vi_row);
-        this->vvd_cost_map.push_back(vd_row);
-        this->vvd_proximity_map.push_back(vd_row);
-    }
 }
 
 base::Waypoint MobileManipMap::getSample()

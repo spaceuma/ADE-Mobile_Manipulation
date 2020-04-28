@@ -100,17 +100,22 @@ private:
     std::vector<std::vector<double>> vvd_proximity_map;
     MMMapState mapstate;
 public:
+    MobileManipMap();
     /**
      * Constructor that receives the map, process it and generates the cost and
      * obstacles maps
      */
-    MobileManipMap(const RoverGuidance_Dem &rg_dem_m);
+    MobileManipMap(const RoverGuidance_Dem &rg_dem_m, unsigned int &ui_isDEM_loaded);
     /**
      * Constructor that introduces pre-computed elevation and cost maps
      */
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
                    std::vector<std::vector<double>> &vvd_cost_map_m,
                    double d_res_m, base::Waypoint w_sample_pos_m);
+    /**
+     * RG DEM is checked and loaded into MobileManipMap
+     */
+    unsigned int loadDEM(const RoverGuidance_Dem &rg_dem_m);
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
@@ -160,15 +165,7 @@ private:
     /**
      * RG DEM is checked and loaded into MobileManipMap
      */
-    void loadDEM(const RoverGuidance_Dem &rg_dem_m);
-    /**
-     * RG DEM is checked and loaded into MobileManipMap
-     */
     bool loadSample(const base::Waypoint &w_sample_pos_m);
-    /**
-     * Memory is reserved for the matrices
-     */
-    void initializeMatrices();
     /**
      * The elevation map vvd_elevation_map is calculated from rg_dem
      */
