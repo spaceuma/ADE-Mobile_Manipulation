@@ -165,6 +165,53 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     }
 }
 
+unsigned int MotionPlan::computeAtomicOperation()
+{
+    this->vvd_arm_motion_profile.clear();
+
+  //TODO - Change this function to use real rover pose, initial and goal EE poses
+    this->vw_rover_path.clear();
+
+    std::vector<double> goalArmConfiguration = {0.797367, -1.5487, 2.48548, -2.23731, 1.14413, -0.484318};
+    std::vector<double> initialArmConfiguration = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
+    
+    std::vector<std::vector<double>> elevationMap;
+    this->pmm_map->getElevationMapToZero(elevationMap);
+
+    base::Waypoint current_waypoint;
+    current_waypoint.position[0] = 3;
+    current_waypoint.position[1] = 3;
+    current_waypoint.position[2]
+        = elevationMap[(int)(current_waypoint.position[1] / this->pmm_map->getResolution() + 0.5)]
+                      [(int)(current_waypoint.position[0] / this->pmm_map->getResolution() + 0.5)]
+          + p_arm_planner->heightGround2BCS;
+    current_waypoint.heading = 0;
+    vw_rover_path.push_back(current_waypoint);
+
+    if(this->p_arm_planner->planAtomicOperation(&elevationMap,
+                                    this->pmm_map->getResolution(),
+                                    this->d_zres,
+                                    vw_rover_path[0],
+                                    initialArmConfiguration,
+                                    goalArmConfiguration,
+                                    &(this->vvd_arm_motion_profile)))
+    {
+        if(this->isArmProfileSafe())
+	{
+            return 0;
+	}
+	else
+	{
+            return 1;
+	}
+    }
+    else
+    {
+        return 2;
+    }
+  
+}
+
 bool MotionPlan::isArmProfileSafe()
 {
     for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)

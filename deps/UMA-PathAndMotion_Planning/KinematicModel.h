@@ -74,7 +74,7 @@ public:
         = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
     std::vector<double> initialConfiguration
-        = {0.785398, -1.52075, 2.4405, 0, 0, 0};
+        = {0.785398, -1.52075, 2.2, 0, 0, 0};
 
     std::vector<double> iniEEorientation = {pi, -pi / 2, 0};
 

@@ -101,6 +101,8 @@ public:
      * Calculates the profile of positions for the arm
      */
     unsigned int computeArmProfilePlanning();
+
+    unsigned int computeAtomicOperation();
 };
 
 #endif

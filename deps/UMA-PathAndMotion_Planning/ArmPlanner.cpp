@@ -8,6 +8,11 @@
 using namespace KinematicModel_lib;
 using namespace ArmPlanner_lib;
 
+ArmPlanner::ArmPlanner(std::string s_data_path_m)
+{
+    sherpa_tt_arm = new Manipulator(s_data_path_m);
+}
+
 ArmPlanner::ArmPlanner(std::string s_data_path_m,
                        bool _approach,
                        int _deployment)
@@ -35,6 +40,31 @@ ArmPlanner::ArmPlanner(std::string s_data_path_m,
 ArmPlanner::~ArmPlanner()
 {
     ;
+}
+
+void ArmPlanner::setApproach(bool _approach)
+{
+    approach = _approach;
+}
+
+void ArmPlanner::setDeployment(int _deployment)
+{
+    deployment = _deployment;
+
+    switch (deployment)
+    {
+        case END:
+            horizonDistance = MIN_HORIZON;
+            break;
+        case TRAJECTORY:
+            varyingHorizon = true;
+            break;
+        case BEGINNING:
+            horizonDistance = MAX_HORIZON;
+            break;
+        default:
+            break;
+    }
 }
 
 bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
@@ -297,6 +327,169 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     return true;
 }
 
+bool ArmPlanner::planAtomicOperation(
+    const std::vector<std::vector<double>> *_DEM,
+    double _mapResolution,
+    double _zResolution,
+    base::Waypoint roverWaypoint,
+    std::vector<double> initialArmConfiguration,
+    std::vector<double> goalArmConfiguration,
+    std::vector<std::vector<double>> *armJoints)
+{
+    this->mapResolution = _mapResolution;
+    this->zResolution = _zResolution;
+    this->DEM = _DEM;
+
+    // Rover z coordinate and heading computation
+    std::vector<double> roverPose6(6);
+
+    roverPose6[0] = roverWaypoint.position[0];
+    roverPose6[1] = roverWaypoint.position[1];
+    roverPose6[2]
+        = (*DEM)[(int)(roverWaypoint.position[1] / mapResolution + 0.5)]
+                [(int)(roverWaypoint.position[0] / mapResolution + 0.5)]
+          + heightGround2BCS;
+    roverPose6[3] = 0;
+    roverPose6[4] = 0;
+    roverPose6[5] = roverWaypoint.heading;
+
+    roverPath6 = new std::vector<std::vector<double>>;
+    roverPath6->push_back(roverPose6);
+
+    // Initial arm pos computation
+    std::vector<std::vector<double>> TBCS2Wrist
+        = sherpa_tt_arm->getWristTransform(initialArmConfiguration);
+
+    std::vector<double> pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
+    double roll = roverPose6[3];
+    double pitch = roverPose6[4];
+    double yaw = roverPose6[5];
+
+    std::vector<std::vector<double>> TW2BCS
+        = dot(getTraslation(pos),
+              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+    std::vector<std::vector<double>> TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+
+    base::Waypoint iniPos;
+    iniPos.position[0] = TW2Wrist[0][3];
+    iniPos.position[1] = TW2Wrist[1][3];
+    iniPos.position[2] = TW2Wrist[2][3];
+
+    // Final arm pos computation
+    TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
+
+    /*pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+    if (!sherpa_tt_arm->isReachable(pos))
+    {
+        std::cout<<"The goal arm position is not reachable\n";
+        return false;
+    }*/
+
+    TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+
+    base::Waypoint goalPos;
+    goalPos.position[0] = TW2Wrist[0][3];
+    goalPos.position[1] = TW2Wrist[1][3];
+    goalPos.position[2] = TW2Wrist[2][3];
+
+    // Cost map 3D computation
+    int n = DEM->size();
+    int m = (*DEM)[0].size();
+
+    double maxz = 0;
+    for (int i = 0; i < DEM->size(); i++)
+        for (int j = 0; j < (*DEM)[0].size(); j++)
+            if ((*DEM)[i][j] > maxz) maxz = (*DEM)[i][j];
+
+    int l
+        = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution
+                + 0.5);
+
+    volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
+    volume_cost_map->resize(
+        n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
+
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            for (int k = 0; k < l; k++)
+                (*volume_cost_map)[i][j][k] = INFINITY;
+
+    // Generating the reachability tunnel surrounding the rover path
+    generateReachabilityTunnel(iniPos, goalPos, roverPose6, volume_cost_map);
+
+    // End effector path planning
+    FastMarching_lib::FastMarching3D pathPlanner3D;
+    std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
+
+    clock_t inip = clock();
+    pathPlanner3D.planPath(volume_cost_map,
+                           mapResolution,
+                           zResolution,
+                           iniPos,
+                           goalPos,
+                           wristPath);
+
+    wristPath6->resize(wristPath->size(), std::vector<double>(6));
+
+    for (int i = 0; i < wristPath->size(); i++)
+    {
+        (*wristPath6)[i][0] = (*wristPath)[i].position[0];
+        (*wristPath6)[i][1] = (*wristPath)[i].position[1];
+        (*wristPath6)[i][2] = (*wristPath)[i].position[2];
+    }
+    // Computing inverse kinematics
+
+    for (int i = 0; i < wristPath->size(); i++)
+    {
+        std::vector<std::vector<double>> TW2Wrist(4, std::vector<double>(4));
+        std::vector<std::vector<double>> TBCS2Wrist(4, std::vector<double>(4));
+
+        pos[0] = (*wristPath)[i].position[0];
+        pos[1] = (*wristPath)[i].position[1];
+        pos[2] = (*wristPath)[i].position[2];
+
+        TW2Wrist = getTraslation(pos);
+
+        TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
+
+        pos[0] = TBCS2Wrist[0][3];
+        pos[1] = TBCS2Wrist[1][3];
+        pos[2] = TBCS2Wrist[2][3];
+        std::vector<double> config;
+
+        try
+        {
+            config = sherpa_tt_arm->getPositionJoints(pos, 1, 1);
+            double joint4
+                = initialArmConfiguration[3]
+                  + i * (goalArmConfiguration[3] - initialArmConfiguration[3])
+                        / wristPath->size();
+            double joint5
+                = initialArmConfiguration[4]
+                  + i * (goalArmConfiguration[4] - initialArmConfiguration[4])
+                        / wristPath->size();
+            double joint6
+                = initialArmConfiguration[5]
+                  + i * (goalArmConfiguration[5] - initialArmConfiguration[5])
+                        / wristPath->size();
+
+            config.push_back(joint4);
+            config.push_back(joint5);
+            config.push_back(joint6);
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "Inverse kinematics failed at waypoint " << i << "!"
+                      << std::endl;
+            return false;
+        }
+        armJoints->push_back(config);
+    }
+
+    return true;
+}
+
 std::vector<std::vector<double>> *ArmPlanner::getWristPath()
 {
     return wristPath6;
@@ -322,9 +515,10 @@ void ArmPlanner::generateTunnel(
     int sy = (*costMap3D)[0].size();
     int sz = (*costMap3D)[0][0].size();
 
-    std::vector<std::vector<std::vector<int>>> *tunnelLabel = new std::vector<std::vector<std::vector<int>>>;
+    std::vector<std::vector<std::vector<int>>> *tunnelLabel
+        = new std::vector<std::vector<std::vector<int>>>;
     tunnelLabel->resize(
-        sx, std::vector<std::vector<int>>(sy, std::vector<int>(sz,2*n)));
+        sx, std::vector<std::vector<int>>(sy, std::vector<int>(sz, 2 * n)));
 
     std::vector<int> goal(3, 0);
     std::vector<int> start(3, 0);
@@ -485,42 +679,63 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix, iy, iz, i-20);
+                                checkIntersections(
+                                    tunnelLabel, costMap3D, ix, iy, iz, i - 20);
                                 (*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = i;
                             }
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix+1, iy, iz, i-20);
-                                (*costMap3D)[iy][ix+1][iz] = cost;
-                                (*tunnelLabel)[iy][ix+1][iz] = i;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix + 1,
+                                                   iy,
+                                                   iz,
+                                                   i - 20);
+                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                                (*tunnelLabel)[iy][ix + 1][iz] = i;
                             }
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix-1, iy, iz, i-20);
-                                (*costMap3D)[iy][ix-1][iz] = cost;
-                                (*tunnelLabel)[iy][ix-1][iz] = i;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix - 1,
+                                                   iy,
+                                                   iz,
+                                                   i - 20);
+                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                                (*tunnelLabel)[iy][ix - 1][iz] = i;
                             }
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix, iy+1, iz, i-20);
-                                (*costMap3D)[iy+1][ix][iz] = cost;
-                                (*tunnelLabel)[iy+1][ix][iz] = i;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix,
+                                                   iy + 1,
+                                                   iz,
+                                                   i - 20);
+                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                                (*tunnelLabel)[iy + 1][ix][iz] = i;
                             }
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix, iy-1, iz, i-20);
-                                (*costMap3D)[iy-1][ix][iz] = cost;
-                                (*tunnelLabel)[iy-1][ix][iz] = i;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix,
+                                                   iy - 1,
+                                                   iz,
+                                                   i - 20);
+                                (*costMap3D)[iy - 1][ix][iz] = cost;
+                                (*tunnelLabel)[iy - 1][ix][iz] = i;
                             }
                     }
                 }
@@ -528,8 +743,7 @@ void ArmPlanner::generateTunnel(
     }
 
     // Tunnel in the last waypoint
-    tunnelSizeX
-        = (int)(abs((*maxValues)[0] - 0) / mapResolution + 0.5);
+    tunnelSizeX = (int)(abs((*maxValues)[0] - 0) / mapResolution + 0.5);
     tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     tunnelSizeZ
         = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
@@ -577,43 +791,164 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix, iy, iz, n/2);
+                                checkIntersections(
+                                    tunnelLabel, costMap3D, ix, iy, iz, n / 2);
                                 (*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = n;
                             }
 
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix+1][iz])
+                            if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix+1, iy, iz, n/2);
-                                (*costMap3D)[iy][ix+1][iz] = cost;
-                                (*tunnelLabel)[iy][ix+1][iz] = n;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix + 1,
+                                                   iy,
+                                                   iz,
+                                                   n / 2);
+                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                                (*tunnelLabel)[iy][ix + 1][iz] = n;
                             }
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy][ix-1][iz])
+                            if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix-1, iy, iz, n/2);
-                                (*costMap3D)[iy][ix-1][iz] = cost;
-                                (*tunnelLabel)[iy][ix-1][iz] = n;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix - 1,
+                                                   iy,
+                                                   iz,
+                                                   n / 2);
+                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                                (*tunnelLabel)[iy][ix - 1][iz] = n;
                             }
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy+1][ix][iz])
+                            if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix, iy+1, iz, n/2);
-                                (*costMap3D)[iy+1][ix][iz] = cost;
-                                (*tunnelLabel)[iy+1][ix][iz] = n;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix,
+                                                   iy + 1,
+                                                   iz,
+                                                   n / 2);
+                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                                (*tunnelLabel)[iy + 1][ix][iz] = n;
                             }
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
-                            if (cost < (*costMap3D)[iy-1][ix][iz])
+                            if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
-                                checkIntersections(tunnelLabel, costMap3D, ix, iy-1, iz, n/2);
-                                (*costMap3D)[iy-1][ix][iz] = cost;
-                                (*tunnelLabel)[iy-1][ix][iz] = n;
+                                checkIntersections(tunnelLabel,
+                                                   costMap3D,
+                                                   ix,
+                                                   iy - 1,
+                                                   iz,
+                                                   n / 2);
+                                (*costMap3D)[iy - 1][ix][iz] = cost;
+                                (*tunnelLabel)[iy - 1][ix][iz] = n;
                             }
+                    }
+                }
+            }
+}
+
+void ArmPlanner::generateReachabilityTunnel(
+    base::Waypoint iniPos,
+    base::Waypoint goalPos,
+    std::vector<double> roverPose6,
+    std::vector<std::vector<std::vector<double>>> *costMap3D)
+{
+    int sx = (*costMap3D).size();
+    int sy = (*costMap3D)[0].size();
+    int sz = (*costMap3D)[0][0].size();
+
+    std::vector<int> goal(3, 0);
+    std::vector<int> start(3, 0);
+
+    start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
+    start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
+    start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
+    (*costMap3D)[start[1]][start[0]][start[2]] = 1;
+
+    goal[0] = (int)(goalPos.position[0] / mapResolution + 0.5);
+    goal[1] = (int)(goalPos.position[1] / mapResolution + 0.5);
+    goal[2] = (int)(goalPos.position[2] / zResolution + 0.5);
+    (*costMap3D)[goal[1]][goal[0]][goal[2]] = 1;
+
+    std::vector<double> *minValues = sherpa_tt_arm->minValues;
+    std::vector<double> *maxValues = sherpa_tt_arm->maxValues;
+
+    double slope = 0.5;
+
+    // Tunnel in the last waypoint
+    int tunnelSizeX
+        = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
+    int tunnelSizeY
+        = (int)(abs((*maxValues)[1] - (*minValues)[1]) / mapResolution + 0.5);
+    int tunnelSizeZ
+        = (int)(abs((*maxValues)[2] - (*minValues)[2]) / zResolution + 0.5);
+
+    std::vector<double> pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
+    double roll = roverPose6[3];
+    double pitch = roverPose6[4];
+    double yaw = roverPose6[5];
+    std::vector<std::vector<double>> TW2BCS
+        = dot(getTraslation(pos),
+              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+    for (int i = 0; i < tunnelSizeX; i++)
+        for (int j = 0; j < tunnelSizeY; j++)
+            for (int k = 0; k < tunnelSizeZ; k++)
+            {
+                double x = (*minValues)[0] + mapResolution * i;
+                double y = (*minValues)[1] + mapResolution * j;
+                double z = (*minValues)[2] + zResolution * k;
+                double dist = sqrt(pow(x, 2) + pow(y, 2)
+                                   + pow(z - sherpa_tt_arm->d0, 2));
+                if (dist < sherpa_tt_arm->maxArmDistance)
+                {
+                    std::vector<std::vector<double>> TBCS2Node = {
+                        {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
+
+                    pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
+
+                    if (sherpa_tt_arm->isReachable(pos))
+                    {
+                        std::vector<std::vector<double>> TW2Node
+                            = dot(TW2BCS, TBCS2Node);
+
+                        int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
+                        int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
+                        int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
+                        double cost
+                            = 1
+                              + slope
+                                    / sherpa_tt_arm->getDistanceToCollision(
+                                          pos);
+
+                        if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix][iz])
+                                (*costMap3D)[iy][ix][iz] = cost;
+
+                        if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix + 1][iz])
+                                (*costMap3D)[iy][ix + 1][iz] = cost;
+                        if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
+                            && iy < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy][ix - 1][iz])
+                                (*costMap3D)[iy][ix - 1][iz] = cost;
+                        if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy + 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy + 1][ix][iz])
+                                (*costMap3D)[iy + 1][ix][iz] = cost;
+                        if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
+                            && iy - 1 < sy - 1 && iz < sz - 1)
+                            if (cost < (*costMap3D)[iy - 1][ix][iz])
+                                (*costMap3D)[iy - 1][ix][iz] = cost;
                     }
                 }
             }
@@ -922,36 +1257,40 @@ std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values,
     return out;
 }
 
-void ArmPlanner::checkIntersections(std::vector<std::vector<std::vector<int>>> *tunnelLabel,
-                                    std::vector<std::vector<std::vector<double>>> *tunnelCost,
-                                    int ix, int iy, int iz, int threshold)
+void ArmPlanner::checkIntersections(
+    std::vector<std::vector<std::vector<int>>> *tunnelLabel,
+    std::vector<std::vector<std::vector<double>>> *tunnelCost,
+    int ix,
+    int iy,
+    int iz,
+    int threshold)
 {
     int sx = (*tunnelLabel).size();
     int sy = (*tunnelLabel)[0].size();
     int sz = (*tunnelLabel)[0][0].size();
 
-    if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
-        && iy < sy - 1 && iz < sz - 1)
-        if((*tunnelLabel)[iy][ix + 1][iz] < threshold)
+    if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1 && iy < sy - 1
+        && iz < sz - 1)
+        if ((*tunnelLabel)[iy][ix + 1][iz] < threshold)
             (*tunnelCost)[iy][ix + 1][iz] = INFINITY;
-    if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
-        && iy < sy - 1 && iz < sz - 1)
-        if((*tunnelLabel)[iy][ix-1][iz] < threshold)
+    if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1 && iy < sy - 1
+        && iz < sz - 1)
+        if ((*tunnelLabel)[iy][ix - 1][iz] < threshold)
             (*tunnelCost)[iy][ix - 1][iz] = INFINITY;
-    if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
-        && iy + 1 < sy - 1 && iz < sz - 1)
-        if((*tunnelLabel)[iy+1][ix][iz] < threshold)
-            (*tunnelCost)[iy+1][ix][iz] = INFINITY;
-    if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
-        && iy - 1 < sy - 1 && iz < sz - 1)
-        if((*tunnelLabel)[iy-1][ix][iz] < threshold)
-            (*tunnelCost)[iy-1][ix][iz] = INFINITY;
-    if (ix > 0 && iy > 0 && iz + 1 > 0 && ix < sx - 1
-        && iy < sy - 1 && iz + 1 < sz - 1)
-        if((*tunnelLabel)[iy][ix][iz+1] < threshold)
-            (*tunnelCost)[iy][ix][iz+1] = INFINITY;
-    if (ix > 0 && iy > 0 && iz - 1 > 0 && ix < sx - 1
-        && iy < sy - 1 && iz - 1 < sz - 1)
-        if((*tunnelLabel)[iy][ix][iz-1] < threshold)
-            (*tunnelCost)[iy][ix][iz-1] = INFINITY;
+    if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1 && iy + 1 < sy - 1
+        && iz < sz - 1)
+        if ((*tunnelLabel)[iy + 1][ix][iz] < threshold)
+            (*tunnelCost)[iy + 1][ix][iz] = INFINITY;
+    if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1 && iy - 1 < sy - 1
+        && iz < sz - 1)
+        if ((*tunnelLabel)[iy - 1][ix][iz] < threshold)
+            (*tunnelCost)[iy - 1][ix][iz] = INFINITY;
+    if (ix > 0 && iy > 0 && iz + 1 > 0 && ix < sx - 1 && iy < sy - 1
+        && iz + 1 < sz - 1)
+        if ((*tunnelLabel)[iy][ix][iz + 1] < threshold)
+            (*tunnelCost)[iy][ix][iz + 1] = INFINITY;
+    if (ix > 0 && iy > 0 && iz - 1 > 0 && ix < sx - 1 && iy < sy - 1
+        && iz - 1 < sz - 1)
+        if ((*tunnelLabel)[iy][ix][iz - 1] < threshold)
+            (*tunnelCost)[iy][ix][iz - 1] = INFINITY;
 }
