@@ -81,7 +81,7 @@ void FastMarching::getShadowedCostMap(
                 || (sqrt(pow(((float)i - vi_goal[0]), 2)
                          + pow(((float)j - vi_goal[1]), 2))
                     > d_max_distance / d_map_resolution))
-            {//Nodes further from a certain distance to goal are omitted
+            { // Nodes further from a certain distance to goal are omitted
                 clear_row.push_back(INFINITY);
                 obstacle_row.push_back(INFINITY);
             }
@@ -89,11 +89,11 @@ void FastMarching::getShadowedCostMap(
             {
                 clear_row.push_back(1.0);
                 if (vvi_obstacle_map[j][i] == 0)
-                {//Obstacle inside sampling area
+                { // Obstacle inside sampling area
                     obstacle_row.push_back(sqrt(2));
                 }
                 else
-                {//Sampling Area
+                { // Sampling Area
                     vvi_obstacle_map[j][i] = 1;
                     obstacle_row.push_back(1.0);
                 }
@@ -114,13 +114,15 @@ void FastMarching::getShadowedCostMap(
         for (int i = 0; i < vvi_obstacle_map[0].size(); i++)
         {
             float d_distToGoal = sqrt(pow(((float)i - vi_goal[0]), 2)
-                         + pow(((float)j - vi_goal[1]), 2));
+                                      + pow(((float)j - vi_goal[1]), 2));
             if (d_distToGoal < d_min_distance / d_map_resolution)
-	    {
-	        vvi_obstacle_map[j][i] = 1; 
-	    }
-	    else if ((d_distToGoal < d_max_distance / d_map_resolution)&&(fabs((*pvvd_clear_totalcostmap)[j][i]
-                     - (*pvvd_obstacle_totalcostmap)[j][i]) > d_map_resolution*sqrt(2)))
+            {
+                vvi_obstacle_map[j][i] = 1;
+            }
+            else if ((d_distToGoal < d_max_distance / d_map_resolution)
+                     && (fabs((*pvvd_clear_totalcostmap)[j][i]
+                              - (*pvvd_obstacle_totalcostmap)[j][i])
+                         > d_map_resolution * sqrt(2)))
             {
                 vvi_obstacle_map[j][i] = 0;
             }

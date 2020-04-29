@@ -49,10 +49,17 @@ public:
     double horizonDistance;
 
     // -- FUNCTIONS --
+    ArmPlanner(std::string s_data_path_m);
+
     ArmPlanner(std::string s_data_path_m,
                bool _approach = CONSERVATIVE,
                int _deployment = TRAJECTORY);
+
     ~ArmPlanner();
+
+    void setApproach(bool _approach);
+
+    void setDeployment(int _deployment);
 
     std::vector<base::Waypoint> *getInterpolatedRoverPath();
 
@@ -61,15 +68,29 @@ public:
     std::vector<std::vector<std::vector<double>>> *getVolumeCostMap();
 
     bool planArmMotion(std::vector<base::Waypoint> *roverPath,
-                       const std::vector<std::vector<double>> *DEM,
-                       double mapResolution,
-                       double zResolution,
+                       const std::vector<std::vector<double>> *_DEM,
+                       double _mapResolution,
+                       double _zResolution,
                        base::Waypoint samplePos,
                        std::vector<std::vector<double>> *armJoints);
+
+    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
+                             double _mapResolution,
+                             double _zResolution,
+                             base::Waypoint roverWaypoint,
+                             std::vector<double> initialArmConfiguration,
+                             std::vector<double> goalArmConfiguration,
+                             std::vector<std::vector<double>> *armJoints);
 
     void generateTunnel(
         base::Waypoint iniPos,
         base::Waypoint samplePos,
+        std::vector<std::vector<std::vector<double>>> *costMap3D);
+
+    void generateReachabilityTunnel(
+        base::Waypoint iniPos,
+        base::Waypoint goalPos,
+        std::vector<double> roverPose6,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
 
     void computeWaypointAssignment(std::vector<int> *pathsAssignment);
@@ -96,9 +117,13 @@ public:
                                          double sigma,
                                          int samples);
 
-    void checkIntersections(std::vector<std::vector<std::vector<int>>> *tunnelLabel,
-                            std::vector<std::vector<std::vector<double>>> *tunnelCost,
-                            int ix, int iy, int iz, int threshold);
+    void checkIntersections(
+        std::vector<std::vector<std::vector<int>>> *tunnelLabel,
+        std::vector<std::vector<std::vector<double>>> *tunnelCost,
+        int ix,
+        int iy,
+        int iz,
+        int threshold);
 };
 } // namespace ArmPlanner_lib
 #endif
