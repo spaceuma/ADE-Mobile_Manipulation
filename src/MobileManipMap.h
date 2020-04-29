@@ -131,6 +131,7 @@ public:
     /**
      * Function to get the current cost map
      */
+    std::vector<std::vector<double>> *getCostMap();
     void getCostMap(std::vector<std::vector<double>> &vvd_cost_map_m);
     /**
      * Function to get the current elevation map
@@ -161,11 +162,12 @@ public:
      */
     bool isSampleLoaded();
 
+    std::vector<double> getOffset();
 private:
     /**
      * RG DEM is checked and loaded into MobileManipMap
      */
-    bool loadSample(const base::Waypoint &w_sample_pos_m);
+    bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
     /**
      * The elevation map vvd_elevation_map is calculated from rg_dem
      */

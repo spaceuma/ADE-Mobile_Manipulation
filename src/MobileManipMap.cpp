@@ -63,7 +63,7 @@ MobileManipMap::MobileManipMap(
     }
     this->ui_num_cols = vvd_elevation_map_m[0].size();
     this->ui_num_rows = vvd_elevation_map_m.size();
-    this->loadSample(w_sample_pos_m);
+    this->loadGlobalSample(w_sample_pos_m);
     this->mapstate = FACE_COMPUTED; 
 }
 
@@ -77,7 +77,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
     {
         mapstate = DEM_LOADED;
     }
-    if(!this->loadSample(w_sample_pos_m))
+    if(!this->loadGlobalSample(w_sample_pos_m))
     {
         return 2; // Error: sample out of the DEM
     }
@@ -88,7 +88,10 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
         this->calculateTraversabilityMap();
         // Compute vvd_proximity_map
         this->addSampleFacingObstacles();
-	// TODO - Return 3 if sample is on obstacle area!!
+	if (isObstacle(this->w_sample_pos))
+	{
+            return 3;
+	}
     }
     catch (exception &e)
     {
@@ -168,7 +171,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     return 0;
 }
 
-bool MobileManipMap::loadSample(const base::Waypoint &w_sample_pos_m)
+bool MobileManipMap::loadGlobalSample(const base::Waypoint &w_sample_pos_m)
 {
     base::Waypoint w_sample_localpos;
     w_sample_localpos.position[0] = w_sample_pos_m.position[0] - this->vd_global_offset[0];
@@ -232,6 +235,11 @@ void MobileManipMap::getCostMap(
     std::vector<std::vector<double>> &vvd_cost_map_m)
 {
     vvd_cost_map_m = this->vvd_cost_map;
+}
+
+std::vector<std::vector<double>> *MobileManipMap::getCostMap()
+{
+    return &(this->vvd_cost_map);
 }
 
 void MobileManipMap::getTraversabilityMap(
@@ -477,4 +485,9 @@ void MobileManipMap::calculateCostValues()
 double MobileManipMap::getResolution()
 {
     return this->d_res;
+}
+
+std::vector<double> MobileManipMap::getOffset()
+{
+    return this->vd_global_offset;
 }

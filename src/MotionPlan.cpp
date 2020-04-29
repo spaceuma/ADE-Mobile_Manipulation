@@ -48,6 +48,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_posit
         return 3;
     }
     this->pmm_map->getCostMap(costMap);
+    std::cout << "Rover pos is " << rover_position.position[0] << ", " << rover_position.position[1] << std::endl;
     if(this->bi_fast_marching.planPath(&costMap,
                                     this->pmm_map->getResolution(),
                                     rover_position,

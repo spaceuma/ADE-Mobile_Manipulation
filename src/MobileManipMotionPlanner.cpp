@@ -61,14 +61,15 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
                                                     plpose_m.m_orientation.m_y,
                                                     plpose_m.m_orientation.m_z);
 
-    base::Waypoint sample_position;
-    this->w_current_rover_position.position[0] = plpose_m.m_position.m_x;
-    this->w_current_rover_position.position[1] = plpose_m.m_position.m_y;
+    std::vector<double> vd_offset = this->p_mmmap->getOffset();
+    base::Waypoint w_sample_globalposition;
+    this->w_current_rover_position.position[0] = plpose_m.m_position.m_x - vd_offset[0];
+    this->w_current_rover_position.position[1] = plpose_m.m_position.m_y - vd_offset[1];
     this->w_current_rover_position.position[2] = plpose_m.m_position.m_z;
     this->w_current_rover_position.heading = basepose_dummy.getYaw();
 
-    sample_position.position[0] = d_sample_pos_x;
-    sample_position.position[1] = d_sample_pos_y;
+    w_sample_globalposition.position[0] = d_sample_pos_x;
+    w_sample_globalposition.position[1] = d_sample_pos_y;
 
     // Can only be called in IDLE state
     if (getStatus() == IDLE)
@@ -78,7 +79,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
         // READY_TO_MOVE
         setStatus(GENERATING_MOTION_PLAN);
 	// The cost map must be computed based on FACE method
-        ui_code = this->p_mmmap->computeFACE(sample_position);
+        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition);
 	switch (ui_code)
 	{
             case 0:
@@ -88,6 +89,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
 		return false;
 	    case 2:
 		setError(OOB_GOAL_POS);
+		std::cout << "Goal pos is " << w_sample_globalposition.position[0] << ", " << w_sample_globalposition.position[1] << std::endl;
 		return false;
 	    case 3:
 		setError(OBS_GOAL_POS);
@@ -110,6 +112,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
                 setError(PLAN_WO_SAMPLE);
                 return false;
             case 4:
+		//TODO - Fix this, the error is not GOAL_TOO_CLOSE!
                 setError(GOAL_TOO_CLOSE);
                 return false;
             case 5:
@@ -236,10 +239,11 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
     {
         case EXECUTING_MOTION_PLAN:
         {
+            std::vector<double> vd_offset = this->p_mmmap->getOffset();
             base::Pose basepose;
 	    // TODO - Path is in local coordinates, the rover position may be in global!
-            basepose.position[0] = plpose_m.m_position.m_x;
-            basepose.position[1] = plpose_m.m_position.m_y;
+            basepose.position[0] = plpose_m.m_position.m_x - vd_offset[0];
+            basepose.position[1] = plpose_m.m_position.m_y - vd_offset[1];
             basepose.position[2] = plpose_m.m_position.m_z;
             basepose.orientation
                 = Eigen::Quaterniond(plpose_m.m_orientation.m_w,
@@ -546,6 +550,11 @@ std::vector<std::vector<double>> *MobileManipMotionPlanner::getWristPath()
 std::vector<base::Waypoint> *MobileManipMotionPlanner::getRoverPath()
 {
     return this->p_motionplan->getRoverPath();
+}
+
+std::vector<std::vector<double>> *MobileManipMotionPlanner::getCostMap()
+{
+    return this->p_mmmap->getCostMap();
 }
 
 std::vector<std::vector<double>>

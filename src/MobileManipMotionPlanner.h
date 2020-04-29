@@ -173,6 +173,7 @@ public:
      * A pointer to the current rover path is returned
      */
     std::vector<base::Waypoint> *getRoverPath();
+    std::vector<std::vector<double>> *getCostMap();
     /**
      * A pointer to the arm motion profile is returned
      */
