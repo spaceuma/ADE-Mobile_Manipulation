@@ -79,7 +79,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
         // READY_TO_MOVE
         setStatus(GENERATING_MOTION_PLAN);
 	// The cost map must be computed based on FACE method
-        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition);
+        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition,this->d_avoid_dist,this->d_maxfetching_dist);
 	switch (ui_code)
 	{
             case 0:
@@ -284,6 +284,9 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                 case 6:
                     setError(COLLIDING_ARM);
                     return false;
+		case 7:
+		    setError(NON_RESP_ARM);// TODO - Shouldnt be better NON_FOLLOWING_ARM?
+		    return false;
             }
             return false;
             break;
@@ -522,6 +525,26 @@ void MobileManipMotionPlanner::printErrorCode()
     std::cout << std::endl;
 }
 
+void MobileManipMotionPlanner::printConfig()
+{
+    std::cout << "MMMotionPlanner Configuration Values: " << std::endl;
+    std::cout << "  - Z resolution: " << this->d_zres << " m" << std::endl;
+    std::cout << "  - Kinematic distances: " << std::endl;
+    std::cout << "    - Base height from ground: " << this->d_base_height << " m" << std::endl;
+    std::cout << "    - d0: " << this->vd_kin_conf[0] << " m" << std::endl;
+    std::cout << "    - a1: " << this->vd_kin_conf[1] << " m" << std::endl;
+    std::cout << "    - a2: " << this->vd_kin_conf[2] << " m" << std::endl;
+    std::cout << "    - c2: " << this->vd_kin_conf[3] << " m" << std::endl;
+    std::cout << "    - a3: " << this->vd_kin_conf[4] << " m" << std::endl;
+    std::cout << "    - d4: " << this->vd_kin_conf[5] << " m" << std::endl;
+    std::cout << "    - d6: " << this->vd_kin_conf[6] << " m" << std::endl;
+    std::cout << "  - End Effector Z distance margin: " << this->d_finalEE_height << " m" << std::endl;
+    std::cout << " Max Fetching distance: " << this->d_maxfetching_dist << " m" << std::endl;
+    std::cout << std::endl;
+}
+
+
+
 void MobileManipMotionPlanner::setError(MMError error_m)
 {
     if (error_m != NO_ERROR)
@@ -535,6 +558,34 @@ void MobileManipMotionPlanner::setStatus(MMStatus status_m)
 {
     this->priorStatus = getStatus();
     this->status = status_m;
+}
+
+bool MobileManipMotionPlanner::setZres(double d_zres_m)
+{
+    if (d_zres_m > 0)
+    {
+        this->d_zres = d_zres_m; 
+	return true;
+    }
+    else
+    {
+        setError(POOR_CONFIG);
+	return false;
+    }
+}
+
+bool MobileManipMotionPlanner::setAvoidanceDistance(double d_avoid_dist_m)
+{
+    if (d_avoid_dist_m > 0)
+    {
+        this->d_avoid_dist = d_avoid_dist_m; 
+	return true;
+    }
+    else
+    {
+        setError(POOR_CONFIG);
+	return false;
+    } 
 }
 
 double MobileManipMotionPlanner::getCurrentRoverYaw()

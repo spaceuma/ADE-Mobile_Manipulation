@@ -28,7 +28,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     double zRes = 0.08;
     unsigned int ui_error_code = 0;
 
-    MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos);
+    MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
 
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
@@ -78,7 +78,7 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     double zRes = 0.08;
     unsigned int ui_error_code = 0;
 
-    MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos);
+    MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
@@ -127,7 +127,7 @@ TEST(MMMotionPlanTest, colliding_profile_test)
     ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
 
-    MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res, samplePos);
+    MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res, samplePos, 1.0, 0.94);
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
@@ -246,7 +246,7 @@ TEST(MMMotionPlanTest, non_reachable_test)
 
     double res = 0.1; // meters
     double zRes = 0.08;
-    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res, samplePos);
+    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res, samplePos, 1.0, 0.94);
 
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
@@ -288,7 +288,7 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
 
     double res = 0.1; // meters
     double zRes = 0.08;
-    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res, samplePos);
+    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res, samplePos, 1.0, 0.94);
 
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
@@ -332,7 +332,7 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
     double zRes = 0.08;
     unsigned int ui_error_code = 0;
 
-    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res, samplePos);
+    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map, res, samplePos, 1.0, 0.94);
 
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);

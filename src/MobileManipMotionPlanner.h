@@ -65,7 +65,39 @@ private:
     void setError(MMError error_m);
 
     base::Waypoint w_current_rover_position;
+    /**
+     * Configurable parameter: Z resolution (in meters)
+     */
     double d_zres = 0.08;
+    /**
+     * Configurable parameter: Avoidance Distance (in meters)
+     */
+    double d_avoid_dist = 1.0;
+    /**
+     * Configurable parameter: rover kinematic configuration (in meters)
+     * (d0, a1, a2, c2, a3, d4, d6) TODO - Maybe these values could be taken from urdf model?
+     */
+    std::vector<double> vd_kin_conf = {0.5,0.225,0.735,0.03,0.03,0.695,0.3};
+
+    /**
+     * Z-distance from base reference frame to ground
+     */
+    double d_base_height = 0.645;
+
+    /**
+     * Z-distance margin from final end effector position and ground
+     */
+    double d_finalEE_height = 0.4;
+
+    /**
+     * Configurable parameter: Max arm fetching distance (in meters)
+     */
+    double d_maxfetching_dist = vd_kin_conf[1] 
+          + sqrt(pow(vd_kin_conf[2] + vd_kin_conf[5], 2)
+                 - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6] - d_finalEE_height, 2));
+    double d_minfetching_dist = (d_maxfetching_dist<0.24)?0.0:(d_maxfetching_dist-0.24);
+
+
 public:
     /**
      * Constructor, it receives a DEM and generates the Map object.
@@ -143,6 +175,16 @@ public:
     MMStatus getStatus();
 
     /**
+     * Sets the value of Z-resolution in meters.
+     */
+    bool setZres(double d_zres_m);
+
+    /**
+     * Sets the value of avoidance distance in meters.
+     */
+    bool setAvoidanceDistance(double d_avoid_dist_m);
+    
+    /**
     * Prints information regarding the resulting path.
     */
     void printRoverPathInfo();
@@ -156,6 +198,11 @@ public:
      * Returns the indication of which error affects the software.
      */
     void printErrorCode();
+
+    /**
+     * Shows current values of different config variables
+     */
+    void printConfig();
 
     /**
      * Returns if the class is in status ERROR.

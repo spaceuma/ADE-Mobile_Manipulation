@@ -56,6 +56,10 @@ private:
      */
     double d_avoid_dist = 1.0;
     /**
+     * Max reachability distance
+     */
+    double d_maxreach_dist = 0.94;
+    /**
      * Map minimal value of elevation in meters
      */
     double d_elevation_min;
@@ -111,7 +115,8 @@ public:
      */
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
                    std::vector<std::vector<double>> &vvd_cost_map_m,
-                   double d_res_m, base::Waypoint w_sample_pos_m);
+                   double d_res_m, base::Waypoint w_sample_pos_m,
+		   double d_avoid_dist_m, double d_maxreach_dist_m);
     /**
      * RG DEM is checked and loaded into MobileManipMap
      */
@@ -119,7 +124,8 @@ public:
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
-    unsigned int computeFACE(base::Waypoint w_sample_pos_m);
+    unsigned int computeFACE(base::Waypoint w_sample_pos_m,
+		double d_avoid_dist_m, double d_maxreach_dist_m);
     /**
      * Function to get the current sample in local coordinates
      */

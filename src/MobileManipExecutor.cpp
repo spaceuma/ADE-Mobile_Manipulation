@@ -105,6 +105,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             return 4; 
 	}
     }
+    // TODO - Modify these configurable variables properly
     double gain = 1.0;
     int saturation = 0;
     double max_speed = 2.0;
@@ -149,11 +150,11 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 		this->armstate = FORBIDDEN_POS;
 		return 6;
 	    }
-            /*if (!isArmWorking(j_next_arm_command_m, j_arm_present_readings_m))
+            if (!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 mc_m = this->getZeroRoverCommand();
-	        return 6;
-	    }*/
+	        return 7;
+	    }
     	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before MotionControl is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
 
@@ -311,13 +312,13 @@ bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints 
     return true;
 }
 
-bool MobileManipExecutor::isArmWorking(const Joints &j_next_command, const Joints &j_present_joints)
+bool MobileManipExecutor::isArmFollowing(const Joints &j_next_command, const Joints &j_present_joints)
 {
     double d_deg2rad = 3.1416/180.0;
     bool isMoving = true;
     for (uint i = 0; i < 6; i++)
     {
-        if (abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) > 0.1)//TODO - ADhoc threshold in radians
+        if (abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) > this->vd_arm_posmargin[i])//TODO - ADhoc threshold in radians
         {
             isMoving = false;
 	}

@@ -40,7 +40,7 @@ TEST(MMMapTest, nominal_working_test)
 
     MobileManipMap dummyMap;
     dummyMap.loadDEM((*prgd_dummy_dem));
-    dummyMap.computeFACE(samplePos);
+    dummyMap.computeFACE(samplePos, 1.0, 0.94);
 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -236,22 +236,22 @@ TEST(MMMapTest, sample_pos_error_test)
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - First Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_one),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_one, 1.0, 0.94),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Second Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_two),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_two, 1.0, 0.94),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Third Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_three),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_three, 1.0, 0.94),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Fourth Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_four),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_four, 1.0, 0.94),
                  2);
      
 }

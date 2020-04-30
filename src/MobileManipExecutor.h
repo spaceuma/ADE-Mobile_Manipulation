@@ -101,6 +101,9 @@ private:
     bool getArmCommand(Joints &j_next_arm_command);
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
+
+    std::vector<double> vd_arm_posmargin = {0.1,0.1,0.1,0.1,0.1,0.1};// TODO - Adhoc margin for arm positions
+
 public:
     /**
      * Class Constructor using the present motion plan 
@@ -145,7 +148,7 @@ public:
     /**
      * Checks if the arm is still following the arm commands 
      */
-    bool isArmWorking(const Joints &j_next_command, const Joints &j_present_joints);
+    bool isArmFollowing(const Joints &j_next_command, const Joints &j_present_joints);
     void getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     void getAtomicCommand();
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);

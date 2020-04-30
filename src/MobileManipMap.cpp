@@ -23,14 +23,17 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem, unsigned int &ui_is
 MobileManipMap::MobileManipMap(
     std::vector<std::vector<double>> &vvd_elevation_map_m,
     std::vector<std::vector<double>> &vvd_cost_map_m,
-    double d_res_m, base::Waypoint w_sample_pos_m)
+    double d_res_m, base::Waypoint w_sample_pos_m,
+    double d_avoid_dist_m, double d_maxreach_dist_m)
 {
     this->d_res = d_res_m;
+    this->d_avoid_dist = d_avoid_dist_m;
+    this->d_maxreach_dist = d_maxreach_dist_m;
     this->vvd_elevation_map.clear();
     std::vector<double> row;
     this->d_elevation_min = INFINITY;
-    this->d_inner_sampling_dist = this->d_avoid_dist + 0.94;//TODO - 0.94 should come from max reachability 
-    this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res;
+    this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist; 
+    this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res; //TODO - Maybe this should be 1.42? = sqrt(2)
     for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
@@ -67,7 +70,8 @@ MobileManipMap::MobileManipMap(
     this->mapstate = FACE_COMPUTED; 
 }
 
-unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
+unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
+		double d_avoid_dist_m, double d_maxreach_dist_m)
 {
     if (mapstate == NO_DEM)
     {
@@ -81,6 +85,13 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
     {
         return 2; // Error: sample out of the DEM
     }
+
+    // FACE distances
+    this->d_avoid_dist = d_avoid_dist_m;
+    this->d_maxreach_dist = d_maxreach_dist_m;
+    this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist; 
+    this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res; //TODO - Maybe this should be 1.42? = sqrt(2)
+ 
     try
     {
         this->calculateElevationMap();
@@ -139,10 +150,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
 
     // DEM is stored
     this->rg_dem = dem;
-    // FACE distances
-    this->d_inner_sampling_dist = this->d_avoid_dist + 0.94;//TODO - 0.94 should come from max reachability 
-    this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res;
-   
+  
     // Initialization of matrices
     try
     {
@@ -468,7 +476,7 @@ void MobileManipMap::calculateCostValues()
             else
             {
                 if (this->vvd_proximity_map[j][i]
-                    < this->d_avoid_dist) // ToDo: this is a adhoc risk distance value!!
+                    < this->d_avoid_dist) 
                 {
                     this->vvd_cost_map[j][i]
                         = 1.0 + 10.0* (this->d_avoid_dist - (double)this->vvd_proximity_map[j][i])/this->d_avoid_dist;
