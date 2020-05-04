@@ -47,6 +47,10 @@ private:
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
     /**
+     * Profile of position values per joint and sample
+     */
+    std::vector<std::vector<double>> vvd_init_arm_profile;
+    /**
      * Pointer to the map class
      */
     MobileManipMap * pmm_map;

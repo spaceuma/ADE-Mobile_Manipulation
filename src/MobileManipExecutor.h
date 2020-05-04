@@ -102,7 +102,7 @@ private:
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
 
-    std::vector<double> vd_arm_posmargin = {0.1,0.1,0.1,0.1,0.1,0.1};// TODO - Adhoc margin for arm positions
+    std::vector<double> vd_arm_posmargin = {0.2,0.2,0.2,0.2,0.2,0.2};// TODO - Adhoc margin for arm positions
 
 public:
     /**

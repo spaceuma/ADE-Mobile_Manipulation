@@ -129,6 +129,25 @@ bool MotionPlan::shortenPathForFetching()
             this->vw_rover_path.erase(this->vw_rover_path.begin() + endWaypoint + 1,
                               this->vw_rover_path.end());
         }
+	// Here we shorten the path as well at the beginning
+	/*int i_path_index = 0;
+	if (this->vw_rover_path.size()>3)
+	{
+ 	    double d_segmentX = this->vw_rover_path[i_path_index].position[0] - this->vw_rover_path[0].position[0];
+	    double d_segmentY = this->vw_rover_path[i_path_index].position[1] - this->vw_rover_path[0].position[1];
+	    double d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
+            while ((i_path_index < this->vw_rover_path.size() - 2)&&(d_norm < 0.1))//TODO-Introduce here configurable position tolerance
+	    {
+                i_path_index += 1;
+                d_segmentX = this->vw_rover_path[i_path_index].position[0] - this->vw_rover_path[0].position[0];
+                d_segmentY = this->vw_rover_path[i_path_index].position[1] - this->vw_rover_path[0].position[1];
+                d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
+	    }
+	    std::cout << "The initial erase index is " << i_path_index << std::endl;
+            this->vw_rover_path.erase(this->vw_rover_path.begin(),
+                              this->vw_rover_path.begin() + i_path_index);
+      
+	}*/
     }
     return true;
 }
@@ -141,6 +160,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         return 3;
     }
     this->vvd_arm_motion_profile.clear();
+    this->vvd_init_arm_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
     if(this->p_arm_planner->planArmMotion(&(this->vw_rover_path),
@@ -150,9 +170,15 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                     this->pmm_map->getSample(),
                                     &(this->vvd_arm_motion_profile)))
     {
+        // Initialization
+        std::vector<double> goalArmConfiguration = {0.797367, -1.5487, 2.48548, -2.23731, 1.14413, -0.484318};
+        std::vector<double> initialArmConfiguration = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
+ 
         if(this->isArmProfileSafe())
 	{
-            return 0;
+	    
+	    	
+	    return 0;
 	}
 	else
 	{
@@ -164,6 +190,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         return 2;
     }
 }
+
 
 unsigned int MotionPlan::computeAtomicOperation()
 {
