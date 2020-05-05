@@ -77,7 +77,6 @@ private:
     /**
      * The previous arm state 
      */
-    std::vector<double> vd_arm_previous_readings;
     std::vector<double> vd_arm_previous_command;
     /**
      * The present state of the Executor Class 
@@ -98,7 +97,7 @@ private:
     /**
      * Provides the next arm command according to the present situation 
      */
-    bool getArmCommand(Joints &j_next_arm_command);
+    bool updateArmCommandAndPose(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
 
@@ -120,11 +119,6 @@ public:
     bool isRoverWithinCorridor(Pose pose_rover);
 
     /**
-     * Indicates whether the arm is colliding with something or not 
-     */
-    bool isArmColliding();
-
-    /**
      * Indicates whether the execution of the present operation is completed
      * or not
      */
@@ -140,7 +134,7 @@ public:
     /**
      * Checks if the arm is currently colliding 
      */
-    bool isArmColliding(const Joints &j_present_joints_m);
+    bool isArmColliding();
     /**
      * Checks if the arm is not in forbidden workspace 
      */
