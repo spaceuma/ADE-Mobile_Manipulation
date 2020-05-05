@@ -130,7 +130,7 @@ bool MotionPlan::shortenPathForFetching()
                               this->vw_rover_path.end());
         }
 	// Here we shorten the path as well at the beginning
-	/*int i_path_index = 0;
+	int i_path_index = 0;
 	if (this->vw_rover_path.size()>3)
 	{
  	    double d_segmentX = this->vw_rover_path[i_path_index].position[0] - this->vw_rover_path[0].position[0];
@@ -147,7 +147,7 @@ bool MotionPlan::shortenPathForFetching()
             this->vw_rover_path.erase(this->vw_rover_path.begin(),
                               this->vw_rover_path.begin() + i_path_index);
       
-	}*/
+	}
     }
     return true;
 }
