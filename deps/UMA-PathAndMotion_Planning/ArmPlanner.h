@@ -26,6 +26,8 @@ private:
     std::vector<base::Waypoint> *interpolatedRoverPath;
     std::vector<std::vector<std::vector<double>>> *volume_cost_map;
 
+    std::vector<double> *timeProfile;
+
 public:
     KinematicModel_lib::Manipulator *sherpa_tt_arm;
 
@@ -49,8 +51,6 @@ public:
     double horizonDistance;
 
     // -- FUNCTIONS --
-    ArmPlanner(std::string s_data_path_m);
-
     ArmPlanner(std::string s_data_path_m,
                bool _approach = CONSERVATIVE,
                int _deployment = TRAJECTORY);
@@ -80,7 +80,8 @@ public:
                              base::Waypoint roverWaypoint,
                              std::vector<double> initialArmConfiguration,
                              std::vector<double> goalArmConfiguration,
-                             std::vector<std::vector<double>> *armJoints);
+                             std::vector<std::vector<double>> *armJoints,
+                             std::vector<double> *timeProfile);
 
     void generateTunnel(
         base::Waypoint iniPos,
@@ -124,6 +125,16 @@ public:
         int iy,
         int iz,
         int threshold);
+
+    double getTimeArmJointMovement(double initialPosition,
+                                   double goalPosition,
+                                   int armJointNumber);
+
+    double getMaxTimeArmMovement(std::vector<double> initialConfiguration,
+                                 std::vector<double> goalConfiguration);
+
+    std::vector<double> getTimeProfile(
+        std::vector<std::vector<double>> *armProfile);
 };
 } // namespace ArmPlanner_lib
 #endif

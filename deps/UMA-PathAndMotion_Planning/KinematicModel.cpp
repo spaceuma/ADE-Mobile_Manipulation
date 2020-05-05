@@ -752,7 +752,7 @@ std::vector<double> Manipulator::getManipJoints(
 
         clock_t endt2 = clock();
         double eetime2 = double(endt2 - init2) / CLOCKS_PER_SEC;
-        std::cout << "Quaternion computation time: " << eetime2 << std::endl;
+        // std::cout << "Quaternion computation time: " << eetime2 << std::endl;
 
         ep = getDifference(Pd, P);
         eo = getDifference(dot(n, ed),
@@ -766,20 +766,20 @@ std::vector<double> Manipulator::getManipJoints(
 
         clock_t endt3 = clock();
         double eetime3 = double(endt3 - endt2) / CLOCKS_PER_SEC;
-        std::cout << "Error computation time: " << eetime3 << std::endl;
+        // std::cout << "Error computation time: " << eetime3 << std::endl;
 
         up = dot(Kp, ep);
         uo = dot(Ko, eo);
 
         clock_t endt4 = clock();
         double eetime4 = double(endt4 - endt3) / CLOCKS_PER_SEC;
-        std::cout << "Actuation time: " << eetime4 << std::endl;
+        // std::cout << "Actuation time: " << eetime4 << std::endl;
 
         std::vector<std::vector<double>> J = getJacobianMatrix(q);
 
         clock_t endt5 = clock();
         double eetime5 = double(endt5 - endt4) / CLOCKS_PER_SEC;
-        std::cout << "Jacobian time: " << eetime5 << std::endl;
+        // std::cout << "Jacobian time: " << eetime5 << std::endl;
 
         clock_t endt6 = clock();
         if (getDeterminant(&J) != 0)
@@ -788,7 +788,7 @@ std::vector<double> Manipulator::getManipJoints(
 
             endt6 = clock();
             double eetime6 = double(endt6 - endt5) / CLOCKS_PER_SEC;
-            std::cout << "Inverse time: " << eetime6 << std::endl;
+            // std::cout << "Inverse time: " << eetime6 << std::endl;
 
             std::vector<double> u{up[0], up[1], up[2], uo[0], uo[1], uo[2]};
             qp = dot(iJ, u);
@@ -803,8 +803,8 @@ std::vector<double> Manipulator::getManipJoints(
         it += 1;
         clock_t endt7 = clock();
         double eetime7 = double(endt7 - endt6) / CLOCKS_PER_SEC;
-        std::cout << "Velocities and new position time: " << eetime7
-                  << std::endl;
+        // std::cout << "Velocities and new position time: " << eetime7
+        //          << std::endl;
     }
 
     for (int i = 0; i < 6; i++)

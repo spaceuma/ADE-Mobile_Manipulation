@@ -196,14 +196,14 @@ unsigned int MotionPlan::computeAtomicOperation()
 {
     this->vvd_arm_motion_profile.clear();
 
-  //TODO - Change this function to use real rover pose, initial and goal EE poses
     this->vw_rover_path.clear();
 
-    std::vector<double> goalArmConfiguration = {0.797367, -1.5487, 2.48548, -2.23731, 1.14413, -0.484318};
-    std::vector<double> initialArmConfiguration = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
-    
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
+
+  //TODO - Change this function to use real rover pose, initial and goal EE poses
+    std::vector<double> goalArmConfiguration = {0.797367, -1.5487, 2.48548, -2.23731, 1.14413, -0.484318};
+    std::vector<double> initialArmConfiguration = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
 
     base::Waypoint current_waypoint;
     current_waypoint.position[0] = 3;
@@ -213,6 +213,7 @@ unsigned int MotionPlan::computeAtomicOperation()
                       [(int)(current_waypoint.position[0] / this->pmm_map->getResolution() + 0.5)]
           + p_arm_planner->heightGround2BCS;
     current_waypoint.heading = 0;
+
     vw_rover_path.push_back(current_waypoint);
 
     if(this->p_arm_planner->planAtomicOperation(&elevationMap,
@@ -221,7 +222,8 @@ unsigned int MotionPlan::computeAtomicOperation()
                                     vw_rover_path[0],
                                     initialArmConfiguration,
                                     goalArmConfiguration,
-                                    &(this->vvd_arm_motion_profile)))
+                                    &(this->vvd_arm_motion_profile),
+                                    &(this->vd_time_profile)))
     {
         if(this->isArmProfileSafe())
 	{
@@ -277,6 +279,11 @@ std::vector<std::vector<double>> *MotionPlan::getWristPath()
 std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
 {
     return &(this->vvd_arm_motion_profile);
+}
+
+std::vector<double> *MotionPlan::getTimeProfile()
+{
+    return &(this->vd_time_profile);
 }
 
 std::vector<std::vector<std::vector<double>>> * MotionPlan::get3DCostMap()

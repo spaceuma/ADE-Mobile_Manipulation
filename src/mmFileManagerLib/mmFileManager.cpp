@@ -231,6 +231,18 @@ void savePath(std::vector<base::Waypoint> *roverPath, std::string s_path_file)
     pathFile.close();
 }
 
+void saveVector(std::vector<double> *pvd_vector, std::string s_path_file)
+{
+    std::ofstream f_vector;
+    f_vector.open(s_path_file);
+    for (int i = 0; i < (*pvd_vector).size(); i++)
+    {
+        f_vector << (*pvd_vector)[i] << " ";
+    }
+    f_vector.close();
+
+}
+
 void saveProfile(std::vector<std::vector<double>> *pvvd_arm_motion_profile, std::string s_path_file)
 {
     std::ofstream f_arm_motion;

@@ -47,6 +47,10 @@ private:
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
     /**
+     * Profile of times related with an atomic operation
+     */
+    std::vector<double> vd_time_profile;
+    /**
      * Profile of position values per joint and sample
      */
     std::vector<std::vector<double>> vvd_init_arm_profile;
@@ -89,6 +93,10 @@ public:
      * A pointer to the arm motion profile is returned
      */
     std::vector<std::vector<double>> *getArmMotionProfile();
+    /**
+     * A pointer to the time profile is returned
+     */
+    std::vector<double> *getTimeProfile();
     /**
      * A pointer to the 3d cost map is returned
      */

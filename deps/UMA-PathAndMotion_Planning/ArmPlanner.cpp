@@ -8,11 +8,6 @@
 using namespace KinematicModel_lib;
 using namespace ArmPlanner_lib;
 
-ArmPlanner::ArmPlanner(std::string s_data_path_m)
-{
-    sherpa_tt_arm = new Manipulator(s_data_path_m);
-}
-
 ArmPlanner::ArmPlanner(std::string s_data_path_m,
                        bool _approach,
                        int _deployment)
@@ -334,7 +329,8 @@ bool ArmPlanner::planAtomicOperation(
     base::Waypoint roverWaypoint,
     std::vector<double> initialArmConfiguration,
     std::vector<double> goalArmConfiguration,
-    std::vector<std::vector<double>> *armJoints)
+    std::vector<std::vector<double>> *armJoints,
+    std::vector<double> *timeProfile)
 {
     this->mapResolution = _mapResolution;
     this->zResolution = _zResolution;
@@ -487,6 +483,7 @@ bool ArmPlanner::planAtomicOperation(
         armJoints->push_back(config);
     }
 
+    (*timeProfile) = getTimeProfile(armJoints);
     return true;
 }
 
@@ -1293,4 +1290,41 @@ void ArmPlanner::checkIntersections(
         && iz - 1 < sz - 1)
         if ((*tunnelLabel)[iy][ix][iz - 1] < threshold)
             (*tunnelCost)[iy][ix][iz - 1] = INFINITY;
+}
+
+double ArmPlanner::getTimeArmJointMovement(double initialPosition,
+                                           double goalPosition,
+                                           int armJointNumber)
+{
+    return abs(goalPosition - initialPosition)
+           / sherpa_tt_arm->armJointsMaxSpeed[armJointNumber - 1];
+}
+
+double ArmPlanner::getMaxTimeArmMovement(
+    std::vector<double> initialConfiguration,
+    std::vector<double> goalConfiguration)
+{
+    double maxTime = 0;
+    for (int i = 0; i < initialConfiguration.size(); i++)
+    {
+        double jointTime = getTimeArmJointMovement(
+            initialConfiguration[i], goalConfiguration[i], i + 1);
+        if (jointTime > maxTime) maxTime = jointTime;
+    }
+
+    return maxTime;
+}
+
+std::vector<double> ArmPlanner::getTimeProfile(
+    std::vector<std::vector<double>> *armProfile)
+{
+    std::vector<double> times;
+    times.push_back(0);
+    for (int i = 1; i < armProfile->size(); i++)
+    {
+        times.push_back(
+            times[i - 1]
+            + getMaxTimeArmMovement((*armProfile)[i - 1], (*armProfile)[i]));
+    }
+    return times;
 }
