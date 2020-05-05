@@ -8,7 +8,7 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
-    if (!isArmColliding(j_present_readings))
+    if (!isArmColliding())
     {
         this->armstate = INITIALIZING;
     }
@@ -39,7 +39,6 @@ void MobileManipExecutor::initializeArmVariables(const Joints &j_present_reading
     double d_val;
     this->vd_arm_previous_command.resize(6);
     this->vd_arm_present_command.resize(6);
-    this->vd_arm_previous_readings.resize(6);
     this->vd_arm_present_readings.resize(6);
     this->vd_arm_abs_speed.resize(6);
     for (uint i = 0; i < 6; i++)
@@ -47,7 +46,6 @@ void MobileManipExecutor::initializeArmVariables(const Joints &j_present_reading
         d_val = j_present_readings.m_jointStates[i].m_position; 
         this->vd_arm_previous_command[i] = d_val;
 	this->vd_arm_present_command[i] = d_val;
-        this->vd_arm_previous_readings[i] = d_val;
 	this->vd_arm_present_readings[i] = d_val;
     }
 
@@ -106,18 +104,17 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	}
     }
     // TODO - Modify these configurable variables properly
-    double gain = 1.0;
-    int saturation = 0;
-    double max_speed = 0.03;
+    double gain = 10.0;
+    double max_speed = 0.005;
 
     // Getting Arm Command
-    bool b_isFinal = this->getArmCommand(j_next_arm_command_m);
+    bool b_isFinal = this->updateArmCommandAndPose(j_next_arm_command_m, j_arm_present_readings_m);
     std::cout << "The Current Segment is " << this->waypoint_navigation.getCurrentSegment() << " and the path size is " << this->vpw_path.size() << std::endl;
     std::cout << "The state is " << this->armstate << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
-            if (this->isArmColliding(j_arm_present_readings_m))
+            if (this->isArmColliding())
 	    {
                 mc_m = this->getZeroRoverCommand();
 		this->armstate = FORBIDDEN_POS;
@@ -127,19 +124,11 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	    {
                 this->armstate = READY; 
             }
-            for (uint i = 0; i<6; i++)
-            {
-	        this->vd_arm_previous_command[i] = j_next_arm_command_m.m_jointStates[i].m_position; 
-            }
             mc_m = this->getZeroRoverCommand();
 	    return 0;
 	case FORBIDDEN_POS:
             mc_m = this->getZeroRoverCommand();
-	    for (uint i = 0; i < 6; i++)// TODO - make this a function to stop the arm
-            {
-                j_next_arm_command_m.m_jointStates[i].m_position = j_arm_present_readings_m.m_jointStates[i].m_position; 
-            }
-	    if (!this->isArmColliding(j_arm_present_readings_m))
+	    if (!this->isArmColliding())
 	    {
                 
 		this->armstate = INITIALIZING;
@@ -153,7 +142,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             this->armstate = COUPLED_MOVING;
 	    return 1;
 	case COUPLED_MOVING:
-	    if (this->isArmColliding(j_arm_present_readings_m))
+	    if (this->isArmColliding())
 	    {
                 mc_m = this->getZeroRoverCommand();
 		this->armstate = FORBIDDEN_POS;
@@ -167,16 +156,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before MotionControl is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
 
-            this->coupled_control.manipulatorMotionControl(gain, saturation, max_speed, vd_arm_present_command, vd_arm_previous_command, vd_arm_abs_speed); 
-            if (saturation == 1)
-	    {
-                this->coupled_control.modifyMotionCommand(max_speed, vd_arm_abs_speed, mc_m); 
-	    }
-
-            for (uint i = 0; i<6; i++)
-	    {
-	        this->vd_arm_previous_command[i] = j_next_arm_command_m.m_jointStates[i].m_position; 
-	    }
+            this->coupled_control.modifyMotionCommand(gain, vd_arm_present_command, vd_arm_previous_command, max_speed, vd_arm_abs_speed, mc_m); 
 
     	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before fixing is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
@@ -302,12 +282,8 @@ bool MobileManipExecutor::isArmSafe(const Joints &j_present_joints_m)
     return true;
 }
 
-bool MobileManipExecutor::isArmColliding(const Joints &j_present_joints_m)
+bool MobileManipExecutor::isArmColliding()
 {
-    for (uint i = 0; i < 6; i++)
-    {
-        this->vd_arm_present_readings[i] = j_present_joints_m.m_jointStates[i].m_position;
-    }
     return this->p_collision_detector->isColliding(this->vd_arm_present_readings);
 }
 
@@ -330,12 +306,12 @@ bool MobileManipExecutor::isArmFollowing(const Joints &j_next_command, const Joi
     bool isMoving = true;
     for (uint i = 0; i < 6; i++)
     {
-	//std::cout << "In joint " << i << " the previous command is " << this->vd_arm_previous_command[i] << " and the current pos is " << j_present_joints.m_jointStates[i].m_position << std::endl; 
+	std::cout << "In joint " << i << " the previous command is " << this->vd_arm_previous_command[i] << " and the current pos is " << j_present_joints.m_jointStates[i].m_position << std::endl; 
         if (abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) > this->vd_arm_posmargin[i])//TODO - ADhoc threshold in radians
         {
             isMoving = false;
+	    std::cout << "Error = " << abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) << " rad" << std::endl;
 	}
-	//std::cout << "In joint " << i << " the previous command is now " << this->vd_arm_previous_command[i] << std::endl; 
     }
     return isMoving;
 }
@@ -360,7 +336,7 @@ MotionCommand MobileManipExecutor::getZeroRoverCommand()
     return mc_zero;
 }
 
-bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
+bool MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command, const Joints &j_present_joints_m)
 {
     if (j_next_arm_command.m_jointNames.empty())
     {
@@ -377,6 +353,11 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
         j_next_arm_command.m_jointStates.resize(6);
     }
 
+    for (uint i = 0; i < 6; i++)
+    {
+        this->vd_arm_present_readings[i] = j_present_joints_m.m_jointStates[i].m_position;
+    }
+
 
     int i_pos_index;
     switch(this->armstate)
@@ -385,7 +366,11 @@ bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
             i_pos_index = this->waypoint_navigation.getCurrentSegment();
 	    break;
         case FORBIDDEN_POS:
-	    return false;
+	    for (uint i = 0; i < 6; i++)// TODO - make this a function to stop the arm
+            {
+                j_next_arm_command.m_jointStates[i].m_position = j_present_joints_m.m_jointStates[i].m_position; 
+            }
+            return false;
 	case READY:
 	    i_pos_index = 0;
 	    break;
