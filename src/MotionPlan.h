@@ -67,6 +67,7 @@ private:
      */
     bool isSmoothPath();
     bool isArmProfileSafe();
+    base::Waypoint w_rover_pos;
 public:
     /**
      * Class Constructor.
@@ -112,7 +113,7 @@ public:
     /**
      * Calculates the profile of positions for the arm
      */
-    unsigned int computeArmProfilePlanning();
+    unsigned int computeArmProfilePlanning(const std::vector<double> &vd_arm_readings);
 
     unsigned int computeAtomicOperation();
 };

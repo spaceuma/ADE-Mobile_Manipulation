@@ -49,6 +49,16 @@ private:
      */
     WaypointNavigation waypoint_navigation;
     /**
+     * Index to current segment 
+     */
+    int i_current_segment;
+    /**
+     * Index to initial segment 
+     */
+    int i_initial_segment;
+
+    bool b_is_last_segment;
+    /**
      * Vector of pointers to each waypoint of the present path 
      */
     std::vector<base::Waypoint *> vpw_path;
@@ -97,7 +107,7 @@ private:
     /**
      * Provides the next arm command according to the present situation 
      */
-    bool updateArmCommandAndPose(Joints &j_next_arm_command, const Joints &j_present_joints_m);
+    void updateArmCommandAndPose(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
 
@@ -146,4 +156,5 @@ public:
     void getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     void getAtomicCommand();
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
+    std::vector<double>* getArmCurrentReadings();
 };

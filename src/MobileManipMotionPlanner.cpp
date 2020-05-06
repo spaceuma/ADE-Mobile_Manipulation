@@ -126,7 +126,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
             return false;
         }
 	// The arm positions profile is to be computed
-        ui_code = this->p_motionplan->computeArmProfilePlanning();
+        ui_code = this->p_motionplan->computeArmProfilePlanning((*this->p_mmexecutor->getArmCurrentReadings()));
         switch (ui_code)
         {
             case 0:

@@ -5,7 +5,7 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,0); 
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,-1); 
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
 }
 
@@ -49,6 +49,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_posit
     }
     this->pmm_map->getCostMap(costMap);
     std::cout << "Rover pos is " << rover_position.position[0] << ", " << rover_position.position[1] << std::endl;
+    this->w_rover_pos = rover_position;
     if(this->bi_fast_marching.planPath(&costMap,
                                     this->pmm_map->getResolution(),
                                     rover_position,
@@ -152,9 +153,15 @@ bool MotionPlan::shortenPathForFetching()
     return true;
 }
 
-unsigned int MotionPlan::computeArmProfilePlanning()
+unsigned int MotionPlan::computeArmProfilePlanning(const std::vector<double> &vd_arm_readings)
 {
   //TODO - Create here several profiles: init, coupled, sweeping and retrieval
+    for (uint i = 0; i < 6; i++)
+    {
+        std::cout << " Joint " << i << " is " << vd_arm_readings[i] << std::endl;
+    }
+
+
     if (!this->pmm_map->isSampleLoaded())
     {
         return 3;
@@ -171,18 +178,32 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                     &(this->vvd_arm_motion_profile)))
     {
         // Initialization
-        std::vector<double> goalArmConfiguration = {0.797367, -1.5487, 2.48548, -2.23731, 1.14413, -0.484318};
-        std::vector<double> initialArmConfiguration = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
- 
-        if(this->isArmProfileSafe())
-	{
-	    
-	    	
-	    return 0;
-	}
-	else
-	{
-            return 1;
+        std::vector<double> goalArmConfiguration = this->vvd_arm_motion_profile[0];
+        for (uint i = 0; i < 6; i++)
+        {
+            std::cout << " Goal Joint " << i << " is " << goalArmConfiguration[i] << std::endl;
+        }
+        if(this->p_arm_planner->planAtomicOperation(&elevationMap,
+                                    this->pmm_map->getResolution(),
+                                    this->d_zres,
+                                    this->w_rover_pos,
+                                    vd_arm_readings,
+                                    goalArmConfiguration,
+                                    &(this->vvd_init_arm_profile),
+                                    &(this->vd_time_profile)))
+        {
+            if(this->isArmProfileSafe())
+	    {
+                return 0;
+	    }
+	    else
+	    {
+                return 1;
+	    }
+        }
+        else
+        {
+            return 2;
 	}
     }
     else
