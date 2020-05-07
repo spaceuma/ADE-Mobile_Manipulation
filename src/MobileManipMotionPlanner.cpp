@@ -126,7 +126,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
             return false;
         }
 	// The arm positions profile is to be computed
-        ui_code = this->p_motionplan->computeArmProfilePlanning((*this->p_mmexecutor->getArmCurrentReadings()));
+        ui_code = this->p_motionplan->computeArmProfilePlanning();
         switch (ui_code)
         {
             case 0:
@@ -286,6 +286,9 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                     return false;
 		case 7:
 		    setError(NON_RESP_ARM);// TODO - Shouldnt be better NON_FOLLOWING_ARM?
+		    return false;
+		case 8:
+		    setError(UNFEASIBLE_INIT);
 		    return false;
             }
             return false;

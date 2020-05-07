@@ -47,6 +47,10 @@ private:
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
     /**
+     * Profile of times related with the initialization operation
+     */
+    std::vector<double> vd_init_time_profile;
+    /**
      * Profile of times related with an atomic operation
      */
     std::vector<double> vd_time_profile;
@@ -95,6 +99,14 @@ public:
      */
     std::vector<std::vector<double>> *getArmMotionProfile();
     /**
+     * A pointer to the initial arm motion profile is returned
+     */
+    std::vector<std::vector<double>> *getInitArmMotionProfile();
+    /**
+     * A pointer to the initial arm motion profile is returned
+     */
+    std::vector<double> *getInitArmTimeProfile();
+    /**
      * A pointer to the time profile is returned
      */
     std::vector<double> *getTimeProfile();
@@ -110,10 +122,16 @@ public:
      * The path is shortened, ending in the best waypoint to fetch the sample
      */
     bool shortenPathForFetching();
+
     /**
      * Calculates the profile of positions for the arm
      */
-    unsigned int computeArmProfilePlanning(const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmProfilePlanning();
+
+    /**
+     * Calculates the profile of positions for the arm
+     */
+    unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
 
     unsigned int computeAtomicOperation();
 };
