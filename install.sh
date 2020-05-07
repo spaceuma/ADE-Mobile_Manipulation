@@ -50,6 +50,12 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
 make
 
+cd $cur/utils/simpleSweepingComputing
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
+make
+
 cd $cur
 
 
