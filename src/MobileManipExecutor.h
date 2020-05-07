@@ -79,6 +79,14 @@ private:
      */
     std::vector<std::vector<double>> *pvvd_arm_motion_profile;
     /**
+     * The initial arm motion profile
+     */
+    std::vector<std::vector<double>> *pvvd_init_arm_profile;
+    /**
+     * The initial arm motion times
+     */
+    std::vector<double> *pvd_init_time_profile;
+    /**
      * The next configuration to be reached by the arm 
      */
     std::vector<double> vd_arm_present_readings;
@@ -112,7 +120,8 @@ private:
     void fixMotionCommand(MotionCommand &mc_m);
 
     std::vector<double> vd_arm_posmargin = {0.2,0.2,0.2,0.2,0.2,0.2};// TODO - Adhoc margin for arm positions
-
+    int i_iteration_counter;
+    double d_call_period;
 public:
     /**
      * Class Constructor using the present motion plan 

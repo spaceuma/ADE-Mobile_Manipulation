@@ -153,21 +153,14 @@ bool MotionPlan::shortenPathForFetching()
     return true;
 }
 
-unsigned int MotionPlan::computeArmProfilePlanning(const std::vector<double> &vd_arm_readings)
+unsigned int MotionPlan::computeArmProfilePlanning()
 {
   //TODO - Create here several profiles: init, coupled, sweeping and retrieval
-    for (uint i = 0; i < 6; i++)
-    {
-        std::cout << " Joint " << i << " is " << vd_arm_readings[i] << std::endl;
-    }
-
 
     if (!this->pmm_map->isSampleLoaded())
     {
         return 3;
     }
-    this->vvd_arm_motion_profile.clear();
-    this->vvd_init_arm_profile.clear();
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
     if(this->p_arm_planner->planArmMotion(&(this->vw_rover_path),
@@ -178,33 +171,14 @@ unsigned int MotionPlan::computeArmProfilePlanning(const std::vector<double> &vd
                                     &(this->vvd_arm_motion_profile)))
     {
         // Initialization
-        std::vector<double> goalArmConfiguration = this->vvd_arm_motion_profile[0];
-        for (uint i = 0; i < 6; i++)
-        {
-            std::cout << " Goal Joint " << i << " is " << goalArmConfiguration[i] << std::endl;
-        }
-        if(this->p_arm_planner->planAtomicOperation(&elevationMap,
-                                    this->pmm_map->getResolution(),
-                                    this->d_zres,
-                                    this->w_rover_pos,
-                                    vd_arm_readings,
-                                    goalArmConfiguration,
-                                    &(this->vvd_init_arm_profile),
-                                    &(this->vd_time_profile)))
-        {
-            if(this->isArmProfileSafe())
-	    {
-                return 0;
-	    }
-	    else
-	    {
-                return 1;
-	    }
+        if(this->isArmProfileSafe())
+	{
+	    return 0;
         }
         else
-        {
-            return 2;
-	}
+	{
+	    return 1;
+        }	    
     }
     else
     {
@@ -212,6 +186,45 @@ unsigned int MotionPlan::computeArmProfilePlanning(const std::vector<double> &vd
     }
 }
 
+
+unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings)
+{
+    this->vvd_init_arm_profile.clear();
+    std::vector<std::vector<double>> elevationMap;
+    this->pmm_map->getElevationMapToZero(elevationMap);
+    // TODO: check if i_segment_m is valid!!
+    std::cout << "The segment is " << i_segment_m << std::endl;
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Actual Joint " << i << " is " << vd_arm_readings[i] << std::endl;
+    }
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Goal Joint " << i << " is " << this->vvd_arm_motion_profile[i_segment_m][i] << std::endl;
+    }
+    if(this->p_arm_planner->planAtomicOperation(&elevationMap,
+                                    this->pmm_map->getResolution(),
+                                    this->d_zres,
+                                    this->vw_rover_path[i_segment_m],
+                                    vd_arm_readings,
+                                    this->vvd_arm_motion_profile[i_segment_m],
+                                    &(this->vvd_init_arm_profile),
+                                    &(this->vd_init_time_profile)))
+    {
+        if(this->isArmProfileSafe())
+	{
+            return 0;
+	}
+	else
+	{
+            return 1;
+	}
+    }
+    else
+    {
+            return 2;
+    }   
+}
 
 unsigned int MotionPlan::computeAtomicOperation()
 {
@@ -300,6 +313,16 @@ std::vector<std::vector<double>> *MotionPlan::getWristPath()
 std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
 {
     return &(this->vvd_arm_motion_profile);
+}
+
+std::vector<std::vector<double>> *MotionPlan::getInitArmMotionProfile()
+{
+    return &(this->vvd_init_arm_profile);
+}
+
+std::vector<double> *MotionPlan::getInitArmTimeProfile()
+{
+    return &(this->vd_init_time_profile);
 }
 
 std::vector<double> *MotionPlan::getTimeProfile()
