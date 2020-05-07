@@ -1328,3 +1328,23 @@ std::vector<double> ArmPlanner::getTimeProfile(
     }
     return times;
 }
+
+void ArmPlanner::computeArmProfileGaussSmoothening(const std::vector<std::vector<double>> *armProfile,
+                                                   std::vector<std::vector<double>> *smoothedArmProfile,
+                                                   double sigma,
+                                                   int samples)
+{
+  (*smoothedArmProfile) = (*armProfile);
+   
+  for(int i = 0; i < (*armProfile)[0].size(); i++)
+  {
+    std::vector<double> jointProfile;
+    for(int j = 0; j < armProfile->size(); j++)
+      jointProfile.push_back((*armProfile)[j][i]);
+
+    std::vector<double> smoothedJointProfile = getGaussSmoothen(jointProfile,sigma,samples);
+    
+    for(int j = (samples/2+samples%2); j < armProfile->size()-(samples/2+samples%2); j++)
+      (*smoothedArmProfile)[j][i] = smoothedJointProfile[j];
+  }
+}
