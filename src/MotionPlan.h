@@ -47,6 +47,10 @@ private:
      */
     std::vector<std::vector<double>> vvd_arm_motion_profile;
     /**
+     * Profile of position values per joint and sample
+     */
+    std::vector<std::vector<double>> vvd_smoothed_arm_motion_profile;
+    /**
      * Profile of times related with the initialization operation
      */
     std::vector<double> vd_init_time_profile;
@@ -70,8 +74,10 @@ private:
      * Checks if the current path is smooth
      */
     bool isSmoothPath();
-    bool isArmProfileSafe();
+    bool isArmProfileSafe(const std::vector<std::vector<double>> &vvd_profile_m);
     base::Waypoint w_rover_pos;
+    double d_gauss_sigma = 5.0;
+    int i_gauss_numsamples = 5;
 public:
     /**
      * Class Constructor.
@@ -134,6 +140,7 @@ public:
     unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
 
     unsigned int computeAtomicOperation();
+    void setArmGaussFilter(double sigma, int numsamples);
 };
 
 #endif
