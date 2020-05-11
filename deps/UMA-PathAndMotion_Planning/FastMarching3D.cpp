@@ -4,6 +4,13 @@
 
 using namespace FastMarching_lib;
 
+FastMarching3D::FastMarching3D(double _waypointDistance)
+{
+    this->waypointDistance = _waypointDistance;
+}
+
+FastMarching3D::~FastMarching3D(){;}
+
 void FastMarching3D::planPath(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     double mapResolution,
@@ -31,7 +38,7 @@ void FastMarching3D::planPath(
     std::vector<std::vector<double>> *path
         = new std::vector<std::vector<double>>;
 
-    computePathGDM(TMap, start, goal, 0.5, path);
+    computePathGDM(TMap, start, goal, waypointDistance, path);
 
     path3D->resize(path->size());
 

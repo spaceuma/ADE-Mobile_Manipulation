@@ -11,8 +11,12 @@ class FastMarching
 private:
 public:
     // -- PARAMETERS --
+    double waypointDistance;
 
     // -- FUNCTIONS --
+    FastMarching(double _waypointDistance = 0.5);
+    ~FastMarching();
+
     void planPath(const std::vector<std::vector<double>> *costMap,
                   double mapResolution,
                   base::Waypoint iniPos,
@@ -65,8 +69,12 @@ class BiFastMarching
 private:
 public:
     // -- PARAMETERS --
+    double waypointDistance;
 
     // -- FUNCTIONS --
+    BiFastMarching(double _waypointDistance = 0.5);
+    ~BiFastMarching();
+
     bool planPath(const std::vector<std::vector<double>> *costMap,
                   double mapResolution,
                   base::Waypoint iniPos,
@@ -116,8 +124,12 @@ class BiFastMarching3D
 private:
 public:
     // -- PARAMETERS --
+    double waypointDistance;
 
     // -- FUNCTIONS --
+    BiFastMarching3D(double _waypointDistance = 0.5);
+    ~BiFastMarching3D();
+
     void planPath(
         const std::vector<std::vector<std::vector<double>>> *costMap3D,
         double mapResolution,
@@ -177,8 +189,12 @@ class FastMarching3D
 private:
 public:
     // -- PARAMETERS --
+    double waypointDistance;
 
     // -- FUNCTIONS --
+    FastMarching3D(double _waypointDistance = 0.5);
+    ~FastMarching3D();
+  
     void planPath(
         const std::vector<std::vector<std::vector<double>>> *costMap3D,
         double mapResolution,

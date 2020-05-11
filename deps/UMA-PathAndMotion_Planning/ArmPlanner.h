@@ -83,6 +83,15 @@ public:
                              std::vector<std::vector<double>> *armJoints,
                              std::vector<double> *timeProfile);
 
+    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
+                             double _mapResolution,
+                             double _zResolution,
+                             base::Waypoint roverWaypoint,
+                             base::Waypoint initialEEPosition,
+                             base::Waypoint goalEEPosition,
+                             std::vector<std::vector<double>> *armJoints,
+                             std::vector<double> *timeProfile);
+
     void generateTunnel(
         base::Waypoint iniPos,
         base::Waypoint samplePos,

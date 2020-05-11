@@ -4,6 +4,13 @@
 
 using namespace FastMarching_lib;
 
+BiFastMarching3D::BiFastMarching3D(double _waypointDistance)
+{
+    this->waypointDistance = _waypointDistance;
+}
+
+BiFastMarching3D::~BiFastMarching3D(){;}
+
 void BiFastMarching3D::planPath(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     double mapResolution,
@@ -37,8 +44,8 @@ void BiFastMarching3D::planPath(
     std::vector<std::vector<double>> *pathStart
         = new std::vector<std::vector<double>>;
 
-    computePathGDM(TMapGoal, (*nodeJoin), goal, 0.5, path);
-    computePathGDM(TMapStart, (*nodeJoin), start, 0.5, pathStart);
+    computePathGDM(TMapGoal, (*nodeJoin), goal, waypointDistance, path);
+    computePathGDM(TMapStart, (*nodeJoin), start, waypointDistance, pathStart);
 
     path->insert(path->begin(), pathStart->rbegin(), pathStart->rend() - 1);
 
