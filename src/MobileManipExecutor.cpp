@@ -1,6 +1,7 @@
 #include "MobileManipExecutor.h"
 #include "MotionCommand.h"
 #include "MotionPlan.h"
+#include "mmFileManager.h"
 
 MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings, std::string s_urdf_path_m )
 {
@@ -16,6 +17,12 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     {
         this->armstate = FORBIDDEN_POS; 
     }
+
+    this->pvvd_arm_sweeping_profile = new std::vector<std::vector<double>>;
+    this->pvd_arm_sweeping_times = new std::vector<double>;
+    readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt", (*this->pvvd_arm_sweeping_profile));
+    readVectorFile(s_urdf_path_m + "/sweepingTimes.txt", (*this->pvd_arm_sweeping_times));
+
     this->b_first_retrieval_point_reached = false;
     this->b_second_retrieval_point_reached = false;
     this->j_first_retrieval_position.m_jointStates.resize(6);
@@ -428,7 +435,7 @@ void MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command, co
 		bool b_end_condition = false, b_is_segment_changed = false;
 		std::cout << "The size of the time vector is " << (*this->pvd_init_time_profile).size() << std::endl;
 		std::cout << "The size of the arm profile vector is " << (*this->pvvd_init_arm_profile).size() << std::endl;
-	        while ((this->i_current_segment < (*this->pvvd_init_arm_profile).size())&&(!b_end_condition))
+	        while ((this->i_current_segment < (*this->pvvd_init_arm_profile).size()-1)&&(!b_end_condition))
 		{
                    std::cout << "Time Limit is " << (*this->pvd_init_time_profile)[this->i_current_segment] << " seconds " << std::endl;
 		   std::cout << "Elapsed Time is " << d_elapsed_init_time << " seconds " << std::endl;
@@ -459,6 +466,7 @@ void MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command, co
             {
                 j_next_arm_command.m_jointStates[i].m_position
                     = vd_arm_present_command[i];
+                //j_next_arm_command.m_jointStates[i].m_speed = 7.0/180.0*3.1416;
             }
 	    break;
         case FORBIDDEN_POS:

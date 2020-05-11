@@ -19,6 +19,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     // Each class contains a pointer to the previous one
     this->p_motionplan
         = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
+    this->p_motionplan->setArmGaussFilter(5.0,9);//TODO - Configurable parameters
     this->p_mmexecutor = new MobileManipExecutor(
         this->p_motionplan, j_present_readings, s_configfile_path_m);
 }

@@ -79,6 +79,14 @@ private:
      */
     std::vector<std::vector<double>> *pvvd_arm_motion_profile;
     /**
+     * The sweeping arm motion profile
+     */
+    std::vector<std::vector<double>> *pvvd_arm_sweeping_profile;
+    /**
+     * The initial arm motion times
+     */
+    std::vector<double> *pvd_arm_sweeping_times;
+    /**
      * The initial arm motion profile
      */
     std::vector<std::vector<double>> *pvvd_init_arm_profile;

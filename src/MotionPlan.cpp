@@ -171,8 +171,25 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                     &(this->vvd_arm_motion_profile)))
     {
         // Initialization
-        if(this->isArmProfileSafe())
+        if(this->isArmProfileSafe(this->vvd_arm_motion_profile))
 	{
+            
+            this->p_arm_planner->computeArmProfileGaussSmoothening(&(this->vvd_arm_motion_profile), &(this->vvd_smoothed_arm_motion_profile), this->d_gauss_sigma, this->i_gauss_numsamples);
+	    if (this->isArmProfileSafe(this->vvd_smoothed_arm_motion_profile))
+            {
+                this->vvd_arm_motion_profile.clear();
+                std::vector<double> row;
+                for (uint j = 0; j < vvd_smoothed_arm_motion_profile.size(); j++)
+                {
+                    for (uint i = 0; i < vvd_smoothed_arm_motion_profile[0].size(); i++)
+                    {
+                        row.push_back(vvd_smoothed_arm_motion_profile[j][i]);
+                    }
+                    this->vvd_arm_motion_profile.push_back(row);
+                    row.clear();
+                }
+                this->vvd_arm_motion_profile = this->vvd_smoothed_arm_motion_profile;
+	    } 
 	    return 0;
         }
         else
@@ -211,7 +228,7 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
                                     &(this->vvd_init_arm_profile),
                                     &(this->vd_init_time_profile)))
     {
-        if(this->isArmProfileSafe())
+        if(this->isArmProfileSafe(this->vvd_init_arm_profile))
 	{
             return 0;
 	}
@@ -259,7 +276,7 @@ unsigned int MotionPlan::computeAtomicOperation()
                                     &(this->vvd_arm_motion_profile),
                                     &(this->vd_time_profile)))
     {
-        if(this->isArmProfileSafe())
+        if(this->isArmProfileSafe(this->vvd_arm_motion_profile))
 	{
             return 0;
 	}
@@ -275,19 +292,19 @@ unsigned int MotionPlan::computeAtomicOperation()
   
 }
 
-bool MotionPlan::isArmProfileSafe()
+bool MotionPlan::isArmProfileSafe(const std::vector<std::vector<double>> &vvd_profile_m)
 {
-    for (int i = 0; i < this->vvd_arm_motion_profile.size(); i++)
+    for (int i = 0; i < vvd_profile_m.size(); i++)
     {
-        if (this->p_collision_detector->isColliding(this->vvd_arm_motion_profile[i]))
+        if (this->p_collision_detector->isColliding(vvd_profile_m[i]))
 	{
             std::cout << "ERROR at sample " << i << std::endl;
-            std::cout << " Joint 1 = " << this->vvd_arm_motion_profile[i][0];
-            std::cout << " Joint 2 = " << this->vvd_arm_motion_profile[i][1];
-            std::cout << " Joint 3 = " << this->vvd_arm_motion_profile[i][2];
-            std::cout << " Joint 4 = " << this->vvd_arm_motion_profile[i][3];
-            std::cout << " Joint 5 = " << this->vvd_arm_motion_profile[i][4];
-            std::cout << " Joint 6 = " << this->vvd_arm_motion_profile[i][5];
+            std::cout << " Joint 1 = " << vvd_profile_m[i][0];
+            std::cout << " Joint 2 = " << vvd_profile_m[i][1];
+            std::cout << " Joint 3 = " << vvd_profile_m[i][2];
+            std::cout << " Joint 4 = " << vvd_profile_m[i][3];
+            std::cout << " Joint 5 = " << vvd_profile_m[i][4];
+            std::cout << " Joint 6 = " << vvd_profile_m[i][5];
 	    return false;
 	}
     }
@@ -333,4 +350,17 @@ std::vector<double> *MotionPlan::getTimeProfile()
 std::vector<std::vector<std::vector<double>>> * MotionPlan::get3DCostMap()
 {
     return this->p_arm_planner->getVolumeCostMap();
+}
+
+
+void MotionPlan::setArmGaussFilter(double sigma, int numsamples)
+{
+    if (sigma > 0.0)
+    {
+        this->d_gauss_sigma = sigma;
+    }
+    if (numsamples > 0)
+    {
+        this->i_gauss_numsamples = numsamples;
+    }
 }
