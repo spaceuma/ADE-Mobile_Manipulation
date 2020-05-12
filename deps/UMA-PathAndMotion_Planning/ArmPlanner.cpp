@@ -1511,6 +1511,12 @@ void ArmPlanner::computeArmProfileGaussSmoothening(const std::vector<std::vector
                                                    double sigma,
                                                    int samples)
 {
+  if(samples%2 == 0)
+  {
+    samples++;
+    std::cout<<"WARNING [computeArmProfileGaussSmoothening]: number of samples should be odd, changing to "<<samples<<std::endl;
+  }
+
   (*smoothedArmProfile) = (*armProfile);
    
   for(int i = 0; i < (*armProfile)[0].size(); i++)
