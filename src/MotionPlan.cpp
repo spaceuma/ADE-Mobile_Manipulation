@@ -5,7 +5,7 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,-1); 
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,1); 
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
 }
 
@@ -359,7 +359,7 @@ void MotionPlan::setArmGaussFilter(double sigma, int numsamples)
     {
         this->d_gauss_sigma = sigma;
     }
-    if (numsamples > 0)
+    if (numsamples > 0) // TODO - Check if odd number
     {
         this->i_gauss_numsamples = numsamples;
     }

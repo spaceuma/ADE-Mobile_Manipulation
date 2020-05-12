@@ -117,18 +117,15 @@ private:
      */
     void initializeArmVariables(const Joints &j_present_readings);
     /**
-     * Returns a (0,0,0) rover command 
-     */
-    MotionCommand getZeroRoverCommand();
-    /**
      * Provides the next arm command according to the present situation 
      */
-    void updateArmCommandAndPose(Joints &j_next_arm_command, const Joints &j_present_joints_m);
+    bool updateArmCommandAndPose(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
 
     std::vector<double> vd_arm_posmargin = {0.2,0.2,0.2,0.2,0.2,0.2};// TODO - Adhoc margin for arm positions
     int i_iteration_counter;
+    int i_current_coverage_index; 
     double d_call_period;
 public:
     /**
@@ -170,8 +167,13 @@ public:
      * Checks if the arm is still following the arm commands 
      */
     bool isArmFollowing(const Joints &j_next_command, const Joints &j_present_joints);
+    /**
+     * Returns a (0,0,0) rover command 
+     */
+    MotionCommand getZeroRoverCommand();
     void getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     void getAtomicCommand();
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
+    unsigned int getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     std::vector<double>* getArmCurrentReadings();
 };

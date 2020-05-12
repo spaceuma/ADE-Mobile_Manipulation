@@ -235,7 +235,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                                                  Joints arm_joints)
 {
 
-    unsigned int ui_retrieval_code;
+    unsigned int ui_error_code = 0;
     switch (getStatus())
     {
         case EXECUTING_MOTION_PLAN:
@@ -259,7 +259,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                 = plpose_m.m_position.m_z;
             this->w_current_rover_position.heading = basepose.getYaw();
             // TODO: use w_current_rover_position instead of basepose
-            unsigned int ui_error_code = this->p_mmexecutor->getCoupledCommand(
+            ui_error_code = this->p_mmexecutor->getCoupledCommand(
                 basepose, arm_joints, rover_command, arm_command);
             switch (ui_error_code)
             {
@@ -296,9 +296,10 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             break;
         }
         case RETRIEVING_ARM:
-            ui_retrieval_code = this->p_mmexecutor->getRetrievalCommand(
+            ui_error_code = this->p_mmexecutor->getRetrievalCommand(
                 arm_joints, arm_command);
-            if (ui_retrieval_code == 2)
+            rover_command = this->p_mmexecutor->getZeroRoverCommand();
+            if (ui_error_code == 2)
             {
                 return false;
             }
@@ -306,7 +307,12 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             break;
         case EXECUTING_ARM_OPERATION:
             std::cout << "Status is Executing Arm Operation" << std::endl;
-            setStatus(RETRIEVING_ARM);
+            rover_command = this->p_mmexecutor->getZeroRoverCommand();
+            ui_error_code = this->p_mmexecutor->getCoverageCommand(arm_command, arm_joints); 
+	    if (ui_error_code == 1)
+            { 
+	        setStatus(RETRIEVING_ARM);
+            }
             return true;
         case ERROR:
             return false;
