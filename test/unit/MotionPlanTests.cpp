@@ -109,6 +109,8 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt");
 }
 
+// DEPRECATED
+/*
 TEST(MMMotionPlanTest, colliding_profile_test)
 {
  
@@ -124,8 +126,8 @@ TEST(MMMotionPlanTest, colliding_profile_test)
     unsigned int ui_error_code = 0;
 
     base::Waypoint w_rover_pos_01, samplePos;
-    ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
+    ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_04.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_03.txt")) << "Input Sample Waypoint file is missing";
 
     MobileManipMap mmmap_no_shadowing(vvd_elevation_map, vvd_cost_map_no_shadowing, res, samplePos, 1.0, 0.94);
     // Creating the Motion Plan
@@ -152,7 +154,7 @@ TEST(MMMotionPlanTest, colliding_profile_test)
     ui_error_code = mplan_no_shadowing.computeArmProfilePlanning();
     ASSERT_EQ(ui_error_code, 1);
 
-}
+}*/
 
 // TODO - Fix this part with new constructors
 /*TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
@@ -269,7 +271,7 @@ TEST(MMMotionPlanTest, non_reachable_test)
     unsigned int ui_error_code;
     ASSERT_NO_THROW(ui_error_code = mplan.computeRoverBasePathPlanning(
         w_rover_pos));
-    ASSERT_EQ(ui_error_code, 5)
+    ASSERT_EQ(ui_error_code, 4)
         << "\033[31m[----------]\033[0m Expected Error Code 5";
 }
 
@@ -283,8 +285,8 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_discontinuous.txt",
                                    vvd_cost_map));
     base::Waypoint w_rover_pos, samplePos;
-    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt")) << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
+    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_05.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_04.txt")) << "Input Sample Waypoint file is missing";
 
     double res = 0.1; // meters
     double zRes = 0.08;
@@ -311,7 +313,7 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
     unsigned int ui_error_code;
     ASSERT_NO_THROW(ui_error_code = mplan.computeRoverBasePathPlanning(
         w_rover_pos));
-    ASSERT_EQ(ui_error_code, 6)
+    ASSERT_EQ(ui_error_code, 5)
         << "\033[31m[----------]\033[0m Expected Error Code 6";
 }
 
@@ -325,7 +327,7 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_noShadowing.txt",
                                    vvd_cost_map));
     base::Waypoint w_rover_pos, samplePos;
-    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_04.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_03.txt")) << "Input Sample Waypoint file is missing";
 
     double res = 0.1; // meters
@@ -359,7 +361,8 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     savePath(mplan.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/sample_outoftunnel_path_01.txt");
-    ASSERT_FALSE(mplan.computeArmProfilePlanning());
+    ASSERT_NO_THROW(ui_error_code = mplan.computeArmProfilePlanning());
+    ASSERT_EQ(ui_error_code, 2);
 }
 
 

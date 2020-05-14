@@ -142,11 +142,11 @@ public:
     /**
      * Function to get the current elevation map
      */
-    void getElevationMap(std::vector<std::vector<double>> &vvd_elevation_map_m);
+    bool getElevationMap(std::vector<std::vector<double>> &vvd_elevation_map_m);
     /**
      * Function to get the current elevation map with its minimum starting at zero
      */
-    void getElevationMapToZero(std::vector<std::vector<double>> &vvd_elevation_map_m);
+    bool getElevationMapToZero(std::vector<std::vector<double>> &vvd_elevation_map_m);
     /**
      * Returns the map resolution --> d_res
      */

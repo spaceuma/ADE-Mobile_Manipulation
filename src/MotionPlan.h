@@ -86,7 +86,9 @@ public:
     /**
      * An existing path and profile are introduced into the motion plan 
      */
-    MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
+    MotionPlan(MobileManipMap * pmmmap_m,
+               double d_zres_m, std::string s_urdf_path_m,
+	       std::vector<Waypoint> &vw_rover_path_m,
                std::vector<std::vector<double>> &vj_joints_profile_m);    
     /**
      * A pointer to the current end effector path is returned

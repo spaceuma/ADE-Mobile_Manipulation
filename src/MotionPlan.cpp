@@ -9,10 +9,17 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
 }
 
-MotionPlan::MotionPlan(std::vector<Waypoint> &vw_rover_path_m,
+MotionPlan::MotionPlan(MobileManipMap * pmmmap_m,
+		       double d_zres_m, std::string s_urdf_path_m,
+		       std::vector<Waypoint> &vw_rover_path_m,
                        std::vector<std::vector<double>> &m_arm_motion_profile)
 {
+    this->pmm_map = pmmmap_m;
+    this->d_zres = d_zres_m;
+    this->s_urdf_path = s_urdf_path_m;
     this->vw_rover_path.clear();
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,1); 
+    this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
     for (uint i = 0; i < vw_rover_path_m.size(); i++)
     {
         this->vw_rover_path.push_back(vw_rover_path_m[i]);
@@ -48,7 +55,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(base::Waypoint rover_posit
         return 3;
     }
     this->pmm_map->getCostMap(costMap);
-    std::cout << "Rover pos is " << rover_position.position[0] << ", " << rover_position.position[1] << std::endl;
+//    std::cout << "Rover pos is " << rover_position.position[0] << ", " << rover_position.position[1] << std::endl;
     this->w_rover_pos = rover_position;
     if(this->bi_fast_marching.planPath(&costMap,
                                     this->pmm_map->getResolution(),
@@ -107,8 +114,8 @@ bool MotionPlan::shortenPathForFetching()
     else
     {
         int i_eraseIndex = endWaypoint + 1;
-	std::cout << "The path size is " << this->vw_rover_path.size() << std::endl;
-	std::cout << "The endWaypoint is " << endWaypoint << std::endl;
+	//std::cout << "The path size is " << this->vw_rover_path.size() << std::endl;
+	//std::cout << "The endWaypoint is " << endWaypoint << std::endl;
 	if (endWaypoint < this->vw_rover_path.size()-3)
         {
 	    double d_segmentX = this->vw_rover_path[i_eraseIndex].position[0] - this->vw_rover_path[endWaypoint].position[0];
@@ -121,7 +128,7 @@ bool MotionPlan::shortenPathForFetching()
                 d_segmentY = this->vw_rover_path[i_eraseIndex].position[1] - this->vw_rover_path[endWaypoint].position[1];
                 d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
 	    }
-	    std::cout << "The erase index is " << i_eraseIndex << std::endl;
+	    //std::cout << "The erase index is " << i_eraseIndex << std::endl;
             this->vw_rover_path.erase(this->vw_rover_path.begin() + i_eraseIndex,
                               this->vw_rover_path.end());
         }
@@ -144,7 +151,7 @@ bool MotionPlan::shortenPathForFetching()
                 d_segmentY = this->vw_rover_path[i_path_index].position[1] - this->vw_rover_path[0].position[1];
                 d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
 	    }
-	    std::cout << "The initial erase index is " << i_path_index << std::endl;
+	    //std::cout << "The initial erase index is " << i_path_index << std::endl;
             this->vw_rover_path.erase(this->vw_rover_path.begin(),
                               this->vw_rover_path.begin() + i_path_index);
       
@@ -208,7 +215,11 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
 {
     this->vvd_init_arm_profile.clear();
     std::vector<std::vector<double>> elevationMap;
-    this->pmm_map->getElevationMapToZero(elevationMap);
+    if(!this->pmm_map->getElevationMapToZero(elevationMap))
+    {
+        return 3;
+    }
+    // TODO: check if elevationMap is properly formatted
     // TODO: check if i_segment_m is valid!!
     std::cout << "The segment is " << i_segment_m << std::endl;
     for (uint i = 0; i < 6; i++)
@@ -219,15 +230,20 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
     {
             std::cout << " Goal Joint " << i << " is " << this->vvd_arm_motion_profile[i_segment_m][i] << std::endl;
     }
+
+    double dxyres = this->pmm_map->getResolution();
+    std::cout << " Resolution is " << dxyres << std::endl;
+    std::cout << " Z-res is " << this->d_zres << std::endl;
+
     if(this->p_arm_planner->planAtomicOperation(&elevationMap,
-                                    this->pmm_map->getResolution(),
+                                    dxyres,
                                     this->d_zres,
                                     this->vw_rover_path[i_segment_m],
                                     vd_arm_readings,
                                     this->vvd_arm_motion_profile[i_segment_m],
                                     &(this->vvd_init_arm_profile),
                                     &(this->vd_init_time_profile)))
-    {
+    {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...
         if(this->isArmProfileSafe(this->vvd_init_arm_profile))
 	{
             return 0;

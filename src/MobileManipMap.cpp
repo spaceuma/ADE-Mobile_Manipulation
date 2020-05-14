@@ -256,23 +256,39 @@ void MobileManipMap::getTraversabilityMap(
     vvi_traversability_map_m = this->vvi_traversability_map;
 }
 
-void MobileManipMap::getElevationMap(
+bool MobileManipMap::getElevationMap(
     std::vector<std::vector<double>> &vvd_elevation_map_m)
 {
-    vvd_elevation_map_m = this->vvd_elevation_map;
+    if (this->mapstate != NO_DEM)
+    {
+        vvd_elevation_map_m = this->vvd_elevation_map;
+	return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
-void MobileManipMap::getElevationMapToZero(
+bool MobileManipMap::getElevationMapToZero(
     std::vector<std::vector<double>> &vvd_elevation_map_m)
 {
-    vvd_elevation_map_m = this->vvd_elevation_map;
-    for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
+    if (this->mapstate != NO_DEM)
     {
-        for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
+        vvd_elevation_map_m = this->vvd_elevation_map;
+        for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
         {
-            vvd_elevation_map_m[j][i] -= getMinElevation();
+            for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
+            {
+                vvd_elevation_map_m[j][i] -= getMinElevation();
+            }
         }
+	return true;
     }
+    else
+    {
+        return false;
+    }	
 }
 
 

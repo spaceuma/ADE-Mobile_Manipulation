@@ -8,13 +8,42 @@
 
 TEST(MMExecutorTest, nominal_working_test)
 {
+    // Reading the DEM
+    std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_cost_map_no_shadowing, vvd_elevation_map;
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
+                       vvd_elevation_map));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
+                                   vvd_cost_map_shadowing));
+    base::Waypoint w_rover_pos_01, samplePos;
+    ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
+
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+
+    double res = 0.1; // meters
+    double zRes = 0.08;
+
+    MobileManipMap mmmap(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
+
 
     std::vector<Waypoint> vw_path;
     std::vector<std::vector<double>> vvd_arm_motion_profile;
     readPath("test/unit/data/input/MMExecutorTest/path.txt", vw_path);
     readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
                    vvd_arm_motion_profile);
-    MotionPlan * dummyPlan = new MotionPlan(vw_path, vvd_arm_motion_profile);
+    MotionPlan * dummyPlan = new MotionPlan(&mmmap, zRes, s_urdf_path, vw_path, vvd_arm_motion_profile);
 
     Pose robotPose, pose_robot_sim;
 
@@ -50,20 +79,9 @@ TEST(MMExecutorTest, nominal_working_test)
     robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
     robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt");
 
-    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
-    std::string s_urdf_path;
-    if (if_urdf_path.is_open())
-    {
-        std::getline(if_urdf_path, s_urdf_path);
-        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
-    }
-    else
-    {
-        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
-	throw "Cannot open urdf model path "; 
-    }
     MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints, s_urdf_path);
- 
+
+    std::cout << " The loop starts " << std::endl; 
     while (!dummyExecutor.isRoverFinished())
     {
 //	ASSERT_TRUE(dummyExecutor.isArmMoving(j_current_joints));
@@ -74,6 +92,7 @@ TEST(MMExecutorTest, nominal_working_test)
 	pose_robot_sim.position.x() += d_pos_error_x;
 	pose_robot_sim.position.y() += d_pos_error_y;
         pose_robot_sim.orientation = robotPose.orientation;
+	std::cout << " Call to getCoupledCommand()" << std::endl;
         ui_error_code = dummyExecutor.getCoupledCommand(pose_robot_sim, j_current_joints, mc, j_next_joints);
 	ASSERT_LE(ui_error_code,2);
         

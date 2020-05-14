@@ -126,6 +126,11 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 
     if ((this->armstate == INITIALIZING)&&(this->i_current_segment == 0))
     {
+        std::cout << " WN Current Segment = " << this->waypoint_navigation.getCurrentSegment() << std::endl;
+	for (uint i = 0; i < 6; i++)
+        {
+            std::cout << " Arm Present Reading " << i << " is " << this->vd_arm_present_readings[i] << std::endl;
+        }
         unsigned int ui_error_code = this->p_motion_plan->computeArmDeployment(this->waypoint_navigation.getCurrentSegment(), this->vd_arm_present_readings);
         if (ui_error_code != 0)
         {

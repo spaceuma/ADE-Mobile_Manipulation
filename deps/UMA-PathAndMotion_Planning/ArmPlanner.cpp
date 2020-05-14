@@ -324,7 +324,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
 bool ArmPlanner::planAtomicOperation(
     const std::vector<std::vector<double>> *_DEM,
-    double _mapResolution,
+    double d_mapResolution_m,
     double _zResolution,
     base::Waypoint roverWaypoint,
     std::vector<double> initialArmConfiguration,
@@ -332,8 +332,11 @@ bool ArmPlanner::planAtomicOperation(
     std::vector<std::vector<double>> *armJoints,
     std::vector<double> *timeProfile)
 {
-    this->mapResolution = _mapResolution;
+    
+    this->mapResolution = d_mapResolution_m;
+    std::cout << "Im here " << std::endl;
     this->zResolution = _zResolution;
+    std::cout << "Im here " << std::endl;
     this->DEM = _DEM;
 
     // Rover z coordinate and heading computation
@@ -351,6 +354,8 @@ bool ArmPlanner::planAtomicOperation(
 
     roverPath6 = new std::vector<std::vector<double>>;
     roverPath6->push_back(roverPose6);
+
+    std::cout << "Im here " << std::endl;
 
     // Initial arm pos computation
     std::vector<std::vector<double>> TBCS2Wrist
