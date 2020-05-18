@@ -101,6 +101,7 @@ public:
         base::Waypoint iniPos,
         base::Waypoint goalPos,
         std::vector<double> roverPose6,
+        bool isTunnelPermisive,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
 
     void computeWaypointAssignment(std::vector<int> *pathsAssignment);

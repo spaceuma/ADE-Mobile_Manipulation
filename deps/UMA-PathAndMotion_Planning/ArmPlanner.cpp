@@ -353,18 +353,24 @@ bool ArmPlanner::planAtomicOperation(
     roverPath6 = new std::vector<std::vector<double>>;
     roverPath6->push_back(roverPose6);
 
-
     // Initial arm pos computation
     std::vector<std::vector<double>> TBCS2Wrist
         = sherpa_tt_arm->getWristTransform(initialArmConfiguration);
 
-    std::vector<double> pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (!sherpa_tt_arm->isReachable(pos))
-    {
-        std::cout<<"The initial arm position is not reachable\n";
-        //return false;
-    }
+    bool isTunnelPermisive = false;
 
+    std::vector<double> pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+    if (sherpa_tt_arm->isReachable(pos)==1)
+    {
+        //std::cout<<"WARNING[planAtomicOperation]: initial arm configuration is outside security area\n";
+        isTunnelPermisive = true;
+    }
+    else if (sherpa_tt_arm->isReachable(pos)==0)
+    {
+        std::cout<<"ERROR[planAtomicOperation]: initial arm configuration is colliding or unreachable\n";
+        return false;
+    }
+    
     pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
     double roll = roverPose6[3];
     double pitch = roverPose6[4];
@@ -385,12 +391,17 @@ bool ArmPlanner::planAtomicOperation(
     TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
 
     pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (!sherpa_tt_arm->isReachable(pos))
+    if (sherpa_tt_arm->isReachable(pos)==1)
     {
-        std::cout<<"The goal arm position is not reachable\n";
-        //return false;
+        //std::cout<<"WARNING[planAtomicOperation]: goal arm configuration is outside security area\n";
+        isTunnelPermisive = true;
     }
-
+    else if (sherpa_tt_arm->isReachable(pos)==0)
+    {
+        std::cout<<"ERROR[planAtomicOperation]: goal arm configuration will lead to collision or is unreachable\n";
+        return false;
+    }
+    
     TW2Wrist = dot(TW2BCS, TBCS2Wrist);
 
     base::Waypoint goalPos;
@@ -421,7 +432,7 @@ bool ArmPlanner::planAtomicOperation(
                 (*volume_cost_map)[i][j][k] = INFINITY;
 
     // Generating the reachability tunnel surrounding the rover path
-    generateReachabilityTunnel(iniPos, goalPos, roverPose6, volume_cost_map);
+    generateReachabilityTunnel(iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
 
     // End effector path planning
     FastMarching_lib::FastMarching3D* pathPlanner3D = new FastMarching_lib::FastMarching3D(0.25);
@@ -532,13 +543,20 @@ bool ArmPlanner::planAtomicOperation(
     std::vector<std::vector<double>> TBCS2Wrist
         = dot(getTraslation(pos),getTraslation(EE2Wrist));
     
-    pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (!sherpa_tt_arm->isReachable(pos))
-    {
-        std::cout<<"The initial arm position is not reachable: ["<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<"]\n";
-        //return false;
-    }
+    bool isTunnelPermisive = false;
 
+    pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+    if (sherpa_tt_arm->isReachable(pos)==1)
+    {
+        //std::cout<<"WARNING[planAtomicOperation]: initial end effector position is outside security area\n";
+        isTunnelPermisive = true;
+    }
+    else if (sherpa_tt_arm->isReachable(pos)==0)
+    {
+        std::cout<<"ERROR[planAtomicOperation]: initial end effector position is colliding or unreachable\n";
+        return false;
+    }
+       
     pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
     double roll = roverPose6[3];
     double pitch = roverPose6[4];
@@ -560,10 +578,15 @@ bool ArmPlanner::planAtomicOperation(
     TBCS2Wrist = dot(getTraslation(pos),getTraslation(EE2Wrist));
 
     pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (!sherpa_tt_arm->isReachable(pos))
+    if (sherpa_tt_arm->isReachable(pos)==1)
     {
-        std::cout<<"The goal arm position is not reachable: ["<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<"]\n";
-        //return false;
+        //std::cout<<"WARNING[planAtomicOperation]: goal end effector position is outside security area\n";
+        isTunnelPermisive = true;
+    }
+    else if (sherpa_tt_arm->isReachable(pos)==0)
+    {
+        std::cout<<"ERROR[planAtomicOperation]: goal end effector position will lead to collision or is unreachable\n";
+        return false;
     }
 
     TW2Wrist = dot(TW2BCS, TBCS2Wrist);
@@ -596,7 +619,7 @@ bool ArmPlanner::planAtomicOperation(
                 (*volume_cost_map)[i][j][k] = INFINITY;
 
     // Generating the reachability tunnel surrounding the rover path
-    generateReachabilityTunnel(iniPos, goalPos, roverPose6, volume_cost_map);
+    generateReachabilityTunnel(iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
 
     // End effector path planning
     FastMarching_lib::FastMarching3D* pathPlanner3D = new FastMarching_lib::FastMarching3D(0.25);
@@ -750,7 +773,7 @@ void ArmPlanner::generateTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos))
+                    if (sherpa_tt_arm->isReachable(pos)==2)
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -837,7 +860,7 @@ void ArmPlanner::generateTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos))
+                    if (sherpa_tt_arm->isReachable(pos)==2)
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -949,7 +972,7 @@ void ArmPlanner::generateTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos))
+                    if (sherpa_tt_arm->isReachable(pos)==2)
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -1034,6 +1057,7 @@ void ArmPlanner::generateReachabilityTunnel(
     base::Waypoint iniPos,
     base::Waypoint goalPos,
     std::vector<double> roverPose6,
+    bool isTunnelPermisive,
     std::vector<std::vector<std::vector<double>>> *costMap3D)
 {
     int sx = (*costMap3D).size();
@@ -1090,7 +1114,8 @@ void ArmPlanner::generateReachabilityTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos))
+                    int reachability = sherpa_tt_arm->isReachable(pos);
+                    if (reachability == 2 || (reachability == 1 && isTunnelPermisive))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -1098,12 +1123,16 @@ void ArmPlanner::generateReachabilityTunnel(
                         int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
-                        double cost
-                            = 1
-                              + slope
-                                    / sherpa_tt_arm->getDistanceToCollision(
-                                          pos);
-
+  
+                        double cost;
+                        if(reachability == 2)
+                            cost
+                               = 1
+                                  + slope
+                                        / sherpa_tt_arm->getDistanceToCollision(
+                                              pos);
+                        else
+                            cost = 10;
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
