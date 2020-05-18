@@ -10,7 +10,6 @@ int main(int argc, char* argv[])
 
   std::vector<double> position;
   readVectorFile("../position.txt", position);
-  position[0] += 0.300;
 
   std::vector<double> orientation;
   readVectorFile("../orientation.txt", orientation);
@@ -29,7 +28,7 @@ int main(int argc, char* argv[])
   //manip_joints = manip->getManipJoints(position, orientation,1,1);
   readVectorFile("../configuration.txt", manip_joints);
 
-  CollisionDetector* p_collision_detector = new CollisionDetector(s_urdf_path);
+  CollisionDetector* p_collision_detector = new CollisionDetector(s_urdf_path, false);
 
   bool colliding = p_collision_detector->isColliding(manip_joints);
 

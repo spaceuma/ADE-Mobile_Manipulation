@@ -125,7 +125,7 @@ public:
 
     void computeReachabilityMap(const double resXY, const double resZ);
 
-    bool isReachable(std::vector<double> position);
+    int isReachable(std::vector<double> position);
 
     double getDistanceToCollision(std::vector<double> position);
 };

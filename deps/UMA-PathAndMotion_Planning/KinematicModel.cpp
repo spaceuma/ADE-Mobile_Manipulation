@@ -944,7 +944,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     std::vector<std::vector<std::vector<double>>> reachabilityMap(
         sizeXY,
         std::vector<std::vector<double>>(sizeXY,
-                                         std::vector<double>(sizeZ, 1)));
+                                         std::vector<double>(sizeZ, 2)));
     std::vector<double> position;
     CollisionDetector *p_collision_detector
         = new CollisionDetector(s_data_path_m);
@@ -964,31 +964,38 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                     std::vector<double> config
                         = getPositionJoints(position, 1, 1);
                     config.resize(6);
-
-                    for (int l = 0; l < 6; l++)
+                  
+                    if (!p_collision_detector->isWristColliding(config))
                     {
-                        config[3] = l * res4;
-                        for (int m = 0; m < 12; m++)
+                        for (int l = 0; l < 6; l++)
                         {
-                            config[4] = -110 * M_PI / 180 + m * res5;
-                            for (int n = 0; n < 3; n++)
+                            config[3] = l * res4;
+                            for (int m = 0; m < 12; m++)
                             {
-                                config[5] = n * res6;
-                                // std::cout << ". Config: ["<<config[0]<<",
-                                // "<<config[1]<<", "<<config[2]<<",
-                                // "<<config[3]<<", "<<config[4]<<",
-                                // "<<config[5]<<"]";
-                                std::cout << std::flush;
-
-                                if (p_collision_detector->isColliding(config))
+                                config[4] = -110 * M_PI / 180 + m * res5;
+                                for (int n = 0; n < 3; n++)
                                 {
-                                    reachabilityMap[i][j][k] = 0;
-                                    break;
+                                    config[5] = n * res6;
+                                    // std::cout << ". Config: ["<<config[0]<<",
+                                    // "<<config[1]<<", "<<config[2]<<",
+                                    // "<<config[3]<<", "<<config[4]<<",
+                                    // "<<config[5]<<"]";
+                                    std::cout << std::flush;
+
+                                    if (p_collision_detector->isColliding(config))
+                                    {
+                                        reachabilityMap[i][j][k] = 1;
+                                        break;
+                                    }
                                 }
+                                if (reachabilityMap[i][j][k]==1) break;
                             }
-                            if (!reachabilityMap[i][j][k]) break;
+                            if (reachabilityMap[i][j][k]==1) break;
                         }
-                        if (!reachabilityMap[i][j][k]) break;
+                    }
+                    else
+                    {
+                        reachabilityMap[i][j][k] = 0;
                     }
                 }
                 catch (std::exception &e)
@@ -1004,7 +1011,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                s_data_path_m + "/reachabilityMap.txt");
 }
 
-bool Manipulator::isReachable(std::vector<double> position)
+int Manipulator::isReachable(std::vector<double> position)
 {
     int ix = (int)((position[0] - (*minValues)[0]) / (*resolutions)[0] + 0.5);
     int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
@@ -1016,7 +1023,7 @@ bool Manipulator::isReachable(std::vector<double> position)
         return (*reachabilityMap)[ix][iy][iz];
     else
     {
-        return false;
+        return 0;
     }
 }
 
