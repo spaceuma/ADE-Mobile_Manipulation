@@ -8,16 +8,8 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     this->initializeArmVariables(j_present_readings); 
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
+    this->armstate = INITIALIZING;
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
-    if (!isArmColliding())
-    {
-        this->armstate = INITIALIZING;
-    }
-    else
-    {
-        this->armstate = FORBIDDEN_POS; 
-    }
-
     this->pvvd_arm_sweeping_profile = new std::vector<std::vector<double>>;
     this->pvd_arm_sweeping_times = new std::vector<double>;
     readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt", (*this->pvvd_arm_sweeping_profile));
@@ -82,6 +74,7 @@ void MobileManipExecutor::updateMotionPlan()
     this->b_first_retrieval_point_reached = false;
     this->b_second_retrieval_point_reached = false;
     this->d_call_period = 0.5; // TODO: MAKE THIS CONFIGURABLE!!!
+    this->i_iteration_counter = 0;
 }
 
 
@@ -124,19 +117,31 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
             std::cout << " Executor Goal Joint " << i << " is " << (*this->pvvd_arm_motion_profile)[this->waypoint_navigation.getCurrentSegment()][i] << std::endl;
     }
 
-    if ((this->armstate == INITIALIZING)&&(this->i_current_segment == 0))
+    this->updateArmPresentReadings(j_arm_present_readings_m);
+    
+    if (this->isArmColliding())
+    {
+        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            j_next_arm_command_m.m_jointStates[i].m_position
+                = j_arm_present_readings_m.m_jointStates[i].m_position;
+        }
+        mc_m = this->getZeroRoverCommand();
+        return 6;
+    }
+
+    if ((this->armstate == INITIALIZING)&&(this->i_iteration_counter == 0))
     {
         std::cout << " WN Current Segment = " << this->waypoint_navigation.getCurrentSegment() << std::endl;
 	for (uint i = 0; i < 6; i++)
         {
             std::cout << " Arm Present Reading " << i << " is " << this->vd_arm_present_readings[i] << std::endl;
         }
-        unsigned int ui_error_code = this->p_motion_plan->computeArmDeployment(this->waypoint_navigation.getCurrentSegment(), this->vd_arm_present_readings);
-	std::cout << "The arm deployment is computed" << std::endl;
-        if (ui_error_code != 0)
+	if (this->p_motion_plan->computeArmDeployment(this->waypoint_navigation.getCurrentSegment(), this->vd_arm_present_readings) != 0)
         {
-             return 8;
+               return 8;
 	}	
+	std::cout << "The arm deployment is computed" << std::endl;	
 	this->pvvd_init_arm_profile  
                     = this->p_motion_plan->getInitArmMotionProfile();
         this->pvd_init_time_profile  
@@ -145,34 +150,36 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 
     // Getting Arm Command
     this->prepareNextArmCommand(j_next_arm_command_m);
-    this->updateArmPresentReadings(j_arm_present_readings_m);
 
-    bool b_isReady = this->updateArmCommandAndPose(j_next_arm_command_m);
+    this->updateArmCommandAndPose(j_next_arm_command_m);
+
     std::cout << "The Rover Segment is " << this->waypoint_navigation.getCurrentSegment() << std::endl;
     std::cout << "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
     std::cout << "The state is " << this->armstate << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
-            if (this->isArmColliding())
-	    {
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+	    double d_elapsed_init_time;
+	    // Keep track of vdd_init_arm_profile
+	    std::cout << " Creating initialization command" << std::endl;
+            d_elapsed_init_time = (double)this->i_iteration_counter * this->d_call_period;
+            if (this->i_current_segment < (*this->pvvd_init_arm_profile).size()-1)
+            {
+                if ((*this->pvd_init_time_profile)[this->i_current_segment]*5.0 <= d_elapsed_init_time)//TODO - ADHOC value to make this slower
                 {
-                    j_next_arm_command_m.m_jointStates[i].m_position
-                        = j_arm_present_readings_m.m_jointStates[i].m_position;
-                }
-		mc_m = this->getZeroRoverCommand();
-		this->armstate = FORBIDDEN_POS;
-		return 6;
-	    }
+                    this->i_current_segment++;
+		    this->updateArmCommandVectors((*this->pvvd_init_arm_profile)[this->i_current_segment]);   
+		}
+            }
+            this->i_iteration_counter++;
+	    this->assignPresentCommand(j_next_arm_command_m);
             // TODO - Check if it is following!!
-	    /*if (this->isArmReady(j_next_arm_command_m, j_arm_present_readings_m))
-	    {
-                this->armstate = READY; 
-            }*/
 
             fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
-            if (b_isReady&&(this->i_current_segment >= this->pvvd_init_arm_profile->size()-1)&&(mc_m.m_manoeuvreType == 0))
+            if (((*this->pvd_init_time_profile)[(*this->pvvd_init_arm_profile).size()-1]*5.0 < 
+		 (double)this->i_iteration_counter * this->d_call_period) &&
+	        (this->i_current_segment >= this->pvvd_init_arm_profile->size()-1) &&
+		(mc_m.m_manoeuvreType == 0))
             {  // If the arm is ready and the rover is going to start with an ackemann
                this->i_initial_segment = this->waypoint_navigation.getCurrentSegment();
 	       this->i_current_segment = this->i_initial_segment;
@@ -183,37 +190,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
                 mc_m = this->getZeroRoverCommand();
             }
 	    return 0;
-	case FORBIDDEN_POS:
-            mc_m = this->getZeroRoverCommand();
-	    if (!this->isArmColliding())
-	    {
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-                {
-                    j_next_arm_command_m.m_jointStates[i].m_position
-                        = j_arm_present_readings_m.m_jointStates[i].m_position;
-                }
-		this->armstate = INITIALIZING;
-		return 0;
-	    }
-	    else
-	    {
-		return 5;
-	    }
 	case READY:
             this->armstate = COUPLED_MOVING;
 	    return 1;
 	case COUPLED_MOVING:
-	    if (this->isArmColliding())
-	    {
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-                {
-                    j_next_arm_command_m.m_jointStates[i].m_position
-                        = j_arm_present_readings_m.m_jointStates[i].m_position;
-                }
-		mc_m = this->getZeroRoverCommand();
-		this->armstate = FORBIDDEN_POS;
-		return 6;
-	    }
             if (!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
@@ -244,6 +224,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	    { 
                 mc_m = this->getZeroRoverCommand();
 		this->armstate = SAMPLING_POS;
+		this->i_current_coverage_index = 0;
+		this->i_iteration_counter = 0;
 		return 2;
 	    }
 	    return 1;
@@ -255,71 +237,43 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 
 unsigned int MobileManipExecutor::getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m)
 {
-    double d_elapsed_time;
-
+    // TODO: introduce followingarm checker
+    double d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
+    bool b_is_finished = false;
+    
     this->prepareNextArmCommand(j_next_arm_command);
-
     this->updateArmPresentReadings(j_present_joints_m); 
-
-  // TODO - Check size of pvvd_arm_sweeping_profile is bigger than 3
-    if ((this->i_current_coverage_index == 0))
-    { 
-        this->i_iteration_counter = 0;
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-        {
-            this->vd_arm_previous_command[i] = (*this->pvvd_arm_sweeping_profile)[0][i];
-        }
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-        {
-            this->vd_arm_present_command[i] = (*this->pvvd_arm_sweeping_profile)[1][i];
-        }
-        this->i_current_coverage_index = 1;   
-    }
-    else
+    if (this->i_current_coverage_index < (*this->pvvd_arm_sweeping_profile).size()-1)
     {
-        this->i_iteration_counter++;
-        bool b_end_condition = false, b_is_segment_changed = false;
-        d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
-        std::cout << "The size of the time vector is " << (*this->pvd_arm_sweeping_times).size() << std::endl;
-        std::cout << "The size of the arm profile vector is " << (*this->pvvd_arm_sweeping_profile).size() << std::endl;
-        while ((this->i_current_coverage_index < (*this->pvvd_arm_sweeping_profile).size()-1)&&(!b_end_condition))
+        if ((*this->pvd_arm_sweeping_times)[this->i_current_coverage_index]*2.0 <= d_elapsed_time)//TODO - ADHOC value to make this slower
         {
-                   std::cout << "Time Limit is " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] << " seconds " << std::endl;
-		   std::cout << "Elapsed Time is " << d_elapsed_time << " seconds " << std::endl;
-                   if ((*this->pvd_arm_sweeping_times)[this->i_current_coverage_index]*2.0 > d_elapsed_time)//TODO - ADHOC value to make this slower
-                   {
-                       b_end_condition = true;
-		   } 
-		   else
-                   {
-                       this->i_current_coverage_index++;
-		       b_is_segment_changed = true;
-		   }
-        }
-        if (b_is_segment_changed)
-        {
-            for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-            {
-                this->vd_arm_previous_command[i] = this->vd_arm_present_command[i];
-                this->vd_arm_present_command[i] = (*this->pvvd_arm_sweeping_profile)[this->i_current_coverage_index][i];
-            }   
-        }
+            this->i_current_coverage_index++;
+            this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)[this->i_current_coverage_index]);   
+	}
+    }
+    else if ((*this->pvd_arm_sweeping_times)[(*this->pvvd_arm_sweeping_profile).size()-1]*2.0 < d_elapsed_time)
+    {
+            b_is_finished = true; 
     }
     std::cout << "The Coverage Index is " << i_current_coverage_index << std::endl;
-    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-    {
-                j_next_arm_command.m_jointStates[i].m_position
-                    = vd_arm_present_command[i];
-    }
-    d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
-    std::cout << "Final Time is " << (*this->pvd_arm_sweeping_times)[(*this->pvvd_arm_sweeping_profile).size()-1] << std::endl;
-    if ((i_current_coverage_index >= (*this->pvvd_arm_sweeping_profile).size()-1)&&((*this->pvd_arm_sweeping_times)[(*this->pvvd_arm_sweeping_profile).size()-1]*2.0 < d_elapsed_time))
+    this->assignPresentCommand(j_next_arm_command); 
+    this->i_iteration_counter++;
+    if (b_is_finished)
     {
         return 1;
     }
     else
     {
         return 0;
+    }
+}
+
+void MobileManipExecutor::assignPresentCommand(Joints &j_command)
+{
+    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+    {
+        j_command.m_jointStates[i].m_position
+            = vd_arm_present_command[i];
     }
 }
 
@@ -486,83 +440,15 @@ bool MobileManipExecutor::updateArmCommandVectors(const std::vector<double> &vd_
     }
 }
 
-bool MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command)
+void MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command)
 {
-    bool b_isReady = false;
 
     int i_actual_segment = this->waypoint_navigation.getCurrentSegment();
 
     switch (armstate)
     {
         case INITIALIZING:
-	    double d_elapsed_init_time;
-	    // Keep track of vdd_init_arm_profile
-	    std::cout << " Creating initialization command" << std::endl;
-	    if ((this->i_current_segment == 0))
-            {
-                std::cout << " Im here " << std::endl; 
-                this->i_iteration_counter = 0;
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-                {
-                    this->vd_arm_previous_command[i] = (*this->pvvd_init_arm_profile)[0][i];
-                }
-		if ((*this->pvvd_init_arm_profile).size() > 1)
-	        {
-                    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-                    {
-                        this->vd_arm_present_command[i] = (*this->pvvd_init_arm_profile)[1][i];
-                    }
-		    this->i_current_segment = 1;   
-		}
-		else
-                {
-                    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-                    {
-                        this->vd_arm_present_command[i] = (*this->pvvd_init_arm_profile)[0][i];
-                    }   
-		}
-	    }
-	    else
-            {
-                this->i_iteration_counter++;
-		d_elapsed_init_time = (double)this->i_iteration_counter * this->d_call_period;
-
-                if (this->i_current_segment < (*this->pvvd_init_arm_profile).size()-1)
-                {
-                    if ((*this->pvd_init_time_profile)[this->i_current_segment]*5.0 <= d_elapsed_init_time)//TODO - ADHOC value to make this slower
-                    {
-                        this->i_current_segment++;
-		        this->updateArmCommandVectors((*this->pvvd_init_arm_profile)[this->i_current_segment]);   
-		    }
-                }
-	    }
-	    // if current pos is reached
-	    //  - Update vd_arm_previous_command
-	    //  - i_current_segment++
-	    //  - Update vd_arm_present_command
-	    //
-            for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-            {
-                j_next_arm_command.m_jointStates[i].m_position
-                    = vd_arm_present_command[i];
-                //j_next_arm_command.m_jointStates[i].m_speed = 7.0/180.0*3.1416;
-            }
-            d_elapsed_init_time = (double)this->i_iteration_counter * this->d_call_period;
-            if ((*this->pvd_init_time_profile)[(*this->pvvd_init_arm_profile).size()-1]*5.0 < d_elapsed_init_time)
-            {
-                b_isReady = true;
-	    }
-	    else
-            {
-                b_isReady = false;
-	    }
 	    break;
-        case FORBIDDEN_POS:
-            for (uint i = 0; i < 6; i++)// TODO - make this a function to stop the arm
-            {
-                j_next_arm_command.m_jointStates[i].m_position = this->vd_arm_present_readings[i]; 
-            }
-            break;	
 	default:
             if ((this->i_current_segment == this->i_initial_segment)||(this->i_current_segment != i_actual_segment))
             {
@@ -577,14 +463,9 @@ bool MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command)
                     &(this->vd_arm_present_command),
                     true);
             }
-            for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-            {
-                j_next_arm_command.m_jointStates[i].m_position
-                    = vd_arm_present_command[i];
-            }
+	    this->assignPresentCommand(j_next_arm_command);
             break;	
     }
-    return b_isReady;
 }
 
 bool MobileManipExecutor::prepareNextArmCommand(Joints &j_next_arm_command)

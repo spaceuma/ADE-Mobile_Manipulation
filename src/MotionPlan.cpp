@@ -7,6 +7,8 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->s_urdf_path = s_urdf_path_m;
     this->p_arm_planner = new ArmPlanner(s_urdf_path_m,false,1); 
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
+    this->b_is_retrieval_computed = false;
+    this->b_is_initialization_computed = false;
 }
 
 MotionPlan::MotionPlan(MobileManipMap * pmmmap_m,
@@ -163,7 +165,8 @@ bool MotionPlan::shortenPathForFetching()
 unsigned int MotionPlan::computeArmProfilePlanning()
 {
   //TODO - Create here several profiles: init, coupled, sweeping and retrieval
-
+    this->b_is_retrieval_computed = false;
+    this->b_is_initialization_computed = false;
     if (!this->pmm_map->isSampleLoaded())
     {
         return 3;
@@ -214,6 +217,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
 unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings)
 {
     this->vvd_init_arm_profile.clear();
+    this->b_is_initialization_computed = false;
     std::vector<std::vector<double>> elevationMap;
     if(!this->pmm_map->getElevationMapToZero(elevationMap))
     {
@@ -246,6 +250,7 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
     {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...
         if(this->isArmProfileSafe(this->vvd_init_arm_profile))
 	{
+            this->b_is_initialization_computed = true;
             return 0;
 	}
 	else
@@ -380,3 +385,14 @@ void MotionPlan::setArmGaussFilter(double sigma, int numsamples)
         this->i_gauss_numsamples = numsamples;
     }
 }
+
+bool MotionPlan::isRetrievalComputed()
+{
+    return b_is_retrieval_computed;
+}
+
+bool MotionPlan::isInitializationComputed()
+{
+    return b_is_initialization_computed;
+}
+

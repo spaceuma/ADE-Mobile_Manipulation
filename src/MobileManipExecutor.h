@@ -13,7 +13,6 @@ using namespace coupled_control;
 enum ArmExecutionState
 {
     INITIALIZING = 0,        // 0
-    FORBIDDEN_POS, //1
     READY,           // 2 
     COUPLED_MOVING,     // 3
     SAMPLING_POS,  // 4
@@ -119,7 +118,7 @@ private:
     /**
      * Provides the next arm command according to the present situation 
      */
-    bool updateArmCommandAndPose(Joints &j_next_arm_command);
+    void updateArmCommandAndPose(Joints &j_next_arm_command);
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
 
@@ -128,6 +127,7 @@ private:
     bool updateArmCommandVectors();
     bool updateArmCommandVectors(const std::vector<double> &vd_present_command_m);
 
+    void assignPresentCommand(Joints &j_command);
     std::vector<double> vd_arm_posmargin = {0.2,0.2,0.2,0.2,0.2,0.2};// TODO - Adhoc margin for arm positions
     int i_iteration_counter;
     int i_current_coverage_index; 

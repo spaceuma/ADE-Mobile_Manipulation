@@ -78,6 +78,10 @@ private:
     base::Waypoint w_rover_pos;
     double d_gauss_sigma = 5.0;
     int i_gauss_numsamples = 5;
+
+    bool b_is_retrieval_computed;
+    bool b_is_initialization_computed;
+
 public:
     /**
      * Class Constructor.
@@ -131,6 +135,8 @@ public:
      */
     bool shortenPathForFetching();
 
+    bool isRetrievalComputed();
+    bool isInitializationComputed();
     /**
      * Calculates the profile of positions for the arm
      */
