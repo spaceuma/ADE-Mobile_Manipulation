@@ -15,6 +15,14 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt", (*this->pvvd_arm_sweeping_profile));
     readVectorFile(s_urdf_path_m + "/sweepingTimes.txt", (*this->pvd_arm_sweeping_times));
 
+    this->vd_retrieval_position.resize(6);
+    this->vd_retrieval_position[0] = 0.45;
+    this->vd_retrieval_position[1] = -1.83;
+    this->vd_retrieval_position[2] = 2.79;
+    this->vd_retrieval_position[3] = 0.0;
+    this->vd_retrieval_position[4] = -0.5;
+    this->vd_retrieval_position[5] = 2.3562;
+    
     this->b_first_retrieval_point_reached = false;
     this->b_second_retrieval_point_reached = false;
     this->j_first_retrieval_position.m_jointStates.resize(6);
@@ -66,6 +74,7 @@ void MobileManipExecutor::updateMotionPlan()
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
+    this->i_current_retrieval_index = 0;
     // Extract and store the joints profile
     this->pvvd_arm_motion_profile
         = this->p_motion_plan->getArmMotionProfile();
@@ -140,12 +149,21 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 	if (this->p_motion_plan->computeArmDeployment(this->waypoint_navigation.getCurrentSegment(), this->vd_arm_present_readings) != 0)
         {
                return 8;
-	}	
+	}
 	std::cout << "The arm deployment is computed" << std::endl;	
+        if (this->p_motion_plan->computeArmRetrieval((*this->pvvd_arm_sweeping_profile)[(*this->pvvd_arm_sweeping_profile).size()-1],this->vd_retrieval_position) != 0)
+        {
+               return 8;
+	}
+	std::cout << "The arm retrieval is computed" << std::endl;	
 	this->pvvd_init_arm_profile  
                     = this->p_motion_plan->getInitArmMotionProfile();
         this->pvd_init_time_profile  
                     = this->p_motion_plan->getInitArmTimeProfile();
+        this->pvvd_retrieval_arm_profile  
+                    = this->p_motion_plan->getRetrievalArmMotionProfile();
+        this->pvd_retrieval_time_profile  
+                    = this->p_motion_plan->getRetrievalArmTimeProfile();
     }
 
     // Getting Arm Command
@@ -225,6 +243,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
                 mc_m = this->getZeroRoverCommand();
 		this->armstate = SAMPLING_POS;
 		this->i_current_coverage_index = 0;
+		this->i_current_retrieval_index = 0;
 		this->i_iteration_counter = 0;
 		return 2;
 	    }
@@ -268,6 +287,11 @@ unsigned int MobileManipExecutor::getCoverageCommand(Joints &j_next_arm_command,
     }
 }
 
+void MobileManipExecutor::resetIterator()
+{
+    this->i_iteration_counter = 0;
+}
+
 void MobileManipExecutor::assignPresentCommand(Joints &j_command)
 {
     for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
@@ -277,10 +301,39 @@ void MobileManipExecutor::assignPresentCommand(Joints &j_command)
     }
 }
 
-unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m)
+unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_present_joints_m, Joints &j_next_arm_command)
 {
-   
-    this->prepareNextArmCommand(j_next_arm_command_m);
+     // TODO: introduce followingarm checker
+    double d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
+    bool b_is_finished = false;
+    
+    this->prepareNextArmCommand(j_next_arm_command);
+    this->updateArmPresentReadings(j_present_joints_m); 
+    if (this->i_current_retrieval_index < (*this->pvvd_retrieval_arm_profile).size()-1)
+    {
+        if ((*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index]*2.0 <= d_elapsed_time)//TODO - ADHOC value to make this slower
+        {
+            this->i_current_retrieval_index++;
+            this->updateArmCommandVectors((*this->pvvd_retrieval_arm_profile)[this->i_current_retrieval_index]);   
+	}
+    }
+    else if ((*this->pvd_retrieval_time_profile)[(*this->pvvd_retrieval_arm_profile).size()-1]*2.0 < d_elapsed_time)
+    {
+            b_is_finished = true; 
+    }
+    std::cout << "The Retrieval Index is " << i_current_retrieval_index << std::endl;
+    this->assignPresentCommand(j_next_arm_command); 
+    this->i_iteration_counter++;
+    if (b_is_finished)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+  
+/*    this->prepareNextArmCommand(j_next_arm_command_m);
 
     this->updateArmPresentReadings(j_arm_present_readings_m); 
 
@@ -329,7 +382,7 @@ unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_arm_presen
             }
 	return 0;
       } 
-   }
+   }*/
 }
 
 

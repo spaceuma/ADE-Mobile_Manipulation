@@ -264,6 +264,53 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
     }   
 }
 
+unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init, const std::vector<double> &vd_goal)
+{
+    this->vvd_retrieval_arm_profile.clear();
+    this->b_is_retrieval_computed = false;
+    std::vector<std::vector<double>> elevationMap;
+    if(!this->pmm_map->getElevationMapToZero(elevationMap))
+    {
+        return 3;
+    }
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Final Sampling Joint " << i << " is " << vd_init[i] << std::endl;
+    }
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Retrieval Joint " << i << " is " << vd_goal[i] << std::endl;
+    }
+
+    double dxyres = this->pmm_map->getResolution();
+    std::cout << " Resolution is " << dxyres << std::endl;
+    std::cout << " Z-res is " << this->d_zres << std::endl;
+
+    if(this->p_arm_planner->planAtomicOperation(&elevationMap,
+                                    dxyres,
+                                    this->d_zres,
+                                    this->vw_rover_path[this->vw_rover_path.size()-1],
+                                    vd_init,
+                                    vd_goal,
+                                    &(this->vvd_retrieval_arm_profile),
+                                    &(this->vd_retrieval_time_profile)))
+    {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...
+        if(this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
+	{
+            this->b_is_retrieval_computed = true;
+            return 0;
+	}
+	else
+	{
+            return 1;
+	}
+    }
+    else
+    {
+            return 2;
+    }   
+}
+
 unsigned int MotionPlan::computeAtomicOperation()
 {
     this->vvd_arm_motion_profile.clear();
@@ -361,6 +408,16 @@ std::vector<std::vector<double>> *MotionPlan::getInitArmMotionProfile()
 std::vector<double> *MotionPlan::getInitArmTimeProfile()
 {
     return &(this->vd_init_time_profile);
+}
+
+std::vector<std::vector<double>> *MotionPlan::getRetrievalArmMotionProfile()
+{
+    return &(this->vvd_retrieval_arm_profile);
+}
+
+std::vector<double> *MotionPlan::getRetrievalArmTimeProfile()
+{
+    return &(this->vd_retrieval_time_profile);
 }
 
 std::vector<double> *MotionPlan::getTimeProfile()

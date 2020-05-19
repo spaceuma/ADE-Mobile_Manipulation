@@ -27,6 +27,7 @@ private:
     /**
      * Adhoc variables to make arm retrieval
      */
+    std::vector<double> vd_retrieval_position;
     Joints j_first_retrieval_position;
     Joints j_second_retrieval_position;
     bool b_first_retrieval_point_reached;
@@ -94,6 +95,14 @@ private:
      */
     std::vector<double> *pvd_init_time_profile;
     /**
+     * The retrieval arm motion profile
+     */
+    std::vector<std::vector<double>> *pvvd_retrieval_arm_profile;
+    /**
+     * The retrieval arm motion times
+     */
+    std::vector<double> *pvd_retrieval_time_profile;
+    /**
      * The next configuration to be reached by the arm 
      */
     std::vector<double> vd_arm_present_readings;
@@ -131,6 +140,7 @@ private:
     std::vector<double> vd_arm_posmargin = {0.2,0.2,0.2,0.2,0.2,0.2};// TODO - Adhoc margin for arm positions
     int i_iteration_counter;
     int i_current_coverage_index; 
+    int i_current_retrieval_index; 
     double d_call_period;
 public:
     /**
@@ -172,6 +182,7 @@ public:
      * Returns a (0,0,0) rover command 
      */
     MotionCommand getZeroRoverCommand();
+    void resetIterator();
     void getAtomicCommand();
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     unsigned int getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m);

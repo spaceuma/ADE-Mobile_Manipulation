@@ -268,6 +268,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
                 case 1: // Either driving or aligning
                     return true;
                 case 2: // (Rover) Target reached
+                    this->p_mmexecutor->resetIterator(); 
                     setStatus(EXECUTING_ARM_OPERATION);
                     return true;
                 case 3: // Out of boundaries
@@ -299,7 +300,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             ui_error_code = this->p_mmexecutor->getRetrievalCommand(
                 arm_joints, arm_command);
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
-            if (ui_error_code == 2)
+            if (ui_error_code == 1)
             {
                 return false;
             }
@@ -310,7 +311,8 @@ bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
             ui_error_code = this->p_mmexecutor->getCoverageCommand(arm_command, arm_joints); 
 	    if (ui_error_code == 1)
-            { 
+            {
+                this->p_mmexecutor->resetIterator(); 
 	        setStatus(RETRIEVING_ARM);
             }
             return true;

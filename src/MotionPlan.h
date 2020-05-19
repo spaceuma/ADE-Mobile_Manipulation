@@ -55,6 +55,10 @@ private:
      */
     std::vector<double> vd_init_time_profile;
     /**
+     * Profile of times related with the retrieval operation
+     */
+    std::vector<double> vd_retrieval_time_profile;
+    /**
      * Profile of times related with an atomic operation
      */
     std::vector<double> vd_time_profile;
@@ -63,6 +67,10 @@ private:
      */
     std::vector<std::vector<double>> vvd_init_arm_profile;
     /**
+     * Profile of position values per joint and sample
+     */
+    std::vector<std::vector<double>> vvd_retrieval_arm_profile;
+/**
      * Pointer to the map class
      */
     MobileManipMap * pmm_map;
@@ -119,6 +127,14 @@ public:
      */
     std::vector<double> *getInitArmTimeProfile();
     /**
+     * A pointer to the retrieval arm motion profile is returned
+     */
+    std::vector<std::vector<double>> *getRetrievalArmMotionProfile();
+    /**
+     * A pointer to the retrieval arm motion profile is returned
+     */
+    std::vector<double> *getRetrievalArmTimeProfile();
+    /**
      * A pointer to the time profile is returned
      */
     std::vector<double> *getTimeProfile();
@@ -147,6 +163,7 @@ public:
      */
     unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
 
+    unsigned int computeArmRetrieval(const std::vector<double> &vd_init, const std::vector<double> &vd_goal);
     unsigned int computeAtomicOperation();
     void setArmGaussFilter(double sigma, int numsamples);
 };
