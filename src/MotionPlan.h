@@ -42,6 +42,7 @@ private:
     ArmPlanner* p_arm_planner;
     CollisionDetector* p_collision_detector;
     std::string s_urdf_path;
+    std::vector<double> vd_retrieval_position;
     /**
      * Profile of position values per joint and sample
      */
@@ -163,7 +164,7 @@ public:
      */
     unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
 
-    unsigned int computeArmRetrieval(const std::vector<double> &vd_init, const std::vector<double> &vd_goal);
+    unsigned int computeArmRetrieval(const std::vector<double> &vd_init);
     unsigned int computeAtomicOperation();
     void setArmGaussFilter(double sigma, int numsamples);
 };

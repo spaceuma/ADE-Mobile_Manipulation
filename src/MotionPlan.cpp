@@ -9,6 +9,15 @@ MotionPlan::MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m); 
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
+
+    this->vd_retrieval_position.resize(6);
+    this->vd_retrieval_position[0] = 0.45;
+    this->vd_retrieval_position[1] = -1.83;
+    this->vd_retrieval_position[2] = 2.79;
+    this->vd_retrieval_position[3] = 0.0;
+    this->vd_retrieval_position[4] = -0.5;
+    this->vd_retrieval_position[5] = 2.3562;
+ 
 }
 
 MotionPlan::MotionPlan(MobileManipMap * pmmmap_m,
@@ -130,7 +139,7 @@ bool MotionPlan::shortenPathForFetching()
                 d_segmentY = this->vw_rover_path[i_eraseIndex].position[1] - this->vw_rover_path[endWaypoint].position[1];
                 d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
 	    }
-	    //std::cout << "The erase index is " << i_eraseIndex << std::endl;
+	    std::cout << "The erase index is " << i_eraseIndex << std::endl;
             this->vw_rover_path.erase(this->vw_rover_path.begin() + i_eraseIndex,
                               this->vw_rover_path.end());
         }
@@ -140,24 +149,24 @@ bool MotionPlan::shortenPathForFetching()
                               this->vw_rover_path.end());
         }
 	// Here we shorten the path as well at the beginning
-	int i_path_index = 0;
+	/*int i_path_index = 0;
 	if (this->vw_rover_path.size()>3)
 	{
  	    double d_segmentX = this->vw_rover_path[i_path_index].position[0] - this->vw_rover_path[0].position[0];
 	    double d_segmentY = this->vw_rover_path[i_path_index].position[1] - this->vw_rover_path[0].position[1];
 	    double d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
-            while ((i_path_index < this->vw_rover_path.size() - 2)&&(d_norm < 0.1))//TODO-Introduce here configurable position tolerance
+            while ((i_path_index < this->vw_rover_path.size() - 2)&&(d_norm < 0.5))//TODO-Introduce here configurable position tolerance
 	    {
                 i_path_index += 1;
                 d_segmentX = this->vw_rover_path[i_path_index].position[0] - this->vw_rover_path[0].position[0];
                 d_segmentY = this->vw_rover_path[i_path_index].position[1] - this->vw_rover_path[0].position[1];
                 d_norm = sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
 	    }
-	    //std::cout << "The initial erase index is " << i_path_index << std::endl;
+	    std::cout << "The initial erase index is " << i_path_index << std::endl;
             this->vw_rover_path.erase(this->vw_rover_path.begin(),
                               this->vw_rover_path.begin() + i_path_index);
       
-	}
+	}*/
     }
     return true;
 }
@@ -264,7 +273,7 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
     }   
 }
 
-unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init, const std::vector<double> &vd_goal)
+unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
 {
     this->vvd_retrieval_arm_profile.clear();
     this->b_is_retrieval_computed = false;
@@ -279,7 +288,7 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init,
     }
     for (uint i = 0; i < 6; i++)
     {
-            std::cout << " Retrieval Joint " << i << " is " << vd_goal[i] << std::endl;
+            std::cout << " Retrieval Joint " << i << " is " << this->vd_retrieval_position[i] << std::endl;
     }
 
     double dxyres = this->pmm_map->getResolution();
@@ -291,7 +300,7 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init,
                                     this->d_zres,
                                     this->vw_rover_path[this->vw_rover_path.size()-1],
                                     vd_init,
-                                    vd_goal,
+                                    this->vd_retrieval_position,
                                     &(this->vvd_retrieval_arm_profile),
                                     &(this->vd_retrieval_time_profile)))
     {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...

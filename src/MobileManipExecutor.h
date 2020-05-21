@@ -27,7 +27,6 @@ private:
     /**
      * Adhoc variables to make arm retrieval
      */
-    std::vector<double> vd_retrieval_position;
     Joints j_first_retrieval_position;
     Joints j_second_retrieval_position;
     bool b_first_retrieval_point_reached;
@@ -120,14 +119,6 @@ private:
      * The present state of the Waypoint Navigation 
      */
     NavigationState navstate;
-    /**
-     * Arm Variables Initialization 
-     */
-    void initializeArmVariables(const Joints &j_present_readings);
-    /**
-     * Provides the next arm command according to the present situation 
-     */
-    void updateArmCommandAndPose(Joints &j_next_arm_command);
     // Temporal fix for motion command bug
     void fixMotionCommand(MotionCommand &mc_m);
 
@@ -146,7 +137,7 @@ public:
     /**
      * Class Constructor using the present motion plan 
      */
-    MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings, std::string s_urdf_path_m);
+    MobileManipExecutor(MotionPlan* presentMotionPlan, std::string s_urdf_path_m);
     /**
      * Update the data extracted from the motion plan 
      */
@@ -182,9 +173,14 @@ public:
      * Returns a (0,0,0) rover command 
      */
     MotionCommand getZeroRoverCommand();
+    /**
+     * Arm Variables Initialization 
+     */
+    void initializeArmVariables(const Joints &j_present_readings);
     void resetIterator();
     void getAtomicCommand();
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     unsigned int getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     std::vector<double>* getArmCurrentReadings();
+    std::vector<double>* getLastProfile();
 };

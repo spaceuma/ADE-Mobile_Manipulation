@@ -3,9 +3,13 @@
 #include "MotionPlan.h"
 #include "mmFileManager.h"
 
-MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings, std::string s_urdf_path_m )
+MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, std::string s_urdf_path_m )
 {
-    this->initializeArmVariables(j_present_readings); 
+    //this->initializeArmVariables(j_present_readings); 
+    this->vd_arm_previous_command.resize(6);
+    this->vd_arm_present_command.resize(6);
+    this->vd_arm_present_readings.resize(6);
+    this->vd_arm_abs_speed.resize(6);
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
     this->armstate = INITIALIZING;
@@ -15,14 +19,7 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt", (*this->pvvd_arm_sweeping_profile));
     readVectorFile(s_urdf_path_m + "/sweepingTimes.txt", (*this->pvd_arm_sweeping_times));
 
-    this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 0.45;
-    this->vd_retrieval_position[1] = -1.83;
-    this->vd_retrieval_position[2] = 2.79;
-    this->vd_retrieval_position[3] = 0.0;
-    this->vd_retrieval_position[4] = -0.5;
-    this->vd_retrieval_position[5] = 2.3562;
-    
+   
     this->b_first_retrieval_point_reached = false;
     this->b_second_retrieval_point_reached = false;
     this->j_first_retrieval_position.m_jointStates.resize(6);
@@ -44,10 +41,6 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
 void MobileManipExecutor::initializeArmVariables(const Joints &j_present_readings)
 {
     double d_val;
-    this->vd_arm_previous_command.resize(6);
-    this->vd_arm_present_command.resize(6);
-    this->vd_arm_present_readings.resize(6);
-    this->vd_arm_abs_speed.resize(6);
     for (uint i = 0; i < 6; i++)
     {
         d_val = j_present_readings.m_jointStates[i].m_position; 
@@ -55,7 +48,6 @@ void MobileManipExecutor::initializeArmVariables(const Joints &j_present_reading
 	this->vd_arm_present_command[i] = d_val;
 	this->vd_arm_present_readings[i] = d_val;
     }
-
 }
 
 void MobileManipExecutor::updateMotionPlan()
@@ -84,6 +76,14 @@ void MobileManipExecutor::updateMotionPlan()
     this->b_second_retrieval_point_reached = false;
     this->d_call_period = 0.5; // TODO: MAKE THIS CONFIGURABLE!!!
     this->i_iteration_counter = 0;
+    this->pvvd_init_arm_profile  
+            = this->p_motion_plan->getInitArmMotionProfile();
+    this->pvd_init_time_profile  
+            = this->p_motion_plan->getInitArmTimeProfile();
+    this->pvvd_retrieval_arm_profile  
+            = this->p_motion_plan->getRetrievalArmMotionProfile();
+    this->pvd_retrieval_time_profile  
+            = this->p_motion_plan->getRetrievalArmTimeProfile();
 }
 
 
@@ -94,6 +94,7 @@ bool MobileManipExecutor::isRoverFinished()
 
 unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Joints &j_arm_present_readings_m, MotionCommand &mc_m, Joints &j_next_arm_command_m)
 {
+    int i_actual_segment = this->waypoint_navigation.getCurrentSegment();
     // Getting Rover Command
     waypoint_navigation.setPose(rover_pose);
     waypoint_navigation.update(mc_m);
@@ -139,37 +140,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
         return 6;
     }
 
-    if ((this->armstate == INITIALIZING)&&(this->i_iteration_counter == 0))
-    {
-        std::cout << " WN Current Segment = " << this->waypoint_navigation.getCurrentSegment() << std::endl;
-	for (uint i = 0; i < 6; i++)
-        {
-            std::cout << " Arm Present Reading " << i << " is " << this->vd_arm_present_readings[i] << std::endl;
-        }
-	if (this->p_motion_plan->computeArmDeployment(this->waypoint_navigation.getCurrentSegment(), this->vd_arm_present_readings) != 0)
-        {
-               return 8;
-	}
-	std::cout << "The arm deployment is computed" << std::endl;	
-        if (this->p_motion_plan->computeArmRetrieval((*this->pvvd_arm_sweeping_profile)[(*this->pvvd_arm_sweeping_profile).size()-1],this->vd_retrieval_position) != 0)
-        {
-               return 8;
-	}
-	std::cout << "The arm retrieval is computed" << std::endl;	
-	this->pvvd_init_arm_profile  
-                    = this->p_motion_plan->getInitArmMotionProfile();
-        this->pvd_init_time_profile  
-                    = this->p_motion_plan->getInitArmTimeProfile();
-        this->pvvd_retrieval_arm_profile  
-                    = this->p_motion_plan->getRetrievalArmMotionProfile();
-        this->pvd_retrieval_time_profile  
-                    = this->p_motion_plan->getRetrievalArmTimeProfile();
-    }
-
     // Getting Arm Command
     this->prepareNextArmCommand(j_next_arm_command_m);
-
-    this->updateArmCommandAndPose(j_next_arm_command_m);
 
     std::cout << "The Rover Segment is " << this->waypoint_navigation.getCurrentSegment() << std::endl;
     std::cout << "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
@@ -177,6 +149,11 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     switch (this->armstate)
     {
         case INITIALIZING:
+            fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
+	    if (mc_m.m_manoeuvreType != 1)
+            {
+                mc_m = this->getZeroRoverCommand();
+            } 
 	    double d_elapsed_init_time;
 	    // Keep track of vdd_init_arm_profile
 	    std::cout << " Creating initialization command" << std::endl;
@@ -189,29 +166,39 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
 		    this->updateArmCommandVectors((*this->pvvd_init_arm_profile)[this->i_current_segment]);   
 		}
             }
-            this->i_iteration_counter++;
-	    this->assignPresentCommand(j_next_arm_command_m);
-            // TODO - Check if it is following!!
-
-            fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
-            if (((*this->pvd_init_time_profile)[(*this->pvvd_init_arm_profile).size()-1]*5.0 < 
+	    else if (((*this->pvd_init_time_profile)[(*this->pvvd_init_arm_profile).size()-1]*5.0 < 
 		 (double)this->i_iteration_counter * this->d_call_period) &&
-	        (this->i_current_segment >= this->pvvd_init_arm_profile->size()-1) &&
 		(mc_m.m_manoeuvreType == 0))
             {  // If the arm is ready and the rover is going to start with an ackemann
                this->i_initial_segment = this->waypoint_navigation.getCurrentSegment();
-	       this->i_current_segment = this->i_initial_segment;
+	       this->i_current_segment = 0;
                this->armstate = READY;  
 	    }
-            if (mc_m.m_manoeuvreType != 1)
-            {
-                mc_m = this->getZeroRoverCommand();
-            }
+            this->i_iteration_counter++;
+	    this->assignPresentCommand(j_next_arm_command_m);
 	    return 0;
 	case READY:
             this->armstate = COUPLED_MOVING;
 	    return 1;
 	case COUPLED_MOVING:
+            if ((this->i_current_segment == this->i_initial_segment)||(this->i_current_segment != i_actual_segment))
+            {
+                if (i_actual_segment < (*this->pvvd_arm_motion_profile).size() - 7)
+                {
+                    i_actual_segment = max(0,i_actual_segment - 6);
+		}
+                this->updateArmCommandVectors(); 
+		if (i_current_segment < i_actual_segment)
+		{
+                    i_current_segment++;// = i_actual_segment;
+		}
+                this->b_is_last_segment = coupled_control.selectNextManipulatorPosition(
+                    i_current_segment,
+                    this->pvvd_arm_motion_profile,
+                    &(this->vd_arm_present_command),
+                    true);
+            }
+	    this->assignPresentCommand(j_next_arm_command_m);
             if (!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))
 	    {
                 for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
@@ -493,34 +480,6 @@ bool MobileManipExecutor::updateArmCommandVectors(const std::vector<double> &vd_
     }
 }
 
-void MobileManipExecutor::updateArmCommandAndPose(Joints &j_next_arm_command)
-{
-
-    int i_actual_segment = this->waypoint_navigation.getCurrentSegment();
-
-    switch (armstate)
-    {
-        case INITIALIZING:
-	    break;
-	default:
-            if ((this->i_current_segment == this->i_initial_segment)||(this->i_current_segment != i_actual_segment))
-            {
-                this->updateArmCommandVectors(); 
-		if (i_current_segment < i_actual_segment)
-		{
-                    i_current_segment++;// = i_actual_segment;
-		}
-                this->b_is_last_segment = coupled_control.selectNextManipulatorPosition(
-                    i_current_segment,
-                    this->pvvd_arm_motion_profile,
-                    &(this->vd_arm_present_command),
-                    true);
-            }
-	    this->assignPresentCommand(j_next_arm_command);
-            break;	
-    }
-}
-
 bool MobileManipExecutor::prepareNextArmCommand(Joints &j_next_arm_command)
 {
     if (j_next_arm_command.m_jointNames.empty())
@@ -544,4 +503,9 @@ bool MobileManipExecutor::prepareNextArmCommand(Joints &j_next_arm_command)
 std::vector<double>* MobileManipExecutor::getArmCurrentReadings()
 {
     return &(this->vd_arm_present_readings); 
+}
+
+std::vector<double>* MobileManipExecutor::getLastProfile()
+{
+    return &((*this->pvvd_arm_sweeping_profile).back());
 }

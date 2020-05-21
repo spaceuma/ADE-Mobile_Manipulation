@@ -103,7 +103,6 @@ public:
      * Constructor, it receives a DEM and generates the Map object.
      */
     MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
-                             const Joints &j_present_readings,
 			     std::string s_urdf_path_m);
 
     /**
@@ -111,6 +110,7 @@ public:
      * sample position.
      */
     bool generateMotionPlan(proxy_library::Pose plpose_m,
+                            const Joints &j_present_readings,
                             double d_sample_pos_x,
                             double d_sample_pos_y);
 

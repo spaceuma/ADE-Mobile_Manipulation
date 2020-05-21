@@ -7,7 +7,6 @@ using namespace std;
 
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
-    const Joints &j_present_readings,
     string s_configfile_path_m)
 {
     this->status = IDLE;
@@ -21,7 +20,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
         = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
     this->p_motionplan->setArmGaussFilter(5.0,9);//TODO - Configurable parameters
     this->p_mmexecutor = new MobileManipExecutor(
-        this->p_motionplan, j_present_readings, s_configfile_path_m);
+        this->p_motionplan, s_configfile_path_m);
 }
 
 
@@ -53,6 +52,7 @@ bool MobileManipMotionPlanner::updateNavCamDEM(const RoverGuidance_Dem &navCamDE
 
 //-- Generate Motion Plan
 bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
+                                                  const Joints &j_present_readings,
                                                   double d_sample_pos_x,
                                                   double d_sample_pos_y)
 {
@@ -79,6 +79,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
         // TODO - Since for now there is no computation, the state will go to
         // READY_TO_MOVE
         setStatus(GENERATING_MOTION_PLAN);
+	this->p_mmexecutor->initializeArmVariables(j_present_readings);
 	// The cost map must be computed based on FACE method
         ui_code = this->p_mmmap->computeFACE(w_sample_globalposition,this->d_avoid_dist,this->d_maxfetching_dist);
 	switch (ui_code)
@@ -142,6 +143,26 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
 		setError(PLAN_WO_SAMPLE);
 		return false;
         }
+	std::vector<double> vd_arm_readings;
+	vd_arm_readings.resize(6);
+	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            vd_arm_readings[i]
+                = j_present_readings.m_jointStates[i].m_position;
+        }
+
+	if (this->p_motionplan->computeArmDeployment(0, vd_arm_readings) != 0)
+        {
+            setError(COLLIDING_PROF);
+	    return false;
+	}
+	std::cout << "The arm deployment is computed" << std::endl;	
+	std::vector<double>* pvd_last_profile = this->p_mmexecutor->getLastProfile();
+        if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile)) != 0)
+        {
+            return false;
+	}
+	//this->p_motionplan->computeArmDeployment(0,);
         this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
         return true;
@@ -169,19 +190,43 @@ bool MobileManipMotionPlanner::start()
 
 bool MobileManipMotionPlanner::abort()
 {
+    std::vector<double>* pvd_current_readings;
     switch (getStatus())
     {
         case READY_TO_MOVE:
             setStatus(IDLE);
             return true;
         case EXECUTING_MOTION_PLAN:
-            setStatus(RETRIEVING_ARM);
+	    // TODO - complete this
+	    //this->p_motionplan->computeArmRetrieval(j_current_readings);
+            this->p_mmexecutor->resetIterator(); 
+            pvd_current_readings = this->p_mmexecutor->getArmCurrentReadings();
+            if (this->p_motionplan->computeArmRetrieval((*pvd_current_readings)) != 0)
+            {
+                return false;
+	    }
+            this->p_mmexecutor->updateMotionPlan();
+	    setStatus(RETRIEVING_ARM);
             return true;
         case EXECUTING_ARM_OPERATION:
-            setStatus(RETRIEVING_ARM);
+            this->p_mmexecutor->resetIterator(); 
+            pvd_current_readings = this->p_mmexecutor->getArmCurrentReadings();
+            if (this->p_motionplan->computeArmRetrieval((*pvd_current_readings)) != 0)
+            {
+                return false;
+	    }
+            this->p_mmexecutor->updateMotionPlan();
+	    setStatus(RETRIEVING_ARM);
             return true;
         case PAUSE:
-            setStatus(RETRIEVING_ARM);
+            this->p_mmexecutor->resetIterator(); 
+            pvd_current_readings = this->p_mmexecutor->getArmCurrentReadings();
+            if (this->p_motionplan->computeArmRetrieval((*pvd_current_readings)) != 0)
+            {
+                return false;
+	    }
+            this->p_mmexecutor->updateMotionPlan();
+	    setStatus(RETRIEVING_ARM);
             return true;
         default:
             setError(IMPROPER_CALL);
