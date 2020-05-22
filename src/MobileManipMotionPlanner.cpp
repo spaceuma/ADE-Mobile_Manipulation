@@ -205,7 +205,7 @@ bool MobileManipMotionPlanner::abort()
             {
                 return false;
 	    }
-            this->p_mmexecutor->updateMotionPlan();
+            this->p_mmexecutor->updateRetrieval();
 	    setStatus(RETRIEVING_ARM);
             return true;
         case EXECUTING_ARM_OPERATION:
@@ -215,7 +215,7 @@ bool MobileManipMotionPlanner::abort()
             {
                 return false;
 	    }
-            this->p_mmexecutor->updateMotionPlan();
+            this->p_mmexecutor->updateRetrieval();
 	    setStatus(RETRIEVING_ARM);
             return true;
         case PAUSE:
@@ -225,7 +225,7 @@ bool MobileManipMotionPlanner::abort()
             {
                 return false;
 	    }
-            this->p_mmexecutor->updateMotionPlan();
+            this->p_mmexecutor->updateRetrieval();
 	    setStatus(RETRIEVING_ARM);
             return true;
         default:

@@ -142,7 +142,7 @@ public:
      * Update the data extracted from the motion plan 
      */
     void updateMotionPlan();
-
+    void updateRetrieval();
     /**
      * Indicates whether the rover is within the corridor or not 
      */

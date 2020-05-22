@@ -80,12 +80,16 @@ void MobileManipExecutor::updateMotionPlan()
             = this->p_motion_plan->getInitArmMotionProfile();
     this->pvd_init_time_profile  
             = this->p_motion_plan->getInitArmTimeProfile();
+    this->updateRetrieval();
+}
+
+void MobileManipExecutor::updateRetrieval()
+{
     this->pvvd_retrieval_arm_profile  
             = this->p_motion_plan->getRetrievalArmMotionProfile();
     this->pvd_retrieval_time_profile  
             = this->p_motion_plan->getRetrievalArmTimeProfile();
 }
-
 
 bool MobileManipExecutor::isRoverFinished()
 {
