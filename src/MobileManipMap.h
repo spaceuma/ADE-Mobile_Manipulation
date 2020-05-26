@@ -5,7 +5,7 @@
 #include "Waypoint.hpp"
 #include <math.h>
 #include <opencv2/opencv.hpp>
-#include <types/RoverGuidance_Dem.h>
+#include "RoverGuidance_InputDataStruct.h"
 
 using namespace cv;
 using namespace FastMarching_lib;

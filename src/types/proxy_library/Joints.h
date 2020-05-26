@@ -9,7 +9,7 @@
 
 namespace proxy_library{
     
-class Joints : public BaseType {
+class proxy_library::Joints : public BaseType {
     
  public:
     uint64_t m_time;

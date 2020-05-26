@@ -40,13 +40,13 @@ TEST(MMMPTest, NominalStateFlow)
     MobileManipMotionPlanner dummyPlanner(dummyDem);
 
     EXPECT_EQ(IDLE, dummyPlanner.getStatus());
-    Joints arm_joints;
+    proxy_library::Joints arm_joints;
     dummyPlanner.generateMotionPlan(roverPos, samplePos, arm_joints);
     EXPECT_EQ(READY_TO_MOVE, dummyPlanner.getStatus());
     /*dummyPlanner.start();
     EXPECT_EQ(EXECUTING_MOTION_PLAN, dummyPlanner.getStatus());
-    Joints arm_command;
-    MotionCommand rover_command;
+    proxy_library::Joints arm_command;
+    proxy_library::MotionCommand rover_command;
     dummyPlanner.updateRoverArmPos(arm_command, rover_command, roverPos, arm_joints);
     EXPECT_EQ(EXECUTING_ARM_OPERATION, dummyPlanner.getStatus());
     dummyPlanner.updateRoverArmPos(arm_command, rover_command, roverPos, arm_joints);
@@ -72,13 +72,13 @@ TEST(MMMPTest, PauseAction)
     samplePos.position[2] = 1.1;
     samplePos.heading = 0;
 
-    Joints arm_joints;
+    proxy_library::Joints arm_joints;
     dummyPlanner.generateMotionPlan(roverPos, sample, arm_joints);
     EXPECT_EQ(READY_TO_MOVE, dummyPlanner.getStatus());
     dummyPlanner.start();
     EXPECT_EQ(EXECUTING_MOTION_PLAN, dummyPlanner.getStatus());
-    Joints arm_command;
-    MotionCommand rover_command;
+    proxy_library::Joints arm_command;
+    proxy_library::MotionCommand rover_command;
     dummyPlanner.pause(arm_command, rover_command);
     EXPECT_EQ(PAUSE, dummyPlanner.getStatus());
     dummyPlanner.resumeOperation();

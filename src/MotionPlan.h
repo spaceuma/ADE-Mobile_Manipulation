@@ -7,7 +7,7 @@
 #include "FastMarching.h"
 #include "CollisionDetector.h"
 #include "MobileManipMap.h"
-#include <types/RoverGuidance_Dem.h>
+#include  "RoverGuidance_InputDataStruct.h"
 // Must come after
 #include "ArmPlanner.h"
 #include "FetchingPoseEstimator.h"

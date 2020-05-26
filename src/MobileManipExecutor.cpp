@@ -2,7 +2,7 @@
 #include "MotionCommand.h"
 #include "MotionPlan.h"
 
-MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Joints &j_present_readings, std::string s_urdf_path_m )
+MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const proxy_library::Joints &j_present_readings, std::string s_urdf_path_m )
 {
     this->initializeArmVariables(j_present_readings); 
     this->p_motion_plan = presentMotionPlan;
@@ -34,7 +34,7 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, const Jo
     this->j_second_retrieval_position.m_jointStates[5].m_position = 2.3562;
 }
 
-void MobileManipExecutor::initializeArmVariables(const Joints &j_present_readings)
+void MobileManipExecutor::initializeArmVariables(const proxy_library::Joints &j_present_readings)
 {
     double d_val;
     this->vd_arm_previous_command.resize(6);
@@ -82,7 +82,7 @@ bool MobileManipExecutor::isRoverFinished()
     return waypoint_navigation.getNavigationState() == TARGET_REACHED;
 }
 
-unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Joints &j_arm_present_readings_m, MotionCommand &mc_m, Joints &j_next_arm_command_m)
+unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const proxy_library::Joints &j_arm_present_readings_m, proxy_library::MotionCommand &mc_m, proxy_library::Joints &j_next_arm_command_m)
 {
     // Getting Rover Command
     waypoint_navigation.setPose(rover_pose);
@@ -173,7 +173,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     }
 }
 
-unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m)
+unsigned int MobileManipExecutor::getRetrievalCommand(const proxy_library::Joints &j_arm_present_readings_m, proxy_library::Joints &j_next_arm_command_m)
 {
     if (j_next_arm_command_m.m_jointNames.empty())
     {
@@ -234,7 +234,7 @@ unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_arm_presen
 }
 
 
-void MobileManipExecutor::fixMotionCommand(MotionCommand &mc_m)
+void MobileManipExecutor::fixMotionCommand(proxy_library::MotionCommand &mc_m)
 {
     if ((abs(mc_m.m_speed_ms) < 0.0000001)&&(abs(mc_m.m_turnRate_rads) > 0.0000001))
     {
@@ -264,7 +264,7 @@ void MobileManipExecutor::fixMotionCommand(MotionCommand &mc_m)
     
 }
 
-bool MobileManipExecutor::isArmSafe(const Joints &j_present_joints_m)
+bool MobileManipExecutor::isArmSafe(const proxy_library::Joints &j_present_joints_m)
 {
     //TODO: put in other function isColliding to check collisions 
     if (j_present_joints_m.m_jointStates[0].m_position < 0.35)
@@ -274,7 +274,7 @@ bool MobileManipExecutor::isArmSafe(const Joints &j_present_joints_m)
     return true;
 }
 
-bool MobileManipExecutor::isArmColliding(const Joints &j_present_joints_m)
+bool MobileManipExecutor::isArmColliding(const proxy_library::Joints &j_present_joints_m)
 {
     for (uint i = 0; i < 6; i++)
     {
@@ -283,7 +283,7 @@ bool MobileManipExecutor::isArmColliding(const Joints &j_present_joints_m)
     return this->p_collision_detector->isColliding(this->vd_arm_present_readings);
 }
 
-bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints &j_present_joints)
+bool MobileManipExecutor::isArmReady(const proxy_library::Joints &j_next_command, const proxy_library::Joints &j_present_joints)
 {
     for (uint i = 0; i < 6; i++)
     {
@@ -299,7 +299,7 @@ bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints 
     return true;
 }
 
-bool MobileManipExecutor::isArmWorking(const Joints &j_next_command, const Joints &j_present_joints)
+bool MobileManipExecutor::isArmWorking(const proxy_library::Joints &j_next_command, const proxy_library::Joints &j_present_joints)
 {
     double d_deg2rad = 3.1416/180.0;
     bool isMoving = true;
@@ -314,7 +314,7 @@ bool MobileManipExecutor::isArmWorking(const Joints &j_next_command, const Joint
     return isMoving;
 }
 
-void MobileManipExecutor::getSamplingCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m)
+void MobileManipExecutor::getSamplingCommand(const proxy_library::Joints &j_arm_present_readings_m, proxy_library::Joints &j_next_arm_command_m)
 {
 
 }
@@ -324,9 +324,9 @@ void MobileManipExecutor::getAtomicCommand()
 
 }
 
-MotionCommand MobileManipExecutor::getZeroRoverCommand()
+proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
 {
-    MotionCommand mc_zero;
+    proxy_library::MotionCommand mc_zero;
     mc_zero.m_manoeuvreType = 0; //0: Ackermann, 1: PointTurn
     mc_zero.m_curvature_radm = 0.0; //in radians/meter
     mc_zero.m_speed_ms = 0.0;  //in meters/seconds
@@ -334,7 +334,7 @@ MotionCommand MobileManipExecutor::getZeroRoverCommand()
     return mc_zero;
 }
 
-bool MobileManipExecutor::getArmCommand(Joints &j_next_arm_command)
+bool MobileManipExecutor::getArmCommand(proxy_library::Joints &j_next_arm_command)
 {
     if (j_next_arm_command.m_jointNames.empty())
     {

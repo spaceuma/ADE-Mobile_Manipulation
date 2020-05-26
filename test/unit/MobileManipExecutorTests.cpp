@@ -25,7 +25,7 @@ TEST(MMExecutorTest, nominal_working_test)
         Eigen::AngleAxisd(10.0 / 180.0 * M_PI, Eigen::Vector3d::UnitZ()));
 
 
-    MotionCommand mc;
+    proxy_library::MotionCommand mc;
     double dt = 0.1, yaw, d_pos_error_x = 0, d_pos_error_y = 0;
     unsigned int ui_error_code;
 
@@ -43,8 +43,8 @@ TEST(MMExecutorTest, nominal_working_test)
     vj_current_jointstates[4].m_position = -0.5;
     vj_current_jointstates[5].m_position = 2.3562;
 
-    Joints j_current_joints(0, vj_current_jointstates);
-    Joints j_next_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_current_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_next_joints(0, vj_current_jointstates);
 
     std::ofstream robotPoseFile, robotSimPoseFile;
     robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
@@ -140,7 +140,7 @@ TEST(MMExecutorTest, nominal_working_test)
 	std::cout << std::endl;*/
 //        usleep(100000);
 
-	// Joints positions are now the ones commanded
+	// proxy_library::Joints positions are now the ones commanded
         for (uint i = 0; i < 6; i++)
         {
             j_current_joints.m_jointStates[i].m_position
@@ -163,7 +163,7 @@ TEST(MMExecutorTest, rover_out_of_corridor_test)
 
     Pose robotPose;
 
-    MotionCommand mc;
+    proxy_library::MotionCommand mc;
     unsigned int ui_error_code;
     robotPose.position
         = Eigen::Vector3d(vw_path[0].position[0], vw_path[0].position[1], 0);
@@ -182,8 +182,8 @@ TEST(MMExecutorTest, rover_out_of_corridor_test)
     vj_current_jointstates[4].m_position = -0.5;
     vj_current_jointstates[5].m_position = 2.3562;
 
-    Joints j_current_joints(0, vj_current_jointstates);
-    Joints j_next_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_current_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_next_joints(0, vj_current_jointstates);
 
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
@@ -252,7 +252,7 @@ TEST(MMExecutorTest, armnotworking_test)
         Eigen::AngleAxisd(10.0 / 180.0 * M_PI, Eigen::Vector3d::UnitZ()));
 
 
-    MotionCommand mc;
+    proxy_library::MotionCommand mc;
     double dt = 0.1, yaw, d_pos_error_x = 0, d_pos_error_y = 0;
     unsigned int ui_error_code;
 
@@ -270,8 +270,8 @@ TEST(MMExecutorTest, armnotworking_test)
     vj_current_jointstates[4].m_position = -0.5;
     vj_current_jointstates[5].m_position = 2.3562;
 
-    Joints j_current_joints(0, vj_current_jointstates);
-    Joints j_next_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_current_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_next_joints(0, vj_current_jointstates);
 
     std::ofstream robotPoseFile, robotSimPoseFile;
     robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
@@ -368,7 +368,7 @@ TEST(MMExecutorTest, armnotworking_test)
 	std::cout << std::endl;
 //        usleep(100000);
 
-	// Joints positions are now the ones commanded
+	// proxy_library::Joints positions are now the ones commanded
         if (ui_loop_counter > 200)
 	{
 	    ASSERT_EQ(ui_error_code,6) << "\033[31m[----------]\033[0m Motion Command is ( transl = " << mc.m_speed_ms << ", rot = " << mc.m_turnRate_rads << ") ";

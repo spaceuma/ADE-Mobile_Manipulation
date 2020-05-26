@@ -3,9 +3,10 @@
 
 using namespace std;
 
+
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
-    const Joints &j_present_readings,
+    const proxy_library::Joints &j_present_readings,
     string s_configfile_path_m)
 {
     double d_zres_m = 0.08;//TODO: this must come from an external config file
@@ -140,7 +141,7 @@ bool MobileManipMotionPlanner::abort()
     }
 }
 
-bool MobileManipMotionPlanner::pause(MotionCommand &rover_command)
+bool MobileManipMotionPlanner::pause(proxy_library::MotionCommand &rover_command)
 {
     if ((getStatus() == EXECUTING_MOTION_PLAN)
         || (getStatus() == EXECUTING_ARM_OPERATION)
@@ -175,15 +176,15 @@ bool MobileManipMotionPlanner::resumeOperation()
 void MobileManipMotionPlanner::updateLocCamDEM(
     RoverGuidance_Dem locCamDEM,
     proxy_library::Pose rover_position,
-    Joints arm_joints)
+    proxy_library::Joints arm_joints)
 {
     throw "Not yet implemented";
 }
 
-bool MobileManipMotionPlanner::updateRoverArmPos(Joints &arm_command,
-                                                 MotionCommand &rover_command,
+bool MobileManipMotionPlanner::updateRoverArmPos(proxy_library::Joints &arm_command,
+                                                 proxy_library::MotionCommand &rover_command,
                                                  proxy_library::Pose plpose_m,
-                                                 Joints arm_joints)
+                                                 proxy_library::Joints arm_joints)
 {
 
     unsigned int ui_retrieval_code; 

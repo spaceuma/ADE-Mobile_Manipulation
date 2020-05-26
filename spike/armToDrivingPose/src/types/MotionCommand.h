@@ -4,7 +4,7 @@
 
 namespace proxy_library{
     
-class MotionCommand : public BaseType {
+class proxy_library::MotionCommand : public BaseType {
  public:
     int m_manoeuvreType; //0: Ackermann, 1: PointTurn
     double m_curvature_radm; //in radians/meter

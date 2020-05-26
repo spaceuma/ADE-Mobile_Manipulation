@@ -20,7 +20,7 @@ void readVectorFile(std::string vector_file,
     }
     else
     {
-        std::cout << "Problem opening the path file" << std::endl;
+        std::cout << "[readVectorFile]  Problem opening the path file " << vector_file << std::endl;
 	throw std::exception();
     }
 }
@@ -59,7 +59,7 @@ void readMatrixFile(std::string map_file,
     }
     else
     {
-        std::cout << "Problem opening the path file" << std::endl;
+        std::cout << "[readMatrixFile] Problem opening the path file " << map_file << std::endl;
 	throw std::exception();
     }
 }
@@ -134,8 +134,8 @@ void readReachabilityMap(std::string map_file,
     }
     else
     {
-        std::cout << "Problem opening the path file" << std::endl;
-	throw std::exception();
+        std::cout << "[readReachabilityMap] Problem opening the path file " << map_file << std::endl;
+	    throw std::exception();
     }
 }
 
