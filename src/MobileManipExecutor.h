@@ -131,6 +131,7 @@ private:
     std::vector<double> vd_arm_posmargin = {0.2,0.2,0.2,0.2,0.2,0.2};// TODO - Adhoc margin for arm positions
     int i_iteration_counter;
     int i_current_coverage_index; 
+    int i_current_init_index; 
     int i_current_retrieval_index; 
     double d_call_period;
 public:
@@ -143,6 +144,7 @@ public:
      */
     void updateMotionPlan();
     void updateRetrieval();
+    void updateDeployment();
     /**
      * Indicates whether the rover is within the corridor or not 
      */
@@ -179,6 +181,7 @@ public:
     void initializeArmVariables(const Joints &j_present_readings);
     void resetIterator();
     void getAtomicCommand();
+    unsigned int getDeploymentCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     unsigned int getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     std::vector<double>* getArmCurrentReadings();

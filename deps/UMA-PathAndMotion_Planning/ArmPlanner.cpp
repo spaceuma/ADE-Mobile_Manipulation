@@ -340,6 +340,7 @@ bool ArmPlanner::planAtomicOperation(
     // Rover z coordinate and heading computation
     std::vector<double> roverPose6(6);
 
+    wristPath6 = new std::vector<std::vector<double>>;
     roverPose6[0] = roverWaypoint.position[0];
     roverPose6[1] = roverWaypoint.position[1];
     roverPose6[2]

@@ -222,6 +222,64 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     }
 }
 
+unsigned int MotionPlan::computeArmDeployment(const std::vector<double> &vd_arm_goal, const std::vector<double> &vd_arm_readings)
+{
+    this->vvd_init_arm_profile.clear();
+    this->vd_init_time_profile.clear();
+    this->b_is_initialization_computed = false;
+    std::vector<std::vector<double>> elevationMap;
+    if(!this->pmm_map->getElevationMapToZero(elevationMap))
+    {
+        return 3;
+    }
+    // TODO: check if elevationMap is properly formatted
+    // TODO: check if i_segment_m is valid!!
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Actual Joint " << i << " is " << vd_arm_readings[i] << std::endl;
+    }
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Goal Joint " << i << " is " << vd_arm_goal[i] << std::endl;
+    }
+
+    double dxyres = this->pmm_map->getResolution();
+    std::cout << " Resolution is " << dxyres << std::endl;
+    std::cout << " Z-res is " << this->d_zres << std::endl;
+    base::Waypoint current_waypoint;
+    current_waypoint.position[0] = 3;
+    current_waypoint.position[1] = 3;
+    current_waypoint.position[2]
+        = elevationMap[(int)(current_waypoint.position[1] / this->pmm_map->getResolution() + 0.5)]
+                      [(int)(current_waypoint.position[0] / this->pmm_map->getResolution() + 0.5)]
+          + p_arm_planner->heightGround2BCS;
+    current_waypoint.heading = 0;
+
+    if(this->p_arm_planner->planAtomicOperation(&elevationMap,
+                                    dxyres,
+                                    this->d_zres,
+                                    current_waypoint,//TODO - this should be avoided
+                                    vd_arm_readings,
+                                    vd_arm_goal,
+                                    &(this->vvd_init_arm_profile),
+                                    &(this->vd_init_time_profile)))
+    {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...
+        if(this->isArmProfileSafe(this->vvd_init_arm_profile))
+	{
+            this->b_is_initialization_computed = true;
+            return 0;
+	}
+	else
+	{
+            return 1;
+	}
+    }
+    else
+    {
+            return 2;
+    }   
+}
+
 
 unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings)
 {
@@ -273,6 +331,8 @@ unsigned int MotionPlan::computeArmDeployment(int i_segment_m, const std::vector
     }   
 }
 
+
+
 unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
 {
     this->vvd_retrieval_arm_profile.clear();
@@ -295,15 +355,26 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
     std::cout << " Resolution is " << dxyres << std::endl;
     std::cout << " Z-res is " << this->d_zres << std::endl;
 
+    base::Waypoint current_waypoint;
+    current_waypoint.position[0] = 3;
+    current_waypoint.position[1] = 3;
+    current_waypoint.position[2]
+        = elevationMap[(int)(current_waypoint.position[1] / this->pmm_map->getResolution() + 0.5)]
+                      [(int)(current_waypoint.position[0] / this->pmm_map->getResolution() + 0.5)]
+          + p_arm_planner->heightGround2BCS;
+    current_waypoint.heading = 0;
+
     if(this->p_arm_planner->planAtomicOperation(&elevationMap,
                                     dxyres,
                                     this->d_zres,
-                                    this->vw_rover_path[this->vw_rover_path.size()-1],
+                                    //this->vw_rover_path[this->vw_rover_path.size()-1],
+				    current_waypoint,
                                     vd_init,
                                     this->vd_retrieval_position,
                                     &(this->vvd_retrieval_arm_profile),
                                     &(this->vd_retrieval_time_profile)))
     {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...
+        std::cout << "The atomic operation is computed" << std::endl;
         if(this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
 	{
             this->b_is_retrieval_computed = true;

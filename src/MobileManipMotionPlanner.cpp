@@ -23,6 +23,92 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
         this->p_motionplan, s_configfile_path_m);
 }
 
+bool MobileManipMotionPlanner::initAtomicOperation(const Joints &j_goal, const Joints &j_present_readings)
+{
+    if (this->status == IDLE)
+    {
+        this->p_mmexecutor->resetIterator(); 
+        std::vector<double> vd_arm_readings, vd_arm_goal;
+	vd_arm_readings.resize(6);
+	vd_arm_goal.resize(6);
+	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            vd_arm_goal[i]
+                = j_goal.m_jointStates[i].m_position;
+            vd_arm_readings[i]
+                = j_present_readings.m_jointStates[i].m_position;
+        }        
+       	if (this->p_motionplan->computeArmDeployment(vd_arm_goal, vd_arm_readings) != 0)
+        {
+            return false;
+	}
+	std::cout << " Arm Deployment computed " << std::endl;
+	if (this->p_motionplan->computeArmRetrieval(vd_arm_goal) != 0)
+        {
+            return false;
+	}
+        this->p_mmexecutor->updateDeployment();
+        this->p_mmexecutor->updateRetrieval();
+	this->b_is_atomic_deployed = false;
+        this->p_mmexecutor->resetIterator(); 
+	setStatus(EXECUTING_ATOMIC_OPERATION);
+	return true;
+    }
+    else
+    {
+        setError(IMPROPER_CALL);
+	return false;
+    }
+}
+
+unsigned int MobileManipMotionPlanner::updateAtomicOperation(Joints &arm_command, Joints arm_joints)
+{
+    unsigned int ui_error_code = 0;
+    if (this->status == EXECUTING_ATOMIC_OPERATION)
+    {
+        if (!this->b_is_atomic_deployed)
+        {
+	    ui_error_code = this->p_mmexecutor->getDeploymentCommand(
+                arm_joints, arm_command);
+	    std::cout << " Getting Deployment Command" << std::endl;
+	    std::cout << "ui_error_code is " << ui_error_code << std::endl;
+	    switch (ui_error_code)
+	    {
+                case 0:
+                    return 0;
+		case 1:
+		    this->b_is_atomic_deployed = true;
+                    this->p_mmexecutor->resetIterator(); 
+		    return 0;
+		default:
+		    return 0;
+	    }
+        }
+	else
+	{
+            ui_error_code = this->p_mmexecutor->getRetrievalCommand(
+                arm_joints, arm_command);
+       	    std::cout << " Getting Retrieval Command" << std::endl;
+	    std::cout << "ui_error_code is " << ui_error_code << std::endl;
+	    switch (ui_error_code)
+	    {
+                case 0:
+                    return 0;
+		case 1:
+		    this->b_is_atomic_deployed = false;
+		    setStatus(IDLE);
+		    return 1;
+		default:
+		    return 0;
+	    }
+	}
+    }
+    else
+    {
+        setError(IMPROPER_CALL);
+	return 0;
+    }
+}
 
 bool MobileManipMotionPlanner::updateNavCamDEM(const RoverGuidance_Dem &navCamDEM)
 {
@@ -472,6 +558,9 @@ void MobileManipMotionPlanner::printStatus()
     {
         case IDLE:
             std::cout << "IDLE";
+            break;
+        case EXECUTING_ATOMIC_OPERATION:
+            std::cout << "EXECUTING_ATOMIC_OPERATION";
             break;
         case GENERATING_MOTION_PLAN:
             std::cout << "GENERATING_MOTION_PLAN";

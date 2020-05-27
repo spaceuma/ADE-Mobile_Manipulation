@@ -32,6 +32,7 @@ private:
     /**
      * Status of the motion planner:
      * IDLE
+     * EXECUTING_ATOMIC_OPERATION
      * GENERATING_MOTION_PLAN
      * READY_TO_MOVE
      * EXECUTING_MOTION_PLAN
@@ -96,7 +97,7 @@ private:
           + sqrt(pow(vd_kin_conf[2] + vd_kin_conf[5], 2)
                  - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6] - d_finalEE_height, 2));
     double d_minfetching_dist = (d_maxfetching_dist<0.24)?0.0:(d_maxfetching_dist-0.24);
-
+    bool b_is_atomic_deployed;
 
 public:
     /**
@@ -136,6 +137,7 @@ public:
      * PAUSE state.
      */
     bool resumeOperation();
+    unsigned int updateAtomicOperation(Joints &arm_command, Joints arm_joints);
 
     /**
      * It provides commands depending on the current position of the rover and
@@ -243,5 +245,6 @@ public:
      * It serves to perform an operation with only the arm.
      */
     void executeAtomicOperation();
+    bool initAtomicOperation(const Joints &j_goal, const Joints &j_present_readings);
 
 };

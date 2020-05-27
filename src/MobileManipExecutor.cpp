@@ -19,7 +19,9 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, std::str
     readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt", (*this->pvvd_arm_sweeping_profile));
     readVectorFile(s_urdf_path_m + "/sweepingTimes.txt", (*this->pvd_arm_sweeping_times));
 
-   
+    this->i_current_init_index = 0;
+    this->i_current_retrieval_index = 0;
+ 
     this->b_first_retrieval_point_reached = false;
     this->b_second_retrieval_point_reached = false;
     this->j_first_retrieval_position.m_jointStates.resize(6);
@@ -66,6 +68,7 @@ void MobileManipExecutor::updateMotionPlan()
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
+    this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
     // Extract and store the joints profile
     this->pvvd_arm_motion_profile
@@ -76,19 +79,26 @@ void MobileManipExecutor::updateMotionPlan()
     this->b_second_retrieval_point_reached = false;
     this->d_call_period = 0.5; // TODO: MAKE THIS CONFIGURABLE!!!
     this->i_iteration_counter = 0;
-    this->pvvd_init_arm_profile  
-            = this->p_motion_plan->getInitArmMotionProfile();
-    this->pvd_init_time_profile  
-            = this->p_motion_plan->getInitArmTimeProfile();
+    this->updateDeployment();
     this->updateRetrieval();
 }
 
 void MobileManipExecutor::updateRetrieval()
 {
+    this->i_current_retrieval_index = 0;
     this->pvvd_retrieval_arm_profile  
             = this->p_motion_plan->getRetrievalArmMotionProfile();
     this->pvd_retrieval_time_profile  
             = this->p_motion_plan->getRetrievalArmTimeProfile();
+}
+
+void MobileManipExecutor::updateDeployment()
+{
+    this->i_current_init_index = 0;
+    this->pvvd_init_arm_profile  
+            = this->p_motion_plan->getInitArmMotionProfile();
+    this->pvd_init_time_profile  
+            = this->p_motion_plan->getInitArmTimeProfile();
 }
 
 bool MobileManipExecutor::isRoverFinished()
@@ -292,6 +302,40 @@ void MobileManipExecutor::assignPresentCommand(Joints &j_command)
     }
 }
 
+unsigned int MobileManipExecutor::getDeploymentCommand(const Joints &j_present_joints_m, Joints &j_next_arm_command)
+{
+     // TODO: introduce followingarm checker
+    double d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
+    bool b_is_finished = false;
+    
+    this->prepareNextArmCommand(j_next_arm_command);
+    this->updateArmPresentReadings(j_present_joints_m); 
+    if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size()-1)
+    {
+        if ((*this->pvd_init_time_profile)[this->i_current_init_index]*2.0 <= d_elapsed_time)//TODO - ADHOC value to make this slower
+        {
+            this->i_current_init_index++;
+            this->updateArmCommandVectors((*this->pvvd_init_arm_profile)[this->i_current_init_index]);   
+	}
+    }
+    else if ((*this->pvd_init_time_profile)[(*this->pvvd_init_arm_profile).size()-1]*2.0 < d_elapsed_time)
+    {
+            b_is_finished = true; 
+    }
+    std::cout << "The Retrieval Index is " << i_current_init_index << std::endl;
+    this->assignPresentCommand(j_next_arm_command); 
+    this->i_iteration_counter++;
+    if (b_is_finished)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+
 unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_present_joints_m, Joints &j_next_arm_command)
 {
      // TODO: introduce followingarm checker
@@ -323,57 +367,6 @@ unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_present_jo
     {
         return 0;
     }
-  
-/*    this->prepareNextArmCommand(j_next_arm_command_m);
-
-    this->updateArmPresentReadings(j_arm_present_readings_m); 
-
-    //TODO - Improve this method
-    if (this->b_first_retrieval_point_reached)
-    {
-        if (this->b_second_retrieval_point_reached)
-	{
-	    return 2;
-	}
-        if (isArmReady(this->j_second_retrieval_position, j_arm_present_readings_m))
-	{
-            this->b_second_retrieval_point_reached = true;
-	    std::cout << "Second Retrieval Point Reached!" << std::endl;
-	    return 1;
-	}
-	else
-	{
-            for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-            {
-                j_next_arm_command_m.m_jointStates[i].m_position
-                    = this->j_second_retrieval_position.m_jointStates[i].m_position;
-            }
-            return 1;
-        }
-   }
-   else
-   {
-      if (isArmReady(this->j_first_retrieval_position,j_arm_present_readings_m))
-      {
-        this->b_first_retrieval_point_reached = true;
-	std::cout << "First Retrieval Point Reached!" << std::endl;
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-            {
-                j_next_arm_command_m.m_jointStates[i].m_position
-                    = this->j_second_retrieval_position.m_jointStates[i].m_position;
-            }
-	return 1;
-      }
-      else
-      {
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-            {
-                j_next_arm_command_m.m_jointStates[i].m_position
-                    = this->j_first_retrieval_position.m_jointStates[i].m_position;
-            }
-	return 0;
-      } 
-   }*/
 }
 
 

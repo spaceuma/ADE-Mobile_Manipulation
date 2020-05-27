@@ -163,6 +163,7 @@ public:
      * Calculates the profile of positions for the arm
      */
     unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(const std::vector<double> &vd_arm_goal, const std::vector<double> &vd_arm_readings);
 
     unsigned int computeArmRetrieval(const std::vector<double> &vd_init);
     unsigned int computeAtomicOperation();

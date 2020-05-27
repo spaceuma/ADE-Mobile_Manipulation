@@ -169,13 +169,14 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
             this->vvd_cost_map.push_back(vd_row);
             this->vvd_proximity_map.push_back(vd_row);
         }        // Assignation of DEM parameters
+        this->calculateElevationMap(); 
 	mapstate = DEM_LOADED;
     }
     catch (bad_alloc &ba)
     {
 	mapstate = NO_DEM;
 	return 5;
-    }    
+    }   
     return 0;
 }
 
