@@ -8,7 +8,7 @@
 *
 * @brief Structure designed to hold a digital elevation map which is provided as input to the rover guidance.
 */
-typedef struct RoverGuidance_Dem
+typedef struct RoverGuidance_DemStruct
 {
 /*! @name cols
 * @details Number of columns in the map, where columns is given by the x direction and an increase in the

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "RoverGuidance_Dem.h"
+#include  "RoverGuidance_InputDataStruct.h"
 #include "Waypoint.hpp"
 
 using namespace base;
