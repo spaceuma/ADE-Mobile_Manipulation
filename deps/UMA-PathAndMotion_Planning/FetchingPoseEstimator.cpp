@@ -41,7 +41,7 @@ int FetchingPoseEstimator::getFetchWaypointIndex(
                "[FetchingPoseEstimator_lib::getFetchWaypointIndex]: No valid "
                "position for "
                "fetching\033[0m\n";
-        return -1;
+        return 0;
     }
 }
 
