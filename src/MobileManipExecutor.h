@@ -1,4 +1,4 @@
-#include "Joints.h"
+#include  "Joints.h"
 
 #include "MotionCommand.h"
 #include "MotionPlan.h"
@@ -6,7 +6,7 @@
 #include "coupledControl.hpp"
 #include "CollisionDetector.h"
 
-using namespace proxy_library;
+//using namespace proxy_library;
 using namespace waypoint_navigation_lib;
 using namespace coupled_control;
 
@@ -27,8 +27,8 @@ private:
     /**
      * Adhoc variables to make arm retrieval
      */
-    Joints j_first_retrieval_position;
-    Joints j_second_retrieval_position;
+    proxy_library::Joints j_first_retrieval_position;
+    proxy_library::Joints j_second_retrieval_position;
     bool b_first_retrieval_point_reached;
     bool b_second_retrieval_point_reached;
     /**
@@ -64,7 +64,7 @@ private:
     /**
      * Motion Command class 
      */
-    MotionCommand motion_command;
+    proxy_library::MotionCommand motion_command;
     /**
      * Coupled Control class 
      */
@@ -148,7 +148,7 @@ public:
     /**
      * Indicates whether the rover is within the corridor or not 
      */
-    bool isRoverWithinCorridor(Pose pose_rover);
+    bool isRoverWithinCorridor(base::Pose pose_rover);
 
     /**
      * Indicates whether the execution of the present operation is completed
@@ -158,11 +158,11 @@ public:
     /**
      * Provides the next arm command according to the present situation 
      */
-    unsigned int getCoupledCommand(Pose &rover_pose, const Joints &j_arm_present_readings_m, MotionCommand &mc_m, Joints &j_next_arm_command_m);
+    unsigned int getCoupledCommand(base::Pose &rover_pose, const proxy_library::Joints &j_arm_present_readings_m, proxy_library::MotionCommand &mc_m, proxy_library::Joints &j_next_arm_command_m);
     /**
      * Checks if the arm is at Ready position 
      */
-    bool isArmReady(const Joints &j_next_command, const Joints &j_present_joints);
+    bool isArmReady(const proxy_library::Joints &j_next_command, const proxy_library::Joints &j_present_joints);
     /**
      * Checks if the arm is currently colliding 
      */
@@ -174,7 +174,7 @@ public:
     /**
      * Returns a (0,0,0) rover command 
      */
-    MotionCommand getZeroRoverCommand();
+    proxy_library::MotionCommand getZeroRoverCommand();
     /**
      * Arm Variables Initialization 
      */

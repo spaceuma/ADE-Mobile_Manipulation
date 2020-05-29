@@ -40,7 +40,7 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan* presentMotionPlan, std::str
     this->j_second_retrieval_position.m_jointStates[5].m_position = 2.3562;
 }
 
-void MobileManipExecutor::initializeArmVariables(const Joints &j_present_readings)
+void MobileManipExecutor::initializeArmVariables(const proxy_library::Joints &j_present_readings)
 {
     double d_val;
     for (uint i = 0; i < 6; i++)
@@ -106,7 +106,7 @@ bool MobileManipExecutor::isRoverFinished()
     return waypoint_navigation.getNavigationState() == TARGET_REACHED;
 }
 
-unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Joints &j_arm_present_readings_m, MotionCommand &mc_m, Joints &j_next_arm_command_m)
+unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const proxy_library::Joints &j_arm_present_readings_m, proxy_library::MotionCommand &mc_m, proxy_library::Joints &j_next_arm_command_m)
 {
     int i_actual_segment = this->waypoint_navigation.getCurrentSegment();
     // Getting Rover Command
@@ -255,7 +255,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const Join
     }
 }
 
-unsigned int MobileManipExecutor::getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m)
+unsigned int MobileManipExecutor::getCoverageCommand(proxy_library::Joints &j_next_arm_command, const proxy_library::Joints &j_present_joints_m)
 {
     // TODO: introduce followingarm checker
     double d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
@@ -293,7 +293,7 @@ void MobileManipExecutor::resetIterator()
     this->i_iteration_counter = 0;
 }
 
-void MobileManipExecutor::assignPresentCommand(Joints &j_command)
+void MobileManipExecutor::assignPresentCommand(proxy_library::Joints &j_command)
 {
     for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
     {
@@ -302,7 +302,7 @@ void MobileManipExecutor::assignPresentCommand(Joints &j_command)
     }
 }
 
-unsigned int MobileManipExecutor::getDeploymentCommand(const Joints &j_present_joints_m, Joints &j_next_arm_command)
+unsigned int MobileManipExecutor::getDeploymentCommand(const proxy_library::Joints &j_present_joints_m, proxy_library::Joints &j_next_arm_command)
 {
      // TODO: introduce followingarm checker
     double d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
@@ -336,7 +336,7 @@ unsigned int MobileManipExecutor::getDeploymentCommand(const Joints &j_present_j
 }
 
 
-unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_present_joints_m, Joints &j_next_arm_command)
+unsigned int MobileManipExecutor::getRetrievalCommand(const proxy_library::Joints &j_present_joints_m, proxy_library::Joints &j_next_arm_command)
 {
      // TODO: introduce followingarm checker
     double d_elapsed_time = (double)this->i_iteration_counter * this->d_call_period;
@@ -370,7 +370,7 @@ unsigned int MobileManipExecutor::getRetrievalCommand(const Joints &j_present_jo
 }
 
 
-void MobileManipExecutor::fixMotionCommand(MotionCommand &mc_m)
+void MobileManipExecutor::fixMotionCommand(proxy_library::MotionCommand &mc_m)
 {
     if ((abs(mc_m.m_speed_ms) < 0.0000001)&&(abs(mc_m.m_turnRate_rads) > 0.0000001))
     {
@@ -405,7 +405,7 @@ bool MobileManipExecutor::isArmColliding()
     return this->p_collision_detector->isColliding(this->vd_arm_present_readings);
 }
 
-bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints &j_present_joints)
+bool MobileManipExecutor::isArmReady(const proxy_library::Joints &j_next_command, const proxy_library::Joints &j_present_joints)
 {
     for (uint i = 0; i < 6; i++)
     {
@@ -418,7 +418,7 @@ bool MobileManipExecutor::isArmReady(const Joints &j_next_command, const Joints 
     return true;
 }
 
-bool MobileManipExecutor::isArmFollowing(const Joints &j_next_command, const Joints &j_present_joints)
+bool MobileManipExecutor::isArmFollowing(const proxy_library::Joints &j_next_command, const proxy_library::Joints &j_present_joints)
 {
     double d_deg2rad = 3.1416/180.0;
     bool isMoving = true;
@@ -442,9 +442,9 @@ void MobileManipExecutor::getAtomicCommand()
 
 }
 
-MotionCommand MobileManipExecutor::getZeroRoverCommand()
+proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
 {
-    MotionCommand mc_zero;
+    proxy_library::MotionCommand mc_zero;
     mc_zero.m_manoeuvreType = 0; //0: Ackermann, 1: PointTurn
     mc_zero.m_curvature_radm = 0.0; //in radians/meter
     mc_zero.m_speed_ms = 0.0;  //in meters/seconds
@@ -452,7 +452,7 @@ MotionCommand MobileManipExecutor::getZeroRoverCommand()
     return mc_zero;
 }
 
-bool MobileManipExecutor::updateArmPresentReadings(const Joints &j_present_joints_m)
+bool MobileManipExecutor::updateArmPresentReadings(const proxy_library::Joints &j_present_joints_m)
 {
     for (uint i = 0; i < 6; i++)
     {
@@ -477,7 +477,7 @@ bool MobileManipExecutor::updateArmCommandVectors(const std::vector<double> &vd_
     }
 }
 
-bool MobileManipExecutor::prepareNextArmCommand(Joints &j_next_arm_command)
+bool MobileManipExecutor::prepareNextArmCommand(proxy_library::Joints &j_next_arm_command)
 {
     if (j_next_arm_command.m_jointNames.empty())
     {

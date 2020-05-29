@@ -38,7 +38,7 @@ int main()
         }
     } 
 
-    MotionCommand mc;
+    proxy_library::MotionCommand mc;
     std::vector<JointState> vj_current_jointstates;
     vj_current_jointstates.resize(6);
     for (uint i = 0; i < 6; i++)
@@ -46,7 +46,7 @@ int main()
         vj_current_jointstates[i].m_position = 0.0;
         vj_current_jointstates[i].m_speed = 0.0;
     }
-    Joints j_current_joints(0, vj_current_jointstates);
+    proxy_library::Joints j_current_joints(0, vj_current_jointstates);
 
 
     double d_zres = 0.08;

@@ -206,6 +206,7 @@ bool MobileManipMap::isOutside(const base::Waypoint &w_sample_localpos_m)
         || (w_sample_localpos_m.position[1]
             > ((double)this->ui_num_rows - 2) * this->d_res))
     {
+        std::cout << "[INFO] [MobileManipMap::isOutside] - dem res: " << this->d_res << "; cols: " << this->ui_num_cols << "; rows: " << this->ui_num_rows << "\n";
         return true;
     }
     else

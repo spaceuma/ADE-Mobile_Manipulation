@@ -5,7 +5,7 @@
 #include "MotionCommand.h"
 #include "MotionPlan.h"
 #include "Pose.h"
-#include "RoverGuidance_Dem.h"
+#include "RoverGuidance_InputDataStruct.h"
 #include "Waypoint.hpp"
 
 /**
@@ -111,7 +111,7 @@ public:
      * sample position.
      */
     bool generateMotionPlan(proxy_library::Pose plpose_m,
-                            const Joints &j_present_readings,
+                            const proxy_library::Joints &j_present_readings,
                             double d_sample_pos_x,
                             double d_sample_pos_y);
 
@@ -130,7 +130,7 @@ public:
      * It makes the software enter into the PAUSE state, first creating commands
      * to stop the rover base.
      */
-    bool pause(MotionCommand &rover_command);
+    bool pause(proxy_library::MotionCommand &rover_command);
 
     /**
      * It returns to the state indicated by priorStatus. Useful to exit the
@@ -143,10 +143,10 @@ public:
      * It provides commands depending on the current position of the rover and
      * the arm joints
      */
-    bool updateRoverArmPos(Joints &arm_command,
-                           MotionCommand &rover_command,
+    bool updateRoverArmPos(proxy_library::Joints &arm_command,
+                           proxy_library::MotionCommand &rover_command,
                            proxy_library::Pose rover_position,
-                           Joints arm_joints);
+                           proxy_library::Joints arm_joints);
 
     /**
      * Goal is updated during the execution of the motion plan. It requires to

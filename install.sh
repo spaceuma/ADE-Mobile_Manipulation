@@ -14,6 +14,12 @@ cur=$PWD
 # pip3 install PyQt5
 # sudo apt-get -y install python3-matplotlib
 
+cd $cur
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+make
+
 cd data/planner
 rm urdfmodel_path.txt
 echo "$cur/data/planner" >> urdfmodel_path.txt
