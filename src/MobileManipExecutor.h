@@ -174,14 +174,7 @@ public:
     /**
      * Returns a (0,0,0) rover command 
      */
-    MotionCommand getZeroRoverCommand();
-    /**
-     * Arm Variables Initialization 
-     */
-    /**
-     * Returns a (0,0,0) rover command 
-     */
-    MotionCommand getZeroRoverCommand();
+    proxy_library::MotionCommand getZeroRoverCommand();
     /**
      * Arm Variables Initialization 
      */
@@ -193,5 +186,4 @@ public:
     unsigned int getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     std::vector<double>* getArmCurrentReadings();
     std::vector<double>* getLastProfile();
-};
 };
