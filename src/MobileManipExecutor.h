@@ -185,5 +185,6 @@ public:
     unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m, Joints &j_next_arm_command_m);
     unsigned int getCoverageCommand(Joints &j_next_arm_command, const Joints &j_present_joints_m);
     std::vector<double>* getArmCurrentReadings();
-    std::vector<double>* getLastProfile();
+    std::vector<double>* getFirstCoverageProfile();
+    std::vector<double>* getLastCoverageProfile();
 };

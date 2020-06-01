@@ -78,7 +78,6 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         samplePos.position[1] - (*roverPath)[roverPath->size() - 1].position[1],
         samplePos.position[0]
             - (*roverPath)[roverPath->size() - 1].position[0]);
-
     roverPath6 = new std::vector<std::vector<double>>;
     roverPath6->resize(roverPath->size(), std::vector<double>(6));
 
@@ -120,17 +119,18 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     double sigma = 2;
     int samples = 5;
-    smoothedHeading = getGaussSmoothen(heading, sigma, samples);
-
-    for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 - 1; i++)
+    if (roverPath->size() > samples*2 + 1)
     {
-        (*roverPath6)[i][5] = smoothedHeading[i];
-        while ((*roverPath6)[i][5] > pi)
-            (*roverPath6)[i][5] -= 2 * pi;
-        while ((*roverPath6)[i][5] < -pi)
-            (*roverPath6)[i][5] += 2 * pi;
+        smoothedHeading = getGaussSmoothen(heading, sigma, samples);
+        for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 - 1; i++)
+        {
+            (*roverPath6)[i][5] = smoothedHeading[i];
+            while ((*roverPath6)[i][5] > pi)
+                (*roverPath6)[i][5] -= 2 * pi;
+            while ((*roverPath6)[i][5] < -pi)
+                (*roverPath6)[i][5] += 2 * pi;
+        }
     }
-
     // Initial arm pos computation
     std::vector<std::vector<double>> initialBCS2Wrist
         = sherpa_tt_arm->getWristTransform(sherpa_tt_arm->initialConfiguration);

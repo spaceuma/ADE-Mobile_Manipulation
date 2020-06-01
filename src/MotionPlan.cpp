@@ -120,7 +120,16 @@ bool MotionPlan::shortenPathForFetching()
         &(this->vw_rover_path));
     if (endWaypoint == 0)
     {
-        return false;
+        if (this->vw_rover_path.size() > 2)
+	{
+            this->vw_rover_path.erase(this->vw_rover_path.begin() + 1,
+                              this->vw_rover_path.end());
+	    return true;
+	}
+	else
+	{
+            return false;
+	}
     }
     else
     {
@@ -192,7 +201,9 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         // Initialization
         if(this->isArmProfileSafe(this->vvd_arm_motion_profile))
 	{
-            
+            std::cout << "Raw Profile is safe, with " << this->vvd_arm_motion_profile.size() << " samples" << std::endl;
+	    if (this->vvd_arm_motion_profile.size() > this->i_gauss_numsamples*2)
+	    {
             this->p_arm_planner->computeArmProfileGaussSmoothening(&(this->vvd_arm_motion_profile), &(this->vvd_smoothed_arm_motion_profile), this->d_gauss_sigma, this->i_gauss_numsamples);
 	    if (this->isArmProfileSafe(this->vvd_smoothed_arm_motion_profile))
             {
@@ -208,6 +219,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                     row.clear();
                 }
                 this->vvd_arm_motion_profile = this->vvd_smoothed_arm_motion_profile;
+	    }
 	    } 
 	    return 0;
         }

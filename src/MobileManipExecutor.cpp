@@ -136,10 +136,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const prox
 
     // Create Profile for initial operation
 
-    for (uint i = 0; i < 6; i++)
+    /*for (uint i = 0; i < 6; i++)
     {
             std::cout << " Executor Goal Joint " << i << " is " << (*this->pvvd_arm_motion_profile)[this->waypoint_navigation.getCurrentSegment()][i] << std::endl;
-    }
+    }*/
 
     this->updateArmPresentReadings(j_arm_present_readings_m);
     
@@ -157,9 +157,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const prox
     // Getting Arm Command
     this->prepareNextArmCommand(j_next_arm_command_m);
 
-    std::cout << "The Rover Segment is " << this->waypoint_navigation.getCurrentSegment() << std::endl;
+    /*std::cout << "The Rover Segment is " << this->waypoint_navigation.getCurrentSegment() << std::endl;
     std::cout << "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
-    std::cout << "The state is " << this->armstate << std::endl;
+    std::cout << "The state is " << this->armstate << std::endl;*/
     switch (this->armstate)
     {
         case INITIALIZING:
@@ -170,7 +170,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const prox
             } 
 	    double d_elapsed_init_time;
 	    // Keep track of vdd_init_arm_profile
-	    std::cout << " Creating initialization command" << std::endl;
+	    //std::cout << " Creating initialization command" << std::endl;
             d_elapsed_init_time = (double)this->i_iteration_counter * this->d_call_period;
             if (this->i_current_segment < (*this->pvvd_init_arm_profile).size()-1)
             {
@@ -224,17 +224,18 @@ unsigned int MobileManipExecutor::getCoupledCommand(Pose &rover_pose, const prox
                 mc_m = this->getZeroRoverCommand();
 	        return 7;
 	    }
-    	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before MotionControl is (translation speed = " << mc_m.m_speed_ms
+    	    /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before MotionControl is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
-
+            */
             this->coupled_control.modifyMotionCommand(gain, vd_arm_present_command, vd_arm_previous_command, max_speed, vd_arm_abs_speed, mc_m); 
 
-    	    std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before fixing is (translation speed = " << mc_m.m_speed_ms
+    	    /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion Command before fixing is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
+		  */
             fixMotionCommand(mc_m);// This sets the maneuver as Point Turn if needed
-    	    std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
+    	    /*std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
 		  << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
-	    std::cout << "VAlue of b_isfinal is " << b_is_last_segment << std::endl;
+	    std::cout << "VAlue of b_isfinal is " << b_is_last_segment << std::endl;*/
 	    if(this->navstate == TARGET_REACHED)
 	    {
                 mc_m = this->getZeroRoverCommand();
@@ -275,7 +276,7 @@ unsigned int MobileManipExecutor::getCoverageCommand(proxy_library::Joints &j_ne
     {
             b_is_finished = true; 
     }
-    std::cout << "The Coverage Index is " << i_current_coverage_index << std::endl;
+    //std::cout << "The Coverage Index is " << i_current_coverage_index << std::endl;
     this->assignPresentCommand(j_next_arm_command); 
     this->i_iteration_counter++;
     if (b_is_finished)
@@ -322,7 +323,7 @@ unsigned int MobileManipExecutor::getDeploymentCommand(const proxy_library::Join
     {
             b_is_finished = true; 
     }
-    std::cout << "The Retrieval Index is " << i_current_init_index << std::endl;
+    //std::cout << "The Retrieval Index is " << i_current_init_index << std::endl;
     this->assignPresentCommand(j_next_arm_command); 
     this->i_iteration_counter++;
     if (b_is_finished)
@@ -356,7 +357,7 @@ unsigned int MobileManipExecutor::getRetrievalCommand(const proxy_library::Joint
     {
             b_is_finished = true; 
     }
-    std::cout << "The Retrieval Index is " << i_current_retrieval_index << std::endl;
+    //std::cout << "The Retrieval Index is " << i_current_retrieval_index << std::endl;
     this->assignPresentCommand(j_next_arm_command); 
     this->i_iteration_counter++;
     if (b_is_finished)
@@ -425,12 +426,12 @@ bool MobileManipExecutor::isArmFollowing(const proxy_library::Joints &j_next_com
     double d_margin;
     for (uint i = 0; i < 6; i++)
     {
-	std::cout << "In joint " << i << " the previous command is " << this->vd_arm_previous_command[i] << " and the current pos is " << j_present_joints.m_jointStates[i].m_position << std::endl; 
+	//std::cout << "In joint " << i << " the previous command is " << this->vd_arm_previous_command[i] << " and the current pos is " << j_present_joints.m_jointStates[i].m_position << std::endl; 
         d_margin = max(1.2*abs(this->vd_arm_previous_command[i] - this->vd_arm_present_command[i]), this->vd_arm_posmargin[i]);
         if (abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) > d_margin)//TODO - ADhoc threshold in radians
         {
             isMoving = false;
-	    std::cout << "Error = " << abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) << " rad" << std::endl;
+	    //std::cout << "Error = " << abs(this->vd_arm_previous_command[i] - j_present_joints.m_jointStates[i].m_position) << " rad" << std::endl;
 	}
     }
     //return isMoving;
@@ -502,7 +503,12 @@ std::vector<double>* MobileManipExecutor::getArmCurrentReadings()
     return &(this->vd_arm_present_readings); 
 }
 
-std::vector<double>* MobileManipExecutor::getLastProfile()
+std::vector<double>* MobileManipExecutor::getFirstCoverageProfile()
+{
+    return &((*this->pvvd_arm_sweeping_profile).front());
+}
+
+std::vector<double>* MobileManipExecutor::getLastCoverageProfile()
 {
     return &((*this->pvvd_arm_sweeping_profile).back());
 }

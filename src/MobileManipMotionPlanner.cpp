@@ -210,9 +210,11 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
 	// The rover base path is shortened to stop near the sample
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
+            this->printRoverPathInfo();
             setError(GOAL_TOO_CLOSE);
             return false;
         }
+        this->printRoverPathInfo();
 	// The arm positions profile is to be computed
         ui_code = this->p_motionplan->computeArmProfilePlanning();
         switch (ui_code)
@@ -236,14 +238,14 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
             vd_arm_readings[i]
                 = j_present_readings.m_jointStates[i].m_position;
         }
-
+        std::cout << "Computing Deployment" << std::endl;
 	if (this->p_motionplan->computeArmDeployment(0, vd_arm_readings) != 0)
         {
             setError(COLLIDING_PROF);
 	    return false;
 	}
 	std::cout << "The arm deployment is computed" << std::endl;	
-	std::vector<double>* pvd_last_profile = this->p_mmexecutor->getLastProfile();
+	std::vector<double>* pvd_last_profile = this->p_mmexecutor->getLastCoverageProfile();
         if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile)) != 0)
         {
             return false;
@@ -276,6 +278,7 @@ bool MobileManipMotionPlanner::start()
 
 bool MobileManipMotionPlanner::abort()
 {
+    // TODO - Add abort for atomic arm operation
     std::vector<double>* pvd_current_readings;
     switch (getStatus())
     {
