@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
+slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
+sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
 traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 costMap_splitted = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_splittedMap.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
@@ -45,15 +47,34 @@ ax2.set_xlim([xMap[0,0],xMap[0,-1]])
 ax2.set_ylim([yMap[0,0],yMap[-1,0]])
 
 
-fig2, ax3 = plt.subplots(constrained_layout=True)
-plot3 = ax3.contourf(xMap, yMap, costMap_splitted, 40, cmap = 'Reds')
+fig2, (ax3,ax4) = plt.subplots(1,2,constrained_layout=True)
+
+plot3 = ax3.contourf(xMap, yMap, slopeMap*180.0/np.pi, 40, vmax = 45.0)
 ax3.set_aspect('equal')
 ax3.set_xlabel('X-axis (m)')
 ax3.set_ylabel('Y-axis (m)')
-ax3.set_title('Cost Map')
-cb3 = fig2.colorbar(plot1, ax = ax1, orientation = 'horizontal')
-cb3.ax.set_title('Cost')
-ax3.set_facecolor('k')
-#s3 = ax3.plot(sample[0], sample[1], 'ob')
+ax3.set_title('Slope Map')
+cb3 = fig2.colorbar(plot3, ax = ax3, orientation = 'horizontal')
+cb3.ax.set_title('Slope')
+
+plot4 = ax4.contourf(xMap, yMap, sdMap, 40, vmax = 20.0)
+ax4.set_aspect('equal')
+ax4.set_xlabel('X-axis (m)')
+ax4.set_ylabel('Y-axis (m)')
+ax4.set_title('Spherical Deviation')
+cb4 = fig2.colorbar(plot4, ax = ax4, orientation = 'horizontal')
+cb4.ax.set_title('Spherical Deviation')
+
+
+#fig2, ax3 = plt.subplots(constrained_layout=True)
+#plot3 = ax3.contourf(xMap, yMap, costMap_splitted, 40, cmap = 'Reds')
+#ax3.set_aspect('equal')
+#ax3.set_xlabel('X-axis (m)')
+#ax3.set_ylabel('Y-axis (m)')
+#ax3.set_title('Cost Map')
+#cb3 = fig2.colorbar(plot1, ax = ax1, orientation = 'horizontal')
+#cb3.ax.set_title('Cost')
+#ax3.set_facecolor('k')
+##s3 = ax3.plot(sample[0], sample[1], 'ob')
 
 plt.show()

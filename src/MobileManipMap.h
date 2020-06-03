@@ -60,6 +60,10 @@ private:
      */
     double d_maxreach_dist = 0.94;
     /**
+     * Occupancy radius
+     */
+    double d_occupancy_dist = 2.0;
+    /**
      * Map minimal value of elevation in meters
      */
     double d_elevation_min;
@@ -79,6 +83,12 @@ private:
      * Matrix containing elevation values
      */
     std::vector<std::vector<double>> vvd_elevation_map;
+    std::vector<std::vector<double>> vvd_slope_map;
+    std::vector<std::vector<double>> vvd_aspect_map;
+    std::vector<std::vector<double>> vvd_sd_map;
+    std::vector<std::vector<double>> vvd_nx_map;
+    std::vector<std::vector<double>> vvd_ny_map;
+    std::vector<std::vector<double>> vvd_nz_map;
     /**
      * Matrix containing values regarding obstacles
      * 0 => obstacle
@@ -140,6 +150,14 @@ public:
      */
     std::vector<std::vector<double>> *getCostMap();
     void getCostMap(std::vector<std::vector<double>> &vvd_cost_map_m);
+    /**
+     * Function to get the current slope map
+     */
+    void getSlopeMap(std::vector<std::vector<double>> &vvd_slope_map_m);
+    /**
+     * Function to get the current spherical deviation map
+     */
+    void getSDMap(std::vector<std::vector<double>> &vvd_sd_map_m);
     /**
      * Function to get the current elevation map
      */

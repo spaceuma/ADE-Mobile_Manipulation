@@ -182,6 +182,8 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     try
     {
         this->vvd_elevation_map.clear();
+        this->vvd_slope_map.clear();
+        this->vvd_sd_map.clear();
         this->vvi_obstacle_map.clear();
         this->vvi_traversability_map.clear();
         this->vvd_cost_map.clear();
@@ -191,6 +193,12 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
         for (uint j = 0; j < this->ui_num_rows; j++)
         {
             this->vvd_elevation_map.push_back(vd_row);
+            this->vvd_slope_map.push_back(vd_row);
+            this->vvd_aspect_map.push_back(vd_row);
+            this->vvd_sd_map.push_back(vd_row);
+            this->vvd_nx_map.push_back(vd_row);
+            this->vvd_ny_map.push_back(vd_row);
+            this->vvd_nz_map.push_back(vd_row);
             this->vvi_obstacle_map.push_back(vi_row);
             this->vvi_traversability_map.push_back(vi_row);
             this->vvd_cost_map.push_back(vd_row);
@@ -274,6 +282,18 @@ void MobileManipMap::getCostMap(
     vvd_cost_map_m = this->vvd_cost_map;
 }
 
+void MobileManipMap::getSlopeMap(
+    std::vector<std::vector<double>> &vvd_slope_map_m)
+{
+    vvd_slope_map_m = this->vvd_slope_map;
+}
+
+void MobileManipMap::getSDMap(
+    std::vector<std::vector<double>> &vvd_sd_map_m)
+{
+    vvd_sd_map_m = this->vvd_sd_map;
+}
+
 std::vector<std::vector<double>> *MobileManipMap::getCostMap()
 {
     return &(this->vvd_cost_map);
@@ -325,6 +345,8 @@ bool MobileManipMap::calculateElevationMap()
 {
     std::vector<double> row;
     d_elevation_min = INFINITY;
+    
+    
     for (int j = 0; j < this->ui_num_rows; j++)
     {
         for (int i = 0; i < this->ui_num_cols; i++)
@@ -337,6 +359,63 @@ bool MobileManipMap::calculateElevationMap()
             }
         }
     }
+
+    if (this->b_debug_mode)
+    {
+        std::cout << "Elevation Map is saved as vector<vector<double>>" << std::endl;
+    }
+
+    double dx,dy;
+    for (int j = 1; j < this->ui_num_rows - 1; j++)
+    {
+        for (int i = 1; i < this->ui_num_cols - 1; i++)
+        {
+            dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i-1])/this->d_res;
+            dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j-1][i])/this->d_res;
+            this->vvd_slope_map[j][i] = atan(sqrt(pow(dx,2) + pow(dy,2)));
+	    this->vvd_aspect_map[j][i] = atan2(dy,dx);
+	    this->vvd_nx_map[j][i] = sin(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
+	    this->vvd_ny_map[j][i] = cos(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
+	    this->vvd_nz_map[j][i] = cos(this->vvd_slope_map[j][i]); 
+        }
+    }
+
+    int i_occupancy_kernel = (int) (.5 / this->d_res);
+    int i_nodes;
+    double d_sumnx, d_sumny, d_sumnz, d_R;
+    for (int j = 1; j < this->ui_num_rows - 1; j++)
+    {
+        for (int i = 1; i < this->ui_num_cols - 1; i++)
+        {
+            i_nodes = 0;
+	    d_sumnx = 0;
+	    d_sumny = 0;
+	    d_sumnz = 0;
+            for (int l = - i_occupancy_kernel; l <= i_occupancy_kernel ; l++)
+	    {
+                for (int k = - i_occupancy_kernel; k <= i_occupancy_kernel ; k++)
+		{
+                    if((j+l >= 0)&&(j+l < this->ui_num_rows - 1)&&(i+k >= 0)&&(i+k < this->ui_num_cols - 1)&&(sqrt(pow((double)l,2)+pow((double)k,2)) < (double)i_occupancy_kernel))
+		    {
+                        i_nodes++;
+			d_sumnx += this->vvd_nx_map[j + l][i + k]; 
+			d_sumny += this->vvd_ny_map[j + l][i + k];
+			d_sumnz += this->vvd_nz_map[j + l][i + k];
+		    }
+		}
+	    }
+	    d_R = sqrt(pow(d_sumnx,2)+pow(d_sumny,2)+pow(d_sumnz,2)); 
+	    this->vvd_sd_map[j][i] = sqrt( - 2 * log(d_R/(double)i_nodes)) * 180.0/3.1416; 
+	}
+    }
+
+
+    if (this->b_debug_mode)
+    {
+        std::cout << "Slope, Aspect and Normal Vector Components Maps are computed" << std::endl;
+	std::cout << "i_occupancy_kernel = " << i_occupancy_kernel << std::endl;
+    }
+
     return true;
 }
 
@@ -386,8 +465,9 @@ bool MobileManipMap::calculateTraversabilityMap()
         for (int i = 0; i < mat_slope_map.cols; i++)
         {
             mat_slope_map.at<float>(j, i)
-                = atan(mag.at<float>(j, i) * 1.0 / this->d_res) * 180.0
-                  / 3.1416;
+		    = (float)this->vvd_slope_map[j][i] * 180.0/3.1416;
+                //= atan(mag.at<float>(j, i) * 1.0 / this->d_res) * 180.0
+                  /// 3.1416;
         }
     }
 
@@ -399,7 +479,7 @@ bool MobileManipMap::calculateTraversabilityMap()
     }
 
     // Obstacle Mat is computed
-    threshold(mat_slope_map, mat_obstacle_map, 30.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
+    threshold(mat_slope_map, mat_obstacle_map, 45.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
     if (b_debug_mode)
     {
         std::cout << "A Threshold of 30.0 degrees is applied to the slope mat" << std::endl;
@@ -434,7 +514,7 @@ bool MobileManipMap::calculateTraversabilityMap()
                 this->vvi_obstacle_map[j][i] = 0;
                 this->vvi_traversability_map[j][i] = 0;
 	    }
-	    else if ((mat_proximity_map.at<float>(j, i) <= 0.94) ||//TODO-Include configurable distance 
+	    else if ((mat_proximity_map.at<float>(j, i) <= this->d_maxreach_dist) || 
 			    (i == 0) || (j == 0)
                 || (i == this->ui_num_cols - 1)
                 || (j == this->ui_num_rows - 1))
@@ -442,11 +522,11 @@ bool MobileManipMap::calculateTraversabilityMap()
                 this->vvi_obstacle_map[j][i] = 0;
                 this->vvi_traversability_map[j][i] = 1;
             }
-            else if (mat_proximity_map.at<float>(j, i) <= 2.0)
+            else if (mat_proximity_map.at<float>(j, i) <= this->d_occupancy_dist) 
             {
                 if (sqrt(pow((double)i*this->d_res - 
 			       this->w_sample_pos.position[0],2)+pow((double)j*this->d_res - 
-				       this->w_sample_pos.position[1],2)) > 0.94)
+				       this->w_sample_pos.position[1],2)) > this->d_maxreach_dist)
 		{
                     this->vvi_obstacle_map[j][i] = 0;
                     this->vvi_traversability_map[j][i] = 2;

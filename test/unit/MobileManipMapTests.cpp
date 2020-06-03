@@ -12,8 +12,16 @@ TEST(MMMapTest, nominal_working_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
+    
+    /*
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
+    */
+    
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
+    std::cout << "Input Matrix is successfully read" << std::endl; 
+    std::cout << "Matrix size is " << vvd_elevation_data[0].size() << "x" << vvd_elevation_data.size() << std::endl; 
     double res = 0.1; // meters
 
     // A dummy Rover Guidance based DEM is created
@@ -35,18 +43,22 @@ TEST(MMMapTest, nominal_working_test)
         }
     }
 
+    std::cout << "Rover Guidance DEM is successfully created" << std::endl; 
+    std::cout << vvd_elevation_data[0][0] << std::endl; 
+
     base::Waypoint samplePos;
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
-    MobileManipMap dummyMap;
-    dummyMap.loadDEM((*prgd_dummy_dem));
-    dummyMap.computeFACE(samplePos, 1.0, 0.94);
-
+    MobileManipMap dummyMap(true);
+    ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
+    std::cout << "DEM is loaded" << std::endl; 
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 0.94),0);
+    std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
     //ASSERT_GT(d_elevation_min, 1008.53);
 
-    std::vector<std::vector<double>> costMap;
+    std::vector<std::vector<double>> costMap, slopeMap, sdMap;
     std::vector<std::vector<int>> traversabilityMap;
     costMap.resize(prgd_dummy_dem->rows);
     traversabilityMap.resize(prgd_dummy_dem->rows);
@@ -56,10 +68,12 @@ TEST(MMMapTest, nominal_working_test)
         traversabilityMap[i].resize(prgd_dummy_dem->cols);
     }
     dummyMap.getCostMap(costMap);
-    ASSERT_EQ(costMap.size(), 80);
+    dummyMap.getSlopeMap(slopeMap);
+    dummyMap.getSDMap(sdMap);
+    /*ASSERT_EQ(costMap.size(), 80);
     ASSERT_EQ(costMap[0].size(), 80);
-
-    std::ofstream costMapFile, traversabilityMapFile;
+*/
+    std::ofstream costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
 
     costMapFile.open("test/unit/data/results/MMMapTest/costMap.txt");
 
@@ -73,6 +87,32 @@ TEST(MMMapTest, nominal_working_test)
     }
 
     costMapFile.close();
+
+    slopeMapFile.open("test/unit/data/results/MMMapTest/slopeMap.txt");
+
+    for (int j = 0; j < slopeMap.size(); j++)
+    {
+        for (int i = 0; i < slopeMap[0].size(); i++)
+        {
+            slopeMapFile << slopeMap[j][i] << " ";
+        }
+        slopeMapFile << "\n";
+    }
+
+    slopeMapFile.close();
+
+    sdMapFile.open("test/unit/data/results/MMMapTest/sdMap.txt");
+
+    for (int j = 0; j < sdMap.size(); j++)
+    {
+        for (int i = 0; i < sdMap[0].size(); i++)
+        {
+            sdMapFile << sdMap[j][i] << " ";
+        }
+        sdMapFile << "\n";
+    }
+
+    sdMapFile.close();
 
     traversabilityMapFile.open("test/unit/data/results/MMMapTest/traversabilityMap.txt");
     dummyMap.getTraversabilityMap(traversabilityMap);
