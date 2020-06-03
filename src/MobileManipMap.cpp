@@ -349,11 +349,11 @@ bool MobileManipMap::calculateTraversabilityMap()
 {
     // TODO - Detect whether the sample is at a distance from obstacles too close, being UNREACHABLE
     Mat mat_elevation_map
-        = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_64F);
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_64F);
     Mat mat_obstacle_map
-        = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_32FC1);
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
     Mat mat_slope_map
-        = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_32FC1);
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
     Mat dx, dy, elev, angle, mag, mat_proximity_map;
     
     double scale = 0.125; // 1/8 to normalize sobel filter
@@ -519,7 +519,7 @@ bool MobileManipMap::calculateProximityToObstaclesMap()
 {
     Mat mat_proximity_map;
     Mat mat_obstacle_map
-        = Mat::zeros(cv::Size(ui_num_rows, ui_num_cols), CV_32FC1);
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
     for (int j = 0; j < this->ui_num_rows; j++)
     {
         for (int i = 0; i < this->ui_num_cols; i++)
