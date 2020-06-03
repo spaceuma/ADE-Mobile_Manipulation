@@ -10,6 +10,7 @@ project(simpleSweepingComputing)
 find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 
 include_directories(../../src)
+include_directories(../../src/types/rg)
 include_directories(data)
 set(WP_DIR ../../deps/ESA-Trajectory_Control)
 

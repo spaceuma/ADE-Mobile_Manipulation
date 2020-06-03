@@ -26,12 +26,12 @@ echo "$cur/data/planner" >> urdfmodel_path.txt
 mkdir results
 
 
-cd $cur/test/harnessExample
-#rm -rf build
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
-make
+#cd $cur/test/harnessExample
+##rm -rf build
+#mkdir build
+#cd build
+#cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
+#make
 
 cd $cur/test/unit
 #rm -rf build
