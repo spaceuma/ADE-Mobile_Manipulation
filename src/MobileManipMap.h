@@ -103,13 +103,14 @@ private:
      */
     std::vector<std::vector<double>> vvd_proximity_map;
     MMMapState mapstate;
+    bool b_debug_mode = false;
 public:
-    MobileManipMap();
+    MobileManipMap(bool b_debug_mode_m = false);
     /**
      * Constructor that receives the map, process it and generates the cost and
      * obstacles maps
      */
-    MobileManipMap(const RoverGuidance_Dem &rg_dem_m, unsigned int &ui_isDEM_loaded);
+    MobileManipMap(const RoverGuidance_Dem &rg_dem_m, unsigned int &ui_isDEM_loaded, bool b_debug_mode_m = false);
     /**
      * Constructor that introduces pre-computed elevation and cost maps
      */

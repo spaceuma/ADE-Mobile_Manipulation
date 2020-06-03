@@ -4,13 +4,14 @@
 using namespace std;
 using namespace cv;
 
-MobileManipMap::MobileManipMap()
+MobileManipMap::MobileManipMap(bool b_debug_mode_m)
 {
     mapstate = NO_DEM;
+    this->b_debug_mode = b_debug_mode_m;
 }
 
 
-MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem, unsigned int &ui_isDEM_loaded)
+MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem, unsigned int &ui_isDEM_loaded, bool b_debug_mode_m)
 {
     mapstate = NO_DEM;
     ui_isDEM_loaded = this->loadDEM(dem);
@@ -18,6 +19,7 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem, unsigned int &ui_is
     {
         mapstate = DEM_LOADED;
     }
+    this->b_debug_mode = b_debug_mode_m;
 }
 
 MobileManipMap::MobileManipMap(
@@ -95,10 +97,22 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
     try
     {
         this->calculateElevationMap();
+	if (this->b_debug_mode)
+	{
+	    std::cout << "Computed Elevation Map" << std::endl;
+	}
         // Compute vvb_obstacle_map
         this->calculateTraversabilityMap();
+	if (this->b_debug_mode)
+	{
+	    std::cout << "Computed Traversability Map" << std::endl;
+	}
         // Compute vvd_proximity_map
         this->addSampleFacingObstacles();
+	if (this->b_debug_mode)
+	{
+	    std::cout << "Computed FACE" << std::endl;
+	}
 	if (isObstacle(this->w_sample_pos))
 	{
             return 3;
@@ -128,13 +142,26 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     {
         return 2;
     }
+    
     this->ui_num_rows = dem.rows;
+
+    if (this->b_debug_mode)
+    {
+        std::cout << "Loading DEM: the number of rows is " << this->ui_num_rows << std::endl;
+    }
+
     // Check Columns
     if (dem.cols < 5)
     {
         return 3;
     }
     this->ui_num_cols = dem.cols;
+
+    if (this->b_debug_mode)
+    {
+        std::cout << "Loading DEM: the number of columns is " << this->ui_num_cols << std::endl;
+    }
+
     // The offset is read, it is supposed to be a 3-element array
     try
     {
@@ -340,6 +367,13 @@ bool MobileManipMap::calculateTraversabilityMap()
             mat_elevation_map.at<double>(j, i) = this->vvd_elevation_map[j][i];
         }
     }
+   
+    if (b_debug_mode)
+    {
+        std::cout << "Elevation Mat is initialized" << std::endl;
+        imshow("Elevation Matrix", mat_elevation_map);
+	waitKey(0);
+    }
 
     // Slope Mat is computed
     mat_elevation_map.convertTo(elev, CV_32F, 1.0, 0);
@@ -357,13 +391,38 @@ bool MobileManipMap::calculateTraversabilityMap()
         }
     }
 
+    if (b_debug_mode)
+    {
+        std::cout << "Slope Mat is computed" << std::endl;
+        imshow("Slope Matrix", mat_slope_map);
+	waitKey(0);
+    }
+
     // Obstacle Mat is computed
     threshold(mat_slope_map, mat_obstacle_map, 30.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
+    if (b_debug_mode)
+    {
+        std::cout << "A Threshold of 30.0 degrees is applied to the slope mat" << std::endl;
+        imshow("Obstacle Matrix", mat_obstacle_map);
+	waitKey(0);
+    }
+
     mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
+    if (b_debug_mode)
+    {
+        std::cout << "Obstacle Mat is computed" << std::endl;
+    }
 
     // Preliminar Proximity map is computed
     distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
     mat_proximity_map = mat_proximity_map * this->d_res;
+
+    if (b_debug_mode)
+    {
+        std::cout << "Preliminar Proximity Map is computed" << std::endl;
+        imshow("Proximity Matrix", mat_proximity_map);
+	waitKey(0);
+    }
 
     // Traversability and Obstacle maps are computed
     for (int j = 0; j < this->ui_num_rows; j++)
@@ -416,13 +475,20 @@ bool MobileManipMap::calculateTraversabilityMap()
 	    }	    
         }
     }
+    if (b_debug_mode)
+    {
+        std::cout << "Obstacle and Traversability Maps are computed" << std::endl;
+    }
     return true;
 }
 
 bool MobileManipMap::addSampleFacingObstacles()
 {
     this->fm_sample_facing.getShadowedCostMap(this->vvi_obstacle_map, this->d_res, this->d_inner_sampling_dist, this->d_outter_sampling_dist, this->w_sample_pos);
-
+    if (b_debug_mode)
+    {
+        std::cout << "Shadowing Proccess is computed" << std::endl;
+    }
     this->calculateProximityToObstaclesMap();
 
     for (uint j = 0; j < this->ui_num_rows; j++)
