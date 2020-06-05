@@ -83,6 +83,7 @@ private:
      * Matrix containing elevation values
      */
     std::vector<std::vector<double>> vvd_elevation_map;
+    std::vector<std::vector<int8_t>> vvi_validity_map;
     std::vector<std::vector<double>> vvd_slope_map;
     std::vector<std::vector<double>> vvd_aspect_map;
     std::vector<std::vector<double>> vvd_sd_map;
@@ -145,6 +146,10 @@ public:
      * Function to get the current traversability map
      */
     void getTraversabilityMap(std::vector<std::vector<int>> &vvi_traversability_map_m);
+    /**
+     * Function to get the current validity map
+     */
+    void getValidityMap(std::vector<std::vector<int8_t>> &vvi_validity_map_m);
     /**
      * Function to get the current cost map
      */

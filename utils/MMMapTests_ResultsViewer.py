@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
 slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
+validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
 sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
 traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 costMap_splitted = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_splittedMap.txt"), skiprows=0)
@@ -64,6 +65,16 @@ ax4.set_ylabel('Y-axis (m)')
 ax4.set_title('Spherical Deviation')
 cb4 = fig2.colorbar(plot4, ax = ax4, orientation = 'horizontal')
 cb4.ax.set_title('Spherical Deviation')
+
+
+fig3, (ax5,ax6) = plt.subplots(1,2,constrained_layout=True)
+plot5 = ax5.contourf(xMap, yMap, validityMap)
+ax5.set_aspect('equal')
+ax5.set_xlabel('X-axis (m)')
+ax5.set_ylabel('Y-axis (m)')
+ax5.set_title('Validity Map')
+cb5 = fig2.colorbar(plot5, ax = ax5, orientation = 'horizontal')
+cb5.ax.set_title('Validity')
 
 
 #fig2, ax3 = plt.subplots(constrained_layout=True)

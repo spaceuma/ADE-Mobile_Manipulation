@@ -96,11 +96,6 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
  
     try
     {
-        this->calculateElevationMap();
-	if (this->b_debug_mode)
-	{
-	    std::cout << "Computed Elevation Map" << std::endl;
-	}
         // Compute vvb_obstacle_map
         this->calculateTraversabilityMap();
 	if (this->b_debug_mode)
@@ -190,9 +185,11 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
         this->vvd_proximity_map.clear();
         std::vector<double> vd_row(this->ui_num_cols);
         std::vector<int> vi_row(this->ui_num_cols);
+        std::vector<int8_t> vit_row(this->ui_num_cols);
         for (uint j = 0; j < this->ui_num_rows; j++)
         {
             this->vvd_elevation_map.push_back(vd_row);
+            this->vvi_validity_map.push_back(vit_row);
             this->vvd_slope_map.push_back(vd_row);
             this->vvd_aspect_map.push_back(vd_row);
             this->vvd_sd_map.push_back(vd_row);
@@ -305,6 +302,12 @@ void MobileManipMap::getTraversabilityMap(
     vvi_traversability_map_m = this->vvi_traversability_map;
 }
 
+void MobileManipMap::getValidityMap(
+    std::vector<std::vector<int8_t>> &vvi_validity_map_m)
+{
+    vvi_validity_map_m = this->vvi_validity_map;
+}
+
 bool MobileManipMap::getElevationMap(
     std::vector<std::vector<double>> &vvd_elevation_map_m)
 {
@@ -357,6 +360,8 @@ bool MobileManipMap::calculateElevationMap()
             {
                 this->d_elevation_min = this->vvd_elevation_map[j][i];
             }
+	    this->vvi_validity_map[j][i] = this->rg_dem.p_pointValidityFlag[i + j * this->ui_num_cols];
+
         }
     }
 
@@ -370,8 +375,45 @@ bool MobileManipMap::calculateElevationMap()
     {
         for (int i = 1; i < this->ui_num_cols - 1; i++)
         {
-            dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i-1])/this->d_res;
-            dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j-1][i])/this->d_res;
+            if (this->vvi_validity_map[j][i+1] == 0)
+	    {
+                if(this->vvi_validity_map[j][i-1] == 0)
+		{
+                    dx = 0;
+		}
+		else
+		{
+                    dx = (this->vvd_elevation_map[j][i] - this->vvd_elevation_map[j][i-1])/(this->d_res);
+		}
+	    }
+	    else if (this->vvi_validity_map[j][i-1] == 0)
+	    {
+                dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i])/(this->d_res);
+	    }
+	    else
+	    {
+                dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i-1])/(2*this->d_res);
+	    }
+            if (this->vvi_validity_map[j+1][i] == 0)
+	    {
+                if(this->vvi_validity_map[j-1][i] == 0)
+		{
+                    dy = 0;
+		}
+		else
+		{
+                    dy = (this->vvd_elevation_map[j][i] - this->vvd_elevation_map[j-1][i])/(this->d_res);
+		}
+	    }
+	    else if (this->vvi_validity_map[j-1][i] == 0)
+	    {
+                dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j][i])/(this->d_res);
+	    }
+	    else
+	    {
+                dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j-1][i])/(2*this->d_res);
+	    }
+
             this->vvd_slope_map[j][i] = atan(sqrt(pow(dx,2) + pow(dy,2)));
 	    this->vvd_aspect_map[j][i] = atan2(dy,dx);
 	    this->vvd_nx_map[j][i] = sin(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
@@ -468,6 +510,13 @@ bool MobileManipMap::calculateTraversabilityMap()
 		    = (float)this->vvd_slope_map[j][i] * 180.0/3.1416;
                 //= atan(mag.at<float>(j, i) * 1.0 / this->d_res) * 180.0
                   /// 3.1416;
+            /*
+	    if (this->vvi_validity_map[j][i] == 0)
+	    {
+                 mat_slope_map.at<float>(j, i)
+		    = 0.0;
+	    }
+	    */
         }
     }
 
@@ -479,7 +528,7 @@ bool MobileManipMap::calculateTraversabilityMap()
     }
 
     // Obstacle Mat is computed
-    threshold(mat_slope_map, mat_obstacle_map, 45.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
+    threshold(mat_slope_map, mat_obstacle_map, 30.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
     if (b_debug_mode)
     {
         std::cout << "A Threshold of 30.0 degrees is applied to the slope mat" << std::endl;

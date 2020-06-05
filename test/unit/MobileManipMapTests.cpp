@@ -11,7 +11,7 @@ using namespace cv;
 TEST(MMMapTest, nominal_working_test)
 {
     // Input Elevation Matrix is read
-    std::vector<std::vector<double>> vvd_elevation_data;
+    std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
     
     /*
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv",
@@ -20,6 +20,8 @@ TEST(MMMapTest, nominal_working_test)
     
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmValidity.csv",
+                   vvd_validity_data)) << "Input DEM file is missing";
     std::cout << "Input Matrix is successfully read" << std::endl; 
     std::cout << "Matrix size is " << vvd_elevation_data[0].size() << "x" << vvd_elevation_data.size() << std::endl; 
     double res = 0.1; // meters
@@ -27,7 +29,9 @@ TEST(MMMapTest, nominal_working_test)
     // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
     double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    int8_t validityArray[vvd_validity_data.size() * vvd_validity_data[0].size()];
     prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
     prgd_dummy_dem->nodeSize_m = res;
@@ -40,6 +44,7 @@ TEST(MMMapTest, nominal_working_test)
         {
             prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
                 = vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = (uint8_t)vvd_validity_data[j][i];
         }
     }
 
@@ -60,20 +65,36 @@ TEST(MMMapTest, nominal_working_test)
 
     std::vector<std::vector<double>> costMap, slopeMap, sdMap;
     std::vector<std::vector<int>> traversabilityMap;
+    std::vector<std::vector<int8_t>> validityMap;
     costMap.resize(prgd_dummy_dem->rows);
     traversabilityMap.resize(prgd_dummy_dem->rows);
+    validityMap.resize(prgd_dummy_dem->rows);
     for (uint i = 0; i < prgd_dummy_dem->rows; i++)
     {
         costMap[i].resize(prgd_dummy_dem->cols);
-        traversabilityMap[i].resize(prgd_dummy_dem->cols);
+        validityMap[i].resize(prgd_dummy_dem->cols);
     }
     dummyMap.getCostMap(costMap);
+    dummyMap.getValidityMap(validityMap);
     dummyMap.getSlopeMap(slopeMap);
     dummyMap.getSDMap(sdMap);
     /*ASSERT_EQ(costMap.size(), 80);
     ASSERT_EQ(costMap[0].size(), 80);
 */
-    std::ofstream costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
+    std::ofstream validityMapFile, costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
+
+    validityMapFile.open("test/unit/data/results/MMMapTest/validityMap.txt");
+
+    for (int j = 0; j < validityMap.size(); j++)
+    {
+        for (int i = 0; i < validityMap[0].size(); i++)
+        {
+            validityMapFile << (double)validityMap[j][i] << " ";
+        }
+        validityMapFile << "\n";
+    }
+
+    validityMapFile.close();
 
     costMapFile.open("test/unit/data/results/MMMapTest/costMap.txt");
 
@@ -132,15 +153,19 @@ TEST(MMMapTest, nominal_working_test)
 TEST(MMMapTest, nominal_working_test_2)
 {
     // Input Elevation Matrix is read
-    std::vector<std::vector<double>> vvd_elevation_data;
+    std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_splitted_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmValidity.csv",
+                   vvd_validity_data)) << "Input DEM file is missing";
     double res = 0.1; // meters
 
     // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
     double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    int8_t validityArray[vvd_validity_data.size() * vvd_validity_data[0].size()];
     prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
     prgd_dummy_dem->nodeSize_m = res;
@@ -150,6 +175,7 @@ TEST(MMMapTest, nominal_working_test_2)
         {
             prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
                 = vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = (uint8_t)vvd_validity_data[j][i];
         }
     }
 
@@ -238,15 +264,19 @@ TEST(MMMapTest, nominal_working_test_2)
 TEST(MMMapTest, sample_pos_error_test)
 {
     // Input Elevation Matrix is read
-    std::vector<std::vector<double>> vvd_elevation_data;
+    std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_smaller_10cmDEM.csv",
                    vvd_elevation_data));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmValidity.csv",
+                   vvd_validity_data)) << "Input DEM file is missing";
     double res = 0.1; // meters
 
     // A dummy Rover Guidance based DEM is created
     RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
     double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    int8_t validityArray[vvd_validity_data.size() * vvd_validity_data[0].size()];
     prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
     prgd_dummy_dem->nodeSize_m = res;
@@ -256,6 +286,7 @@ TEST(MMMapTest, sample_pos_error_test)
         {
             prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
                 = vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = (uint8_t)vvd_validity_data[j][i];
         }
     }
 
