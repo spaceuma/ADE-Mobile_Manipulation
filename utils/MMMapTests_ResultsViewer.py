@@ -2,7 +2,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+from matplotlib import cm
+
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
+elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv"), skiprows=0)
 slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
 validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
 sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
@@ -36,13 +39,50 @@ cb1.ax.set_title('Cost')
 ax1.set_facecolor('k')
 s1 = ax1.plot(sample[0], sample[1], 'ob')
 
-plot2 = ax2.scatter(xMap, yMap,c = traversabilityMap, cmap = 'Set1', s = 20)
+plot2 = ax2.scatter(xMap[np.where(traversabilityMap == 0)],
+        yMap[np.where(traversabilityMap == 0)],
+        c = 'r',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 1)],
+        yMap[np.where(traversabilityMap == 1)],
+        c = 'orange',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 2)],
+        yMap[np.where(traversabilityMap == 2)],
+        c = 'yellow',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 3)],
+        yMap[np.where(traversabilityMap == 3)],
+        c = 'green',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 4)],
+        yMap[np.where(traversabilityMap == 4)],
+        c = 'c',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 5)],
+        yMap[np.where(traversabilityMap == 5)],
+        c = 'lime',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 6)],
+        yMap[np.where(traversabilityMap == 6)],
+        c = 'grey',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(traversabilityMap == 7)],
+        yMap[np.where(traversabilityMap == 7)],
+        c = 'black',
+        s = 20
+        )
 ax2.set_aspect('equal')
 ax2.set_xlabel('X-axis')
 ax2.set_ylabel('Y-axis')
 ax2.set_title('Traversability Map')
-cb2 = fig1.colorbar(plot2, ax = ax2, orientation = 'horizontal')
-cb2.ax.set_title('Cost')
 s2 = ax2.plot(sample[0], sample[1], 'ob')
 ax2.set_xlim([xMap[0,0],xMap[0,-1]])
 ax2.set_ylim([yMap[0,0],yMap[-1,0]])
@@ -58,7 +98,7 @@ ax3.set_title('Slope Map')
 cb3 = fig2.colorbar(plot3, ax = ax3, orientation = 'horizontal')
 cb3.ax.set_title('Slope')
 
-plot4 = ax4.contourf(xMap, yMap, sdMap, 40, vmax = 20.0)
+plot4 = ax4.contourf(xMap, yMap, sdMap, 40)#, vmax = 20.0)
 ax4.set_aspect('equal')
 ax4.set_xlabel('X-axis (m)')
 ax4.set_ylabel('Y-axis (m)')
@@ -73,8 +113,19 @@ ax5.set_aspect('equal')
 ax5.set_xlabel('X-axis (m)')
 ax5.set_ylabel('Y-axis (m)')
 ax5.set_title('Validity Map')
-cb5 = fig2.colorbar(plot5, ax = ax5, orientation = 'horizontal')
+cb5 = fig3.colorbar(plot5, ax = ax5, orientation = 'horizontal')
 cb5.ax.set_title('Validity')
+
+plot6 = ax6.contourf(xMap, yMap, elevationMap, 100, cmap = cm.gist_earth, extend = 'both')
+plot6k = ax6.contour(xMap, yMap, elevationMap, 50, colors = 'k', alpha = .3)
+ax6.set_aspect('equal')
+ax6.set_xlabel('X-axis (m)')
+ax6.set_ylabel('Y-axis (m)')
+ax6.set_title('Elevation Map')
+cb6 = fig3.colorbar(plot6, ax = ax6, orientation = 'horizontal')
+cb6.ax.set_title('Elevation')
+
+
 
 
 #fig2, ax3 = plt.subplots(constrained_layout=True)

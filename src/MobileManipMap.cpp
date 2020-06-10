@@ -108,6 +108,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
 	{
 	    std::cout << "Computed FACE" << std::endl;
 	}
+        this->addValidityCost();
 	if (isObstacle(this->w_sample_pos))
 	{
             return 3;
@@ -375,50 +376,61 @@ bool MobileManipMap::calculateElevationMap()
     {
         for (int i = 1; i < this->ui_num_cols - 1; i++)
         {
-            if (this->vvi_validity_map[j][i+1] == 0)
+            if (this->vvi_validity_map[j][i] == 1)
 	    {
-                if(this->vvi_validity_map[j][i-1] == 0)
-		{
-                    dx = 0;
-		}
-		else
-		{
-                    dx = (this->vvd_elevation_map[j][i] - this->vvd_elevation_map[j][i-1])/(this->d_res);
-		}
-	    }
-	    else if (this->vvi_validity_map[j][i-1] == 0)
-	    {
-                dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i])/(this->d_res);
-	    }
-	    else
-	    {
-                dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i-1])/(2*this->d_res);
-	    }
-            if (this->vvi_validity_map[j+1][i] == 0)
-	    {
-                if(this->vvi_validity_map[j-1][i] == 0)
-		{
-                    dy = 0;
-		}
-		else
-		{
-                    dy = (this->vvd_elevation_map[j][i] - this->vvd_elevation_map[j-1][i])/(this->d_res);
-		}
-	    }
-	    else if (this->vvi_validity_map[j-1][i] == 0)
-	    {
-                dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j][i])/(this->d_res);
-	    }
-	    else
-	    {
-                dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j-1][i])/(2*this->d_res);
-	    }
+                if (this->vvi_validity_map[j][i+1] == 0)
+	        {
+                    if(this->vvi_validity_map[j][i-1] == 0)
+	            {
+                        dx = 0;
+	            }
+	            else
+	            {
+                        dx = (this->vvd_elevation_map[j][i] - this->vvd_elevation_map[j][i-1])/(this->d_res);
+	            }
+	        }
+	        else if (this->vvi_validity_map[j][i-1] == 0)
+	        {
+                    dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i])/(this->d_res);
+	        }
+	        else
+	        {
+                    dx = (this->vvd_elevation_map[j][i+1] - this->vvd_elevation_map[j][i-1])/(2*this->d_res);
+	        }
+                if (this->vvi_validity_map[j+1][i] == 0)
+	        {
+                    if(this->vvi_validity_map[j-1][i] == 0)
+	            {
+                        dy = 0;
+	            }
+	            else
+	            {
+                        dy = (this->vvd_elevation_map[j][i] - this->vvd_elevation_map[j-1][i])/(this->d_res);
+	            }
+	        }
+	        else if (this->vvi_validity_map[j-1][i] == 0)
+	        {
+                    dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j][i])/(this->d_res);
+	        }
+	        else
+	        {
+                    dy = (this->vvd_elevation_map[j+1][i] - this->vvd_elevation_map[j-1][i])/(2*this->d_res);
+	        }
 
-            this->vvd_slope_map[j][i] = atan(sqrt(pow(dx,2) + pow(dy,2)));
-	    this->vvd_aspect_map[j][i] = atan2(dy,dx);
-	    this->vvd_nx_map[j][i] = sin(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
-	    this->vvd_ny_map[j][i] = cos(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
-	    this->vvd_nz_map[j][i] = cos(this->vvd_slope_map[j][i]); 
+                this->vvd_slope_map[j][i] = atan(sqrt(pow(dx,2) + pow(dy,2)));
+	        this->vvd_aspect_map[j][i] = atan2(dy,dx);
+                this->vvd_nx_map[j][i] = sin(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
+                this->vvd_ny_map[j][i] = cos(this->vvd_aspect_map[j][i])*sin(this->vvd_slope_map[j][i]);
+                this->vvd_nz_map[j][i] = cos(this->vvd_slope_map[j][i]); 
+	    }
+	    else
+	    {
+                this->vvd_slope_map[j][i] = 0.0;
+	        this->vvd_aspect_map[j][i] = 0.0;
+                this->vvd_nx_map[j][i] = 0.0;
+                this->vvd_ny_map[j][i] = 0.0;
+		this->vvd_nz_map[j][i] = 0.0; 
+	    }
         }
     }
 
@@ -429,25 +441,35 @@ bool MobileManipMap::calculateElevationMap()
     {
         for (int i = 1; i < this->ui_num_cols - 1; i++)
         {
-            i_nodes = 0;
-	    d_sumnx = 0;
-	    d_sumny = 0;
-	    d_sumnz = 0;
-            for (int l = - i_occupancy_kernel; l <= i_occupancy_kernel ; l++)
+            if (this->vvi_validity_map[j][i] == 1)
 	    {
-                for (int k = - i_occupancy_kernel; k <= i_occupancy_kernel ; k++)
-		{
-                    if((j+l >= 0)&&(j+l < this->ui_num_rows - 1)&&(i+k >= 0)&&(i+k < this->ui_num_cols - 1)&&(sqrt(pow((double)l,2)+pow((double)k,2)) < (double)i_occupancy_kernel))
-		    {
-                        i_nodes++;
-			d_sumnx += this->vvd_nx_map[j + l][i + k]; 
-			d_sumny += this->vvd_ny_map[j + l][i + k];
-			d_sumnz += this->vvd_nz_map[j + l][i + k];
-		    }
-		}
+	        i_nodes = 0;
+	        d_sumnx = 0;
+	        d_sumny = 0;
+	        d_sumnz = 0;
+                for (int l = - i_occupancy_kernel; l <= i_occupancy_kernel ; l++)
+	        {
+                    for (int k = - i_occupancy_kernel; k <= i_occupancy_kernel ; k++)
+	            {
+                        if((j+l > 0)&&(j+l < this->ui_num_rows - 1)&&(i+k > 0)&&(i+k < this->ui_num_cols - 1)&&(sqrt(pow((double)l,2)+pow((double)k,2)) < (double)i_occupancy_kernel))
+	                {
+			    if (this->vvi_validity_map[j+l][i+k] == 1)
+			    {
+                                i_nodes++;
+	            	        d_sumnx += this->vvd_nx_map[j + l][i + k]; 
+	            	        d_sumny += this->vvd_ny_map[j + l][i + k];
+	            	        d_sumnz += this->vvd_nz_map[j + l][i + k];
+			    }
+	                }
+	            }
+	        }
+	        d_R = sqrt(pow(d_sumnx,2)+pow(d_sumny,2)+pow(d_sumnz,2)); 
+	        this->vvd_sd_map[j][i] = sqrt( - 2 * log(d_R/(double)i_nodes)) * 180.0/3.1416; 
 	    }
-	    d_R = sqrt(pow(d_sumnx,2)+pow(d_sumny,2)+pow(d_sumnz,2)); 
-	    this->vvd_sd_map[j][i] = sqrt( - 2 * log(d_R/(double)i_nodes)) * 180.0/3.1416; 
+	    else
+	    {
+	        this->vvd_sd_map[j][i] = 0.0;
+	    }
 	}
     }
 
@@ -469,69 +491,37 @@ double MobileManipMap::getMinElevation()
 bool MobileManipMap::calculateTraversabilityMap()
 {
     // TODO - Detect whether the sample is at a distance from obstacles too close, being UNREACHABLE
-    Mat mat_elevation_map
-        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_64F);
     Mat mat_obstacle_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    Mat mat_slope_map
+    Mat mat_sd_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    Mat dx, dy, elev, angle, mag, mat_proximity_map;
+    Mat mat_proximity_map;
     
     double scale = 0.125; // 1/8 to normalize sobel filter
     double delta = 0;
 
-    // Elevation Mat is initialized
-    for (int j = 0; j < this->ui_num_rows; j++)
-    {
-        for (int i = 0; i < this->ui_num_cols; i++)
-        {
-            mat_elevation_map.at<double>(j, i) = this->vvd_elevation_map[j][i];
-        }
-    }
-   
-    if (b_debug_mode)
-    {
-        std::cout << "Elevation Mat is initialized" << std::endl;
-        imshow("Elevation Matrix", mat_elevation_map);
-	waitKey(0);
-    }
-
     // Slope Mat is computed
-    mat_elevation_map.convertTo(elev, CV_32F, 1.0, 0);
-    Sobel(elev, dx, CV_32F, 1, 0, 3, scale, delta, BORDER_DEFAULT);
-    Sobel(elev, dy, CV_32F, 0, 1, 3, scale, delta, BORDER_DEFAULT);
-    cartToPolar(dx, dy, mag, angle);
-
-    for (int j = 0; j < mat_slope_map.rows; j++)
+    for (int j = 0; j < mat_sd_map.rows; j++)
     {
-        for (int i = 0; i < mat_slope_map.cols; i++)
+        for (int i = 0; i < mat_sd_map.cols; i++)
         {
-            mat_slope_map.at<float>(j, i)
-		    = (float)this->vvd_slope_map[j][i] * 180.0/3.1416;
-                //= atan(mag.at<float>(j, i) * 1.0 / this->d_res) * 180.0
-                  /// 3.1416;
-            /*
-	    if (this->vvi_validity_map[j][i] == 0)
-	    {
-                 mat_slope_map.at<float>(j, i)
-		    = 0.0;
-	    }
-	    */
+            mat_sd_map.at<float>(j, i)
+		    = (float)this->vvd_sd_map[j][i];
         }
     }
 
     if (b_debug_mode)
     {
-        std::cout << "Slope Mat is computed" << std::endl;
-        imshow("Slope Matrix", mat_slope_map);
+        std::cout << "SD Mat is computed" << std::endl;
+        imshow("SD Matrix", mat_sd_map);
 	waitKey(0);
     }
 
     // Obstacle Mat is computed
-    threshold(mat_slope_map, mat_obstacle_map, 30.0, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
+    threshold(mat_sd_map, mat_obstacle_map, this->d_sd_threshold, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
     if (b_debug_mode)
     {
-        std::cout << "A Threshold of 30.0 degrees is applied to the slope mat" << std::endl;
+        std::cout << "A Threshold of " << this->d_sd_threshold << " degrees is applied to the sd mat" << std::endl;
         imshow("Obstacle Matrix", mat_obstacle_map);
 	waitKey(0);
     }
@@ -618,6 +608,7 @@ bool MobileManipMap::addSampleFacingObstacles()
     {
         std::cout << "Shadowing Proccess is computed" << std::endl;
     }
+
     this->calculateProximityToObstaclesMap();
 
     for (uint j = 0; j < this->ui_num_rows; j++)
@@ -643,6 +634,87 @@ bool MobileManipMap::addSampleFacingObstacles()
     }
     return true;
 }
+
+bool MobileManipMap::addValidityCost()
+{
+    Mat mat_obstacle_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    Mat mat_validity_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    Mat mat_proximity_map;
+    
+    for (int j = 0; j < mat_validity_map.rows; j++)
+    {
+        for (int i = 0; i < mat_validity_map.cols; i++)
+        {
+            mat_validity_map.at<float>(j, i)
+		    = (float)this->vvi_validity_map[j][i];
+        }
+    }
+    if (this->b_debug_mode)
+    {
+        std::cout << "Validity Mat is computed" << std::endl;
+        imshow("Validity Matrix", mat_validity_map);
+	waitKey(0);
+    }
+
+    threshold(mat_validity_map, mat_obstacle_map, 0.5, 255, THRESH_BINARY);
+    if (this->b_debug_mode)
+    {
+        std::cout << "A Threshold is applied to the validity mat" << std::endl;
+        imshow("Obstacle Matrix 2", mat_obstacle_map);
+	waitKey(0);
+    }
+
+    mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
+
+    morphologyEx(mat_obstacle_map, mat_obstacle_map, MORPH_CLOSE, getStructuringElement(MORPH_ELLIPSE,Size(3,3)),Point(-1,-1),this->i_validity_morph_iterations);
+
+    distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
+    mat_proximity_map = mat_proximity_map * this->d_res;
+
+    if (b_debug_mode)
+    {
+        std::cout << "Preliminar Proximity Map is computed" << std::endl;
+        imshow("Proximity Matrix 2", mat_proximity_map);
+	waitKey(0);
+    }
+
+
+    for (uint j = 0; j < this->ui_num_rows; j++)
+    {
+        for (uint i = 0; i < this->ui_num_cols; i++)
+        {
+
+            if (this->vvi_traversability_map[j][i] != 4)
+	    {
+                if (mat_proximity_map.at<float>(j,i) < this->d_res)
+                {
+                    this->vvd_cost_map[j][i] = INFINITY;
+                }
+                else
+	        {
+                    this->vvd_cost_map[j][i] = max(this->vvd_cost_map[j][i], 1.0 + 10.0 * (this->d_avoid_dist - (double)mat_proximity_map.at<float>(j,i))/this->d_avoid_dist);
+	        }
+	    }
+
+            if ((this->vvi_validity_map[j][i] == 0)&&(mat_proximity_map.at<float>(j, i) > 0.0))
+	    {
+                this->vvi_validity_map[j][i] = -1;
+	    }
+            if ((mat_proximity_map.at<float>(j, i) < this->d_res)&&(this->vvi_traversability_map[j][i] == 3))
+	    {
+                this->vvi_traversability_map[j][i] = 7;//Invisible
+	    }
+	    else if ((mat_proximity_map.at<float>(j, i) <= this->d_occupancy_dist)&&(this->vvi_traversability_map[j][i] == 3))
+	    {
+                this->vvi_traversability_map[j][i] = 6;//Partially visible
+	    }
+        }
+    }
+    return 1;
+}
+
 
 bool MobileManipMap::calculateProximityToObstaclesMap()
 {
@@ -693,6 +765,7 @@ void MobileManipMap::calculateCostValues()
                 {
                     this->vvd_cost_map[j][i]
                         = 1.0 + 10.0* (this->d_avoid_dist - (double)this->vvd_proximity_map[j][i])/this->d_avoid_dist;
+                    this->vvi_traversability_map[j][i] = 5;//Risky area
                 }
                 else
                 {

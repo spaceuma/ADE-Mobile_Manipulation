@@ -52,6 +52,14 @@ private:
      */
     double d_inner_sampling_dist;
     /**
+     * Threshold for spherical deviation
+     */
+    double d_sd_threshold = 9.5;
+    /**
+     * Iterations for the morphological CLOSE operation on validity map
+     */
+    int i_validity_morph_iterations = 2;
+    /**
      * Avoidance distance for risk area
      */
     double d_avoid_dist = 1.0;
@@ -62,7 +70,7 @@ private:
     /**
      * Occupancy radius
      */
-    double d_occupancy_dist = 2.0;
+    double d_occupancy_dist = 1.5;
     /**
      * Map minimal value of elevation in meters
      */
@@ -218,6 +226,7 @@ private:
      * Cost Map is modified
      */
     bool addSampleFacingObstacles();
+    bool addValidityCost();
 };
 
 #endif
