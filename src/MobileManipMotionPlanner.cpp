@@ -133,6 +133,12 @@ bool MobileManipMotionPlanner::updateNavCamDEM(const RoverGuidance_Dem &navCamDE
         case 5:
 	    setError(BAD_DEM_ALLOC);
 	    return false;
+	case 6:
+	    setError(POOR_DEM);
+	    return false;
+	case 7:
+	    setError(POOR_DEM);
+	    return false;
     }
 }
 
@@ -167,7 +173,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(proxy_library::Pose plpose_m,
         setStatus(GENERATING_MOTION_PLAN);
 	this->p_mmexecutor->initializeArmVariables(j_present_readings);
 	// The cost map must be computed based on FACE method
-        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition,this->d_avoid_dist,this->d_maxfetching_dist);
+        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition,this->d_avoid_dist,this->d_minfetching_dist, this->d_maxfetching_dist);
 	switch (ui_code)
 	{
             case 0:
@@ -689,6 +695,7 @@ void MobileManipMotionPlanner::printConfig()
     std::cout << "    - d6: " << this->vd_kin_conf[6] << " m" << std::endl;
     std::cout << "  - End Effector Z distance margin: " << this->d_finalEE_height << " m" << std::endl;
     std::cout << " Max Fetching distance: " << this->d_maxfetching_dist << " m" << std::endl;
+    std::cout << " Min Fetching distance: " << this->d_minfetching_dist << " m" << std::endl;
     std::cout << std::endl;
 }
 

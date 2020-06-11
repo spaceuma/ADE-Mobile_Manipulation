@@ -5,6 +5,8 @@
 #include "Waypoint.hpp"
 #include <math.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc_c.h>
 #include "RoverGuidance_InputDataStruct.h"
 
 using namespace cv;
@@ -52,9 +54,17 @@ private:
      */
     double d_inner_sampling_dist;
     /**
+     * Threshold for valid pixels ratio 
+     */
+    double d_valid_ratio_threshold = .5;
+    /**
+     * Threshold for contour/valid pixels ratio
+     */
+    double d_contour_ratio_threshold = .1;
+    /**
      * Threshold for spherical deviation
      */
-    double d_sd_threshold = 9.5;
+    double d_sd_threshold = 10.0;
     /**
      * Iterations for the morphological CLOSE operation on validity map
      */
@@ -67,6 +77,10 @@ private:
      * Max reachability distance
      */
     double d_maxreach_dist = 0.94;
+    /**
+     * Min reachability distance
+     */
+    double d_minreach_dist = 0.94;
     /**
      * Occupancy radius
      */
@@ -123,6 +137,9 @@ private:
     std::vector<std::vector<double>> vvd_proximity_map;
     MMMapState mapstate;
     bool b_debug_mode = false;
+
+    void checkValidityMap(double& d_valid_ratio, double& d_contour_ratio);
+
 public:
     MobileManipMap(bool b_debug_mode_m = false);
     /**
@@ -145,7 +162,7 @@ public:
      * Function to introduce the Sample into the costmap using FACE
      */
     unsigned int computeFACE(base::Waypoint w_sample_pos_m,
-		double d_avoid_dist_m, double d_maxreach_dist_m);
+		double d_avoid_dist_m, double d_minreach_dist_m, double d_maxreach_dist_m);
     /**
      * Function to get the current sample in local coordinates
      */

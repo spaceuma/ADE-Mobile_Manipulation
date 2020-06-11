@@ -73,7 +73,7 @@ MobileManipMap::MobileManipMap(
 }
 
 unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
-		double d_avoid_dist_m, double d_maxreach_dist_m)
+		double d_avoid_dist_m, double d_minreach_dist_m, double d_maxreach_dist_m)
 {
     if (mapstate == NO_DEM)
     {
@@ -90,6 +90,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
 
     // FACE distances
     this->d_avoid_dist = d_avoid_dist_m;
+    this->d_minreach_dist = d_minreach_dist_m;
     this->d_maxreach_dist = d_maxreach_dist_m;
     this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist; 
     this->d_outter_sampling_dist = this->d_inner_sampling_dist + 1.72*this->d_res; //TODO - Maybe this should be 1.42? = sqrt(2)
@@ -202,6 +203,19 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
             this->vvd_cost_map.push_back(vd_row);
             this->vvd_proximity_map.push_back(vd_row);
         }        // Assignation of DEM parameters
+
+	double d_valid_ratio, d_contour_ratio;
+	this->checkValidityMap(d_valid_ratio, d_contour_ratio);
+	if (d_valid_ratio < this->d_valid_ratio_threshold)
+	{
+            // Not enough valid pixels
+            return 6;
+	}
+	if (d_contour_ratio > this->d_contour_ratio_threshold)
+	{
+            // Too many contour pixels
+            return 7;
+	}
         this->calculateElevationMap(); 
 	mapstate = DEM_LOADED;
     }
@@ -211,6 +225,56 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
 	return 5;
     }   
     return 0;
+}
+
+// Valid ratio is the ratio between the number of valid pixels and the total
+// Contour ratio is the ratio between the number of corner pixels and valid pixels
+void MobileManipMap::checkValidityMap(double& d_valid_ratio, double& d_contour_ratio)
+{
+    Mat mat_valid_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+
+    unsigned int ui_point_counter = 0, ui_valid_pixels = 0, ui_total_pixels = ui_num_cols*ui_num_rows;
+    for (int j = 0; j < mat_valid_map.rows; j++)
+    {
+        for (int i = 0; i < mat_valid_map.cols; i++)
+        {
+	    this->vvi_validity_map[j][i] = this->rg_dem.p_pointValidityFlag[i + j * this->ui_num_cols];
+            mat_valid_map.at<float>(j, i)
+		    = (float)this->vvi_validity_map[j][i];
+	    if(this->vvi_validity_map[j][i] == 1)
+	    {
+                ui_valid_pixels++;
+	    } 
+        }
+    }
+
+    mat_valid_map.convertTo(mat_valid_map, CV_8UC1);
+    std::vector<std::vector<Point> > vvp_contours;
+
+    findContours(mat_valid_map, vvp_contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+    for (int k = 0; k < vvp_contours.size(); k++)
+    {
+        ui_point_counter += vvp_contours[k].size();
+    }
+/*
+    imshow("Valid Matrix", mat_valid_map);
+    waitKey(0);
+
+    Mat dst = Mat::zeros(mat_valid_map.rows, mat_valid_map.cols, CV_8UC3);
+    Scalar color( rand()&255, rand()&255, rand()&255 );
+    drawContours( dst, vvp_contours, -1, color);
+    imshow( "Components", dst );
+    waitKey(0);
+*/
+    d_valid_ratio = (double)ui_valid_pixels / (double)ui_total_pixels;
+    d_contour_ratio = (double)ui_point_counter / (double)ui_valid_pixels;
+    std::cout << "Done checking validity" << std::endl;
+    std::cout << "Total number of points is: " << ui_total_pixels << std::endl;
+    std::cout << "Number of contour points is: " << ui_point_counter << " (" << (double)ui_point_counter / (double)ui_total_pixels * 100.0  << "%)" << std::endl;
+    std::cout << "Number of valid points is: " << ui_valid_pixels << " (" << d_valid_ratio * 100.0  << "%)" << std::endl;
+    std::cout << "Contour/Valid ratio is: " << d_contour_ratio * 100.0  << "%" << std::endl;
 }
 
 bool MobileManipMap::loadGlobalSample(const base::Waypoint &w_sample_pos_m)
@@ -361,8 +425,6 @@ bool MobileManipMap::calculateElevationMap()
             {
                 this->d_elevation_min = this->vvd_elevation_map[j][i];
             }
-	    this->vvi_validity_map[j][i] = this->rg_dem.p_pointValidityFlag[i + j * this->ui_num_cols];
-
         }
     }
 
@@ -434,7 +496,7 @@ bool MobileManipMap::calculateElevationMap()
         }
     }
 
-    int i_occupancy_kernel = (int) (.5 / this->d_res);
+    int i_occupancy_kernel = (int) (.2 / this->d_res);
     int i_nodes;
     double d_sumnx, d_sumny, d_sumnz, d_R;
     for (int j = 1; j < this->ui_num_rows - 1; j++)
@@ -553,7 +615,7 @@ bool MobileManipMap::calculateTraversabilityMap()
                 this->vvi_obstacle_map[j][i] = 0;
                 this->vvi_traversability_map[j][i] = 0;
 	    }
-	    else if ((mat_proximity_map.at<float>(j, i) <= this->d_maxreach_dist) || 
+	    else if ((mat_proximity_map.at<float>(j, i) <= this->d_minreach_dist) || 
 			    (i == 0) || (j == 0)
                 || (i == this->ui_num_cols - 1)
                 || (j == this->ui_num_rows - 1))
@@ -581,7 +643,7 @@ bool MobileManipMap::calculateTraversabilityMap()
 	    {
 		if (sqrt(pow((double)i*this->d_res - 
 			       this->w_sample_pos.position[0],2)+pow((double)j*this->d_res - 
-				       this->w_sample_pos.position[1],2)) > 0.94)
+				       this->w_sample_pos.position[1],2)) > this->d_maxreach_dist)
 		{
                     this->vvi_obstacle_map[j][i] = 1;
                     this->vvi_traversability_map[j][i] = 3;
