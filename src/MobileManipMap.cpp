@@ -109,7 +109,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
 	{
 	    std::cout << "Computed FACE" << std::endl;
 	}
-        this->addValidityCost();
+        //this->addValidityCost();
 	if (isObstacle(this->w_sample_pos))
 	{
             return 3;
@@ -179,6 +179,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     try
     {
         this->vvd_elevation_map.clear();
+        this->vvd_smoothed_elevation_map.clear();
         this->vvd_slope_map.clear();
         this->vvd_sd_map.clear();
         this->vvi_obstacle_map.clear();
@@ -191,6 +192,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
         for (uint j = 0; j < this->ui_num_rows; j++)
         {
             this->vvd_elevation_map.push_back(vd_row);
+            this->vvd_smoothed_elevation_map.push_back(vd_row);
             this->vvi_validity_map.push_back(vit_row);
             this->vvd_slope_map.push_back(vd_row);
             this->vvd_aspect_map.push_back(vd_row);
@@ -433,6 +435,48 @@ bool MobileManipMap::calculateElevationMap()
         std::cout << "Elevation Map is saved as vector<vector<double>>" << std::endl;
     }
 
+
+    int i_occupancy_kernel = (int) (0.6 / this->d_res);
+    int i_nodes;
+    double d_elevation;
+    for (int j = 0; j < this->ui_num_rows; j++)
+    {
+        for (int i = 0; i < this->ui_num_cols; i++)
+        {
+            if (this->vvi_validity_map[j][i] == 1)
+	    {
+	        i_nodes = 0;
+	        d_elevation = 0;
+                for (int l = - i_occupancy_kernel; l <= i_occupancy_kernel ; l++)
+	        {
+                    for (int k = - i_occupancy_kernel; k <= i_occupancy_kernel ; k++)
+	            {
+                        if((j+l >= 0)&&(j+l <= this->ui_num_rows - 1)&&(i+k >= 0)&&(i+k <= this->ui_num_cols - 1)&&(sqrt(pow((double)l,2)+pow((double)k,2)) < (double)i_occupancy_kernel))
+	                {
+			    if (this->vvi_validity_map[j+l][i+k] == 1)
+			    {
+                                i_nodes++;
+	            	        d_elevation += this->vvd_elevation_map[j + l][i + k]; 
+			    }
+	                }
+	            }
+	        }
+		this->vvd_smoothed_elevation_map[j][i] = d_elevation / (double)i_nodes;
+	    }
+	    else
+	    {
+	        this->vvd_smoothed_elevation_map[j][i] = this->vvd_elevation_map[j][i];
+	    }
+	}
+    }
+
+    if (this->b_debug_mode)
+    {
+        std::cout << "Smoothed elevation map is computed" << std::endl;
+    }
+
+
+
     double dx,dy;
     for (int j = 1; j < this->ui_num_rows - 1; j++)
     {
@@ -496,9 +540,63 @@ bool MobileManipMap::calculateElevationMap()
         }
     }
 
-    int i_occupancy_kernel = (int) (.2 / this->d_res);
-    int i_nodes;
-    double d_sumnx, d_sumny, d_sumnz, d_R;
+    for (int j = 1; j < this->ui_num_rows - 1; j++)
+    {
+        for (int i = 1; i < this->ui_num_cols - 1; i++)
+        {
+            if (this->vvi_validity_map[j][i] == 1)
+	    {
+                if (this->vvi_validity_map[j][i+1] == 0)
+	        {
+                    if(this->vvi_validity_map[j][i-1] == 0)
+	            {
+                        dx = 0;
+	            }
+	            else
+	            {
+                        dx = (this->vvd_smoothed_elevation_map[j][i] - this->vvd_smoothed_elevation_map[j][i-1])/(this->d_res);
+	            }
+	        }
+	        else if (this->vvi_validity_map[j][i-1] == 0)
+	        {
+                    dx = (this->vvd_smoothed_elevation_map[j][i+1] - this->vvd_smoothed_elevation_map[j][i])/(this->d_res);
+	        }
+	        else
+	        {
+                    dx = (this->vvd_smoothed_elevation_map[j][i+1] - this->vvd_smoothed_elevation_map[j][i-1])/(2*this->d_res);
+	        }
+                if (this->vvi_validity_map[j+1][i] == 0)
+	        {
+                    if(this->vvi_validity_map[j-1][i] == 0)
+	            {
+                        dy = 0;
+	            }
+	            else
+	            {
+                        dy = (this->vvd_smoothed_elevation_map[j][i] - this->vvd_smoothed_elevation_map[j-1][i])/(this->d_res);
+	            }
+	        }
+	        else if (this->vvi_validity_map[j-1][i] == 0)
+	        {
+                    dy = (this->vvd_smoothed_elevation_map[j+1][i] - this->vvd_smoothed_elevation_map[j][i])/(this->d_res);
+	        }
+	        else
+	        {
+                    dy = (this->vvd_smoothed_elevation_map[j+1][i] - this->vvd_smoothed_elevation_map[j-1][i])/(2*this->d_res);
+	        }
+
+                this->vvd_slope_map[j][i] = atan(sqrt(pow(dx,2) + pow(dy,2)))*180.0/3.1416;
+	        this->vvd_aspect_map[j][i] = atan2(dy,dx);
+	    }
+	    else
+	    {
+                this->vvd_slope_map[j][i] = 0.0;
+	        this->vvd_aspect_map[j][i] = 0.0;
+	    }
+        }
+    }
+
+    double d_sumnx, d_sumny, d_sumnz, d_R, d_Rratio;
     for (int j = 1; j < this->ui_num_rows - 1; j++)
     {
         for (int i = 1; i < this->ui_num_cols - 1; i++)
@@ -526,7 +624,20 @@ bool MobileManipMap::calculateElevationMap()
 	            }
 	        }
 	        d_R = sqrt(pow(d_sumnx,2)+pow(d_sumny,2)+pow(d_sumnz,2)); 
-	        this->vvd_sd_map[j][i] = sqrt( - 2 * log(d_R/(double)i_nodes)) * 180.0/3.1416; 
+		// A numerical error is avoided when d_R == i_nodes -> d_Rratio ~ 1.0 +- error
+		d_Rratio = min(d_R / (double)i_nodes, 0.9999999);
+	        this->vvd_sd_map[j][i] = sqrt( - 2 * log(d_Rratio)) * 180.0/3.1416; 
+		if (isnan(this->vvd_sd_map[j][i]))
+		{
+                    std::cout << "At node " << i << "," << j << " is zero " << std::endl;
+                    std::cout << "  i_nodes =  " << i_nodes << std::endl;
+                    std::cout << "  d_R =  " << d_R << std::endl;
+                    std::cout << "  d_sumnx =  " << d_sumnx << std::endl;
+                    std::cout << "  d_sumny =  " << d_sumny << std::endl;
+                    std::cout << "  d_sumnz =  " << d_sumnz << std::endl;
+		    std::cout << "  ratio = " << d_R/(double)i_nodes << std::endl;
+		    std::cout << "  log = " << log(d_R/(double)i_nodes) << std::endl;
+		}
 	    }
 	    else
 	    {
@@ -555,40 +666,97 @@ bool MobileManipMap::calculateTraversabilityMap()
     // TODO - Detect whether the sample is at a distance from obstacles too close, being UNREACHABLE
     Mat mat_obstacle_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    Mat mat_slope_obstacle_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    Mat mat_sd_obstacle_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
     Mat mat_sd_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    Mat mat_slope_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
     Mat mat_proximity_map;
-    
+    Mat mat_validity_obstacle_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    Mat mat_validity_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+   
     double scale = 0.125; // 1/8 to normalize sobel filter
     double delta = 0;
 
-    // Slope Mat is computed
+    // Slope mat and sd mat are computed
     for (int j = 0; j < mat_sd_map.rows; j++)
     {
         for (int i = 0; i < mat_sd_map.cols; i++)
         {
             mat_sd_map.at<float>(j, i)
 		    = (float)this->vvd_sd_map[j][i];
+            mat_slope_map.at<float>(j, i)
+		    = (float)this->vvd_slope_map[j][i];
         }
     }
 
     if (b_debug_mode)
     {
-        std::cout << "SD Mat is computed" << std::endl;
+        std::cout << "Slope and SD Mat are computed" << std::endl;
+        imshow("Slope Matrix", mat_slope_map);
+	waitKey(0);
         imshow("SD Matrix", mat_sd_map);
 	waitKey(0);
     }
 
+    // Validity Mat is computed
+    for (int j = 0; j < mat_validity_map.rows; j++)
+    {
+        for (int i = 0; i < mat_validity_map.cols; i++)
+        {
+            mat_validity_map.at<float>(j, i)
+		    = (float)this->vvi_validity_map[j][i];
+        }
+    }
+    if (this->b_debug_mode)
+    {
+        std::cout << "Validity Mat is computed" << std::endl;
+        imshow("Validity Matrix", mat_validity_map);
+	waitKey(0);
+    }
+
+    threshold(mat_validity_map, mat_validity_obstacle_map, 0.5, 255, THRESH_BINARY);
+    if (this->b_debug_mode)
+    {
+        std::cout << "A Threshold is applied to the validity mat" << std::endl;
+        imshow("Obstacle Matrix 2", mat_validity_obstacle_map);
+	waitKey(0);
+    }
+
+    mat_validity_obstacle_map.convertTo(mat_validity_obstacle_map, CV_8UC1);
+
+    morphologyEx(mat_validity_obstacle_map, mat_validity_obstacle_map, MORPH_CLOSE, getStructuringElement(MORPH_ELLIPSE,Size(3,3)),Point(-1,-1),this->i_validity_morph_iterations);
+
+
     // Obstacle Mat is computed
-    threshold(mat_sd_map, mat_obstacle_map, this->d_sd_threshold, 255, THRESH_BINARY_INV);//TODO-Include here configurable parameter for slope threshold
+    threshold(mat_slope_map, mat_slope_obstacle_map, this->d_slope_threshold, 255, THRESH_BINARY_INV);
+    threshold(mat_sd_map, mat_sd_obstacle_map, this->d_sd_threshold, 255, THRESH_BINARY_INV);
+    mat_slope_obstacle_map.convertTo(mat_slope_obstacle_map, CV_8UC1);
+    mat_sd_obstacle_map.convertTo(mat_sd_obstacle_map, CV_8UC1);
+    mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
+    
+    
+    bitwise_and(mat_sd_obstacle_map, mat_slope_obstacle_map, mat_obstacle_map);
     if (b_debug_mode)
     {
         std::cout << "A Threshold of " << this->d_sd_threshold << " degrees is applied to the sd mat" << std::endl;
         imshow("Obstacle Matrix", mat_obstacle_map);
 	waitKey(0);
     }
+    bitwise_and(mat_obstacle_map, mat_validity_obstacle_map, mat_obstacle_map);
+    if (b_debug_mode)
+    {
+        std::cout << "A Threshold of " << this->d_sd_threshold << " degrees is applied to the sd mat" << std::endl;
+        imshow("Obstacle Matrix", mat_obstacle_map);
+	waitKey(0);
+    }
+   
 
-    mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
     if (b_debug_mode)
     {
         std::cout << "Obstacle Mat is computed" << std::endl;
@@ -615,7 +783,7 @@ bool MobileManipMap::calculateTraversabilityMap()
                 this->vvi_obstacle_map[j][i] = 0;
                 this->vvi_traversability_map[j][i] = 0;
 	    }
-	    else if ((mat_proximity_map.at<float>(j, i) <= this->d_minreach_dist) || 
+	    else if ((mat_proximity_map.at<float>(j, i) <= max(0.0, this->d_occupancy_dist - this->d_minreach_dist)) || 
 			    (i == 0) || (j == 0)
                 || (i == this->ui_num_cols - 1)
                 || (j == this->ui_num_rows - 1))
@@ -699,38 +867,9 @@ bool MobileManipMap::addSampleFacingObstacles()
 
 bool MobileManipMap::addValidityCost()
 {
-    Mat mat_obstacle_map
-        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    Mat mat_validity_map
-        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    Mat mat_proximity_map;
+/*    Mat mat_proximity_map;
     
-    for (int j = 0; j < mat_validity_map.rows; j++)
-    {
-        for (int i = 0; i < mat_validity_map.cols; i++)
-        {
-            mat_validity_map.at<float>(j, i)
-		    = (float)this->vvi_validity_map[j][i];
-        }
-    }
-    if (this->b_debug_mode)
-    {
-        std::cout << "Validity Mat is computed" << std::endl;
-        imshow("Validity Matrix", mat_validity_map);
-	waitKey(0);
-    }
 
-    threshold(mat_validity_map, mat_obstacle_map, 0.5, 255, THRESH_BINARY);
-    if (this->b_debug_mode)
-    {
-        std::cout << "A Threshold is applied to the validity mat" << std::endl;
-        imshow("Obstacle Matrix 2", mat_obstacle_map);
-	waitKey(0);
-    }
-
-    mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
-
-    morphologyEx(mat_obstacle_map, mat_obstacle_map, MORPH_CLOSE, getStructuringElement(MORPH_ELLIPSE,Size(3,3)),Point(-1,-1),this->i_validity_morph_iterations);
 
     distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
     mat_proximity_map = mat_proximity_map * this->d_res;
@@ -774,7 +913,7 @@ bool MobileManipMap::addValidityCost()
 	    }
         }
     }
-    return 1;
+    return 1;*/
 }
 
 

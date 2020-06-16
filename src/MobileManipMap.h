@@ -64,7 +64,11 @@ private:
     /**
      * Threshold for spherical deviation
      */
-    double d_sd_threshold = 10.0;
+    double d_sd_threshold = 16.82;
+    /**
+     * Threshold for average slope
+     */
+    double d_slope_threshold = 20.0;
     /**
      * Iterations for the morphological CLOSE operation on validity map
      */
@@ -76,15 +80,15 @@ private:
     /**
      * Max reachability distance
      */
-    double d_maxreach_dist = 0.94;
+    double d_maxreach_dist = 1.584;
     /**
      * Min reachability distance
      */
-    double d_minreach_dist = 0.94;
+    double d_minreach_dist = 1.344;
     /**
      * Occupancy radius
      */
-    double d_occupancy_dist = 1.5;
+    double d_occupancy_dist = 1.6;
     /**
      * Map minimal value of elevation in meters
      */
@@ -105,6 +109,7 @@ private:
      * Matrix containing elevation values
      */
     std::vector<std::vector<double>> vvd_elevation_map;
+    std::vector<std::vector<double>> vvd_smoothed_elevation_map;
     std::vector<std::vector<int8_t>> vvi_validity_map;
     std::vector<std::vector<double>> vvd_slope_map;
     std::vector<std::vector<double>> vvd_aspect_map;

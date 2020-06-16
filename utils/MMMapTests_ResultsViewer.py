@@ -6,6 +6,7 @@ from matplotlib import cm
 
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
 elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv"), skiprows=0)
+#elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv"), skiprows=0)
 slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
 validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
 sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
@@ -37,7 +38,8 @@ ax1.set_title('Cost Map')
 cb1 = fig1.colorbar(plot1, ax = ax1, orientation = 'horizontal')
 cb1.ax.set_title('Cost')
 ax1.set_facecolor('k')
-s1 = ax1.plot(sample[0], sample[1], 'ob')
+#s1 = ax1.plot(sample[0], sample[1], 'ob')
+s1 = ax1.plot(6.0, 7.0, 'ob')
 
 plot2 = ax2.scatter(xMap[np.where(traversabilityMap == 0)],
         yMap[np.where(traversabilityMap == 0)],
@@ -83,14 +85,15 @@ ax2.set_aspect('equal')
 ax2.set_xlabel('X-axis')
 ax2.set_ylabel('Y-axis')
 ax2.set_title('Traversability Map')
-s2 = ax2.plot(sample[0], sample[1], 'ob')
+#s2 = ax2.plot(sample[0], sample[1], 'ob')
+s2 = ax2.plot(6.0, 7.0, 'ob')
 ax2.set_xlim([xMap[0,0],xMap[0,-1]])
 ax2.set_ylim([yMap[0,0],yMap[-1,0]])
 
 
 fig2, (ax3,ax4) = plt.subplots(1,2,constrained_layout=True)
 
-plot3 = ax3.contourf(xMap, yMap, slopeMap*180.0/np.pi, 40, vmax = 45.0)
+plot3 = ax3.contourf(xMap, yMap, slopeMap, 40, vmax = 20.0, cmap = 'Reds')
 ax3.set_aspect('equal')
 ax3.set_xlabel('X-axis (m)')
 ax3.set_ylabel('Y-axis (m)')
@@ -98,7 +101,7 @@ ax3.set_title('Slope Map')
 cb3 = fig2.colorbar(plot3, ax = ax3, orientation = 'horizontal')
 cb3.ax.set_title('Slope')
 
-plot4 = ax4.contourf(xMap, yMap, sdMap, 40)#, vmax = 20.0)
+plot4 = ax4.contourf(xMap, yMap, sdMap, 40, vmax = 16.82, cmap = 'Oranges')
 ax4.set_aspect('equal')
 ax4.set_xlabel('X-axis (m)')
 ax4.set_ylabel('Y-axis (m)')

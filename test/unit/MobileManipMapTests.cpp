@@ -16,8 +16,8 @@ TEST(MMMapTest, nominal_working_test)
 /*
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
-		   */
-    
+  */
+
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
     
@@ -55,14 +55,14 @@ TEST(MMMapTest, nominal_working_test)
     std::cout << vvd_elevation_data[0][0] << std::endl; 
 
     base::Waypoint samplePos;
-    samplePos.position[0] = 5.6;
-    samplePos.position[1] = 4.2;
-//    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
+    samplePos.position[0] = 6.0;//5.6;
+    samplePos.position[1] = 7.0;
+    //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
     MobileManipMap dummyMap(true);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 0.94, 1.54),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);

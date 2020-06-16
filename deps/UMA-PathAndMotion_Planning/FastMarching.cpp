@@ -129,7 +129,7 @@ void FastMarching::getShadowedCostMap(
             else if ((d_distToGoal < d_max_distance / d_map_resolution)
                      && (fabs((*pvvd_clear_totalcostmap)[j][i]
                               - (*pvvd_obstacle_totalcostmap)[j][i])
-                         > d_map_resolution))
+                         > d_map_resolution * sqrt(2)))
             {
                 vvi_obstacle_map[j][i] = 0;
             }
