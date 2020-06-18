@@ -9,7 +9,10 @@ FastMarching3D::FastMarching3D(double _waypointDistance)
     this->waypointDistance = _waypointDistance;
 }
 
-FastMarching3D::~FastMarching3D(){;}
+FastMarching3D::~FastMarching3D()
+{
+    ;
+}
 
 void FastMarching3D::planPath(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,

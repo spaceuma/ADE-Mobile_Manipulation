@@ -194,7 +194,7 @@ public:
     // -- FUNCTIONS --
     FastMarching3D(double _waypointDistance = 0.5);
     ~FastMarching3D();
-  
+
     void planPath(
         const std::vector<std::vector<std::vector<double>>> *costMap3D,
         double mapResolution,

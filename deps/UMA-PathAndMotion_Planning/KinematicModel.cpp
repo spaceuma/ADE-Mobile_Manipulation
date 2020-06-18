@@ -964,7 +964,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                     std::vector<double> config
                         = getPositionJoints(position, 1, 1);
                     config.resize(6);
-                  
+
                     if (!p_collision_detector->isWristColliding(config))
                     {
                         for (int l = 0; l < 6; l++)
@@ -982,15 +982,16 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                                     // "<<config[5]<<"]";
                                     std::cout << std::flush;
 
-                                    if (p_collision_detector->isColliding(config))
+                                    if (p_collision_detector->isColliding(
+                                            config))
                                     {
                                         reachabilityMap[i][j][k] = 1;
                                         break;
                                     }
                                 }
-                                if (reachabilityMap[i][j][k]==1) break;
+                                if (reachabilityMap[i][j][k] == 1) break;
                             }
-                            if (reachabilityMap[i][j][k]==1) break;
+                            if (reachabilityMap[i][j][k] == 1) break;
                         }
                     }
                     else

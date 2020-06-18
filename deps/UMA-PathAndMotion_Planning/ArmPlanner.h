@@ -87,6 +87,17 @@ public:
                              double _mapResolution,
                              double _zResolution,
                              base::Waypoint roverWaypoint,
+                             std::vector<double> initialArmConfiguration,
+                             base::Waypoint goalEEPosition,
+                             std::vector<double> goalEEOrientation,
+                             std::vector<std::vector<double>> *armJoints,
+                             std::vector<double> *timeProfile);
+
+    // Function deprecated
+    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
+                             double _mapResolution,
+                             double _zResolution,
+                             base::Waypoint roverWaypoint,
                              base::Waypoint initialEEPosition,
                              base::Waypoint goalEEPosition,
                              std::vector<std::vector<double>> *armJoints,
@@ -146,10 +157,11 @@ public:
     std::vector<double> getTimeProfile(
         std::vector<std::vector<double>> *armProfile);
 
-    void computeArmProfileGaussSmoothening(const std::vector<std::vector<double>> *armProfile,
-                                           std::vector<std::vector<double>> *smoothedArmProfile,
-                                           double sigma = 5,
-                                           int samples = 5);
+    void computeArmProfileGaussSmoothening(
+        const std::vector<std::vector<double>> *armProfile,
+        std::vector<std::vector<double>> *smoothedArmProfile,
+        double sigma = 5,
+        int samples = 5);
 };
 } // namespace ArmPlanner_lib
 #endif

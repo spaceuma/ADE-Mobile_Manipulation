@@ -1,7 +1,8 @@
 
 #include "CollisionDetector.h"
 
-CollisionDetector::CollisionDetector(std::string s_urdf_path_m, bool _includeWrist)
+CollisionDetector::CollisionDetector(std::string s_urdf_path_m,
+                                     bool _includeWrist)
 {
     includeWrist = _includeWrist;
 
@@ -16,8 +17,8 @@ CollisionDetector::CollisionDetector(std::string s_urdf_path_m, bool _includeWri
     mWorld->addSkeleton(sherpatt);
     mWorld->addSkeleton(manipulator);
 
-    if(includeWrist)
-    { 
+    if (includeWrist)
+    {
         initializeWristModel();
     }
 
@@ -60,9 +61,10 @@ CollisionDetector::~CollisionDetector() {}
 
 void CollisionDetector::initializeWristModel()
 {
-        manipulator_wrist = dl.parseSkeleton("package://urdf/manipulator_wrist.urdf");
-        manipulator_wrist->setName("manipulator_wrist");
-        mWorld->addSkeleton(manipulator_wrist);
+    manipulator_wrist
+        = dl.parseSkeleton("package://urdf/manipulator_wrist.urdf");
+    manipulator_wrist->setName("manipulator_wrist");
+    mWorld->addSkeleton(manipulator_wrist);
 }
 
 bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
@@ -91,8 +93,7 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
     dart::collision::CollisionResult result;
     bool collisionBody
         = sherpaGroup->collide(manipGroup.get(), option, &result);
-    bool collisionManip = manipGroup->collide(
-        option, &result);
+    bool collisionManip = manipGroup->collide(option, &result);
 
     /*if(collisionBody)
     {
@@ -112,8 +113,7 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
 
 bool CollisionDetector::isWristColliding(const std::vector<double> manip_joints)
 {
-    if(!includeWrist)
-        initializeWristModel();
+    if (!includeWrist) initializeWristModel();
 
     // Get sherpa into the desired configuration
     /* Pan of the whole leg */
@@ -130,14 +130,14 @@ bool CollisionDetector::isWristColliding(const std::vector<double> manip_joints)
     auto collisionEngine
         = mWorld->getConstraintSolver()->getCollisionDetector();
     auto sherpaGroup = collisionEngine->createCollisionGroup(sherpatt.get());
-    auto manipGroup = collisionEngine->createCollisionGroup(manipulator_wrist.get());
+    auto manipGroup
+        = collisionEngine->createCollisionGroup(manipulator_wrist.get());
 
     dart::collision::CollisionOption option;
     dart::collision::CollisionResult result;
     bool collisionBody
         = sherpaGroup->collide(manipGroup.get(), option, &result);
-    bool collisionManip = manipGroup->collide(
-        option, &result);
+    bool collisionManip = manipGroup->collide(option, &result);
 
     /*if(collisionBody)
     {
@@ -153,5 +153,4 @@ bool CollisionDetector::isWristColliding(const std::vector<double> manip_joints)
     }*/
 
     return collisionBody || collisionManip;
-    
 }

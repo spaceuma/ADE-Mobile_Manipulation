@@ -9,7 +9,10 @@ BiFastMarching::BiFastMarching(double _waypointDistance)
     this->waypointDistance = _waypointDistance;
 }
 
-BiFastMarching::~BiFastMarching(){;}
+BiFastMarching::~BiFastMarching()
+{
+    ;
+}
 
 bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                               double mapResolution,

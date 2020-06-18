@@ -9,7 +9,10 @@ FastMarching::FastMarching(double _waypointDistance)
     this->waypointDistance = _waypointDistance;
 }
 
-FastMarching::~FastMarching(){;}
+FastMarching::~FastMarching()
+{
+    ;
+}
 
 void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                             double mapResolution,

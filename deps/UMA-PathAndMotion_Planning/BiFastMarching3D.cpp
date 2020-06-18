@@ -9,7 +9,10 @@ BiFastMarching3D::BiFastMarching3D(double _waypointDistance)
     this->waypointDistance = _waypointDistance;
 }
 
-BiFastMarching3D::~BiFastMarching3D(){;}
+BiFastMarching3D::~BiFastMarching3D()
+{
+    ;
+}
 
 void BiFastMarching3D::planPath(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,

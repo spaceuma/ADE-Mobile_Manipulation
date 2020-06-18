@@ -14,7 +14,7 @@ private:
     dart::dynamics::SkeletonPtr sherpatt;
     dart::dynamics::SkeletonPtr manipulator;
     dart::dynamics::SkeletonPtr manipulator_wrist;
-  
+
     bool includeWrist;
 
 public:

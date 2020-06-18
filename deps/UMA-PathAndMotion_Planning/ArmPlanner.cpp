@@ -119,10 +119,11 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     double sigma = 2;
     int samples = 5;
-    if (roverPath->size() > samples*2 + 1)
+    if (roverPath->size() > samples * 2 + 1)
     {
         smoothedHeading = getGaussSmoothen(heading, sigma, samples);
-        for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 - 1; i++)
+        for (int i = samples / 2 + 1; i < roverPath->size() - samples / 2 - 1;
+             i++)
         {
             (*roverPath6)[i][5] = smoothedHeading[i];
             while ((*roverPath6)[i][5] > pi)
@@ -332,7 +333,7 @@ bool ArmPlanner::planAtomicOperation(
     std::vector<std::vector<double>> *armJoints,
     std::vector<double> *timeProfile)
 {
-    
+
     this->mapResolution = d_mapResolution_m;
     this->zResolution = _zResolution;
     this->DEM = _DEM;
@@ -360,18 +361,21 @@ bool ArmPlanner::planAtomicOperation(
 
     bool isTunnelPermisive = false;
 
-    std::vector<double> pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (sherpa_tt_arm->isReachable(pos)==1)
+    std::vector<double> pos
+        = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+    if (sherpa_tt_arm->isReachable(pos) == 1)
     {
-        //std::cout<<"WARNING[planAtomicOperation]: initial arm configuration is outside security area\n";
+        // std::cout<<"WARNING[planAtomicOperation]: initial arm configuration
+        // is outside security area\n";
         isTunnelPermisive = true;
     }
-    else if (sherpa_tt_arm->isReachable(pos)==0)
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
     {
-        std::cout<<"ERROR[planAtomicOperation]: initial arm configuration is colliding or unreachable\n";
+        std::cout << "ERROR[planAtomicOperation]: initial arm configuration is "
+                     "colliding or unreachable\n";
         return false;
     }
-    
+
     pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
     double roll = roverPose6[3];
     double pitch = roverPose6[4];
@@ -392,17 +396,19 @@ bool ArmPlanner::planAtomicOperation(
     TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
 
     pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (sherpa_tt_arm->isReachable(pos)==1)
+    if (sherpa_tt_arm->isReachable(pos) == 1)
     {
-        //std::cout<<"WARNING[planAtomicOperation]: goal arm configuration is outside security area\n";
+        // std::cout<<"WARNING[planAtomicOperation]: goal arm configuration is
+        // outside security area\n";
         isTunnelPermisive = true;
     }
-    else if (sherpa_tt_arm->isReachable(pos)==0)
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
     {
-        std::cout<<"ERROR[planAtomicOperation]: goal arm configuration will lead to collision or is unreachable\n";
+        std::cout << "ERROR[planAtomicOperation]: goal arm configuration will "
+                     "lead to collision or is unreachable\n";
         return false;
     }
-    
+
     TW2Wrist = dot(TW2BCS, TBCS2Wrist);
 
     base::Waypoint goalPos;
@@ -433,19 +439,221 @@ bool ArmPlanner::planAtomicOperation(
                 (*volume_cost_map)[i][j][k] = INFINITY;
 
     // Generating the reachability tunnel surrounding the rover path
-    generateReachabilityTunnel(iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
+    generateReachabilityTunnel(
+        iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
 
     // End effector path planning
-    FastMarching_lib::FastMarching3D* pathPlanner3D = new FastMarching_lib::FastMarching3D(0.25);
+    FastMarching_lib::FastMarching3D *pathPlanner3D
+        = new FastMarching_lib::FastMarching3D(0.25);
     std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
 
     clock_t inip = clock();
     pathPlanner3D->planPath(volume_cost_map,
-                           mapResolution,
-                           zResolution,
-                           iniPos,
-                           goalPos,
-                           wristPath);
+                            mapResolution,
+                            zResolution,
+                            iniPos,
+                            goalPos,
+                            wristPath);
+
+    wristPath6->resize(wristPath->size(), std::vector<double>(6));
+
+    for (int i = 0; i < wristPath->size(); i++)
+    {
+        (*wristPath6)[i][0] = (*wristPath)[i].position[0];
+        (*wristPath6)[i][1] = (*wristPath)[i].position[1];
+        (*wristPath6)[i][2] = (*wristPath)[i].position[2];
+    }
+    // Computing inverse kinematics
+
+    for (int i = 0; i < wristPath->size(); i++)
+    {
+        std::vector<std::vector<double>> TW2Wrist(4, std::vector<double>(4));
+        std::vector<std::vector<double>> TBCS2Wrist(4, std::vector<double>(4));
+
+        pos[0] = (*wristPath)[i].position[0];
+        pos[1] = (*wristPath)[i].position[1];
+        pos[2] = (*wristPath)[i].position[2];
+
+        TW2Wrist = getTraslation(pos);
+
+        TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
+
+        pos[0] = TBCS2Wrist[0][3];
+        pos[1] = TBCS2Wrist[1][3];
+        pos[2] = TBCS2Wrist[2][3];
+        std::vector<double> config;
+
+        try
+        {
+            config = sherpa_tt_arm->getPositionJoints(pos, 1, 1);
+            double joint4
+                = initialArmConfiguration[3]
+                  + i * (goalArmConfiguration[3] - initialArmConfiguration[3])
+                        / wristPath->size();
+            double joint5
+                = initialArmConfiguration[4]
+                  + i * (goalArmConfiguration[4] - initialArmConfiguration[4])
+                        / wristPath->size();
+            double joint6
+                = initialArmConfiguration[5]
+                  + i * (goalArmConfiguration[5] - initialArmConfiguration[5])
+                        / wristPath->size();
+
+            config.push_back(joint4);
+            config.push_back(joint5);
+            config.push_back(joint6);
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "Inverse kinematics failed at waypoint " << i << "!"
+                      << std::endl;
+            return false;
+        }
+        armJoints->push_back(config);
+    }
+
+    (*timeProfile) = getTimeProfile(armJoints);
+    return true;
+}
+
+bool ArmPlanner::planAtomicOperation(
+    const std::vector<std::vector<double>> *_DEM,
+    double d_mapResolution_m,
+    double _zResolution,
+    base::Waypoint roverWaypoint,
+    std::vector<double> initialArmConfiguration,
+    base::Waypoint goalEEPosition,
+    std::vector<double> goalEEOrientation,
+    std::vector<std::vector<double>> *armJoints,
+    std::vector<double> *timeProfile)
+{
+
+    this->mapResolution = d_mapResolution_m;
+    this->zResolution = _zResolution;
+    this->DEM = _DEM;
+
+    // Rover z coordinate and heading computation
+    std::vector<double> roverPose6(6);
+
+    wristPath6 = new std::vector<std::vector<double>>;
+    roverPose6[0] = roverWaypoint.position[0];
+    roverPose6[1] = roverWaypoint.position[1];
+    roverPose6[2]
+        = (*DEM)[(int)(roverWaypoint.position[1] / mapResolution + 0.5)]
+                [(int)(roverWaypoint.position[0] / mapResolution + 0.5)]
+          + heightGround2BCS;
+    roverPose6[3] = 0;
+    roverPose6[4] = 0;
+    roverPose6[5] = roverWaypoint.heading;
+
+    roverPath6 = new std::vector<std::vector<double>>;
+    roverPath6->push_back(roverPose6);
+
+    // Initial arm pos computation
+    std::vector<std::vector<double>> TBCS2Wrist
+        = sherpa_tt_arm->getWristTransform(initialArmConfiguration);
+
+    bool isTunnelPermisive = false;
+
+    std::vector<double> pos
+        = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+    if (sherpa_tt_arm->isReachable(pos) == 1)
+    {
+        // std::cout<<"WARNING[planAtomicOperation]: initial arm configuration
+        // is outside security area\n";
+        isTunnelPermisive = true;
+    }
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
+    {
+        std::cout << "ERROR[planAtomicOperation]: initial arm configuration is "
+                     "colliding or unreachable\n";
+        return false;
+    }
+
+    pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
+    double roll = roverPose6[3];
+    double pitch = roverPose6[4];
+    double yaw = roverPose6[5];
+
+    std::vector<std::vector<double>> TW2BCS
+        = dot(getTraslation(pos),
+              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+    std::vector<std::vector<double>> TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+
+    base::Waypoint iniPos;
+    iniPos.position[0] = TW2Wrist[0][3];
+    iniPos.position[1] = TW2Wrist[1][3];
+    iniPos.position[2] = TW2Wrist[2][3];
+
+    // Final arm pos computation
+    std::vector<double> goalPosition = {goalEEPosition.position[0],
+                                        goalEEPosition.position[1],
+                                        goalEEPosition.position[2]};
+    std::vector<double> goalArmConfiguration
+        = sherpa_tt_arm->getManipJoints(goalPosition, goalEEOrientation,1,1);
+
+    TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
+
+    pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+    if (sherpa_tt_arm->isReachable(pos) == 1)
+    {
+        // std::cout<<"WARNING[planAtomicOperation]: goal arm configuration is
+        // outside security area\n";
+        isTunnelPermisive = true;
+    }
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
+    {
+        std::cout << "ERROR[planAtomicOperation]: goal arm configuration will "
+                     "lead to collision or is unreachable\n";
+        return false;
+    }
+
+    TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+
+    base::Waypoint goalPos;
+    goalPos.position[0] = TW2Wrist[0][3];
+    goalPos.position[1] = TW2Wrist[1][3];
+    goalPos.position[2] = TW2Wrist[2][3];
+
+    // Cost map 3D computation
+    int n = DEM->size();
+    int m = (*DEM)[0].size();
+
+    double maxz = 0;
+    for (int i = 0; i < DEM->size(); i++)
+        for (int j = 0; j < (*DEM)[0].size(); j++)
+            if ((*DEM)[i][j] > maxz) maxz = (*DEM)[i][j];
+
+    int l
+        = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution
+                + 0.5);
+
+    volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
+    volume_cost_map->resize(
+        n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
+
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            for (int k = 0; k < l; k++)
+                (*volume_cost_map)[i][j][k] = INFINITY;
+
+    // Generating the reachability tunnel surrounding the rover path
+    generateReachabilityTunnel(
+        iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
+
+    // End effector path planning
+    FastMarching_lib::FastMarching3D *pathPlanner3D
+        = new FastMarching_lib::FastMarching3D(0.25);
+    std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
+
+    clock_t inip = clock();
+    pathPlanner3D->planPath(volume_cost_map,
+                            mapResolution,
+                            zResolution,
+                            iniPos,
+                            goalPos,
+                            wristPath);
 
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
@@ -539,25 +747,29 @@ bool ArmPlanner::planAtomicOperation(
     roverPath6->push_back(roverPose6);
 
     // Initial arm pos computation
-    std::vector<double> pos = {initialEEPosition.position[0], initialEEPosition.position[1], initialEEPosition.position[2]};
+    std::vector<double> pos = {initialEEPosition.position[0],
+                               initialEEPosition.position[1],
+                               initialEEPosition.position[2]};
     std::vector<double> EE2Wrist = {0, 0, sherpa_tt_arm->d6};
     std::vector<std::vector<double>> TBCS2Wrist
-        = dot(getTraslation(pos),getTraslation(EE2Wrist));
-    
+        = dot(getTraslation(pos), getTraslation(EE2Wrist));
+
     bool isTunnelPermisive = false;
 
     pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (sherpa_tt_arm->isReachable(pos)==1)
+    if (sherpa_tt_arm->isReachable(pos) == 1)
     {
-        //std::cout<<"WARNING[planAtomicOperation]: initial end effector position is outside security area\n";
+        // std::cout<<"WARNING[planAtomicOperation]: initial end effector
+        // position is outside security area\n";
         isTunnelPermisive = true;
     }
-    else if (sherpa_tt_arm->isReachable(pos)==0)
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
     {
-        std::cout<<"ERROR[planAtomicOperation]: initial end effector position is colliding or unreachable\n";
+        std::cout << "ERROR[planAtomicOperation]: initial end effector "
+                     "position is colliding or unreachable\n";
         return false;
     }
-       
+
     pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
     double roll = roverPose6[3];
     double pitch = roverPose6[4];
@@ -575,18 +787,22 @@ bool ArmPlanner::planAtomicOperation(
     iniPos.position[2] = TW2Wrist[2][3];
 
     // Final arm pos computation
-    pos = {goalEEPosition.position[0], goalEEPosition.position[1], goalEEPosition.position[2]};
-    TBCS2Wrist = dot(getTraslation(pos),getTraslation(EE2Wrist));
+    pos = {goalEEPosition.position[0],
+           goalEEPosition.position[1],
+           goalEEPosition.position[2]};
+    TBCS2Wrist = dot(getTraslation(pos), getTraslation(EE2Wrist));
 
     pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (sherpa_tt_arm->isReachable(pos)==1)
+    if (sherpa_tt_arm->isReachable(pos) == 1)
     {
-        //std::cout<<"WARNING[planAtomicOperation]: goal end effector position is outside security area\n";
+        // std::cout<<"WARNING[planAtomicOperation]: goal end effector position
+        // is outside security area\n";
         isTunnelPermisive = true;
     }
-    else if (sherpa_tt_arm->isReachable(pos)==0)
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
     {
-        std::cout<<"ERROR[planAtomicOperation]: goal end effector position will lead to collision or is unreachable\n";
+        std::cout << "ERROR[planAtomicOperation]: goal end effector position "
+                     "will lead to collision or is unreachable\n";
         return false;
     }
 
@@ -620,19 +836,21 @@ bool ArmPlanner::planAtomicOperation(
                 (*volume_cost_map)[i][j][k] = INFINITY;
 
     // Generating the reachability tunnel surrounding the rover path
-    generateReachabilityTunnel(iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
+    generateReachabilityTunnel(
+        iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
 
     // End effector path planning
-    FastMarching_lib::FastMarching3D* pathPlanner3D = new FastMarching_lib::FastMarching3D(0.25);
+    FastMarching_lib::FastMarching3D *pathPlanner3D
+        = new FastMarching_lib::FastMarching3D(0.25);
     std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
 
     clock_t inip = clock();
     pathPlanner3D->planPath(volume_cost_map,
-                           mapResolution,
-                           zResolution,
-                           iniPos,
-                           goalPos,
-                           wristPath);
+                            mapResolution,
+                            zResolution,
+                            iniPos,
+                            goalPos,
+                            wristPath);
 
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
@@ -774,7 +992,7 @@ void ArmPlanner::generateTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos)==2)
+                    if (sherpa_tt_arm->isReachable(pos) == 2)
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -861,7 +1079,7 @@ void ArmPlanner::generateTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos)==2)
+                    if (sherpa_tt_arm->isReachable(pos) == 2)
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -973,7 +1191,7 @@ void ArmPlanner::generateTunnel(
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
-                    if (sherpa_tt_arm->isReachable(pos)==2)
+                    if (sherpa_tt_arm->isReachable(pos) == 2)
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -1116,7 +1334,8 @@ void ArmPlanner::generateReachabilityTunnel(
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
                     int reachability = sherpa_tt_arm->isReachable(pos);
-                    if (reachability == 2 || (reachability == 1 && isTunnelPermisive))
+                    if (reachability == 2
+                        || (reachability == 1 && isTunnelPermisive))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -1124,11 +1343,11 @@ void ArmPlanner::generateReachabilityTunnel(
                         int ix = (int)(TW2Node[0][3] / mapResolution + 0.5);
                         int iy = (int)(TW2Node[1][3] / mapResolution + 0.5);
                         int iz = (int)(TW2Node[2][3] / zResolution + 0.5);
-  
+
                         double cost;
-                        if(reachability == 2)
+                        if (reachability == 2)
                             cost
-                               = 1
+                                = 1
                                   + slope
                                         / sherpa_tt_arm->getDistanceToCollision(
                                               pos);
@@ -1538,28 +1757,34 @@ std::vector<double> ArmPlanner::getTimeProfile(
     return times;
 }
 
-void ArmPlanner::computeArmProfileGaussSmoothening(const std::vector<std::vector<double>> *armProfile,
-                                                   std::vector<std::vector<double>> *smoothedArmProfile,
-                                                   double sigma,
-                                                   int samples)
+void ArmPlanner::computeArmProfileGaussSmoothening(
+    const std::vector<std::vector<double>> *armProfile,
+    std::vector<std::vector<double>> *smoothedArmProfile,
+    double sigma,
+    int samples)
 {
-  if(samples%2 == 0)
-  {
-    samples++;
-    std::cout<<"WARNING [computeArmProfileGaussSmoothening]: number of samples should be odd, changing to "<<samples<<std::endl;
-  }
+    if (samples % 2 == 0)
+    {
+        samples++;
+        std::cout << "WARNING [computeArmProfileGaussSmoothening]: number of "
+                     "samples should be odd, changing to "
+                  << samples << std::endl;
+    }
 
-  (*smoothedArmProfile) = (*armProfile);
-   
-  for(int i = 0; i < (*armProfile)[0].size(); i++)
-  {
-    std::vector<double> jointProfile;
-    for(int j = 0; j < armProfile->size(); j++)
-      jointProfile.push_back((*armProfile)[j][i]);
+    (*smoothedArmProfile) = (*armProfile);
 
-    std::vector<double> smoothedJointProfile = getGaussSmoothen(jointProfile,sigma,samples);
-    
-    for(int j = (samples/2+samples%2); j < armProfile->size()-(samples/2+samples%2); j++)
-      (*smoothedArmProfile)[j][i] = smoothedJointProfile[j];
-  }
+    for (int i = 0; i < (*armProfile)[0].size(); i++)
+    {
+        std::vector<double> jointProfile;
+        for (int j = 0; j < armProfile->size(); j++)
+            jointProfile.push_back((*armProfile)[j][i]);
+
+        std::vector<double> smoothedJointProfile
+            = getGaussSmoothen(jointProfile, sigma, samples);
+
+        for (int j = (samples / 2 + samples % 2);
+             j < armProfile->size() - (samples / 2 + samples % 2);
+             j++)
+            (*smoothedArmProfile)[j][i] = smoothedJointProfile[j];
+    }
 }
