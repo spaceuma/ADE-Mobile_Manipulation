@@ -244,7 +244,6 @@ public:
     /**
      * It serves to perform an operation with only the arm.
      */
-    void executeAtomicOperation();
-    bool initAtomicOperation(const Joints &j_goal, const Joints &j_present_readings);
+    bool initAtomicOperation(const base::Waypoint &w_goal, const Joints &j_present_readings);
 
 };

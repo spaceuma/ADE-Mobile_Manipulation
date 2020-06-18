@@ -234,6 +234,60 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     }
 }
 
+unsigned int MotionPlan::computeArmDeployment(const base::Waypoint &w_goal, const std::vector<double> &vd_orientation_goal, const std::vector<double> &vd_arm_readings)
+{
+    this->vvd_init_arm_profile.clear();
+    this->vd_init_time_profile.clear();
+    this->b_is_initialization_computed = false;
+    std::vector<std::vector<double>> elevationMap;
+    if(!this->pmm_map->getElevationMapToZero(elevationMap))
+    {
+        return 3;
+    }
+    // TODO: check if elevationMap is properly formatted
+    // TODO: check if i_segment_m is valid!!
+    for (uint i = 0; i < 6; i++)
+    {
+            std::cout << " Actual Joint " << i << " is " << vd_arm_readings[i] << std::endl;
+    }
+    double dxyres = this->pmm_map->getResolution();
+    std::cout << " Resolution is " << dxyres << std::endl;
+    std::cout << " Z-res is " << this->d_zres << std::endl;
+    base::Waypoint current_waypoint;
+    current_waypoint.position[0] = 3;// TODO - Fix This
+    current_waypoint.position[1] = 3;
+    current_waypoint.position[2]
+        = elevationMap[(int)(current_waypoint.position[1] / this->pmm_map->getResolution() + 0.5)]
+                      [(int)(current_waypoint.position[0] / this->pmm_map->getResolution() + 0.5)]
+          + p_arm_planner->heightGround2BCS;
+    current_waypoint.heading = 0;
+
+    if(this->p_arm_planner->planAtomicOperation(&elevationMap,
+                                    dxyres,
+                                    this->d_zres,
+                                    current_waypoint,//TODO - this should be avoided
+                                    vd_arm_readings,
+                                    w_goal,
+				    vd_orientation_goal,
+                                    &(this->vvd_init_arm_profile),
+                                    &(this->vd_init_time_profile)))
+    {//TODO - This may return a segmentation fault, maybe because of a non initialized elevation map...
+        if(this->isArmProfileSafe(this->vvd_init_arm_profile))
+	{
+            this->b_is_initialization_computed = true;
+            return 0;
+	}
+	else
+	{
+            return 1;
+	}
+    }
+    else
+    {
+            return 2;
+    }   
+}
+
 unsigned int MotionPlan::computeArmDeployment(const std::vector<double> &vd_arm_goal, const std::vector<double> &vd_arm_readings)
 {
     this->vvd_init_arm_profile.clear();
@@ -259,7 +313,7 @@ unsigned int MotionPlan::computeArmDeployment(const std::vector<double> &vd_arm_
     std::cout << " Resolution is " << dxyres << std::endl;
     std::cout << " Z-res is " << this->d_zres << std::endl;
     base::Waypoint current_waypoint;
-    current_waypoint.position[0] = 3;
+    current_waypoint.position[0] = 3;// TODO - Fix This
     current_waypoint.position[1] = 3;
     current_waypoint.position[2]
         = elevationMap[(int)(current_waypoint.position[1] / this->pmm_map->getResolution() + 0.5)]
@@ -492,9 +546,19 @@ std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
     return &(this->vvd_arm_motion_profile);
 }
 
+std::vector<double> *MotionPlan::getBackArmMotionProfile()
+{
+    return &(this->vvd_arm_motion_profile.back());
+}
+
 std::vector<std::vector<double>> *MotionPlan::getInitArmMotionProfile()
 {
     return &(this->vvd_init_arm_profile);
+}
+
+std::vector<double> *MotionPlan::getBackInitArmMotionProfile()
+{
+    return &(this->vvd_init_arm_profile.back());
 }
 
 std::vector<double> *MotionPlan::getInitArmTimeProfile()

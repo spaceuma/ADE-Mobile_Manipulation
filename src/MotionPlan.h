@@ -123,6 +123,8 @@ public:
      * A pointer to the initial arm motion profile is returned
      */
     std::vector<std::vector<double>> *getInitArmMotionProfile();
+    std::vector<double> *getBackArmMotionProfile();
+    std::vector<double> *getBackInitArmMotionProfile();
     /**
      * A pointer to the initial arm motion profile is returned
      */
@@ -163,6 +165,7 @@ public:
      * Calculates the profile of positions for the arm
      */
     unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(const base::Waypoint &w_goal, const std::vector<double> &vd_orientation_goal, const std::vector<double> &vd_arm_readings);
     unsigned int computeArmDeployment(const std::vector<double> &vd_arm_goal, const std::vector<double> &vd_arm_readings);
 
     unsigned int computeArmRetrieval(const std::vector<double> &vd_init);

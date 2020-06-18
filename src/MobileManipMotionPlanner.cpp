@@ -23,30 +23,34 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
         this->p_motionplan, s_configfile_path_m);
 }
 
-bool MobileManipMotionPlanner::initAtomicOperation(const Joints &j_goal, const Joints &j_present_readings)
+bool MobileManipMotionPlanner::initAtomicOperation(const base::Waypoint &w_goal, const Joints &j_present_readings)
 {
     if (this->status == IDLE)
     {
         this->p_mmexecutor->resetIterator(); 
-        std::vector<double> vd_arm_readings, vd_arm_goal;
+        std::vector<double> vd_arm_readings;
 	vd_arm_readings.resize(6);
-	vd_arm_goal.resize(6);
 	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
         {
-            vd_arm_goal[i]
-                = j_goal.m_jointStates[i].m_position;
             vd_arm_readings[i]
                 = j_present_readings.m_jointStates[i].m_position;
-        }        
-       	if (this->p_motionplan->computeArmDeployment(vd_arm_goal, vd_arm_readings) != 0)
+        }       
+        std::vector<double> vd_orientation_goal;
+        vd_orientation_goal.resize(3);
+        vd_orientation_goal[0] = 0.0;	
+        vd_orientation_goal[1] = 3.1416;	
+        vd_orientation_goal[2] = 0.0;	
+       	if (this->p_motionplan->computeArmDeployment(w_goal, vd_orientation_goal, vd_arm_readings) != 0)
         {
             return false;
 	}
 	std::cout << " Arm Deployment computed " << std::endl;
-	if (this->p_motionplan->computeArmRetrieval(vd_arm_goal) != 0)
+	std::vector<double> *pvd_arm_goal = this->p_motionplan->getBackInitArmMotionProfile();
+	if (this->p_motionplan->computeArmRetrieval((*pvd_arm_goal)) != 0)
         {
             return false;
 	}
+	std::cout << " Arm Retrieval computed " << std::endl;
         this->p_mmexecutor->updateDeployment();
         this->p_mmexecutor->updateRetrieval();
 	this->b_is_atomic_deployed = false;
@@ -776,9 +780,4 @@ std::vector<std::vector<std::vector<double>>>
     return this->p_motionplan->get3DCostMap();
 }
 
-void MobileManipMotionPlanner::executeAtomicOperation()
-{
-    // TODO - implement MobileManipMotionPlanner::executeAtomicOperation
-    throw "Not yet implemented";
-}
 
