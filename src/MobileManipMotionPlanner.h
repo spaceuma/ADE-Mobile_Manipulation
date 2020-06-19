@@ -61,8 +61,8 @@ private:
      */
     void setStatus(MMStatus status_m);
     /**
-    * Set an error code
-    */
+     * Set an error code
+     */
     void setError(MMError error_m);
 
     base::Waypoint w_current_rover_position;
@@ -76,9 +76,11 @@ private:
     double d_avoid_dist = 1.0;
     /**
      * Configurable parameter: rover kinematic configuration (in meters)
-     * (d0, a1, a2, c2, a3, d4, d6) TODO - Maybe these values could be taken from urdf model?
+     * (d0, a1, a2, c2, a3, d4, d6) TODO - Maybe these values could be taken
+     * from urdf model?
      */
-    std::vector<double> vd_kin_conf = {0.5,0.225,0.735,0.03,0.03,0.695,0.3};
+    std::vector<double> vd_kin_conf
+        = {0.5, 0.225, 0.735, 0.03, 0.03, 0.695, 0.3};
 
     /**
      * Z-distance from base reference frame to ground
@@ -93,10 +95,14 @@ private:
     /**
      * Configurable parameter: Max arm fetching distance (in meters)
      */
-    double d_maxfetching_dist = vd_kin_conf[1] 
+    double d_maxfetching_dist
+        = vd_kin_conf[1]
           + sqrt(pow(vd_kin_conf[2] + vd_kin_conf[5], 2)
-                 - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6] - d_finalEE_height, 2));
-    double d_minfetching_dist = (d_maxfetching_dist<0.24)?0.0:(d_maxfetching_dist-0.24);
+                 - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6]
+                           - d_finalEE_height,
+                       2));
+    double d_minfetching_dist
+        = (d_maxfetching_dist < 0.24) ? 0.0 : (d_maxfetching_dist - 0.24);
     bool b_is_atomic_deployed;
 
 public:
@@ -104,7 +110,7 @@ public:
      * Constructor, it receives a DEM and generates the Map object.
      */
     MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
-			     std::string s_urdf_path_m);
+                             std::string s_urdf_path_m);
 
     /**
      * It generates a motion plan based on the Map, the rover pose and the
@@ -137,7 +143,8 @@ public:
      * PAUSE state.
      */
     bool resumeOperation();
-    unsigned int updateAtomicOperation(Joints &arm_command, Joints arm_joints);
+    unsigned int updateAtomicOperation(Joints &arm_command, Joints arm_joints,
+		                       bool b_display_status = false);
 
     /**
      * It provides commands depending on the current position of the rover and
@@ -185,10 +192,10 @@ public:
      * Sets the value of avoidance distance in meters.
      */
     bool setAvoidanceDistance(double d_avoid_dist_m);
-    
+
     /**
-    * Prints information regarding the resulting path.
-    */
+     * Prints information regarding the resulting path.
+     */
     void printRoverPathInfo();
 
     /**
@@ -231,9 +238,9 @@ public:
      * A pointer to the 3d cost map is returned
      */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
-    
+
     bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM);
-    
+
     /**
      * It procceses the input LocCamDEM and triggers a replanning if necessary.
      */
@@ -244,6 +251,9 @@ public:
     /**
      * It serves to perform an operation with only the arm.
      */
-    bool initAtomicOperation(const base::Waypoint &w_goal, const Joints &j_present_readings);
-
+    bool initAtomicOperation(const Joints &j_present_readings,
+		             const base::Waypoint &w_goal,
+			     double d_roll = 0.0,
+			     double d_pitch = 3.1416,
+			     double d_yaw = 0.0);
 };

@@ -4,10 +4,10 @@
 // Respect the order of headers
 #include "Waypoint.hpp"
 // Must come after
-#include "FastMarching.h"
 #include "CollisionDetector.h"
+#include "FastMarching.h"
 #include "MobileManipMap.h"
-#include  "RoverGuidance_InputDataStruct.h"
+#include "RoverGuidance_InputDataStruct.h"
 // Must come after
 #include "ArmPlanner.h"
 #include "FetchingPoseEstimator.h"
@@ -39,8 +39,8 @@ private:
     /**
      * Motion Planner for the arm
      */
-    ArmPlanner* p_arm_planner;
-    CollisionDetector* p_collision_detector;
+    ArmPlanner *p_arm_planner;
+    CollisionDetector *p_collision_detector;
     std::string s_urdf_path;
     std::vector<double> vd_retrieval_position;
     /**
@@ -71,10 +71,10 @@ private:
      * Profile of position values per joint and sample
      */
     std::vector<std::vector<double>> vvd_retrieval_arm_profile;
-/**
+    /**
      * Pointer to the map class
      */
-    MobileManipMap * pmm_map;
+    MobileManipMap *pmm_map;
     /**
      * Value of Z resolution
      */
@@ -83,7 +83,8 @@ private:
      * Checks if the current path is smooth
      */
     bool isSmoothPath();
-    bool isArmProfileSafe(const std::vector<std::vector<double>> &vvd_profile_m);
+    bool isArmProfileSafe(
+        const std::vector<std::vector<double>> &vvd_profile_m);
     base::Waypoint w_rover_pos;
     double d_gauss_sigma = 5.0;
     int i_gauss_numsamples = 5;
@@ -95,22 +96,25 @@ public:
     /**
      * Class Constructor.
      */
-    MotionPlan(MobileManipMap * pmmmap_m, double d_zres_m, std::string s_urdf_path_m);
+    MotionPlan(MobileManipMap *pmmmap_m,
+               double d_zres_m,
+               std::string s_urdf_path_m);
     /**
-     * An existing path and profile are introduced into the motion plan 
+     * An existing path and profile are introduced into the motion plan
      */
-    MotionPlan(MobileManipMap * pmmmap_m,
-               double d_zres_m, std::string s_urdf_path_m,
-	       std::vector<Waypoint> &vw_rover_path_m,
-               std::vector<std::vector<double>> &vj_joints_profile_m);    
+    MotionPlan(MobileManipMap *pmmmap_m,
+               double d_zres_m,
+               std::string s_urdf_path_m,
+               std::vector<Waypoint> &vw_rover_path_m,
+               std::vector<std::vector<double>> &vj_joints_profile_m);
     /**
      * A pointer to the current end effector path is returned
      */
-    std::vector<std::vector<double>> * getWristPath();
+    std::vector<std::vector<double>> *getWristPath();
     /**
      * A pointer to the current rover path is returned
      */
-    std::vector<base::Waypoint> * getRoverPath();
+    std::vector<base::Waypoint> *getRoverPath();
     /**
      * A pointer to the current rover path is returned
      */
@@ -144,7 +148,7 @@ public:
     /**
      * A pointer to the 3d cost map is returned
      */
-    std::vector<std::vector<std::vector<double>>> * get3DCostMap();
+    std::vector<std::vector<std::vector<double>>> *get3DCostMap();
     /**
      * The path for the rover base, vw_rover_path, is calculated
      */
@@ -164,13 +168,20 @@ public:
     /**
      * Calculates the profile of positions for the arm
      */
-    unsigned int computeArmDeployment(int i_segment_m, const std::vector<double> &vd_arm_readings);
-    unsigned int computeArmDeployment(const base::Waypoint &w_goal, const std::vector<double> &vd_orientation_goal, const std::vector<double> &vd_arm_readings);
-    unsigned int computeArmDeployment(const std::vector<double> &vd_arm_goal, const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(
+        int i_segment_m,
+        const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(
+        const base::Waypoint &w_goal,
+        const std::vector<double> &vd_orientation_goal,
+        const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(
+        const std::vector<double> &vd_arm_goal,
+        const std::vector<double> &vd_arm_readings);
 
     unsigned int computeArmRetrieval(const std::vector<double> &vd_init);
     unsigned int computeAtomicOperation();
-    void setArmGaussFilter(double sigma, int numsamples);
+    void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);
 };
 
 #endif

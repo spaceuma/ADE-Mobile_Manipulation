@@ -8,7 +8,6 @@ CollisionDetector::CollisionDetector(std::string s_urdf_path_m,
 
     mWorld = dart::simulation::World::create("Empty");
     dl.addPackageDirectory("urdf", s_urdf_path_m); // TODO set this path
-    std::cout << "package directory aded: " << s_urdf_path_m << "\n";
     // Load urdf models
     sherpatt = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
     manipulator = dl.parseSkeleton("package://urdf/manipulator.urdf");

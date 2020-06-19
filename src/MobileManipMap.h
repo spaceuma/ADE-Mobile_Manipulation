@@ -2,12 +2,12 @@
 #define __MOBILE_MANIP_MAP__
 
 #include "FastMarching.h"
+#include "RoverGuidance_InputDataStruct.h"
 #include "Waypoint.hpp"
 #include <math.h>
-#include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
-#include "RoverGuidance_InputDataStruct.h"
+#include <opencv2/opencv.hpp>
 
 using namespace cv;
 using namespace FastMarching_lib;
@@ -18,7 +18,6 @@ enum MMMapState
     DEM_LOADED,
     FACE_COMPUTED
 };
-
 
 /**
  * This class includes all information concerning the map (elevation, cost...)
@@ -54,7 +53,7 @@ private:
      */
     double d_inner_sampling_dist;
     /**
-     * Threshold for valid pixels ratio 
+     * Threshold for valid pixels ratio
      */
     double d_valid_ratio_threshold = .5;
     /**
@@ -96,7 +95,7 @@ private:
     /**
      * Global offset of bottom left node (local frame origin)
      */
-    std::vector<double> vd_global_offset{0,0,0};
+    std::vector<double> vd_global_offset{0, 0, 0};
     /**
      * Sample position in waypoint format
      */
@@ -127,9 +126,9 @@ private:
      * Matrix containing values regarding traversability
      * 0 => Area occupied by obstacles
      * 1 => Dilatation of obstacles, neither rover or sample can be placed here
-     * 2 => Second dilatation of obstacles, the sampling area can remove part of this
-     * 3 => Possible locations for the rover and the sampling area
-     * 4 => Sampling Area 
+     * 2 => Second dilatation of obstacles, the sampling area can remove part of
+     * this 3 => Possible locations for the rover and the sampling area 4 =>
+     * Sampling Area
      */
     std::vector<std::vector<int>> vvi_traversability_map;
     /**
@@ -143,7 +142,7 @@ private:
     MMMapState mapstate;
     bool b_debug_mode = false;
 
-    void checkValidityMap(double& d_valid_ratio, double& d_contour_ratio);
+    void checkValidityMap(double &d_valid_ratio, double &d_contour_ratio);
 
 public:
     MobileManipMap(bool b_debug_mode_m = false);
@@ -151,14 +150,18 @@ public:
      * Constructor that receives the map, process it and generates the cost and
      * obstacles maps
      */
-    MobileManipMap(const RoverGuidance_Dem &rg_dem_m, unsigned int &ui_isDEM_loaded, bool b_debug_mode_m = false);
+    MobileManipMap(const RoverGuidance_Dem &rg_dem_m,
+                   unsigned int &ui_isDEM_loaded,
+                   bool b_debug_mode_m = false);
     /**
      * Constructor that introduces pre-computed elevation and cost maps
      */
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
                    std::vector<std::vector<double>> &vvd_cost_map_m,
-                   double d_res_m, base::Waypoint w_sample_pos_m,
-		   double d_avoid_dist_m, double d_maxreach_dist_m);
+                   double d_res_m,
+                   base::Waypoint w_sample_pos_m,
+                   double d_avoid_dist_m,
+                   double d_maxreach_dist_m);
     /**
      * RG DEM is checked and loaded into MobileManipMap
      */
@@ -167,7 +170,9 @@ public:
      * Function to introduce the Sample into the costmap using FACE
      */
     unsigned int computeFACE(base::Waypoint w_sample_pos_m,
-		double d_avoid_dist_m, double d_minreach_dist_m, double d_maxreach_dist_m);
+                             double d_avoid_dist_m,
+                             double d_minreach_dist_m,
+                             double d_maxreach_dist_m);
     /**
      * Function to get the current sample in local coordinates
      */
@@ -175,7 +180,8 @@ public:
     /**
      * Function to get the current traversability map
      */
-    void getTraversabilityMap(std::vector<std::vector<int>> &vvi_traversability_map_m);
+    void getTraversabilityMap(
+        std::vector<std::vector<int>> &vvi_traversability_map_m);
     /**
      * Function to get the current validity map
      */
@@ -198,9 +204,11 @@ public:
      */
     bool getElevationMap(std::vector<std::vector<double>> &vvd_elevation_map_m);
     /**
-     * Function to get the current elevation map with its minimum starting at zero
+     * Function to get the current elevation map with its minimum starting at
+     * zero
      */
-    bool getElevationMapToZero(std::vector<std::vector<double>> &vvd_elevation_map_m);
+    bool getElevationMapToZero(
+        std::vector<std::vector<double>> &vvd_elevation_map_m);
     /**
      * Returns the map resolution --> d_res
      */
@@ -223,6 +231,7 @@ public:
     bool isSampleLoaded();
 
     std::vector<double> getOffset();
+
 private:
     /**
      * RG DEM is checked and loaded into MobileManipMap
