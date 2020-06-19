@@ -132,15 +132,15 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                     }
                     this->b_is_atomic_deployed = true;
                     this->p_mmexecutor->resetIterator();
-                    return 0;
+                    return 1;
                 case 2:
                     setError(INCOMPLETE_INPUT);
-                    return 1;
+                    return 3;
                 case 3:
                     setError(DEGEN_PATH);
-                    return 1;
+                    return 3;
                 default:
-                    return 1;
+                    return 3;
             }
         }
         else
@@ -180,7 +180,7 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
             switch (ui_error_code)
             {
                 case 0:
-                    return 0;
+                    return 1;
                 case 1:
                     if (b_display_status)
                     {
@@ -195,15 +195,15 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                     }
                     this->b_is_atomic_deployed = false;
                     setStatus(IDLE);
-                    return 1;
+                    return 2;
                 case 2:
                     setError(INCOMPLETE_INPUT);
-                    return 1;
+                    return 3;
                 case 3:
                     setError(DEGEN_PATH);
-                    return 1;
+                    return 3;
                 default:
-                    return 1;
+                    return 3;
             }
         }
     }
@@ -217,7 +217,7 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                       << std::endl;
         }
         setError(IMPROPER_CALL);
-        return 0;
+        return 3;
     }
 }
 
