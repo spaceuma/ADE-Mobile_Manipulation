@@ -63,12 +63,18 @@ public:
     double d4 = 0.695;
     double d6 = 0.300;
 
-    std::vector<double> armJointsMaxSpeed = {0.541052068,
-                                             0.122173048,
-                                             0.122173048,
-                                             2.26892803,
-                                             2.26892803,
-                                             2.26892803};
+    //std::vector<double> armJointsMaxSpeed = {0.541052068,
+    //                                         0.122173048,
+    //                                         0.122173048,
+    //                                         2.26892803,
+    //                                         2.26892803,
+    //                                         2.26892803};
+    std::vector<double> armJointsMaxSpeed = {3.1416*3.0 / 180.0,
+                                             3.1416*6.0 / 180.0,
+                                             3.1416*6.0 / 180.0,
+                                             3.1416*20.0 / 180.0,
+                                             3.1416*20.0 / 180.0,
+                                             3.1416*20.0 / 180.0};
 
     // Manipulator Workspace
     double maxArmDistance = a2 + d4 + d6;
