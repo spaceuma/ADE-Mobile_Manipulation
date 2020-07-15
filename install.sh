@@ -14,6 +14,12 @@ cur=$PWD
 # pip3 install PyQt5
 # sudo apt-get -y install python3-matplotlib
 
+## To install google test
+#sudo apt install libgtest-dev build-essential cmake
+#cd /usr/src/googletest
+#sudo cmake .
+#sudo cmake --build . --target install
+
 cd $cur
 mkdir build
 cd build
