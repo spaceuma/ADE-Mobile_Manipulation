@@ -129,11 +129,14 @@ private:
            0.2,
            0.2}; // TODO - Adhoc margin for arm positions
     int i_iteration_counter;
+    int i_lookahead_iterator;
     int i_current_coverage_index;
     int i_current_init_index;
     int i_current_retrieval_index;
     double d_call_period;
-
+    double d_operational_time;
+    unsigned int ui_current_timestamp;
+    unsigned int ui_past_timestamp;
 public:
     /**
      * Class Constructor using the present motion plan

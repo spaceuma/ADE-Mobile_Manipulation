@@ -65,7 +65,11 @@ void MobileManipExecutor::updateMotionPlan()
     this->b_is_last_segment = false;
     this->d_call_period = 0.5; // TODO: MAKE THIS CONFIGURABLE!!!
     this->i_iteration_counter = 0;
+    this->i_lookahead_iterator = 0;
+    this->d_operational_time = 0.0;
     this->updateDeployment();
+    this->ui_current_timestamp = 0;
+    this->ui_past_timestamp = 0;
     this->updateRetrieval();
 }
 
@@ -147,7 +151,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 
     // Getting Arm Command
     this->prepareNextArmCommand(j_next_arm_command_m);
-
+    
+    double d_step_time;
     /*std::cout << "The Rover Segment is " <<
     this->waypoint_navigation.getCurrentSegment() << std::endl; std::cout <<
     "The Current Segment is " << this->i_current_segment << " and the path size
@@ -162,16 +167,25 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             {
                 mc_m = this->getZeroRoverCommand();
             }
+            this->ui_current_timestamp = j_arm_present_readings_m.m_time; 
+            d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
+            d_step_time = std::max(0.0,d_step_time / 1000000);
+            this->d_operational_time += std::min(2.0, d_step_time); 
+            this->ui_past_timestamp = this->ui_current_timestamp;
+
+            std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
+            std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
+
             double d_elapsed_init_time;
             // Keep track of vdd_init_arm_profile
             // std::cout << " Creating initialization command" << std::endl;
             d_elapsed_init_time
-                = (double)this->i_iteration_counter * this->d_call_period;
+		= this->d_operational_time;
             if (this->i_current_segment
                 < (*this->pvvd_init_arm_profile).size() - 1)
             {
                 if ((*this->pvd_init_time_profile)[this->i_current_segment]
-                        * 5.0
+                        * 2.0
                     <= d_elapsed_init_time) // TODO - ADHOC value to make this
                                             // slower
                 {
@@ -182,8 +196,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             }
             else if (((*this->pvd_init_time_profile)
                               [(*this->pvvd_init_arm_profile).size() - 1]
-                          * 5.0
-                      < (double)this->i_iteration_counter * this->d_call_period)
+                          * 2.0
+                      < d_elapsed_init_time)
                      && (mc_m.m_manoeuvreType == 0))
             { // If the arm is ready and the rover is going to start with an
               // ackemann
@@ -325,7 +339,10 @@ unsigned int MobileManipExecutor::getCoverageCommand(
 
 void MobileManipExecutor::resetIterator()
 {
-    this->i_iteration_counter = 0;
+    this->i_iteration_counter = this->i_lookahead_iterator;
+    this->d_operational_time = 0.0;
+    this->ui_current_timestamp = 0;
+    this->ui_past_timestamp = 0;
 }
 
 bool MobileManipExecutor::assignPresentCommand(proxy_library::Joints &j_command)
@@ -362,8 +379,17 @@ unsigned int MobileManipExecutor::getDeploymentCommand(
     proxy_library::Joints &j_next_arm_command)
 {
     // TODO: introduce followingarm checker
+    this->ui_current_timestamp = j_present_joints_m.m_time; 
+    double d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
+    d_step_time = std::max(0.0,d_step_time / 1000000);
+    this->d_operational_time += std::min(2.0, d_step_time); 
+    this->ui_past_timestamp = this->ui_current_timestamp;
+
+    std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
+    std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
+
     double d_elapsed_time
-        = (double)this->i_iteration_counter * this->d_call_period;
+	= this->d_operational_time;
     bool b_is_finished = false;
 
     if (!this->updateArmPresentReadings(j_present_joints_m))
@@ -377,8 +403,11 @@ unsigned int MobileManipExecutor::getDeploymentCommand(
         return 3; // There is no deployment profile available
     }
 
+    double d_current_timelimit;
     if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size() - 1)
     {
+        d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0;
+	std::cout << "The current time limit is " << d_current_timelimit << std::endl;
         if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0
             <= d_elapsed_time) // TODO - ADHOC value to make this slower
         {
@@ -413,8 +442,17 @@ unsigned int MobileManipExecutor::getRetrievalCommand(
     proxy_library::Joints &j_next_arm_command)
 {
     // TODO: introduce followingarm checker
+    this->ui_current_timestamp = j_present_joints_m.m_time; 
+    double d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
+    d_step_time = std::max(0.0,d_step_time / 1000000);
+    this->d_operational_time += std::min(2.0, d_step_time); 
+    this->ui_past_timestamp = this->ui_current_timestamp;
+
+    std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
+    std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
+
     double d_elapsed_time
-        = (double)this->i_iteration_counter * this->d_call_period;
+	= this->d_operational_time;
     bool b_is_finished = false;
 
     if (!this->updateArmPresentReadings(j_present_joints_m))
@@ -428,9 +466,12 @@ unsigned int MobileManipExecutor::getRetrievalCommand(
         return 3; // There is no deployment profile available
     }
 
+    double d_current_timelimit;
     if (this->i_current_retrieval_index
         < (*this->pvvd_retrieval_arm_profile).size() - 1)
     {
+        d_current_timelimit = (*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index] * 2.0;
+	std::cout << "The current time limit is " << d_current_timelimit << std::endl;
         if ((*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index]
                 * 2.0
             <= d_elapsed_time) // TODO - ADHOC value to make this slower
@@ -451,7 +492,6 @@ unsigned int MobileManipExecutor::getRetrievalCommand(
     // std::cout << "The Retrieval Index is " << i_current_retrieval_index <<
     // std::endl;
     this->assignPresentCommand(j_next_arm_command);
-    this->i_iteration_counter++;
     if (b_is_finished)
     {
         return 1;
