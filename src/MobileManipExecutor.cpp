@@ -293,50 +293,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
     }
 }
 
-unsigned int MobileManipExecutor::getCoverageCommand(
-    proxy_library::Joints &j_next_arm_command,
-    const proxy_library::Joints &j_present_joints_m)
-{
-    // TODO: introduce followingarm checker
-    double d_elapsed_time
-        = (double)this->i_iteration_counter * this->d_call_period;
-    bool b_is_finished = false;
-
-    this->prepareNextArmCommand(j_next_arm_command);
-    this->updateArmPresentReadings(j_present_joints_m);
-    if (this->i_current_coverage_index
-        < (*this->pvvd_arm_sweeping_profile).size() - 1)
-    {
-        if ((*this->pvd_arm_sweeping_times)[this->i_current_coverage_index]
-                * 2.0
-            <= d_elapsed_time) // TODO - ADHOC value to make this slower
-        {
-            this->i_current_coverage_index++;
-            this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)
-                                              [this->i_current_coverage_index]);
-        }
-    }
-    else if ((*this->pvd_arm_sweeping_times)
-                     [(*this->pvvd_arm_sweeping_profile).size() - 1]
-                 * 2.0
-             < d_elapsed_time)
-    {
-        b_is_finished = true;
-    }
-    // std::cout << "The Coverage Index is " << i_current_coverage_index <<
-    // std::endl;
-    this->assignPresentCommand(j_next_arm_command);
-    this->i_iteration_counter++;
-    if (b_is_finished)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 void MobileManipExecutor::resetIterator()
 {
     this->i_iteration_counter = this->i_lookahead_iterator;
@@ -374,10 +330,52 @@ bool MobileManipExecutor::assignPresentCommand(proxy_library::Joints &j_command)
     return true;
 }
 
-unsigned int MobileManipExecutor::getDeploymentCommand(
+unsigned int MobileManipExecutor::getAtomicCommand(
     const proxy_library::Joints &j_present_joints_m,
-    proxy_library::Joints &j_next_arm_command)
-{
+    proxy_library::Joints &j_next_arm_command,
+    unsigned int ui_mode)
+{   
+    if (!this->updateArmPresentReadings(j_present_joints_m))
+    {
+        return 2; // j_present_joints_m has wrong size
+    }
+
+    if (this->isArmColliding())
+    {
+        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            j_next_arm_command.m_jointStates[i].m_position
+                = j_present_joints_m.m_jointStates[i].m_position;
+        }
+        return 4;
+    }
+
+    switch (ui_mode)
+    {
+        case 0: // Deployment
+            if (((*this->pvvd_init_arm_profile).empty())
+               || ((*this->pvd_init_time_profile).empty()))
+            {
+                return 3; // There is no profile available
+            }
+	    break;
+        case 1: // Retrieval
+            if (((*this->pvvd_retrieval_arm_profile).empty())
+               || ((*this->pvd_retrieval_time_profile).empty()))
+            {
+                return 3; // There is no profile available
+            }
+	    break;
+        case 2:  // Coverage
+            if (((*this->pvvd_arm_sweeping_profile).empty())
+               || ((*this->pvd_arm_sweeping_times).empty()))
+            {
+                return 3; // There is no profile available
+            }
+	    break;
+    }
+    
+
     // TODO: introduce followingarm checker
     this->ui_current_timestamp = j_present_joints_m.m_time; 
     double d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
@@ -392,104 +390,76 @@ unsigned int MobileManipExecutor::getDeploymentCommand(
 	= this->d_operational_time;
     bool b_is_finished = false;
 
-    if (!this->updateArmPresentReadings(j_present_joints_m))
-    {
-        return 2; // j_present_joints_m has wrong size
-    }
-
-    if (((*this->pvvd_init_arm_profile).empty())
-        || ((*this->pvd_init_time_profile).empty()))
-    {
-        return 3; // There is no deployment profile available
-    }
-
     double d_current_timelimit;
-    if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size() - 1)
+    
+    switch (ui_mode)
     {
-        d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0;
-	std::cout << "The current time limit is " << d_current_timelimit << std::endl;
-        if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0
-            <= d_elapsed_time) // TODO - ADHOC value to make this slower
-        {
-            this->i_current_init_index++;
-            this->updateArmCommandVectors(
-                (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
-        }
-    }
-    else if ((*this->pvd_init_time_profile)
-                     [(*this->pvvd_init_arm_profile).size() - 1]
-                 * 2.0
-             < d_elapsed_time)
-    {
-        b_is_finished = true;
-    }
-    // std::cout << "The Retrieval Index is " << i_current_init_index <<
-    // std::endl;
-    this->assignPresentCommand(j_next_arm_command);
-    this->i_iteration_counter++;
-    if (b_is_finished)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-unsigned int MobileManipExecutor::getRetrievalCommand(
-    const proxy_library::Joints &j_present_joints_m,
-    proxy_library::Joints &j_next_arm_command)
-{
-    // TODO: introduce followingarm checker
-    this->ui_current_timestamp = j_present_joints_m.m_time; 
-    double d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
-    d_step_time = std::max(0.0,d_step_time / 1000000);
-    this->d_operational_time += std::min(2.0, d_step_time); 
-    this->ui_past_timestamp = this->ui_current_timestamp;
-
-    std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
-    std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
-
-    double d_elapsed_time
-	= this->d_operational_time;
-    bool b_is_finished = false;
-
-    if (!this->updateArmPresentReadings(j_present_joints_m))
-    {
-        return 2; // j_present_joints_m has wrong size
-    }
-
-    if (((*this->pvvd_retrieval_arm_profile).empty())
-        || ((*this->pvd_retrieval_time_profile).empty()))
-    {
-        return 3; // There is no deployment profile available
-    }
-
-    double d_current_timelimit;
-    if (this->i_current_retrieval_index
-        < (*this->pvvd_retrieval_arm_profile).size() - 1)
-    {
-        d_current_timelimit = (*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index] * 2.0;
-	std::cout << "The current time limit is " << d_current_timelimit << std::endl;
-        if ((*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index]
-                * 2.0
-            <= d_elapsed_time) // TODO - ADHOC value to make this slower
-        {
-            this->i_current_retrieval_index++;
-            this->updateArmCommandVectors(
-                (*this->pvvd_retrieval_arm_profile)
-                    [this->i_current_retrieval_index]);
-        }
-    }
-    else if ((*this->pvd_retrieval_time_profile)
+        case 0: // Deployment
+            if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size() - 1)
+            {
+                d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0;
+	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
+                if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0
+                    <= d_elapsed_time) // TODO - ADHOC value to make this slower
+                {
+                    this->i_current_init_index++;
+                    this->updateArmCommandVectors(
+                        (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
+                }
+            }
+            else if ((*this->pvd_init_time_profile)
+                             [(*this->pvvd_init_arm_profile).size() - 1]
+                         * 2.0 < d_elapsed_time)
+            {
+                b_is_finished = true;
+            }
+	    break;
+        case 1: // Retrieval
+	    if (this->i_current_retrieval_index < (*this->pvvd_retrieval_arm_profile).size() - 1)
+            {
+                d_current_timelimit = (*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index] * 2.0;
+	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
+                if ((*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index]
+                    * 2.0 <= d_elapsed_time) // TODO - ADHOC value to make this slower
+                {
+                    this->i_current_retrieval_index++;
+                    this->updateArmCommandVectors(
+                        (*this->pvvd_retrieval_arm_profile)
+                        [this->i_current_retrieval_index]);
+                }
+            }
+            else if ((*this->pvd_retrieval_time_profile)
                      [(*this->pvvd_retrieval_arm_profile).size() - 1]
                  * 2.0
              < d_elapsed_time)
-    {
-        b_is_finished = true;
+            {
+                b_is_finished = true;
+            }
+            break;
+        case 2:  // Coverage
+	    if (this->i_current_coverage_index < (*this->pvvd_arm_sweeping_profile).size() - 1)
+            {
+                d_current_timelimit = (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index]
+                    * 2.0;
+	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
+                if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
+                {
+                    this->i_current_coverage_index++;
+                    this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)
+                                              [this->i_current_coverage_index]);
+                }
+            }
+            else if ((*this->pvd_arm_sweeping_times)
+                     [(*this->pvvd_arm_sweeping_profile).size() - 1]
+                 * 2.0
+             < d_elapsed_time)
+            {
+                b_is_finished = true;
+            }
+            break;
     }
-    // std::cout << "The Retrieval Index is " << i_current_retrieval_index <<
+
+    // std::cout << "The Retrieval Index is " << i_current_init_index <<
     // std::endl;
     this->assignPresentCommand(j_next_arm_command);
     if (b_is_finished)
@@ -500,6 +470,7 @@ unsigned int MobileManipExecutor::getRetrievalCommand(
     {
         return 0;
     }
+   
 }
 
 void MobileManipExecutor::fixMotionCommand(proxy_library::MotionCommand &mc_m)
@@ -586,8 +557,6 @@ bool MobileManipExecutor::isArmFollowing(
     // return isMoving;
     return true; // TODO - Remove this
 }
-
-void MobileManipExecutor::getAtomicCommand() {}
 
 proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
 {

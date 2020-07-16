@@ -190,13 +190,9 @@ public:
      */
     void initializeArmVariables(const Joints &j_present_readings);
     void resetIterator();
-    void getAtomicCommand();
-    unsigned int getDeploymentCommand(const Joints &j_arm_present_readings_m,
-                                      Joints &j_next_arm_command_m);
-    unsigned int getRetrievalCommand(const Joints &j_arm_present_readings_m,
-                                     Joints &j_next_arm_command_m);
-    unsigned int getCoverageCommand(Joints &j_next_arm_command,
-                                    const Joints &j_present_joints_m);
+    unsigned int getAtomicCommand(const Joints &j_arm_present_readings_m,
+                                      Joints &j_next_arm_command_m,
+				      unsigned int ui_mode);
     std::vector<double> *getArmCurrentReadings();
     std::vector<double> *getFirstCoverageProfile();
     std::vector<double> *getLastCoverageProfile();

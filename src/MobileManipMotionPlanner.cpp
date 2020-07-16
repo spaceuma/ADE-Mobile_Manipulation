@@ -93,8 +93,8 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                        "Getting Deployment Command"
                     << std::endl;
             }
-            ui_error_code = this->p_mmexecutor->getDeploymentCommand(
-                arm_joints, arm_command);
+            ui_error_code = this->p_mmexecutor->getAtomicCommand(
+                arm_joints, arm_command, 0); // 0 -> Deployment
             if (b_display_status)
             {
                 std::cout << " \033[32m[----------]\033[0m "
@@ -139,6 +139,9 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                 case 3:
                     setError(DEGEN_PATH);
                     return 3;
+		case 4:
+		    setError(COLLIDING_ARM);
+		    return 3;
                 default:
                     return 3;
             }
@@ -152,8 +155,8 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                        "Getting Retrieval Command"
                     << std::endl;
             }
-            ui_error_code = this->p_mmexecutor->getRetrievalCommand(
-                arm_joints, arm_command);
+            ui_error_code = this->p_mmexecutor->getAtomicCommand(
+                arm_joints, arm_command, 1); // 1 -> Retrieval
             if (b_display_status)
             {
                 std::cout << " \033[32m[----------]\033[0m "
@@ -202,6 +205,9 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                 case 3:
                     setError(DEGEN_PATH);
                     return 3;
+		case 4:
+		    setError(COLLIDING_ARM);
+		    return 3;
                 default:
                     return 3;
             }
@@ -566,25 +572,35 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             break;
         }
         case RETRIEVING_ARM:
-            ui_error_code = this->p_mmexecutor->getRetrievalCommand(
-                arm_joints, arm_command);
+            ui_error_code = this->p_mmexecutor->getAtomicCommand(
+                arm_joints, arm_command, 1); // 1 -> Retrieval
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
             if (ui_error_code == 1)
             {
                 return false;
             }
+            if (ui_error_code == 4)
+	    {
+                setError(COLLIDING_ARM);
+		return false;
+	    }
             return true;
             break;
         case EXECUTING_ARM_OPERATION:
             std::cout << "Status is Executing Arm Operation" << std::endl;
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
-            ui_error_code = this->p_mmexecutor->getCoverageCommand(arm_command,
-                                                                   arm_joints);
+            ui_error_code = this->p_mmexecutor->getAtomicCommand(arm_joints,
+                                                                 arm_command, 2); // 2 -> Coverage
             if (ui_error_code == 1)
             {
                 this->p_mmexecutor->resetIterator();
                 setStatus(RETRIEVING_ARM);
             }
+            if (ui_error_code == 4)
+	    {
+                setError(COLLIDING_ARM);
+		return false;
+	    }
             return true;
         case ERROR:
             return false;
