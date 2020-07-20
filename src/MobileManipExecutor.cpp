@@ -153,11 +153,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(
     this->prepareNextArmCommand(j_next_arm_command_m);
     
     double d_step_time;
-    /*std::cout << "The Rover Segment is " <<
+    std::cout << "The Rover Segment is " <<
     this->waypoint_navigation.getCurrentSegment() << std::endl; std::cout <<
-    "The Current Segment is " << this->i_current_segment << " and the path size
-    is " << this->vpw_path.size() << std::endl;
-    std::cout << "The state is " << this->armstate << std::endl;*/
+    "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
+    std::cout << "The state is " << this->armstate << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
@@ -185,7 +184,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 < (*this->pvvd_init_arm_profile).size() - 1)
             {
                 if ((*this->pvd_init_time_profile)[this->i_current_segment]
-                        * 2.0
+                        * 1.0
                     <= d_elapsed_init_time) // TODO - ADHOC value to make this
                                             // slower
                 {
@@ -196,7 +195,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             }
             else if (((*this->pvd_init_time_profile)
                               [(*this->pvvd_init_arm_profile).size() - 1]
-                          * 2.0
+                          * 1.0
                       < d_elapsed_init_time)
                      && (mc_m.m_manoeuvreType == 0))
             { // If the arm is ready and the rover is going to start with an
@@ -224,7 +223,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 this->updateArmCommandVectors();
                 if (i_current_segment < i_actual_segment)
                 {
-                    i_current_segment++; // = i_actual_segment;
+                    i_current_segment = min(i_actual_segment, i_current_segment + 1 + (i_actual_segment - i_current_segment)/30);
+                    //i_current_segment++; // = i_actual_segment;
                 }
                 this->b_is_last_segment
                     = coupled_control.selectNextManipulatorPosition(
@@ -251,12 +251,12 @@ unsigned int MobileManipExecutor::getCoupledCommand(
           << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
           and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
             */
-            this->coupled_control.modifyMotionCommand(gain,
+            /*this->coupled_control.modifyMotionCommand(gain,
                                                       vd_arm_present_command,
                                                       vd_arm_previous_command,
                                                       max_speed,
                                                       vd_arm_abs_speed,
-                                                      mc_m);
+                                                      mc_m);*/
 
             /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion
           Command before fixing is (translation speed = " << mc_m.m_speed_ms
@@ -397,9 +397,9 @@ unsigned int MobileManipExecutor::getAtomicCommand(
         case 0: // Deployment
             if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size() - 1)
             {
-                d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0;
+                d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 1.0;
 	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
-                if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 2.0
+                if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 1.0
                     <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_init_index++;
@@ -409,7 +409,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             }
             else if ((*this->pvd_init_time_profile)
                              [(*this->pvvd_init_arm_profile).size() - 1]
-                         * 2.0 < d_elapsed_time)
+                         * 1.0 < d_elapsed_time)
             {
                 b_is_finished = true;
             }
@@ -417,10 +417,10 @@ unsigned int MobileManipExecutor::getAtomicCommand(
         case 1: // Retrieval
 	    if (this->i_current_retrieval_index < (*this->pvvd_retrieval_arm_profile).size() - 1)
             {
-                d_current_timelimit = (*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index] * 2.0;
+                d_current_timelimit = (*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index] * 1.0;
 	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
                 if ((*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index]
-                    * 2.0 <= d_elapsed_time) // TODO - ADHOC value to make this slower
+                    * 1.0 <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_retrieval_index++;
                     this->updateArmCommandVectors(
@@ -430,7 +430,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             }
             else if ((*this->pvd_retrieval_time_profile)
                      [(*this->pvvd_retrieval_arm_profile).size() - 1]
-                 * 2.0
+                 * 1.0
              < d_elapsed_time)
             {
                 b_is_finished = true;
