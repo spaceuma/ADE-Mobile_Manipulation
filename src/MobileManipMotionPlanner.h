@@ -1,187 +1,259 @@
-#include "MM_status.h"
-#include "MM_error.h"
-#include "RoverGuidance_Dem.h"
+#include "MMError.h"
+#include "MMStatus.h"
+#include "MobileManipExecutor.h"
+#include "MobileManipMap.h"
 #include "MotionCommand.h"
 #include "MotionPlan.h"
-#include "MobileManipMap.h"
-#include "MobileManipExecutor.h"
+#include "Pose.h"
+#include "RoverGuidance_InputDataStruct.h"
+#include "Waypoint.hpp"
 
 /**
- * It is the main class that receives all the information from other components, start the execution of the coupled rover-manipulator motion, etc.
+ * It is the main class that receives all the information from other components,
+ * start the execution of the coupled rover-manipulator motion, etc.
  */
-class MobileManipMotionPlanner {
+class MobileManipMotionPlanner
+{
 
 private:
-	/**
-	 * Rover surronding map that would be used to generate the rover-manipulator trajectories.
-	 */
-	MobileManipMap currentMap;
-	/**
-	 * The motion plan that is currently available.
-	 */
-	MotionPlan currentMotionPlan;
-	/**
-	 * Object that run the execution of the planned trajectory.
-	 */
-	MobileManipExecutor executor;
-	/**
-	 * Status of the motion planner:
-	 * IDLE
-	 * GENERATING_MOTION_PLAN
-	 * READY_TO_MOVE
-	 * EXECUTING_MOTION_PLAN
-	 * EXECUTING_ARM_OPERATION
-	 * RETRIEVING_ARM
-	 * FINISHED
-	 * ERROR
-	 * REPLANNING
-	 * PAUSE
-	 */
-	MM_status status;
-	/**
-	 * Attribute to indicate the error code
-	 */
-	MM_error error;
-	/**
-	 * The status prior to entering to the current one. This is useful for entering and exiting PAUSE status.
-	 */
-	MM_status priorStatus;
-	/**
-	 * A variable that indicates which kind of operation shall be performed with the arm (e.g. some atomic operation or sample handling)
-	 */
-	ArmOperation currentArmOperation;
-	/**
-	 * The pose of the sample. TODO: CHANGE ITS TYPE BY THE ONE USED BY MAGELLIUM!!
-	 */
-	Pose currentSamplePos;
-	/**
-	 * The current pose of the rover.
-	 */
-	Pose currentRoverPos;
-	/**
-	 * The current position of the arm joints.
-	 */
-	//Joints currentJointPositions;
+    /**
+     * Rover surronding map that would be used to generate the rover-manipulator
+     * trajectories.
+     */
+    MobileManipMap *p_mmmap;
+    /**
+     * The motion plan that is currently available.
+     */
+    MotionPlan *p_motionplan;
+    /**
+     * Object that run the execution of the planned trajectory.
+     */
+    MobileManipExecutor *p_mmexecutor;
+    /**
+     * Status of the motion planner:
+     * IDLE
+     * EXECUTING_ATOMIC_OPERATION
+     * GENERATING_MOTION_PLAN
+     * READY_TO_MOVE
+     * EXECUTING_MOTION_PLAN
+     * EXECUTING_ARM_OPERATION
+     * RETRIEVING_ARM
+     * FINISHED
+     * ERROR
+     * REPLANNING
+     * PAUSE
+     */
+    MMStatus status;
+    /**
+     * Attribute to indicate the error code
+     */
+    MMError error;
+    /**
+     * The status prior to entering to the current one. This is useful for
+     * entering and exiting PAUSE status.
+     */
+    MMStatus priorStatus;
+    /**
+     * The current position of the arm joints.
+     */
+    /**
+     * Set the current status
+     */
+    void setStatus(MMStatus status_m);
+    /**
+     * Set an error code
+     */
+    void setError(MMError error_m);
+
+    base::Waypoint w_current_rover_position;
+    /**
+     * Configurable parameter: Z resolution (in meters)
+     */
+    double d_zres = 0.08;
+    /**
+     * Configurable parameter: Avoidance Distance (in meters)
+     */
+    double d_avoid_dist = 1.0;
+    /**
+     * Configurable parameter: rover kinematic configuration (in meters)
+     * (d0, a1, a2, c2, a3, d4, d6) TODO - Maybe these values could be taken
+     * from urdf model?
+     */
+    std::vector<double> vd_kin_conf
+        = {0.5, 0.225, 0.735, 0.03, 0.03, 0.695, 0.3};
+
+    /**
+     * Z-distance from base reference frame to ground
+     */
+    double d_base_height = 0.645;
+
+    /**
+     * Z-distance margin from final end effector position and ground
+     */
+    double d_finalEE_height = 0.4;
+
+    /**
+     * Configurable parameter: Max arm fetching distance (in meters)
+     */
+    double d_maxfetching_dist
+        = vd_kin_conf[1]
+          + sqrt(pow(vd_kin_conf[2] + vd_kin_conf[5], 2)
+                 - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6]
+                           - d_finalEE_height,
+                       2));
+    double d_minfetching_dist
+        = (d_maxfetching_dist < 0.24) ? 0.0 : (d_maxfetching_dist - 0.24);
+    bool b_is_atomic_deployed;
 
 public:
-	/**
-	 * Constructor, it receives a DEM and generates the Map object.
-	 */
-	MobileManipMotionPlanner(/* Provided DEM using the same data struct as Airbus */RoverGuidance_Dem navCamDEM);
+    /**
+     * Constructor, it receives a DEM and generates the Map object.
+     */
+    MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
+                             std::string s_urdf_path_m);
 
-	/**
-	 * Run the execution of the motion
-	 */
-	void executeMotion(/* Coupled rover-manipulator motion plan to be followed. */MotionPlan readyMotionPlan);
+    /**
+     * It generates a motion plan based on the Map, the rover pose and the
+     * sample position.
+     */
+    bool generateMotionPlan(proxy_library::Pose plpose_m,
+                            const proxy_library::Joints &j_present_readings,
+                            double d_sample_pos_x,
+                            double d_sample_pos_y);
 
-	/**
-	 * It updates the stored map
-	 */
-	void updateNavCamDEM(/* DEM using the Airbus data struct */RoverGuidance_Dem navCamDEM);
+    /**
+     * Serves to actively start moving the rover and arm once a motion plan is
+     * available.
+     */
+    bool start();
 
-	/**
-	 * It generates a motion plan based on the Map, the rover pose and the sample position.
-	 */
-	void generateMotionPlan(/* It should include the estimation error. */Pose rover_position, /* It should include the estimation error. */Pose sample, Joints arm_joints);
+    /**
+     * It makes the software finish immediately.
+     */
+    bool abort();
 
-	/**
-	 * It returns the status in which the software is.
-	 */
-	MM_status getStatus();
+    /**
+     * It makes the software enter into the PAUSE state, first creating commands
+     * to stop the rover base.
+     */
+    bool pause(proxy_library::MotionCommand &rover_command);
 
-	/**
-	 * It serves to perform an operation with only the arm.
-	 */
-	void executeAtomicOperation(ArmOperation arm_operation);
+    /**
+     * It returns to the state indicated by priorStatus. Useful to exit the
+     * PAUSE state.
+     */
+    bool resumeOperation();
+    unsigned int updateAtomicOperation(Joints &arm_command, Joints arm_joints,
+		                       bool b_display_status = false);
 
-	/**
-	 * It makes the software finish immediately.
-	 */
-	void abort();
+    /**
+     * It provides commands depending on the current position of the rover and
+     * the arm joints
+     */
+    bool updateRoverArmPos(proxy_library::Joints &arm_command,
+                           proxy_library::MotionCommand &rover_command,
+                           proxy_library::Pose rover_position,
+                           proxy_library::Joints arm_joints);
 
-	/**
-	 * It provides commands depending on the current position of the rover and the arm joints
-	 */
-	void updateRoverArmPos(/**
-	 * Command to compute for the arm.
-	 */
-	Joints& arm_command, /**
-	 * Command to compute for the rover base.
-	 */
-	MotionCommand& rover_command, /**
-	 * Current pose of the rover base.
-	 */
-	Pose rover_position, /**
-	 * Current position of the joints.
-	 */
-	Joints arm_joints);
+    /**
+     * Goal is updated during the execution of the motion plan. It requires to
+     * recalculate the motion plan taking into consideration the previously
+     * received DEM.
+     */
+    void updateSamplePos(proxy_library::Pose sample);
 
-	/**
-	 * It procceses the input LocCamDEM and triggers a replanning if necessary.
-	 */
-	void updateLocCamDEM(/**
-	 * DEM using Airbus data struct
-	 */
-	RoverGuidance_Dem locCamDEM, /**
-	 * Current position of the base
-	 */
-	Pose rover_position, /**
-	 * Current position of the joints
-	 */
-	Joints arm_joints);
+    /**
+     * It serves to acknowledge by the user that the operation is completely
+     * finished.
+     */
+    bool ack();
 
-	/**
-	 * Goal is updated during the execution of the motion plan. It requires to recalculate the motion plan taking into consideration the previously received DEM.
-	 */
-	void updateSamplePos(/**
-	 * Pose of the sample including error.
-	 */
-	Pose sample);
+    /**
+     * It handles the error and behaves according to its type.
+     */
+    void resumeError();
 
-	/**
-	 * It makes the software enter into the PAUSE state, first creating commands to stop the rover base and arm.
-	 */
-	void pause(/**
-	 * By reference parameter to get commands to stop the joints.
-	 */
-	Joints& arm_command, /**
-	 * By reference parameter to get commands to stop the rover base.
-	 */
-	MotionCommand& rover_command);
+    /**
+     * Returns the indication of which error affects the software.
+     */
+    MMError getErrorCode();
 
-	/**
-	 * It returns to the state indicated by priorStatus. Useful to exit the PAUSE state.
-	 */
-	void resumeOperation();
+    /**
+     * It returns the status in which the software is.
+     */
+    MMStatus getStatus();
 
-	/**
-	 * It serves to acknowledge by the user that the operation is completely finished.
-	 */
-	void ack();
+    /**
+     * Sets the value of Z-resolution in meters.
+     */
+    bool setZres(double d_zres_m);
 
-	/**
-	 * It handles the error and behaves according to its type.
-	 */
-	void resumeError();
+    /**
+     * Sets the value of avoidance distance in meters.
+     */
+    bool setAvoidanceDistance(double d_avoid_dist_m);
 
-	/**
-	 * Returns the indication of which error affects the software.
-	 */
-	MM_error getErrorCode();
+    /**
+     * Prints information regarding the resulting path.
+     */
+    void printRoverPathInfo();
 
-	/**
-	 * Serves to actively start moving the rover and arm once a motion plan is available.
-	 */
-	void start();
+    /**
+     * Indicates the current status
+     */
+    void printStatus();
 
-	/**
-	 * Provides commands to completely stop the rover.
-	 */
-	void stopMotion(/**
-	 * By reference parameter to get commands to stop the joints.
-	 */
-	Joints& arm_command, /**
-	 * By reference parameter to get commands to stop the rover base.
-	 */
-	MotionCommand& rover_command);
+    /**
+     * Returns the indication of which error affects the software.
+     */
+    void printErrorCode();
+
+    /**
+     * Shows current values of different config variables
+     */
+    void printConfig();
+
+    /**
+     * Returns if the class is in status ERROR.
+     */
+    bool isStatusError();
+    /**
+     * Returns the current value of the rover yaw.
+     */
+    double getCurrentRoverYaw();
+    /**
+     * A pointer to the current end effector path is returned
+     */
+    std::vector<std::vector<double>> *getWristPath();
+    /**
+     * A pointer to the current rover path is returned
+     */
+    std::vector<base::Waypoint> *getRoverPath();
+    std::vector<std::vector<double>> *getCostMap();
+    /**
+     * A pointer to the arm motion profile is returned
+     */
+    std::vector<std::vector<double>> *getArmMotionProfile();
+    /**
+     * A pointer to the 3d cost map is returned
+     */
+    std::vector<std::vector<std::vector<double>>> *get3DCostMap();
+
+    bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM);
+
+    /**
+     * It procceses the input LocCamDEM and triggers a replanning if necessary.
+     */
+    void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
+                         proxy_library::Pose rover_position,
+                         Joints arm_joints);
+
+    /**
+     * It serves to perform an operation with only the arm.
+     */
+    bool initAtomicOperation(const Joints &j_present_readings,
+		             const base::Waypoint &w_goal,
+			     double d_roll = 0.0,
+			     double d_pitch = 3.1416,
+			     double d_yaw = 0.0);
 };

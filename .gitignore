@@ -2,3 +2,7 @@
 build
 install
 env.sh
+test/unit/data/results/*
+*.swp
+*.swo
+data/planner/urdfmodel_path.txt

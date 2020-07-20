@@ -4,11 +4,11 @@
 #include <iostream>
 #include "Main.hpp"
 
-using namespace proxy_library;
+//using namespace proxy_library;
 
 //Code extracted from Sherpa API example
-Joints buildDrivingPoseArmCommand(){
-    Joints j;
+proxy_library::Joints buildDrivingPoseArmCommand(){
+    proxy_library::Joints j;
     j.m_jointNames.push_back("arm_joint_1");
     j.m_jointNames.push_back("arm_joint_2");
     j.m_jointNames.push_back("arm_joint_3");
@@ -28,7 +28,7 @@ Joints buildDrivingPoseArmCommand(){
 }
 
 // Checks whether the arm state is the one desired
-bool checkFinishedArmCommand(Joints armCommand, Joints armReadings)
+bool checkFinishedArmCommand(proxy_library::Joints armCommand, proxy_library::Joints armReadings)
 {
   for (uint i = 0; i < 6; i++)
   {
@@ -40,7 +40,7 @@ bool checkFinishedArmCommand(Joints armCommand, Joints armReadings)
 }
 
 // Dummy thread to command the arm
-void moveArm(Joints armCommand)
+void moveArm(proxy_library::Joints armCommand)
 {
   // The proxy config.
   Config config;
@@ -63,7 +63,7 @@ void moveArm(Joints armCommand)
 
   std::cout << "Command is sent to SherpaTT" << std::endl;
 
-  Joints jointReadings;
+  proxy_library::Joints jointReadings;
   bool st = false;
   while (!st)
   {
