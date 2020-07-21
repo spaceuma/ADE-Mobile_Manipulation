@@ -1,9 +1,6 @@
-#ifndef __MOTION_COMMAND__
-#define __MOTION_COMMAND__
-
 #pragma once
 
-#include "BaseType.hpp"
+#include <proxy_library/types/BaseType.hpp>
 
 namespace proxy_library{
     
@@ -36,9 +33,13 @@ class MotionCommand : public BaseType {
     }
     
     std::string toString() const {
-        return getTypeName() + ": toString() not implemented";
+        std::stringstream ss;
+        ss << "m_manoeuvreType: " << m_manoeuvreType << 
+        ", m_curvature_radm: " << m_curvature_radm << 
+        ", m_speed_ms: " << m_speed_ms <<
+        ", m_turnRate_rads: " << m_turnRate_rads;
+        return ss.str();
     }
 };
 }
 
-#endif
