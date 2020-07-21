@@ -142,6 +142,9 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
 		case 4:
 		    setError(COLLIDING_ARM);
 		    return 3;
+       		case 5:
+		    setError(NON_RESP_ARM);
+		    return 3;
                 default:
                     return 3;
             }
@@ -207,6 +210,9 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                     return 3;
 		case 4:
 		    setError(COLLIDING_ARM);
+		    return 3;
+       		case 5:
+		    setError(NON_RESP_ARM);
 		    return 3;
                 default:
                     return 3;
@@ -584,10 +590,16 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                 setError(COLLIDING_ARM);
 		return false;
 	    }
+            if (ui_error_code == 5)
+	    {
+                setError(NON_RESP_ARM);
+		return false;
+	    }
             return true;
             break;
         case EXECUTING_ARM_OPERATION:
             std::cout << "Status is Executing Arm Operation" << std::endl;
+            //rover_command = this->p_mmexecutor->getPointTurnRoverCommand(-0.01);
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
             ui_error_code = this->p_mmexecutor->getAtomicCommand(arm_joints,
                                                                  arm_command, 2); // 2 -> Coverage
@@ -599,6 +611,11 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             if (ui_error_code == 4)
 	    {
                 setError(COLLIDING_ARM);
+		return false;
+	    }
+            if (ui_error_code == 5)
+	    {
+                setError(NON_RESP_ARM);
 		return false;
 	    }
             return true;

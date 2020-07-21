@@ -63,7 +63,6 @@ void MobileManipExecutor::updateMotionPlan()
     this->pvvd_arm_motion_profile = this->p_motion_plan->getArmMotionProfile();
     this->i_initial_segment = 0;
     this->b_is_last_segment = false;
-    this->d_call_period = 0.5; // TODO: MAKE THIS CONFIGURABLE!!!
     this->d_operational_time = 0.0;
     this->updateDeployment();
     this->ui_current_timestamp = 0;
@@ -171,6 +170,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 		{
                     return 6; 
                 }
+		else if (ui_status == 5)
+		{
+                    return 7;
+		}
 		else
 		{
                     return 4;
@@ -178,8 +181,20 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 	    }
             return 0;
         case READY:
-            this->armstate = COUPLED_MOVING;
-            return 1;
+	    if (this->vpw_path.size() == 1)
+	    {
+                mc_m = this->getZeroRoverCommand();
+                this->armstate = SAMPLING_POS;
+                this->i_current_coverage_index = 0;
+                this->i_current_retrieval_index = 0;
+                return 2;
+	    }
+	    else
+	    {
+                mc_m = this->getZeroRoverCommand();
+                this->armstate = COUPLED_MOVING;
+		return 1;
+	    }
         case COUPLED_MOVING:
             if ((this->i_current_segment == this->i_initial_segment)
                 || (this->i_current_segment != i_actual_segment))
@@ -203,7 +218,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                         true);
             }
             this->assignPresentCommand(j_next_arm_command_m);
-            if (!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))
+            if ((!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))&&
+		(!isArmMoving(j_arm_present_readings_m)))
             {
                 for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
                 {
@@ -220,30 +236,27 @@ unsigned int MobileManipExecutor::getCoupledCommand(
           << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
           and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
             */
-            this->coupled_control.modifyMotionCommand(gain,
+            /*this->coupled_control.modifyMotionCommand(gain,
                                                       vd_arm_present_command,
                                                       vd_arm_previous_command,
                                                       max_speed,
                                                       vd_arm_abs_speed,
                                                       mc_m);
 
-            /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion
-          Command before fixing is (translation speed = " << mc_m.m_speed_ms
-          << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
-          and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
-          */
+            std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion  Command before fixing is (translation speed = " << mc_m.m_speed_ms << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;*/
+          
             fixMotionCommand(
                 mc_m); // This sets the maneuver as Point Turn if needed
-            /*std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover
-        Motion Command is (translation speed = " << mc_m.m_speed_ms
-          << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
-        and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
+            std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
+          << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
         std::cout << "VAlue of b_isfinal is " << b_is_last_segment <<
-        std::endl;*/
+        std::endl;
             if (this->navstate == TARGET_REACHED)
             {
                 mc_m = this->getZeroRoverCommand();
             }
+	    std::cout << "Navstate = " << this->navstate << std::endl;
+	    std::cout << "Target reached = " << TARGET_REACHED << std::endl;
             if ((b_is_last_segment) && (this->navstate == TARGET_REACHED)
                 && (this->isArmReady(j_next_arm_command_m,
                                      j_arm_present_readings_m)))
@@ -317,6 +330,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
         return 4;
     }
 
+
     switch (ui_mode)
     {
         case 0: // Deployment
@@ -349,6 +363,16 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     d_step_time = std::max(0.0,d_step_time / 1000000);
     this->d_operational_time += std::min(2.0, d_step_time); 
     this->ui_past_timestamp = this->ui_current_timestamp;
+
+    if ((!this->isArmMoving(j_present_joints_m))&&(this->d_operational_time>5.0)) //ADHOC time
+    {
+        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            j_next_arm_command.m_jointStates[i].m_position
+                = j_present_joints_m.m_jointStates[i].m_position;
+        }
+        return 5;
+    }
 
     std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
     std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
@@ -495,6 +519,20 @@ bool MobileManipExecutor::isArmReady(
     return true;
 }
 
+bool MobileManipExecutor::isArmMoving(
+    const proxy_library::Joints &j_present_joints)
+{
+    bool isMoving = false;
+    for (uint i = 0; i < 6; i++)
+    {
+        if (j_present_joints.m_jointStates[i].m_speed > 0.0001)
+	{
+            isMoving = true;
+	}
+    }
+    return isMoving;
+}
+
 bool MobileManipExecutor::isArmFollowing(
     const proxy_library::Joints &j_next_command,
     const proxy_library::Joints &j_present_joints)
@@ -521,8 +559,7 @@ bool MobileManipExecutor::isArmFollowing(
             // std::endl;
         }
     }
-    // return isMoving;
-    return true; // TODO - Remove this
+    return isMoving;
 }
 
 proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
@@ -533,6 +570,16 @@ proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
     mc_zero.m_speed_ms = 0.0;       // in meters/seconds
     mc_zero.m_turnRate_rads = 0.0;  // in radians/seconds
     return mc_zero;
+}
+
+proxy_library::MotionCommand MobileManipExecutor::getPointTurnRoverCommand(double d_turnSpeed_rads)
+{
+    proxy_library::MotionCommand mc_pt;
+    mc_pt.m_manoeuvreType = 1;    // 0: Ackermann, 1: PointTurn
+    mc_pt.m_curvature_radm = 0.0; // in radians/meter
+    mc_pt.m_speed_ms = 0.0;       // in meters/seconds
+    mc_pt.m_turnRate_rads = d_turnSpeed_rads;  // in radians/seconds
+    return mc_pt;
 }
 
 bool MobileManipExecutor::updateArmPresentReadings(

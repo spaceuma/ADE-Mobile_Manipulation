@@ -130,7 +130,6 @@ private:
     int i_current_coverage_index;
     int i_current_init_index;
     int i_current_retrieval_index;
-    double d_call_period;
     double d_operational_time;
     unsigned int ui_current_timestamp;
     unsigned int ui_past_timestamp;
@@ -176,10 +175,17 @@ public:
      */
     bool isArmFollowing(const Joints &j_next_command,
                         const Joints &j_present_joints);
+    bool isArmMoving(const Joints &j_present_joints);
     /**
      * Returns a (0,0,0) rover command
      */
     proxy_library::MotionCommand getZeroRoverCommand();
+
+    /**
+     * Returns a Point Turn rover command
+     */
+    proxy_library::MotionCommand getPointTurnRoverCommand(double d_turnSpeed_rads);
+
     /**
      * Arm Variables Initialization
      */
