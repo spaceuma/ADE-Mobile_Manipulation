@@ -7,7 +7,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, false, 1);
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, false, 0);
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;

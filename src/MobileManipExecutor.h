@@ -115,7 +115,6 @@ private:
     void fixMotionCommand(MotionCommand &mc_m);
 
     bool updateArmPresentReadings(const Joints &j_present_joints_m);
-    bool prepareNextArmCommand(Joints &j_next_arm_command);
     bool updateArmCommandVectors();
     bool updateArmCommandVectors(
         const std::vector<double> &vd_present_command_m);
@@ -128,8 +127,6 @@ private:
            0.2,
            0.2,
            0.2}; // TODO - Adhoc margin for arm positions
-    int i_iteration_counter;
-    int i_lookahead_iterator;
     int i_current_coverage_index;
     int i_current_init_index;
     int i_current_retrieval_index;
@@ -155,11 +152,6 @@ public:
     bool isRoverWithinCorridor(base::Pose pose_rover);
 
     /**
-     * Indicates whether the execution of the present operation is completed
-     * or not
-     */
-    bool isRoverFinished();
-    /**
      * Provides the next arm command according to the present situation
      */
     unsigned int getCoupledCommand(
@@ -167,6 +159,9 @@ public:
         const proxy_library::Joints &j_arm_present_readings_m,
         proxy_library::MotionCommand &mc_m,
         proxy_library::Joints &j_next_arm_command_m);
+    unsigned int getAtomicCommand(const Joints &j_arm_present_readings_m,
+                                      Joints &j_next_arm_command_m,
+				      unsigned int ui_mode);
     /**
      * Checks if the arm is at Ready position
      */
@@ -189,10 +184,7 @@ public:
      * Arm Variables Initialization
      */
     void initializeArmVariables(const Joints &j_present_readings);
-    void resetIterator();
-    unsigned int getAtomicCommand(const Joints &j_arm_present_readings_m,
-                                      Joints &j_next_arm_command_m,
-				      unsigned int ui_mode);
+    void resetOperationTime();
     std::vector<double> *getArmCurrentReadings();
     std::vector<double> *getFirstCoverageProfile();
     std::vector<double> *getLastCoverageProfile();

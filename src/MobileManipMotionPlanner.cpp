@@ -38,7 +38,7 @@ bool MobileManipMotionPlanner::initAtomicOperation(
 {
     if (this->status == IDLE)
     {
-        this->p_mmexecutor->resetIterator();
+        this->p_mmexecutor->resetOperationTime();
         std::vector<double> vd_arm_readings;
         vd_arm_readings.resize(6);
         for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
@@ -65,7 +65,7 @@ bool MobileManipMotionPlanner::initAtomicOperation(
         this->p_mmexecutor->updateDeployment();
         this->p_mmexecutor->updateRetrieval();
         this->b_is_atomic_deployed = false;
-        this->p_mmexecutor->resetIterator();
+        this->p_mmexecutor->resetOperationTime();
         setStatus(EXECUTING_ATOMIC_OPERATION);
         return true;
     }
@@ -131,7 +131,7 @@ unsigned int MobileManipMotionPlanner::updateAtomicOperation(
                                   << std::endl;
                     }
                     this->b_is_atomic_deployed = true;
-                    this->p_mmexecutor->resetIterator();
+                    this->p_mmexecutor->resetOperationTime();
                     return 1;
                 case 2:
                     setError(INCOMPLETE_INPUT);
@@ -422,7 +422,7 @@ bool MobileManipMotionPlanner::abort()
         case EXECUTING_MOTION_PLAN:
             // TODO - complete this
             // this->p_motionplan->computeArmRetrieval(j_current_readings);
-            this->p_mmexecutor->resetIterator();
+            this->p_mmexecutor->resetOperationTime();
             pvd_current_readings = this->p_mmexecutor->getArmCurrentReadings();
             if (this->p_motionplan->computeArmRetrieval((*pvd_current_readings))
                 != 0)
@@ -433,7 +433,7 @@ bool MobileManipMotionPlanner::abort()
             setStatus(RETRIEVING_ARM);
             return true;
         case EXECUTING_ARM_OPERATION:
-            this->p_mmexecutor->resetIterator();
+            this->p_mmexecutor->resetOperationTime();
             pvd_current_readings = this->p_mmexecutor->getArmCurrentReadings();
             if (this->p_motionplan->computeArmRetrieval((*pvd_current_readings))
                 != 0)
@@ -444,7 +444,7 @@ bool MobileManipMotionPlanner::abort()
             setStatus(RETRIEVING_ARM);
             return true;
         case PAUSE:
-            this->p_mmexecutor->resetIterator();
+            this->p_mmexecutor->resetOperationTime();
             pvd_current_readings = this->p_mmexecutor->getArmCurrentReadings();
             if (this->p_motionplan->computeArmRetrieval((*pvd_current_readings))
                 != 0)
@@ -542,7 +542,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                 case 1: // Either driving or aligning
                     return true;
                 case 2: // (Rover) Target reached
-                    this->p_mmexecutor->resetIterator();
+                    this->p_mmexecutor->resetOperationTime();
                     setStatus(EXECUTING_ARM_OPERATION);
                     return true;
                 case 3: // Out of boundaries
@@ -593,7 +593,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                                                                  arm_command, 2); // 2 -> Coverage
             if (ui_error_code == 1)
             {
-                this->p_mmexecutor->resetIterator();
+                this->p_mmexecutor->resetOperationTime();
                 setStatus(RETRIEVING_ARM);
             }
             if (ui_error_code == 4)

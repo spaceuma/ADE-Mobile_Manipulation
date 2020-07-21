@@ -64,8 +64,6 @@ void MobileManipExecutor::updateMotionPlan()
     this->i_initial_segment = 0;
     this->b_is_last_segment = false;
     this->d_call_period = 0.5; // TODO: MAKE THIS CONFIGURABLE!!!
-    this->i_iteration_counter = 0;
-    this->i_lookahead_iterator = 0;
     this->d_operational_time = 0.0;
     this->updateDeployment();
     this->ui_current_timestamp = 0;
@@ -88,11 +86,6 @@ void MobileManipExecutor::updateDeployment()
     this->pvvd_init_arm_profile
         = this->p_motion_plan->getInitArmMotionProfile();
     this->pvd_init_time_profile = this->p_motion_plan->getInitArmTimeProfile();
-}
-
-bool MobileManipExecutor::isRoverFinished()
-{
-    return waypoint_navigation.getNavigationState() == TARGET_REACHED;
 }
 
 unsigned int MobileManipExecutor::getCoupledCommand(
@@ -149,14 +142,12 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         return 6;
     }
 
-    // Getting Arm Command
-    this->prepareNextArmCommand(j_next_arm_command_m);
-    
     double d_step_time;
+    unsigned int ui_status = 0;
     std::cout << "The Rover Segment is " <<
     this->waypoint_navigation.getCurrentSegment() << std::endl; std::cout <<
     "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
-    std::cout << "The state is " << this->armstate << std::endl;
+    std::cout << "The arm coupled state is " << this->armstate << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
@@ -166,47 +157,25 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             {
                 mc_m = this->getZeroRoverCommand();
             }
-            this->ui_current_timestamp = j_arm_present_readings_m.m_time; 
-            d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
-            d_step_time = std::max(0.0,d_step_time / 1000000);
-            this->d_operational_time += std::min(2.0, d_step_time); 
-            this->ui_past_timestamp = this->ui_current_timestamp;
-
-            std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
-            std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
-
-            double d_elapsed_init_time;
-            // Keep track of vdd_init_arm_profile
-            // std::cout << " Creating initialization command" << std::endl;
-            d_elapsed_init_time
-		= this->d_operational_time;
-            if (this->i_current_segment
-                < (*this->pvvd_init_arm_profile).size() - 1)
-            {
-                if ((*this->pvd_init_time_profile)[this->i_current_segment]
-                        * 1.0
-                    <= d_elapsed_init_time) // TODO - ADHOC value to make this
-                                            // slower
-                {
-                    this->i_current_segment++;
-                    this->updateArmCommandVectors((
-                        *this->pvvd_init_arm_profile)[this->i_current_segment]);
-                }
-            }
-            else if (((*this->pvd_init_time_profile)
-                              [(*this->pvvd_init_arm_profile).size() - 1]
-                          * 1.0
-                      < d_elapsed_init_time)
-                     && (mc_m.m_manoeuvreType == 0))
-            { // If the arm is ready and the rover is going to start with an
-              // ackemann
+	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
+	    if(ui_status == 1)
+	    {
                 this->i_initial_segment
                     = this->waypoint_navigation.getCurrentSegment();
                 this->i_current_segment = 0;
                 this->armstate = READY;
-            }
-            this->i_iteration_counter++;
-            this->assignPresentCommand(j_next_arm_command_m);
+	    }
+	    else if (ui_status != 0)
+	    {
+                if (ui_status == 4)
+		{
+                    return 6; 
+                }
+		else
+		{
+                    return 4;
+                }
+	    }
             return 0;
         case READY:
             this->armstate = COUPLED_MOVING;
@@ -251,12 +220,12 @@ unsigned int MobileManipExecutor::getCoupledCommand(
           << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
           and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
             */
-            /*this->coupled_control.modifyMotionCommand(gain,
+            this->coupled_control.modifyMotionCommand(gain,
                                                       vd_arm_present_command,
                                                       vd_arm_previous_command,
                                                       max_speed,
                                                       vd_arm_abs_speed,
-                                                      mc_m);*/
+                                                      mc_m);
 
             /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion
           Command before fixing is (translation speed = " << mc_m.m_speed_ms
@@ -283,7 +252,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 this->armstate = SAMPLING_POS;
                 this->i_current_coverage_index = 0;
                 this->i_current_retrieval_index = 0;
-                this->i_iteration_counter = 0;
                 return 2;
             }
             return 1;
@@ -293,9 +261,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
     }
 }
 
-void MobileManipExecutor::resetIterator()
+void MobileManipExecutor::resetOperationTime()
 {
-    this->i_iteration_counter = this->i_lookahead_iterator;
     this->d_operational_time = 0.0;
     this->ui_current_timestamp = 0;
     this->ui_past_timestamp = 0;
@@ -599,25 +566,6 @@ bool MobileManipExecutor::updateArmCommandVectors(
     {
         this->vd_arm_previous_command[i] = this->vd_arm_present_command[i];
         this->vd_arm_present_command[i] = vd_present_command_m[i];
-    }
-}
-
-bool MobileManipExecutor::prepareNextArmCommand(
-    proxy_library::Joints &j_next_arm_command)
-{
-    if (j_next_arm_command.m_jointNames.empty())
-    {
-        j_next_arm_command.m_jointNames.resize(6);
-        j_next_arm_command.m_jointNames[0] = "arm_joint_1";
-        j_next_arm_command.m_jointNames[1] = "arm_joint_2";
-        j_next_arm_command.m_jointNames[2] = "arm_joint_3";
-        j_next_arm_command.m_jointNames[3] = "arm_joint_4";
-        j_next_arm_command.m_jointNames[4] = "arm_joint_5";
-        j_next_arm_command.m_jointNames[5] = "arm_joint_6";
-    }
-    if (j_next_arm_command.m_jointStates.empty())
-    {
-        j_next_arm_command.m_jointStates.resize(6);
     }
 }
 
