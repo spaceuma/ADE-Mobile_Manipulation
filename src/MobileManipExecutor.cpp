@@ -164,8 +164,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 this->i_current_segment = 0;
                 this->armstate = READY;
 	    }
-	    else if (ui_status != 0)
+	    else if (ui_status > 1)
 	    {
+                mc_m = this->getZeroRoverCommand();
                 if (ui_status == 4)
 		{
                     return 6; 
@@ -176,6 +177,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 		}
 		else
 		{
+                    std::cout << "ui_status = " << ui_status << std::endl;
                     return 4;
                 }
 	    }
@@ -398,9 +400,10 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                         (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
                 }
             }
-            else if ((*this->pvd_init_time_profile)
+            else if (((*this->pvd_init_time_profile)
                              [(*this->pvvd_init_arm_profile).size() - 1]
-                         * 1.0 < d_elapsed_time)
+                         * 1.0 < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
+
             {
                 b_is_finished = true;
             }
@@ -419,10 +422,10 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                         [this->i_current_retrieval_index]);
                 }
             }
-            else if ((*this->pvd_retrieval_time_profile)
+            else if (((*this->pvd_retrieval_time_profile)
                      [(*this->pvvd_retrieval_arm_profile).size() - 1]
                  * 1.0
-             < d_elapsed_time)
+             < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
             {
                 b_is_finished = true;
             }
@@ -440,10 +443,11 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                                               [this->i_current_coverage_index]);
                 }
             }
-            else if ((*this->pvd_arm_sweeping_times)
+            else if (((*this->pvd_arm_sweeping_times)
                      [(*this->pvvd_arm_sweeping_profile).size() - 1]
                  * 2.0
-             < d_elapsed_time)
+             < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
+
             {
                 b_is_finished = true;
             }
@@ -525,7 +529,7 @@ bool MobileManipExecutor::isArmMoving(
     bool isMoving = false;
     for (uint i = 0; i < 6; i++)
     {
-        if (j_present_joints.m_jointStates[i].m_speed > 0.0001)
+        if (abs(j_present_joints.m_jointStates[i].m_speed) > 0.0001)
 	{
             isMoving = true;
 	}
