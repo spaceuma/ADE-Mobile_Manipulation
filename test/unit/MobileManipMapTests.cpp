@@ -18,12 +18,16 @@ TEST(MMMapTest, nominal_working_test)
                    vvd_elevation_data)) << "Input DEM file is missing";
   */
 
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RH1_Zone1_10cmDEM.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
+  
+/*
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
     
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmValidity.csv",
                    vvd_validity_data)) << "Input DEM file is missing";
-    
+  */  
     std::cout << "Input Matrix is successfully read" << std::endl; 
     std::cout << "Matrix size is " << vvd_elevation_data[0].size() << "x" << vvd_elevation_data.size() << std::endl; 
     double res = 0.1; // meters
@@ -46,8 +50,8 @@ TEST(MMMapTest, nominal_working_test)
         {
             prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
                 = vvd_elevation_data[j][i];
-            //prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = 1;
-            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = (uint8_t)vvd_validity_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = 1;
+            //prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = (uint8_t)vvd_validity_data[j][i];
         }
     }
 
@@ -55,8 +59,8 @@ TEST(MMMapTest, nominal_working_test)
     std::cout << vvd_elevation_data[0][0] << std::endl; 
 
     base::Waypoint samplePos;
-    samplePos.position[0] = 6.0;//5.6;
-    samplePos.position[1] = 7.0;
+    samplePos.position[0] = 5.0;//5.6;
+    samplePos.position[1] = 5.0;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
     MobileManipMap dummyMap(true);

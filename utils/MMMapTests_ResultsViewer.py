@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
-elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv"), skiprows=0)
+#elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv"), skiprows=0)
+elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
 #elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv"), skiprows=0)
 slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
 validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
