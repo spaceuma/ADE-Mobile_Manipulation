@@ -13,12 +13,12 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
     this->b_is_initialization_computed = false;
 
     this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 0.45;
+    this->vd_retrieval_position[0] = 1.571;
     this->vd_retrieval_position[1] = -1.83;
     this->vd_retrieval_position[2] = 2.79;
     this->vd_retrieval_position[3] = 0.0;
     this->vd_retrieval_position[4] = -0.5;
-    this->vd_retrieval_position[5] = 2.3562;
+    this->vd_retrieval_position[5] = 2.354;
 }
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
@@ -206,6 +206,25 @@ bool MotionPlan::shortenPathForFetching()
         }*/
     }
     return true;
+}
+
+void MotionPlan::addTurningWaypoint(double d_dev)
+{
+    base::Waypoint w_end, w_sample, w_turn;
+    w_end = this->vw_rover_path.back();
+    w_sample = this->pmm_map->getSample();
+    std::cout << "WAYPOINT END DATA: " <<  w_end.position[0] << " m, " << w_end.position[1] << " m, " << w_end.heading * 180.0/3.1416 << " deg" << std::endl;
+    std::cout << "WAYPOINT SAMPLE DATA: " <<  w_sample.position[0] << " m, " << w_sample.position[1] << " m, " << w_sample.heading * 180.0/3.1416 << " deg" << std::endl;
+    double dx,dy,dnx,dny;
+    dx = w_sample.position[1] - w_end.position[1];
+    dy = w_end.position[0] - w_sample.position[0];
+    dnx = dx / sqrt(pow(dx,2) + pow(dy,2));
+    dny = dy / sqrt(pow(dx,2) + pow(dy,2));
+    w_turn.position[0] = w_sample.position[0] + dx*d_dev;
+    w_turn.position[1] = w_sample.position[1] + dy*d_dev;
+    w_turn.heading = atan2(w_turn.position[1] - w_end.position[1], w_turn.position[0] - w_end.position[0]);
+    std::cout << "WAYPOINT TURN DATA: " <<  w_turn.position[0] << " m, " << w_turn.position[1] << " m, " << w_turn.heading * 180.0/3.1416 << " deg" << std::endl;
+    this->vw_rover_path.push_back(w_turn);
 }
 
 unsigned int MotionPlan::computeArmProfilePlanning()

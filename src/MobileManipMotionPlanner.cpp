@@ -391,6 +391,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
             return false;
         }
         // this->p_motionplan->computeArmDeployment(0,);
+	// Adds a dummy waypoint at the end to smoothly turn the rover at the end
+	this->p_motionplan->addTurningWaypoint(0.7);
         this->p_mmexecutor->updateMotionPlan();
         setStatus(READY_TO_MOVE);
         return true;

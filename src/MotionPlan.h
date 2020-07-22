@@ -182,6 +182,7 @@ public:
     unsigned int computeArmRetrieval(const std::vector<double> &vd_init);
     unsigned int computeAtomicOperation();
     void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);
+    void addTurningWaypoint(double d_dev);
 };
 
 #endif

@@ -87,6 +87,30 @@ void MobileManipExecutor::updateDeployment()
     this->pvd_init_time_profile = this->p_motion_plan->getInitArmTimeProfile();
 }
 
+bool MobileManipExecutor::isAligned(Pose &rover_pose)
+{
+    double dx,dy,dist,dyaw,dtargetheading, dacos;
+    dx = rover_pose.position[0] - (*this->vpw_path.back()).position[0];  
+    dy = rover_pose.position[1] - (*this->vpw_path.back()).position[1];  
+    dist = sqrt(pow(dx,2)+pow(dy,2));
+    dyaw = rover_pose.getYaw();
+    dtargetheading =  (*this->vpw_path.back()).heading;
+    std::cout << "ALIGNED:" << std::endl;
+    std::cout << "    dist = " << dist << std::endl;
+    std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
+    dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
+    std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
+    if ((dist < 1.4))//&&(dacos < 0.1))
+    {
+        return true; 
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 unsigned int MobileManipExecutor::getCoupledCommand(
     Pose &rover_pose,
     const proxy_library::Joints &j_arm_present_readings_m,
@@ -198,6 +222,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 		return 1;
 	    }
         case COUPLED_MOVING:
+	    //To avoid the dummy turn waypoint
+	    i_actual_segment = min(i_actual_segment, (int)this->vpw_path.size() - 2);
+	    std::cout << "COUPLED_MOVING: initial segment is " << i_initial_segment << std::endl;
             if ((this->i_current_segment == this->i_initial_segment)
                 || (this->i_current_segment != i_actual_segment))
             {
@@ -212,6 +239,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     i_current_segment = min(i_actual_segment, i_current_segment + 1 + (i_actual_segment - i_current_segment)/30);
                     //i_current_segment++; // = i_actual_segment;
                 }
+	        std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
                 this->b_is_last_segment
                     = coupled_control.selectNextManipulatorPosition(
                         i_current_segment,
@@ -253,13 +281,18 @@ unsigned int MobileManipExecutor::getCoupledCommand(
           << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
         std::cout << "VAlue of b_isfinal is " << b_is_last_segment <<
         std::endl;
-            if (this->navstate == TARGET_REACHED)
+            //if (this->navstate == TARGET_REACHED)
+	    //if (i_actual_segment == (int)this->vpw_path.size() - 2)
+	    if(isAligned(rover_pose))
             {
                 mc_m = this->getZeroRoverCommand();
             }
 	    std::cout << "Navstate = " << this->navstate << std::endl;
 	    std::cout << "Target reached = " << TARGET_REACHED << std::endl;
-            if ((b_is_last_segment) && (this->navstate == TARGET_REACHED)
+            if ((b_is_last_segment) && 
+			   (isAligned(rover_pose))
+		           //(this->navstate == TARGET_REACHED) 
+			   //(i_actual_segment == (int)this->vpw_path.size() - 2)
                 && (this->isArmReady(j_next_arm_command_m,
                                      j_arm_present_readings_m)))
             {
