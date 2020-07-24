@@ -212,12 +212,18 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
 
     clock_t inip = clock();
-    pathPlanner3D.planPath(volume_cost_map,
+    
+    std::cout << "IniPos = (" << iniPos.position[0] << ", " << iniPos.position[1] << ", " << iniPos.position[2] <<  ")" << std::endl; 
+    std::cout << "samplePos = (" << samplePos.position[0] << ", " << samplePos.position[1] << ", " << samplePos.position[2] << ")" << std::endl; 
+    if(!pathPlanner3D.planPath(volume_cost_map,
                            mapResolution,
                            zResolution,
                            iniPos,
                            samplePos,
-                           wristPath);
+                           wristPath))
+    {
+        return false;
+    }
 
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
@@ -538,6 +544,8 @@ bool ArmPlanner::planAtomicOperation(
     wristPath6 = new std::vector<std::vector<double>>;
     roverPose6[0] = roverWaypoint.position[0];
     roverPose6[1] = roverWaypoint.position[1];
+    
+    //TODO - This can be computed externally and take the height as input parameter
     roverPose6[2]
         = (*DEM)[(int)(roverWaypoint.position[1] / mapResolution + 0.5)]
                 [(int)(roverWaypoint.position[0] / mapResolution + 0.5)]
@@ -617,6 +625,7 @@ bool ArmPlanner::planAtomicOperation(
     goalPos.position[2] = TW2Wrist[2][3];
 
     // Cost map 3D computation
+    // TODO - This could be independent from the DEM
     int n = DEM->size();
     int m = (*DEM)[0].size();
 

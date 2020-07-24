@@ -31,6 +31,7 @@ public:
 
     void computeEntireTMap(const std::vector<std::vector<double>> *costMap,
                            std::vector<int> goal,
+                           std::vector<std::vector<double>> *closedMap,
                            std::vector<std::vector<double>> *TMap);
 
     void computeTMap(const std::vector<std::vector<double>> *costMap,
@@ -195,7 +196,7 @@ public:
     FastMarching3D(double _waypointDistance = 0.5);
     ~FastMarching3D();
 
-    void planPath(
+    bool planPath(
         const std::vector<std::vector<std::vector<double>>> *costMap3D,
         double mapResolution,
         double zResolution,
@@ -203,7 +204,7 @@ public:
         base::Waypoint endPos,
         std::vector<base::Waypoint> *path3D);
 
-    void computeTMap(
+    bool computeTMap(
         const std::vector<std::vector<std::vector<double>>> *costMap3D,
         std::vector<int> goal,
         std::vector<int> start,

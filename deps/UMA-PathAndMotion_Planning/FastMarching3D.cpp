@@ -14,7 +14,7 @@ FastMarching3D::~FastMarching3D()
     ;
 }
 
-void FastMarching3D::planPath(
+bool FastMarching3D::planPath(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     double mapResolution,
     double zResolution,
@@ -33,11 +33,18 @@ void FastMarching3D::planPath(
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
     start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
 
+    std::cout << "Cost Value at start is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
+    std::cout << "Cost Value at goal is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
+    
     std::vector<std::vector<std::vector<double>>> *TMap
         = new std::vector<std::vector<std::vector<double>>>;
 
-    computeTMap(costMap3D, goal, start, TMap);
+    if(!computeTMap(costMap3D, goal, start, TMap))
+    {
+        return false; //UNREACHABLE
+    }
 
+    std::cout << "3d Tmap is computed" << std::endl;
     std::vector<std::vector<double>> *path
         = new std::vector<std::vector<double>>;
 
@@ -51,9 +58,10 @@ void FastMarching3D::planPath(
         (*path3D)[i].position[1] = mapResolution * (*path)[i][1];
         (*path3D)[i].position[2] = zResolution * (*path)[i][2];
     }
+    return true;
 }
 
-void FastMarching3D::computeTMap(
+bool FastMarching3D::computeTMap(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     std::vector<int> goal,
     std::vector<int> start,
@@ -113,9 +121,10 @@ void FastMarching3D::computeTMap(
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1])
             && (nodeTarget[2] == start[2]))
         {
-            break;
+            return true; //The propagation wave reaches the start
         }
     }
+    return false; //The propagation does not reach the start
 }
 
 void FastMarching3D::updateNode(

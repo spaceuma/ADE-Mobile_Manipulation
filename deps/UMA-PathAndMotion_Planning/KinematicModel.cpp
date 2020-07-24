@@ -936,10 +936,12 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     int sizeXY = (int)((maxXY - minXY) / resXY);
     int sizeZ = (int)((maxZ - minZ) / resZ);
 
+/*
     std::cout << "Size xy: " << sizeXY << ", size z: " << sizeZ << std::endl;
     std::cout << "Res xy: " << resXY << ", res z: " << resZ << std::endl;
     std::cout << "Min xy: " << minXY << ", min z: " << minZ << std::endl;
     std::cout << "Max xy: " << maxXY << ", max z: " << maxZ << std::endl;
+*/
 
     std::vector<std::vector<std::vector<double>>> reachabilityMap(
         sizeXY,
@@ -1018,10 +1020,20 @@ int Manipulator::isReachable(std::vector<double> position)
     int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
     int iz = (int)((position[2] - (*minValues)[2]) / (*resolutions)[2] + 0.5);
 
+    /*
+    std::cout << "ix = " << ix << std::endl; 
+    std::cout << "iy = " << iy << std::endl; 
+    std::cout << "iz = " << iz << std::endl; 
+    std::cout << "Reachability Map size = " << reachabilityMap->size() << ", " << (*reachabilityMap)[0].size() << ", " << (*reachabilityMap)[0][0].size() << std::endl; 
+*/
+
     if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityMap->size() - 1
         && iy < (*reachabilityMap)[0].size() - 1
         && iz < (*reachabilityMap)[0][0].size() - 1)
+    {
+        //std::cout << "isReachable? -> " << (*reachabilityMap)[ix][iy][iz] << std::endl;
         return (*reachabilityMap)[ix][iy][iz];
+    }
     else
     {
         return 0;

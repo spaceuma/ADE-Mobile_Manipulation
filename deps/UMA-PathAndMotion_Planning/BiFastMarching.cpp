@@ -36,10 +36,15 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
 
     std::vector<int> *nodeJoin = new std::vector<int>;
 
+    std::cout << "Resolution is " << mapResolution << std::endl;
+    std::cout << "Costmap cols,rows: " << (*costMap)[0].size() << "," << (*costMap).size() << std::endl;
+
     if (!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
     {
         return false;
     }
+
+    std::cout << "Tmap computed" << std::endl;
 
     std::vector<std::vector<double>> *pathGoal
         = new std::vector<std::vector<double>>;
@@ -82,8 +87,12 @@ bool BiFastMarching::computeTMap(
     std::vector<std::vector<double>> *TMapStart,
     std::vector<int> *nodeJoin)
 {
-    int n = costMap->size();
-    int m = costMap[0].size();
+    int n = (*costMap).size();
+
+    std::cout << "N = " << n << std::endl;
+
+    int m = (*costMap)[0].size();
+    std::cout << "M = " << m << std::endl;
 
     std::vector<int> nodeTargetGoal = goal;
     std::vector<int> nodeTargetStart = start;
@@ -142,6 +151,8 @@ bool BiFastMarching::computeTMap(
 
     while ((nbTGoal->size() > 0) || (nbTStart->size() > 0))
     {
+        //std::cout << "NodeTargetGoal: " << nodeTargetGoal[0] << ", " << nodeTargetGoal[1] << std::endl;
+        //std::cout << "NodeTargetStart: " << nodeTargetStart[0] << ", " << nodeTargetStart[1] << std::endl;
         if (nbTGoal->size() > 0)
         {
             nodeTargetGoal = (*nbNodesGoal)[0];
