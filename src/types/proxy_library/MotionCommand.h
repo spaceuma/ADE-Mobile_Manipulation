@@ -1,6 +1,9 @@
+#ifndef __MOTION_COMMAND__
+#define __MOTION_COMMAND__
+
 #pragma once
 
-#include <proxy_library/types/BaseType.hpp>
+#include "BaseType.hpp"
 
 namespace proxy_library{
     
@@ -42,4 +45,6 @@ class MotionCommand : public BaseType {
     }
 };
 }
+
+#endif
 

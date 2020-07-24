@@ -306,7 +306,9 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                                              this->d_avoid_dist,
                                              this->d_minfetching_dist,
                                              this->d_maxfetching_dist);
-        switch (ui_code)
+        
+	std::cout << "FACE is computed" << std::endl;
+	switch (ui_code)
         {
             case 0:
                 break;
@@ -323,10 +325,15 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(OBS_GOAL_POS);
                 return false;
         }
+
+	std::cout << "No Errors" << std::endl;
+	std::cout << "Local Rover Position: " << this->w_current_rover_position.position[0] << ", " << this->w_current_rover_position.position[1] << std::endl;
         // To compute the path for the rover base
         ui_code = this->p_motionplan->computeRoverBasePathPlanning(
             this->w_current_rover_position);
-        switch (ui_code)
+        
+	std::cout << "Rover Base Path Planning is computed" << std::endl;
+	switch (ui_code)
         {
             case 0:
                 break;
@@ -341,7 +348,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 return false;
             case 4:
                 // TODO - Fix this, the error is not GOAL_TOO_CLOSE!
-                setError(GOAL_TOO_CLOSE);
+		std::cout << "ComputeRoverBasePathPlanning returned Goal too close" << std::endl;
+                setError(UNREACH_GOAL);
                 return false;
             case 5:
                 setError(DEGEN_PATH);
@@ -350,6 +358,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         // The rover base path is shortened to stop near the sample
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
+	    std::cout << "shortenPathForFetching returned Goal too close" << std::endl;
             this->printRoverPathInfo();
             setError(GOAL_TOO_CLOSE);
             return false;
@@ -357,7 +366,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         this->printRoverPathInfo();
         // The arm positions profile is to be computed
         ui_code = this->p_motionplan->computeArmProfilePlanning();
-        switch (ui_code)
+	std::cout << "Arm Profile is computed " << std::endl;
+	switch (ui_code)
         {
             case 0:
                 break;
@@ -365,7 +375,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(COLLIDING_PROF);
                 return false;
             case 2:
-                setError(DEVIATED_PROF);
+                setError(DEVIATED_PROF); //TODO: Maybe substitute by UNFEASIBLE...?
                 return false;
             case 3:
                 setError(PLAN_WO_SAMPLE);

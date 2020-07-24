@@ -399,7 +399,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     this->d_operational_time += std::min(2.0, d_step_time); 
     this->ui_past_timestamp = this->ui_current_timestamp;
 
-    if ((!this->isArmMoving(j_present_joints_m))&&(this->d_operational_time>5.0)) //ADHOC time
+    if ((!this->isArmMoving(j_present_joints_m))&&(this->d_operational_time>5.0)&&(ui_mode != 2)) //ADHOC time
     {
         for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
         {

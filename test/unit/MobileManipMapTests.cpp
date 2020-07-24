@@ -59,8 +59,8 @@ TEST(MMMapTest, nominal_working_test)
     std::cout << vvd_elevation_data[0][0] << std::endl; 
 
     base::Waypoint samplePos;
-    samplePos.position[0] = 5.0;//5.6;
-    samplePos.position[1] = 5.0;
+    samplePos.position[0] = 9.8;//5.6;
+    samplePos.position[1] = 5.1;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
     MobileManipMap dummyMap(true);
