@@ -595,14 +595,6 @@ bool ArmPlanner::planAtomicOperation(
     iniPos.position[2] = TW2Wrist[2][3];
 
     // Final arm pos computation
-    std::vector<double> goalPosition = {goalEEPosition.position[0],
-                                        goalEEPosition.position[1],
-                                        goalEEPosition.position[2]};
-    std::vector<double> goalArmConfiguration
-        = sherpa_tt_arm->getManipJoints(goalPosition, goalEEOrientation,1,1);
-
-    TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
-
     pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
     if (sherpa_tt_arm->isReachable(pos) == 1)
     {
@@ -616,6 +608,14 @@ bool ArmPlanner::planAtomicOperation(
                      "lead to collision or is unreachable\n";
         return false;
     }
+
+    std::vector<double> goalPosition = {goalEEPosition.position[0],
+                                        goalEEPosition.position[1],
+                                        goalEEPosition.position[2]};
+    std::vector<double> goalArmConfiguration
+        = sherpa_tt_arm->getManipJoints(goalPosition, goalEEOrientation,1,1);
+
+    TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
 
     TW2Wrist = dot(TW2BCS, TBCS2Wrist);
 
