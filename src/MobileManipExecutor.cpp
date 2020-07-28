@@ -53,7 +53,7 @@ void MobileManipExecutor::updateMotionPlan()
         this->vpw_path.at(i) = (&rover_path->at(i));
     }
     this->waypoint_navigation.configureTol(
-        0.1, 45.0 / 180.0 * 3.1416); // tolpos,tolheading
+        0.1, 5.0 / 180.0 * 3.1416); // tolpos,tolheading
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
@@ -372,7 +372,9 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             if (((*this->pvvd_init_arm_profile).empty())
                || ((*this->pvd_init_time_profile).empty()))
             {
-                return 3; // There is no profile available
+                // TODO - It may happen it is empty because the arm is already initialized...
+		// return 3; // There is no profile available
+		return 1;
             }
 	    break;
         case 1: // Retrieval
