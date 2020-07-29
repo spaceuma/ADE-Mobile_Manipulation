@@ -202,6 +202,10 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     clock_t init = clock();
 
+    // Smoothing heading of the rover path by inserting new waypoints
+    double headingThreshold = M_PI/12;
+    smoothRoverPathHeading(headingThreshold);
+    
     // Generating the reachability tunnel surrounding the rover path
     generateTunnel(iniPos, samplePos, volume_cost_map);
     clock_t endt = clock();
@@ -1057,7 +1061,7 @@ void ArmPlanner::generateTunnel(
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
                                 checkIntersections(
-                                    tunnelLabel, costMap3D, ix, iy, iz, i - 20);
+                                    tunnelLabel, costMap3D, ix, iy, iz, i - n/4);
                                 (*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = i;
                             }
@@ -1071,7 +1075,7 @@ void ArmPlanner::generateTunnel(
                                                    ix + 1,
                                                    iy,
                                                    iz,
-                                                   i - 20);
+                                                   i - n/4);
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix + 1][iz] = i;
                             }
@@ -1084,7 +1088,7 @@ void ArmPlanner::generateTunnel(
                                                    ix - 1,
                                                    iy,
                                                    iz,
-                                                   i - 20);
+                                                   i - n/4);
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix - 1][iz] = i;
                             }
@@ -1097,7 +1101,7 @@ void ArmPlanner::generateTunnel(
                                                    ix,
                                                    iy + 1,
                                                    iz,
-                                                   i - 20);
+                                                   i - n/4);
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy + 1][ix][iz] = i;
                             }
@@ -1110,7 +1114,7 @@ void ArmPlanner::generateTunnel(
                                                    ix,
                                                    iy - 1,
                                                    iz,
-                                                   i - 20);
+                                                   i - n/4);
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy - 1][ix][iz] = i;
                             }
@@ -1169,7 +1173,7 @@ void ArmPlanner::generateTunnel(
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
                                 checkIntersections(
-                                    tunnelLabel, costMap3D, ix, iy, iz, n / 2);
+                                    tunnelLabel, costMap3D, ix, iy, iz, n /5);
                                 (*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = n;
                             }
@@ -1183,7 +1187,7 @@ void ArmPlanner::generateTunnel(
                                                    ix + 1,
                                                    iy,
                                                    iz,
-                                                   n / 2);
+                                                   n / 5);
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix + 1][iz] = n;
                             }
@@ -1196,7 +1200,7 @@ void ArmPlanner::generateTunnel(
                                                    ix - 1,
                                                    iy,
                                                    iz,
-                                                   n / 2);
+                                                   n / 5);
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix - 1][iz] = n;
                             }
@@ -1209,7 +1213,7 @@ void ArmPlanner::generateTunnel(
                                                    ix,
                                                    iy + 1,
                                                    iz,
-                                                   n / 2);
+                                                   n / 5);
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy + 1][ix][iz] = n;
                             }
@@ -1222,7 +1226,7 @@ void ArmPlanner::generateTunnel(
                                                    ix,
                                                    iy - 1,
                                                    iz,
-                                                   n / 2);
+                                                   n / 5);
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy - 1][ix][iz] = n;
                             }
@@ -1431,6 +1435,27 @@ void ArmPlanner::computeWaypointInterpolation(
     }
 }
 
+void ArmPlanner::smoothRoverPathHeading(double headingThreshold)
+{
+    int i = 1;
+    while (i < roverPath6->size())
+    {
+        double diff = abs((*roverPath6)[i][5] - (*roverPath6)[i-1][5]);
+        if(diff>2*M_PI) diff = diff-2*M_PI;
+        //std::cout<<"Diff: "<<diff<<", threshold: "<<headingThreshold<<std::endl;
+        if (diff > headingThreshold)
+        {
+            std::vector<std::vector<double>> newWaypoints = getLinearInterpolation(
+                (*roverPath6)[i - 1], (*roverPath6)[i], round(diff/headingThreshold)+1);
+            roverPath6->insert(roverPath6->begin() + i,
+                                 newWaypoints.begin(),
+                                 newWaypoints.end());
+            i += round(diff/headingThreshold)+1;
+        }
+        i++;
+    }
+}
+
 std::vector<base::Waypoint> ArmPlanner::getLinearInterpolation(
     base::Waypoint waypoint0,
     base::Waypoint waypoint1,
@@ -1486,6 +1511,67 @@ std::vector<base::Waypoint> ArmPlanner::getLinearInterpolation(
                 newWaypoints[i].position[2]
                     = (waypoint0.position[2] + waypoint1.position[2]) / 2;
                 newWaypoints[i].heading = heading[j];
+
+                break;
+            }
+
+    return newWaypoints;
+}
+
+std::vector<std::vector<double>> ArmPlanner::getLinearInterpolation(
+    std::vector<double> waypoint0,
+    std::vector<double> waypoint1,
+    int numberIntWaypoints)
+{
+    double x0 = waypoint0[0];
+    double y0 = waypoint0[1];
+    double yaw0 = waypoint0[5];
+
+    double x1 = waypoint1[0];
+    double y1 = waypoint1[1];
+    double yaw1 = waypoint1[5];
+
+    if (yaw1 - yaw0 > pi)
+        yaw1 -= 2 * pi;
+    else if (yaw1 - yaw0 < -pi)
+        yaw1 += 2 * pi;
+
+    double l;
+    std::vector<double> xi(10002, 0);
+    std::vector<double> yi(10002, 0);
+    std::vector<double> heading(10002, 0);
+    std::vector<double> laccum(10002, 0);
+
+    xi[0] = x0;
+    yi[0] = y0;
+    heading[0] = yaw0;
+
+    for (int i = 1; i < 10002; i++)
+    {
+        xi[i] = x0 + i * (x1 - x0) / 10001;
+        yi[i] = y0 + i * (y1 - y0) / 10001;
+        heading[i] = yaw0 + i * (yaw1 - yaw0) / 10001;
+
+        while (heading[i] > pi)
+            heading[i] -= 2 * pi;
+        while (heading[i] < -pi)
+            heading[i] += 2 * pi;
+
+        l = sqrt((xi[i] - xi[i - 1]) * (xi[i] - xi[i - 1])
+                 + (yi[i] - yi[i - 1]) * (yi[i] - yi[i - 1]));
+        laccum[i] = laccum[i - 1] + l;
+    }
+    double d = laccum[10001] / (numberIntWaypoints + 1);
+
+    std::vector<std::vector<double>> newWaypoints(numberIntWaypoints,std::vector<double>(6));
+    for (int i = 0; i < numberIntWaypoints; i++)
+        for (int j = 0; j < 10002; j++)
+            if (laccum[j] > (i + 1) * d)
+            {
+                newWaypoints[i][0] = xi[j];
+                newWaypoints[i][1] = yi[j];
+                newWaypoints[i][2] = (waypoint0[2] + waypoint1[2]) / 2;
+                newWaypoints[i][5] = heading[j];
 
                 break;
             }
@@ -1656,27 +1742,45 @@ void ArmPlanner::checkIntersections(
     if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1 && iy < sy - 1
         && iz < sz - 1)
         if ((*tunnelLabel)[iy][ix + 1][iz] < threshold)
+        {
+            //std::cout<<"Detected intersection with label "<<(*tunnelLabel)[iy][ix + 1][iz]<<" and threshold "<<threshold<<"\n";
             (*tunnelCost)[iy][ix + 1][iz] = INFINITY;
+        }
     if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1 && iy < sy - 1
         && iz < sz - 1)
         if ((*tunnelLabel)[iy][ix - 1][iz] < threshold)
+        {
+            //std::cout<<"Detected intersection with label "<<(*tunnelLabel)[iy][ix - 1][iz]<<" and threshold "<<threshold<<"\n";
             (*tunnelCost)[iy][ix - 1][iz] = INFINITY;
+        }
     if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1 && iy + 1 < sy - 1
         && iz < sz - 1)
         if ((*tunnelLabel)[iy + 1][ix][iz] < threshold)
+        {
+            //std::cout<<"Detected intersection with label "<<(*tunnelLabel)[iy+1][ix][iz]<<" and threshold "<<threshold<<"\n";
             (*tunnelCost)[iy + 1][ix][iz] = INFINITY;
+        }
     if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1 && iy - 1 < sy - 1
         && iz < sz - 1)
         if ((*tunnelLabel)[iy - 1][ix][iz] < threshold)
+        {
+            //std::cout<<"Detected intersection with label "<<(*tunnelLabel)[iy-1][ix][iz]<<" and threshold "<<threshold<<"\n";
             (*tunnelCost)[iy - 1][ix][iz] = INFINITY;
+        }
     if (ix > 0 && iy > 0 && iz + 1 > 0 && ix < sx - 1 && iy < sy - 1
         && iz + 1 < sz - 1)
         if ((*tunnelLabel)[iy][ix][iz + 1] < threshold)
+        {
+            //std::cout<<"Detected intersection with label "<<(*tunnelLabel)[iy][ix][iz+1]<<" and threshold "<<threshold<<"\n";
             (*tunnelCost)[iy][ix][iz + 1] = INFINITY;
+        }
     if (ix > 0 && iy > 0 && iz - 1 > 0 && ix < sx - 1 && iy < sy - 1
         && iz - 1 < sz - 1)
         if ((*tunnelLabel)[iy][ix][iz - 1] < threshold)
+        {
+            //std::cout<<"Detected intersection with label "<<(*tunnelLabel)[iy][ix][iz-1]<<" and threshold "<<threshold<<"\n";
             (*tunnelCost)[iy][ix][iz - 1] = INFINITY;
+        }
 }
 
 double ArmPlanner::getTimeArmJointMovement(double initialPosition,

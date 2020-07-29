@@ -117,8 +117,14 @@ public:
                                       std::vector<base::Waypoint> *newRoverPath,
                                       std::vector<int> *newAssignment);
 
+    void smoothRoverPathHeading(double headingThreshold);
+
     std::vector<base::Waypoint> getLinearInterpolation(base::Waypoint waypoint0,
                                                        base::Waypoint waypoint1,
+                                                       int numberIntWaypoints);
+
+    std::vector<std::vector<double>> getLinearInterpolation(std::vector<double> waypoint0,
+                                                       std::vector<double> waypoint1,
                                                        int numberIntWaypoints);
 
     std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,
