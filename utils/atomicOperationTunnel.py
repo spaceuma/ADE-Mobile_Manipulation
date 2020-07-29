@@ -13,8 +13,10 @@ cMap2d[np.isinf(cMap2d)] = 0
 sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/atomic_operation_3dmap.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/atomic_operation_path.txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/atomic_operation_eepath.txt",'r'), skiprows=0)
+path3D[:,0] = path3D[:,0]+1.8205
+path3D[:,1] = path3D[:,1]+1.8205
+path3D[:,2] = path3D[:,2]+1.023
 
 xsize = int(sizes[1])
 ysize = int(sizes[0])
@@ -46,7 +48,7 @@ box[:,:,0] = np.max(costMap3D)
 box[:,:,-1] = np.max(costMap3D)
 
 fig1 = mlab.figure()
-mlab.plot3d(path[0]/res, path[1]/res, path[2]/resz, color=(1,1,1), tube_radius = 1)
+mlab.plot3d(1/res, 1/res, (1+0.625)/resz, color=(1,1,1), tube_radius = 1)
 mlab.contour3d(box, contours = 5, opacity = 0.05, transparent = True)
 mlab.contour3d(costMap3D, contours = 10, opacity = 0.7, transparent = True)
 mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True)
@@ -54,7 +56,7 @@ mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.
 
 fig2 = mlab.figure()
 mlab.contour3d(box, contours = 5, opacity = 0.05, transparent = True)
-mlab.plot3d(path[0]/res, path[1]/res, (1+0.625)/resz, color=(1,1,1), tube_radius = 1)
+mlab.plot3d(1/res, 1/res, (1+0.625)/resz, color=(1,1,1), tube_radius = 1)
 mlab.plot3d(path3D[:,0]/res, path3D[:,1]/res, path3D[:,2]/resz, color=(0.3,0.3,0.5), tube_radius = 1)
 mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 20)
 plt_vs = mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True,slice_index=80)     

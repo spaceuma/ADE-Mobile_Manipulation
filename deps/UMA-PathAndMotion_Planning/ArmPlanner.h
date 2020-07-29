@@ -74,19 +74,15 @@ public:
                        base::Waypoint samplePos,
                        std::vector<std::vector<double>> *armJoints);
 
-    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
-                             double _mapResolution,
+    bool planAtomicOperation(double _mapResolution,
                              double _zResolution,
-                             base::Waypoint roverWaypoint,
                              std::vector<double> initialArmConfiguration,
                              std::vector<double> goalArmConfiguration,
                              std::vector<std::vector<double>> *armJoints,
                              std::vector<double> *timeProfile);
 
-    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
-                             double _mapResolution,
+    bool planAtomicOperation(double _mapResolution,
                              double _zResolution,
-                             base::Waypoint roverWaypoint,
                              std::vector<double> initialArmConfiguration,
                              base::Waypoint goalEEPosition,
                              std::vector<double> goalEEOrientation,
