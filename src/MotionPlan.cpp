@@ -210,6 +210,11 @@ bool MotionPlan::shortenPathForFetching()
 
 void MotionPlan::addTurningWaypoint(double d_dev)
 {
+    if (this->vw_rover_path.size() <=2)
+    {
+        d_dev /= 2.0;
+    }
+
     base::Waypoint w_end, w_sample, w_turn;
     w_end = this->vw_rover_path.back();
     w_sample = this->pmm_map->getSample();
@@ -222,7 +227,8 @@ void MotionPlan::addTurningWaypoint(double d_dev)
     dny = dy / sqrt(pow(dx,2) + pow(dy,2));
     w_turn.position[0] = w_sample.position[0] + dx*d_dev;
     w_turn.position[1] = w_sample.position[1] + dy*d_dev;
-    w_turn.heading = atan2(w_turn.position[1] - w_end.position[1], w_turn.position[0] - w_end.position[0]);
+    //w_turn.heading = atan2(w_turn.position[1] - w_end.position[1], w_turn.position[0] - w_end.position[0]);
+    w_turn.heading = w_end.heading;
     std::cout << "WAYPOINT TURN DATA: " <<  w_turn.position[0] << " m, " << w_turn.position[1] << " m, " << w_turn.heading * 180.0/3.1416 << " deg" << std::endl;
     this->vw_rover_path.push_back(w_turn);
 }
@@ -246,6 +252,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                            this->pmm_map->getSample(),
                                            &(this->vvd_arm_motion_profile)))
     {
+        std::cout << " Done " << std::endl;
         // Initialization
         if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
         {
@@ -286,6 +293,9 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         }
         else
         {
+            std::cout << "Raw Profile is not safe, with "
+                      << this->vvd_arm_motion_profile.size() << " samples"
+                      << std::endl;
             return 1;
         }
     }
@@ -314,6 +324,14 @@ unsigned int MotionPlan::computeArmDeployment(
     {
         return 3;
     }
+
+    if (((w_goal.position[1] >= 0.0)&&(vd_arm_readings[0] <= 0.0))||((w_goal.position[1] <= 0.0)&&(vd_arm_readings[0] >= 0.0)))
+    {
+        std::cout << "Goal position hemisphere is not the same as arm's" << std::endl;
+        return 4; 
+    }
+
+
     base::Waypoint current_waypoint;
     current_waypoint.position[0] = dxyres * (double)elevationMap[0].size() / 2.0; // TODO - Fix This
     current_waypoint.position[1] = dxyres * (double)elevationMap.size() / 2.0;
@@ -325,7 +343,7 @@ unsigned int MotionPlan::computeArmDeployment(
                                            + 0.5)]
           + p_arm_planner->heightGround2BCS;
     current_waypoint.heading = 0;
-
+    std::cout << "About to compute the deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
             &elevationMap,
             dxyres,
