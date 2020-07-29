@@ -330,36 +330,18 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 }
 
 bool ArmPlanner::planAtomicOperation(
-    const std::vector<std::vector<double>> *_DEM,
     double d_mapResolution_m,
     double _zResolution,
-    base::Waypoint roverWaypoint,
     std::vector<double> initialArmConfiguration,
     std::vector<double> goalArmConfiguration,
     std::vector<std::vector<double>> *armJoints,
     std::vector<double> *timeProfile)
 {
-
     this->mapResolution = d_mapResolution_m;
     this->zResolution = _zResolution;
-    this->DEM = _DEM;
 
     // Rover z coordinate and heading computation
-    std::vector<double> roverPose6(6);
-
     wristPath6 = new std::vector<std::vector<double>>;
-    roverPose6[0] = roverWaypoint.position[0];
-    roverPose6[1] = roverWaypoint.position[1];
-    roverPose6[2]
-        = (*DEM)[(int)(roverWaypoint.position[1] / mapResolution + 0.5)]
-                [(int)(roverWaypoint.position[0] / mapResolution + 0.5)]
-          + heightGround2BCS;
-    roverPose6[3] = 0;
-    roverPose6[4] = 0;
-    roverPose6[5] = roverWaypoint.heading;
-
-    roverPath6 = new std::vector<std::vector<double>>;
-    roverPath6->push_back(roverPose6);
 
     // Initial arm pos computation
     std::vector<std::vector<double>> TBCS2Wrist
@@ -382,21 +364,12 @@ bool ArmPlanner::planAtomicOperation(
         return false;
     }
 
-    pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
-    double roll = roverPose6[3];
-    double pitch = roverPose6[4];
-    double yaw = roverPose6[5];
-
-    std::vector<std::vector<double>> TW2BCS
-        = dot(getTraslation(pos),
-              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
-
-    std::vector<std::vector<double>> TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+    std::vector<double> relativePos = sherpa_tt_arm->getRelativePosition(pos);
 
     base::Waypoint iniPos;
-    iniPos.position[0] = TW2Wrist[0][3];
-    iniPos.position[1] = TW2Wrist[1][3];
-    iniPos.position[2] = TW2Wrist[2][3];
+    iniPos.position[0] = relativePos[0];
+    iniPos.position[1] = relativePos[1];
+    iniPos.position[2] = relativePos[2];
 
     // Final arm pos computation
     TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
@@ -415,25 +388,25 @@ bool ArmPlanner::planAtomicOperation(
         return false;
     }
 
-    TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+    relativePos = sherpa_tt_arm->getRelativePosition(pos);
 
     base::Waypoint goalPos;
-    goalPos.position[0] = TW2Wrist[0][3];
-    goalPos.position[1] = TW2Wrist[1][3];
-    goalPos.position[2] = TW2Wrist[2][3];
+    goalPos.position[0] = relativePos[0];
+    goalPos.position[1] = relativePos[1];
+    goalPos.position[2] = relativePos[2];
+
+    // Rover pose should be in the center of the new volume cost map
+    pos = {0, 0, 0}; 
+    relativePos = sherpa_tt_arm->getRelativePosition(pos);
+    std::vector<double> roverPose6 = {relativePos[0], relativePos[1], relativePos[2], 0, 0, 0};
+
+    std::vector<std::vector<double>> TW2BCS = getTraslation(relativePos);
 
     // Cost map 3D computation
-    int n = DEM->size();
-    int m = (*DEM)[0].size();
-
-    double maxz = 0;
-    for (int i = 0; i < DEM->size(); i++)
-        for (int j = 0; j < (*DEM)[0].size(); j++)
-            if ((*DEM)[i][j] > maxz) maxz = (*DEM)[i][j];
-
-    int l
-        = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution
-                + 0.5);
+    std::vector<double> sizes = sherpa_tt_arm->getReachabilityMapSize();
+    int n = round(sizes[0]/mapResolution);
+    int m = round(sizes[1]/mapResolution);
+    int l = round(sizes[2]/zResolution);
 
     volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
     volume_cost_map->resize(
@@ -518,44 +491,27 @@ bool ArmPlanner::planAtomicOperation(
         armJoints->push_back(config);
     }
 
+    for (int i = 0; i < wristPath->size(); i++)
+        (*wristPath6)[i] = sherpa_tt_arm->getAbsolutePosition((*wristPath6)[i]);
+
     (*timeProfile) = getTimeProfile(armJoints);
     return true;
 }
 
 bool ArmPlanner::planAtomicOperation(
-    const std::vector<std::vector<double>> *_DEM,
     double d_mapResolution_m,
     double _zResolution,
-    base::Waypoint roverWaypoint,
     std::vector<double> initialArmConfiguration,
     base::Waypoint goalEEPosition,
     std::vector<double> goalEEOrientation,
     std::vector<std::vector<double>> *armJoints,
     std::vector<double> *timeProfile)
 {
-
     this->mapResolution = d_mapResolution_m;
     this->zResolution = _zResolution;
-    this->DEM = _DEM;
 
     // Rover z coordinate and heading computation
-    std::vector<double> roverPose6(6);
-
     wristPath6 = new std::vector<std::vector<double>>;
-    roverPose6[0] = roverWaypoint.position[0];
-    roverPose6[1] = roverWaypoint.position[1];
-    
-    //TODO - This can be computed externally and take the height as input parameter
-    roverPose6[2]
-        = (*DEM)[(int)(roverWaypoint.position[1] / mapResolution + 0.5)]
-                [(int)(roverWaypoint.position[0] / mapResolution + 0.5)]
-          + heightGround2BCS;
-    roverPose6[3] = 0;
-    roverPose6[4] = 0;
-    roverPose6[5] = roverWaypoint.heading;
-
-    roverPath6 = new std::vector<std::vector<double>>;
-    roverPath6->push_back(roverPose6);
 
     // Initial arm pos computation
     std::vector<std::vector<double>> TBCS2Wrist
@@ -578,37 +534,14 @@ bool ArmPlanner::planAtomicOperation(
         return false;
     }
 
-    pos = {roverPose6[0], roverPose6[1], roverPose6[2]};
-    double roll = roverPose6[3];
-    double pitch = roverPose6[4];
-    double yaw = roverPose6[5];
-
-    std::vector<std::vector<double>> TW2BCS
-        = dot(getTraslation(pos),
-              dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
-
-    std::vector<std::vector<double>> TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+    std::vector<double> relativePos = sherpa_tt_arm->getRelativePosition(pos);
 
     base::Waypoint iniPos;
-    iniPos.position[0] = TW2Wrist[0][3];
-    iniPos.position[1] = TW2Wrist[1][3];
-    iniPos.position[2] = TW2Wrist[2][3];
+    iniPos.position[0] = relativePos[0];
+    iniPos.position[1] = relativePos[1];
+    iniPos.position[2] = relativePos[2];
 
     // Final arm pos computation
-    pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-    if (sherpa_tt_arm->isReachable(pos) == 1)
-    {
-        // std::cout<<"WARNING[planAtomicOperation]: goal arm configuration is
-        // outside security area\n";
-        isTunnelPermisive = true;
-    }
-    else if (sherpa_tt_arm->isReachable(pos) == 0)
-    {
-        std::cout << "ERROR[planAtomicOperation]: goal arm configuration will "
-                     "lead to collision or is unreachable\n";
-        return false;
-    }
-
     std::vector<double> goalPosition = {goalEEPosition.position[0],
                                         goalEEPosition.position[1],
                                         goalEEPosition.position[2]};
@@ -617,26 +550,40 @@ bool ArmPlanner::planAtomicOperation(
 
     TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
 
-    TW2Wrist = dot(TW2BCS, TBCS2Wrist);
+    pos = {TBCS2Wrist[0][3],TBCS2Wrist[1][3],TBCS2Wrist[2][3]};
+
+    if (sherpa_tt_arm->isReachable(pos) == 1)
+    {
+        // std::cout<<"WARNING[planAtomicOperation]: goal arm configuration is
+        // outside security area\n";
+        isTunnelPermisive = true;
+    }
+    else if (sherpa_tt_arm->isReachable(pos) == 0)
+    {
+        std::cout << "ERROR[planAtomicOperation]: goal arm configuration will "
+                     "lead to collision or is unreachable\n";
+        return false;
+    }
+
+    relativePos = sherpa_tt_arm->getRelativePosition(pos);
 
     base::Waypoint goalPos;
-    goalPos.position[0] = TW2Wrist[0][3];
-    goalPos.position[1] = TW2Wrist[1][3];
-    goalPos.position[2] = TW2Wrist[2][3];
+    goalPos.position[0] = relativePos[0];
+    goalPos.position[1] = relativePos[1];
+    goalPos.position[2] = relativePos[2];
+
+    // Rover pose should be in the center of the new volume cost map
+    pos = {0, 0, 0}; 
+    relativePos = sherpa_tt_arm->getRelativePosition(pos);
+    std::vector<double> roverPose6 = {relativePos[0], relativePos[1], relativePos[2], 0, 0, 0};
+
+    std::vector<std::vector<double>> TW2BCS = getTraslation(relativePos);
 
     // Cost map 3D computation
-    // TODO - This could be independent from the DEM
-    int n = DEM->size();
-    int m = (*DEM)[0].size();
-
-    double maxz = 0;
-    for (int i = 0; i < DEM->size(); i++)
-        for (int j = 0; j < (*DEM)[0].size(); j++)
-            if ((*DEM)[i][j] > maxz) maxz = (*DEM)[i][j];
-
-    int l
-        = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution
-                + 0.5);
+    std::vector<double> sizes = sherpa_tt_arm->getReachabilityMapSize();
+    int n = round(sizes[0]/mapResolution);
+    int m = round(sizes[1]/mapResolution);
+    int l = round(sizes[2]/zResolution);
 
     volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
     volume_cost_map->resize(
@@ -720,6 +667,9 @@ bool ArmPlanner::planAtomicOperation(
         }
         armJoints->push_back(config);
     }
+
+    for (int i = 0; i < wristPath->size(); i++)
+        (*wristPath6)[i] = sherpa_tt_arm->getAbsolutePosition((*wristPath6)[i]);
 
     (*timeProfile) = getTimeProfile(armJoints);
     return true;

@@ -345,10 +345,8 @@ unsigned int MotionPlan::computeArmDeployment(
     current_waypoint.heading = 0;
     std::cout << "About to compute the deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            current_waypoint, // TODO - this should be avoided
             vd_arm_readings,
             w_goal,
             vd_orientation_goal,
@@ -402,10 +400,8 @@ unsigned int MotionPlan::computeArmDeployment(
     current_waypoint.heading = 0;
 
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            current_waypoint, // TODO - this should be avoided
             vd_arm_readings,
             vd_arm_goal,
             &(this->vvd_init_arm_profile),
@@ -458,10 +454,8 @@ unsigned int MotionPlan::computeArmDeployment(
     std::cout << " Z-res is " << this->d_zres << std::endl;
 
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            this->vw_rover_path[i_segment_m],
             vd_arm_readings,
             this->vvd_arm_motion_profile[i_segment_m],
             &(this->vvd_init_arm_profile),
@@ -511,11 +505,8 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
     current_waypoint.heading = 0;
 
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            // this->vw_rover_path[this->vw_rover_path.size()-1],
-            current_waypoint,
             vd_init,
             this->vd_retrieval_position,
             &(this->vvd_retrieval_arm_profile),
@@ -554,25 +545,16 @@ unsigned int MotionPlan::computeAtomicOperation()
     std::vector<double> initialArmConfiguration
         = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
 
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = 3;
-    current_waypoint.position[1] = 3;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
+    base::Waypoint goal_waypoint;
+    goal_waypoint.position[0] = 1;
+    goal_waypoint.position[1] = 1;
+    goal_waypoint.position[2] = 1;
 
-    vw_rover_path.push_back(current_waypoint);
+    std::vector<double> goal_orientation = {0, 0, 0};
 
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             this->pmm_map->getResolution(),
             this->d_zres,
-            vw_rover_path[0],
             initialArmConfiguration,
             goalArmConfiguration,
             &(this->vvd_arm_motion_profile),

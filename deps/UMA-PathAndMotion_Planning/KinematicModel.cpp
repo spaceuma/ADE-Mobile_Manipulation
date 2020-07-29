@@ -967,7 +967,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                         = getPositionJoints(position, 1, 1);
                     config.resize(6);
 
-                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<2.5)&&(config[0]>-2.5)) //TODO - This is a workaround to avoid passing through pi/-pi
+                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<2.5)&&(config[0]>-2.5)&&(config[1]>-2)) //TODO - This is a workaround to avoid passing through pi/-pi
                     {
                         for (int l = 0; l < 6; l++)
                         {
@@ -1039,6 +1039,27 @@ int Manipulator::isReachable(std::vector<double> position)
         return 0;
     }
 }
+std::vector<double> Manipulator::getRelativePosition(std::vector<double> position)
+{
+    double posx = position[0] - (*minValues)[0];
+    double posy = position[1] - (*minValues)[1];
+    double posz = position[2] - (*minValues)[2];
+
+    std::vector<double> pos = {posx, posy, posz};
+
+    return pos;
+}
+
+std::vector<double> Manipulator::getAbsolutePosition(std::vector<double> position)
+{
+    double posx = position[0] + (*minValues)[0];
+    double posy = position[1] + (*minValues)[1];
+    double posz = position[2] + (*minValues)[2];
+
+    std::vector<double> pos = {posx, posy, posz};
+
+    return pos;
+}
 
 double Manipulator::getDistanceToCollision(std::vector<double> position)
 {
@@ -1054,4 +1075,10 @@ double Manipulator::getDistanceToCollision(std::vector<double> position)
     {
         return 0;
     }
+}
+
+std::vector<double> Manipulator::getReachabilityMapSize()
+{
+    std::vector<double> sizes = {(*maxValues)[0]-(*minValues)[0], (*maxValues)[1]-(*minValues)[1], (*maxValues)[2]-(*minValues)[2]};
+    return sizes;
 }

@@ -303,7 +303,6 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
 
     return theta1, theta2, theta3, theta4, theta5, theta6
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/atomic_operation_path.txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/atomic_operation_eepath.txt",'r'), skiprows=0)
 
 armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/atomic_operation_profile.txt",'r'), skiprows=0)
@@ -321,27 +320,30 @@ resz = resolutions[1]
 DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_Nominal_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
-DEM0 = DEM[:,:] - minz
+#DEM0 = DEM[:,:] - minz
+DEM0 = -1.023*np.ones([2,2])
 
-xMap= np.linspace(0,res*xsize,xsize)
-yMap= np.linspace(0,res*ysize,ysize)
+xMap= np.linspace(0,res,round(xsize*res))
+yMap= np.linspace(0,res,round(ysize*res))
 x,y = np.meshgrid(xMap,yMap)
 
-T = DKM(armJoints[0,:], path[np.array([0,1,2])], [0,0,path[3]])
+heading = 0
+
+T = DKM(armJoints[0,:], [0,0,0], [0,0,heading])
 rotT = T
 rotT[0,3] = 0   
 rotT[1,3] = 0   
 rotT[2,3] = 0   
 
-Tbx = dot(rotZ(path[3]), traslation([1,0,0]))
-Tby = dot(rotZ(path[3]), traslation([0,1,0]))
-Tbz = dot(rotZ(path[3]), traslation([0,0,1]))
+Tbx = dot(rotZ(heading), traslation([1,0,0]))
+Tby = dot(rotZ(heading), traslation([0,1,0]))
+Tbz = dot(rotZ(heading), traslation([0,0,1]))
 
 Tx = dot(rotT, traslation([1,0,0]))
 Ty = dot(rotT, traslation([0,1,0]))
 Tz = dot(rotT, traslation([0,0,1]))
 
-px,py,pz = plotArm(armJoints[0,:], path[np.array([0,1,2])], [0,0,path[3]])
+px,py,pz = plotArm(armJoints[0,:], [0,0,0], [0,0,0])
 px = np.array(px)
 py = np.array(py)
 pz = np.array(pz)
@@ -351,7 +353,7 @@ fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
 mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
-mlab.plot3d(path[0], path[1], path[2], color=(1,1,1), tube_radius = 0.04)
+mlab.plot3d(0, 0, 0, color=(1,1,1), tube_radius = 0.04)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
@@ -367,7 +369,7 @@ f.scene._lift();
 duration = 10
 def make_frame(t):
         i = (int)(t*len(armJoints)/duration)
-        T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
+        T = DKM(armJoints[i,:], [0,0,0], [0,0,heading])
         rotT = T
         rotT[0,3] = 0   
         rotT[1,3] = 0   
@@ -377,9 +379,9 @@ def make_frame(t):
         Ty = dot(rotT, traslation([0,1,0]))
         Tz = dot(rotT, traslation([0,0,1]))
 
-        Tbx = dot(rotZ(path[3]), traslation([1,0,0]))
-        Tby = dot(rotZ(path[3]), traslation([0,1,0]))
-        Tbz = dot(rotZ(path[3]), traslation([0,0,1]))
+        Tbx = dot(rotZ(heading), traslation([1,0,0]))
+        Tby = dot(rotZ(heading), traslation([0,1,0]))
+        Tbz = dot(rotZ(heading), traslation([0,0,1]))
 
         px,py,pz = plotArm(armJoints[i,:], path[np.array([0,1,2])], [0,0,path[3]])
         px = np.array(px)
@@ -402,7 +404,7 @@ def make_frame(t):
 def anim():
     mlab.gcf()
     for i in range(0,len(armJoints)):
-        T = DKM(armJoints[i,:], path[np.array([0,1,2])], [0,0,path[3]])
+        T = DKM(armJoints[i,:], [0,0,0], [0,0,heading])
         rotT = T
         rotT[0,3] = 0   
         rotT[1,3] = 0   
@@ -412,11 +414,11 @@ def anim():
         Ty = dot(rotT, traslation([0,1,0]))
         Tz = dot(rotT, traslation([0,0,1]))
 
-        Tbx = dot(rotZ(path[3]), traslation([1,0,0]))
-        Tby = dot(rotZ(path[3]), traslation([0,1,0]))
-        Tbz = dot(rotZ(path[3]), traslation([0,0,1]))
+        Tbx = dot(rotZ(heading), traslation([1,0,0]))
+        Tby = dot(rotZ(heading), traslation([0,1,0]))
+        Tbz = dot(rotZ(heading), traslation([0,0,1]))
 
-        px,py,pz = plotArm(armJoints[i,:], path[np.array([0,1,2])], [0,0,path[3]])
+        px,py,pz = plotArm(armJoints[i,:], [0,0,0], [0,0,heading])
         px = np.array(px)
         py = np.array(py)
         pz = np.array(pz)
