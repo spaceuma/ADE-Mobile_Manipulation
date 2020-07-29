@@ -967,7 +967,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                         = getPositionJoints(position, 1, 1);
                     config.resize(6);
 
-                    if (!p_collision_detector->isWristColliding(config))
+                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<2.5)&&(config[0]>-2.5)) //TODO - This is a workaround to avoid passing through pi/-pi
                     {
                         for (int l = 0; l < 6; l++)
                         {
