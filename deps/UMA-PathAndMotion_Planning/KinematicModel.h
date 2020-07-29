@@ -133,7 +133,11 @@ public:
 
     int isReachable(std::vector<double> position);
 
+    std::vector<double> getRelativePosition(std::vector<double> position);
+
     double getDistanceToCollision(std::vector<double> position);
+
+    std::vector<int> getReachabilityMapSize();
 };
 } // namespace KinematicModel_lib
 #endif

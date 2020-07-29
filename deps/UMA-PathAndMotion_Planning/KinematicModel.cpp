@@ -1039,6 +1039,16 @@ int Manipulator::isReachable(std::vector<double> position)
         return 0;
     }
 }
+std::vector<double> Manipulator::getRelativePosition(std::vector<double> position)
+{
+    double posx = position[0] - (*minValues)[0];
+    double posy = position[1] - (*minValues)[1];
+    double posz = position[2] - (*minValues)[2];
+
+    std::vector<double> pos = {posx, posy, posz};
+
+    return pos;
+}
 
 double Manipulator::getDistanceToCollision(std::vector<double> position)
 {
@@ -1054,4 +1064,10 @@ double Manipulator::getDistanceToCollision(std::vector<double> position)
     {
         return 0;
     }
+}
+
+std::vector<int> Manipulator::getReachabilityMapSize()
+{
+    std::vector<int> sizes = {(*reachabilityMap).size(), (*reachabilityMap)[0].size(), (*reachabilityMap)[0][0].size()};
+    return sizes;
 }
