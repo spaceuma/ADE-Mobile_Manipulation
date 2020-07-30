@@ -14,7 +14,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
 
     double deg2rad = 3.14159/180.0;
     this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 169.0*deg2rad;//1.571;
+    this->vd_retrieval_position[0] = 165.0*deg2rad;//1.571;
     this->vd_retrieval_position[1] = -90.0*deg2rad;//-1.83;
     this->vd_retrieval_position[2] = 140.0*deg2rad;//2.79;
     this->vd_retrieval_position[3] = 0.0*deg2rad;//0.0;
