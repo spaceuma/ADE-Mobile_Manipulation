@@ -217,8 +217,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     clock_t inip = clock();
     
-    std::cout << "IniPos = (" << iniPos.position[0] << ", " << iniPos.position[1] << ", " << iniPos.position[2] <<  ")" << std::endl; 
-    std::cout << "samplePos = (" << samplePos.position[0] << ", " << samplePos.position[1] << ", " << samplePos.position[2] << ")" << std::endl; 
+    //std::cout << "IniPos = (" << iniPos.position[0] << ", " << iniPos.position[1] << ", " << iniPos.position[2] <<  ")" << std::endl; 
+    //std::cout << "samplePos = (" << samplePos.position[0] << ", " << samplePos.position[1] << ", " << samplePos.position[2] << ")" << std::endl; 
     if(!pathPlanner3D.planPath(volume_cost_map,
                            mapResolution,
                            zResolution,

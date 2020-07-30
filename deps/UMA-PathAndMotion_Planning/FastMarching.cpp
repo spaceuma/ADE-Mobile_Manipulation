@@ -70,7 +70,7 @@ void FastMarching::getShadowedCostMap(
     vi_goal[0] = (int)(finalPos.position[0] / d_map_resolution + 0.5);
     vi_goal[1] = (int)(finalPos.position[1] / d_map_resolution + 0.5);
 
-    std::cout << "VI_GOAL is " << vi_goal[0] << ", " << vi_goal[1] << std::endl;
+    //std::cout << "VI_GOAL is " << vi_goal[0] << ", " << vi_goal[1] << std::endl;
 
     std::vector<std::vector<double>> vvd_clear_costmap;
     std::vector<std::vector<double>> vvd_obstacle_costmap;
@@ -92,8 +92,8 @@ void FastMarching::getShadowedCostMap(
     
     
     pvvd_obstacle_totalcostmap->resize(vvi_obstacle_map.size(), std::vector<double>(vvi_obstacle_map[0].size()));
-    std::cout << "TMap is resized" << std::endl;
-    std::cout << "Size of obstacle map is " << vvi_obstacle_map[0].size() << ", " <<vvi_obstacle_map.size()<<std::endl;
+    //std::cout << "TMap is resized" << std::endl;
+    //std::cout << "Size of obstacle map is " << vvi_obstacle_map[0].size() << ", " <<vvi_obstacle_map.size()<<std::endl;
 
     //std::vector<double> clear_row(vvi_obstacle_map[0].size()), obstacle_row(vvi_obstacle_map[0].size());
     double value;
@@ -133,19 +133,19 @@ void FastMarching::getShadowedCostMap(
         //vvd_obstacle_costmap.push_back(obstacle_row);
     }
 
-    std::cout << "Both costmaps are created" << std::endl;
+    //std::cout << "Both costmaps are created" << std::endl;
 
-    std::cout << "-Clear-Cost at start is " << vvd_clear_costmap[vi_goal[1]][vi_goal[0]] << std::endl;
-    std::cout << "-Obstacle-Cost at start is " << vvd_obstacle_costmap[vi_goal[1]][vi_goal[0]] << std::endl;
+    //std::cout << "-Clear-Cost at start is " << vvd_clear_costmap[vi_goal[1]][vi_goal[0]] << std::endl;
+    //std::cout << "-Obstacle-Cost at start is " << vvd_obstacle_costmap[vi_goal[1]][vi_goal[0]] << std::endl;
 
-    std::cout << "Size of clear cost map is " << vvd_clear_costmap[0].size() << ", " <<vvd_clear_costmap.size()<<std::endl;
-    std::cout << "Size of obstacle cost map is " << vvd_obstacle_costmap[0].size() << ", " <<vvd_obstacle_costmap.size()<<std::endl;
+    //std::cout << "Size of clear cost map is " << vvd_clear_costmap[0].size() << ", " <<vvd_clear_costmap.size()<<std::endl;
+    //std::cout << "Size of obstacle cost map is " << vvd_obstacle_costmap[0].size() << ", " <<vvd_obstacle_costmap.size()<<std::endl;
     computeEntireTMap(&vvd_clear_costmap, vi_goal, pvvd_closedmap, pvvd_clear_totalcostmap);
-    std::cout << "First TMap is computed" << std::endl;
+    //std::cout << "First TMap is computed" << std::endl;
 
     computeEntireTMap(
         &vvd_obstacle_costmap, vi_goal, pvvd_closedmap, pvvd_obstacle_totalcostmap);
-    std::cout << "Second TMap is computed" << std::endl;
+    //std::cout << "Second TMap is computed" << std::endl;
 
     for (int j = 0; j < vvi_obstacle_map.size(); j++)
     {
@@ -178,8 +178,8 @@ void FastMarching::computeEntireTMap(
     int n = (*costMap).size();
     int m = (*costMap)[0].size();
 
-    std::cout << "N = " << n << std::endl;
-    std::cout << "M = " << m << std::endl;
+    //std::cout << "N = " << n << std::endl;
+    //std::cout << "M = " << m << std::endl;
     std::vector<int> nodeTarget = goal;
 
     //std::vector<std::vector<double>> *closedMap

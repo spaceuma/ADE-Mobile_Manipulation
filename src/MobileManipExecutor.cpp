@@ -219,7 +219,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 		}
 		else
 		{
-                    std::cout << "ui_status = " << ui_status << std::endl;
+                    //std::cout << "ui_status = " << ui_status << std::endl;
                     return 4;
                 }
 	    }
@@ -305,8 +305,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             {
                 mc_m = this->getZeroRoverCommand();
             }
-	    std::cout << "Navstate = " << this->navstate << std::endl;
-	    std::cout << "Target reached = " << TARGET_REACHED << std::endl;
+	    //std::cout << "Navstate = " << this->navstate << std::endl;
+	    //std::cout << "Target reached = " << TARGET_REACHED << std::endl;
             if ((b_is_last_segment) && 
 			   (isAligned(rover_pose))
 		           //(this->navstate == TARGET_REACHED) 

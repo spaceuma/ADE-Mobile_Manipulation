@@ -33,8 +33,8 @@ bool FastMarching3D::planPath(
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
     start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
 
-    std::cout << "Cost Value at start is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
-    std::cout << "Cost Value at goal is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
+    //std::cout << "Cost Value at start is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
+    //std::cout << "Cost Value at goal is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
     
     std::vector<std::vector<std::vector<double>>> *TMap
         = new std::vector<std::vector<std::vector<double>>>;
@@ -44,7 +44,7 @@ bool FastMarching3D::planPath(
         return false; //UNREACHABLE
     }
 
-    std::cout << "3d Tmap is computed" << std::endl;
+    //std::cout << "3d Tmap is computed" << std::endl;
     std::vector<std::vector<double>> *path
         = new std::vector<std::vector<double>>;
 
