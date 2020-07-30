@@ -12,13 +12,14 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
 
+    double deg2rad = 3.14159/180.0;
     this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 1.571;
-    this->vd_retrieval_position[1] = -1.83;
-    this->vd_retrieval_position[2] = 2.79;
-    this->vd_retrieval_position[3] = 0.0;
-    this->vd_retrieval_position[4] = -0.5;
-    this->vd_retrieval_position[5] = 2.354;
+    this->vd_retrieval_position[0] = 169.0*deg2rad;//1.571;
+    this->vd_retrieval_position[1] = -90.0*deg2rad;//-1.83;
+    this->vd_retrieval_position[2] = 140.0*deg2rad;//2.79;
+    this->vd_retrieval_position[3] = 0.0*deg2rad;//0.0;
+    this->vd_retrieval_position[4] = -65.0*deg2rad;//-0.5;
+    this->vd_retrieval_position[5] = 134.9*deg2rad;//2.354;
 }
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
@@ -233,6 +234,7 @@ void MotionPlan::addTurningWaypoint(double d_dev)
     this->vw_rover_path.push_back(w_turn);
 }
 
+
 unsigned int MotionPlan::computeArmProfilePlanning()
 {
     // TODO - Create here several profiles: init, coupled, sweeping and
@@ -245,7 +247,25 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     }
     std::vector<std::vector<double>> elevationMap;
     this->pmm_map->getElevationMapToZero(elevationMap);
-    if (this->p_arm_planner->planArmMotion(&(this->vw_rover_path),
+
+    std::vector<base::Waypoint> *pvw_reference_path;
+    std::vector<base::Waypoint> vw_reference_path;
+    if (this->vw_rover_path.size() < 20)
+    {
+        std::cout << "Short path" << std::endl;
+        vw_reference_path.resize(1); 
+        std::cout << "Resized, now size is " << vw_reference_path.size() << std::endl;
+        vw_reference_path[0] = this->vw_rover_path.back(); 
+	pvw_reference_path = &(vw_reference_path);
+    }
+    else
+    {
+        pvw_reference_path = &(this->vw_rover_path);
+    }
+
+    std::cout << "PVW reference path size is " << pvw_reference_path->size() << std::endl; 
+
+    if (this->p_arm_planner->planArmMotion(pvw_reference_path,
                                            &elevationMap,
                                            this->pmm_map->getResolution(),
                                            this->d_zres,
@@ -425,7 +445,7 @@ unsigned int MotionPlan::computeArmDeployment(
 }
 
 unsigned int MotionPlan::computeArmDeployment(
-    int i_segment_m,
+    int i_segment_m,//TODO - Remove this...
     const std::vector<double> &vd_arm_readings)
 {
     this->vvd_init_arm_profile.clear();
@@ -435,6 +455,11 @@ unsigned int MotionPlan::computeArmDeployment(
     {
         return 3;
     }
+
+
+    // Here we deploy not to 0, but to a more advanced segment
+    i_segment_m = min(40, (int)(this->vvd_arm_motion_profile.size()-1));
+
     // TODO: check if elevationMap is properly formatted
     // TODO: check if i_segment_m is valid!!
     std::cout << "The segment is " << i_segment_m << std::endl;

@@ -50,14 +50,16 @@ bool MobileManipMotionPlanner::initAtomicOperation(
         vd_orientation_goal[0] = d_roll;
         vd_orientation_goal[1] = d_pitch;
         vd_orientation_goal[2] = d_yaw;
+	std::cout << "Computing arm deployment" << std::endl;
         if (this->p_motionplan->computeArmDeployment(
                 w_goal, vd_orientation_goal, vd_arm_readings)
             != 0)
         {
-            return false;
+            return false;//TODO - It must set the corresponding error
         }
         std::vector<double> *pvd_arm_goal
             = this->p_motionplan->getBackInitArmMotionProfile();
+	std::cout << "Computing arm retrieval" << std::endl;
         if (this->p_motionplan->computeArmRetrieval((*pvd_arm_goal)) != 0)
         {
             return false;
@@ -283,6 +285,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
 
     std::vector<double> vd_offset = this->p_mmmap->getOffset();
     base::Waypoint w_sample_globalposition;
+
+    // Offset is substracted to set position in local map frame
     this->w_current_rover_position.position[0]
         = plpose_m.m_position.m_x - vd_offset[0];
     this->w_current_rover_position.position[1]
@@ -328,7 +332,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
 
 	std::cout << "No Errors" << std::endl;
 	std::cout << "Local Rover Position: " << this->w_current_rover_position.position[0] << ", " << this->w_current_rover_position.position[1] << std::endl;
-        // To compute the path for the rover base
+        
+	// To compute the path for the rover base
         ui_code = this->p_motionplan->computeRoverBasePathPlanning(
             this->w_current_rover_position);
         
@@ -347,7 +352,6 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(PLAN_WO_SAMPLE);
                 return false;
             case 4:
-                // TODO - Fix this, the error is not GOAL_TOO_CLOSE!
 		std::cout << "ComputeRoverBasePathPlanning returned Goal too close" << std::endl;
                 setError(UNREACH_GOAL);
                 return false;
@@ -582,7 +586,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                     setError(NON_RESP_ARM); // TODO - Shouldnt be better
                                             // NON_FOLLOWING_ARM?
                     return false;
-                case 8:
+                case 8:// TODO - CHECK THIS
                     setError(UNFEASIBLE_INIT);
                     return false;
             }

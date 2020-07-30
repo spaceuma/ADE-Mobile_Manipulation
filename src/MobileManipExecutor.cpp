@@ -176,17 +176,35 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         case INITIALIZING:
             fixMotionCommand(
                 mc_m); // This sets the maneuver as Point Turn if needed
-            if (mc_m.m_manoeuvreType != 1)
+            /*if (mc_m.m_manoeuvreType != 1)
+            {
+                mc_m = this->getZeroRoverCommand();
+            }*/
+	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
+	    if(isAligned(rover_pose))
             {
                 mc_m = this->getZeroRoverCommand();
             }
-	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
 	    if(ui_status == 1)
 	    {
                 this->i_initial_segment
                     = this->waypoint_navigation.getCurrentSegment();
-                this->i_current_segment = 0;
-                this->armstate = READY;
+                this->i_current_segment = min(40, (int)(*this->pvvd_arm_motion_profile).size() - 1);
+                if (this->vpw_path.size() == 1)
+	        {
+                    mc_m = this->getZeroRoverCommand();
+                    this->armstate = SAMPLING_POS;
+                    this->i_current_coverage_index = 0;
+                    this->i_current_retrieval_index = 0;
+                    return 2;
+	        }
+	        else
+	        {
+                    mc_m = this->getZeroRoverCommand();
+                    this->armstate = COUPLED_MOVING;
+		    return 1;
+	        }
+	    //this->armstate = READY;
 	    }
 	    else if (ui_status > 1)
 	    {
@@ -223,7 +241,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 	    }
         case COUPLED_MOVING:
 	    //To avoid the dummy turn waypoint
-	    i_actual_segment = min(i_actual_segment, (int)this->vpw_path.size() - 2);
+	    i_actual_segment = min(i_actual_segment, (int)(*this->pvvd_arm_motion_profile).size() - 1);
 	    std::cout << "COUPLED_MOVING: initial segment is " << i_initial_segment << std::endl;
             if ((this->i_current_segment == this->i_initial_segment)
                 || (this->i_current_segment != i_actual_segment))
@@ -239,14 +257,14 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     i_current_segment = min(i_actual_segment, i_current_segment + 1 + (i_actual_segment - i_current_segment)/30);
                     //i_current_segment++; // = i_actual_segment;
                 }
-	        std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
-                this->b_is_last_segment
+            }
+	    std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+	    this->b_is_last_segment
                     = coupled_control.selectNextManipulatorPosition(
                         i_current_segment,
                         this->pvvd_arm_motion_profile,
                         &(this->vd_arm_present_command),
                         true);
-            }
             this->assignPresentCommand(j_next_arm_command_m);
             if ((!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))&&
 		(!isArmMoving(j_arm_present_readings_m)))
