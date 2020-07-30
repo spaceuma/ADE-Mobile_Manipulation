@@ -194,5 +194,5 @@ public:
     std::vector<double> *getArmCurrentReadings();
     std::vector<double> *getFirstCoverageProfile();
     std::vector<double> *getLastCoverageProfile();
-    bool isAligned(Pose &rover_pose);
+    bool isAligned(base::Pose &rover_pose);
 };

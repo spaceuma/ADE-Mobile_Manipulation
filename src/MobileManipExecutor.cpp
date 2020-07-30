@@ -87,7 +87,7 @@ void MobileManipExecutor::updateDeployment()
     this->pvd_init_time_profile = this->p_motion_plan->getInitArmTimeProfile();
 }
 
-bool MobileManipExecutor::isAligned(Pose &rover_pose)
+bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 {
     double dx,dy,dist,dyaw,dtargetheading, dacos;
     dx = rover_pose.position[0] - (*this->vpw_path.back()).position[0];  
