@@ -448,8 +448,8 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             else
             {
 	        this->updateArmCommandVectors(
-                        (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
-                
+                        (*this->pvvd_init_arm_profile)[this->i_current_init_index]); 
+                this->assignPresentCommand(j_next_arm_command);
 		if ((this->isArmReady(j_next_arm_command, j_present_joints_m)))
 		{
                     b_is_ready = true;
@@ -482,6 +482,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 		this->updateArmCommandVectors(
                         (*this->pvvd_retrieval_arm_profile)
                         [this->i_current_retrieval_index]);
+                this->assignPresentCommand(j_next_arm_command);
        		if ((this->isArmReady(j_next_arm_command, j_present_joints_m)))
 		{
                     b_is_ready = true;
