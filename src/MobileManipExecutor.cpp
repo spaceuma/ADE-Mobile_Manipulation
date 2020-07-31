@@ -421,11 +421,17 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
     if ((!this->isArmMoving(j_present_joints_m))&&(this->d_operational_time>5.0)&&(ui_mode != 2)) //ADHOC time
     {
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+	std::vector<double> vd_present_joints;
+	vd_present_joints.resize(6);
+
+	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
         {
-            j_next_arm_command.m_jointStates[i].m_position
+           vd_present_joints[i] 
                 = j_present_joints_m.m_jointStates[i].m_position;
         }
+	this->updateArmCommandVectors(vd_present_joints);
+        this->assignPresentCommand(j_next_arm_command);
+        
         return 5;
     }
 
