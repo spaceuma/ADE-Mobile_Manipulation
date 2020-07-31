@@ -14,7 +14,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
 
     double deg2rad = 3.14159/180.0;
     this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 165.0*deg2rad;//1.571;
+    this->vd_retrieval_position[0] = 155.0*deg2rad;//1.571;
     this->vd_retrieval_position[1] = -90.0*deg2rad;//-1.83;
     this->vd_retrieval_position[2] = 140.0*deg2rad;//2.79;
     this->vd_retrieval_position[3] = 0.0*deg2rad;//0.0;
@@ -546,8 +546,13 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
             &(this->vd_retrieval_time_profile)))
     { // TODO - This may return a segmentation fault, maybe because of a non
       // initialized elevation map...
-		std::cout << "The size of the retrieval profile is "  << this->vvd_init_arm_profile.size() << std::endl;
-        if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
+		std::cout << "The size of the retrieval profile is "  << this->vvd_retrieval_arm_profile.size() << std::endl;
+        if(this->vvd_retrieval_arm_profile.empty())
+	{
+            this->vvd_retrieval_arm_profile.push_back(vd_init);    
+	    this->vd_retrieval_time_profile.push_back(0.0);
+	}
+	if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
         {
             this->b_is_retrieval_computed = true;
             return 0;

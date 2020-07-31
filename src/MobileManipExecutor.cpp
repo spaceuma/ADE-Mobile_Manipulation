@@ -482,13 +482,19 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                         [this->i_current_retrieval_index]);
                 }
             }
-            else if (((*this->pvd_retrieval_time_profile)
+            else
+	    {	
+		this->updateArmCommandVectors(
+                        (*this->pvvd_retrieval_arm_profile)
+                        [this->i_current_retrieval_index]);
+                if (((*this->pvd_retrieval_time_profile)
                      [(*this->pvvd_retrieval_arm_profile).size() - 1]
                  * 1.0
-             < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
-            {
-                b_is_finished = true;
-            }
+                < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
+                {
+                    b_is_finished = true;
+                }
+	    }
             break;
         case 2:  // Coverage
 	    if (this->i_current_coverage_index < (*this->pvvd_arm_sweeping_profile).size() - 1)
