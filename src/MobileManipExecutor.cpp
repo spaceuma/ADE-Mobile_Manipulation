@@ -419,29 +419,13 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     this->d_operational_time += std::min(2.0, d_step_time); 
     this->ui_past_timestamp = this->ui_current_timestamp;
 
-    if ((!this->isArmMoving(j_present_joints_m))&&(this->d_operational_time>5.0)&&(ui_mode != 2)) //ADHOC time
-    {
-	std::vector<double> vd_present_joints;
-	vd_present_joints.resize(6);
-
-	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-        {
-           vd_present_joints[i] 
-                = j_present_joints_m.m_jointStates[i].m_position;
-        }
-	this->updateArmCommandVectors(vd_present_joints);
-        this->assignPresentCommand(j_next_arm_command);
-        
-        return 5;
-    }
-
     std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
     std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
 
     double d_elapsed_time
 	= this->d_operational_time;
     bool b_is_finished = false;
-
+    bool b_is_ready = false;
     double d_current_timelimit;
     
     switch (ui_mode)
@@ -465,7 +449,12 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             {
 	        this->updateArmCommandVectors(
                         (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
-                if (((*this->pvd_init_time_profile)
+                
+		if ((this->isArmReady(j_next_arm_command, j_present_joints_m)))
+		{
+                    b_is_ready = true;
+		}
+		if (((*this->pvd_init_time_profile)
                              [(*this->pvvd_init_arm_profile).size() - 1]
                          * 1.0 < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
 
@@ -493,6 +482,10 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 		this->updateArmCommandVectors(
                         (*this->pvvd_retrieval_arm_profile)
                         [this->i_current_retrieval_index]);
+       		if ((this->isArmReady(j_next_arm_command, j_present_joints_m)))
+		{
+                    b_is_ready = true;
+		}
                 if (((*this->pvd_retrieval_time_profile)
                      [(*this->pvvd_retrieval_arm_profile).size() - 1]
                  * 1.0
@@ -524,6 +517,22 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 b_is_finished = true;
             }
             break;
+    }
+
+    if ((!b_is_ready)&&(!this->isArmMoving(j_present_joints_m))&&(this->d_operational_time>5.0)&&(ui_mode != 2)) //ADHOC time
+    {
+	std::vector<double> vd_present_joints;
+	vd_present_joints.resize(6);
+
+	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+           vd_present_joints[i] 
+                = j_present_joints_m.m_jointStates[i].m_position;
+        }
+	this->updateArmCommandVectors(vd_present_joints);
+        this->assignPresentCommand(j_next_arm_command);
+        
+        return 5;
     }
 
     // std::cout << "The Retrieval Index is " << i_current_init_index <<
