@@ -57,9 +57,21 @@ bool MobileManipMotionPlanner::initAtomicOperation(
         {
             return false;//TODO - It must set the corresponding error
         }
-        std::vector<double> *pvd_arm_goal
-            = this->p_motionplan->getBackInitArmMotionProfile();
+        std::vector<double> *pvd_arm_goal;
 	std::cout << "Computing arm retrieval" << std::endl;
+	if (this->p_motionplan->isInitArmMotionProfileEmpty())
+	{
+	    std::cout << "INFO: the deployment is null" << std::endl;
+            pvd_arm_goal = &(vd_arm_readings);
+	}
+	else
+	{
+            pvd_arm_goal =this->p_motionplan->getBackInitArmMotionProfile(); 
+		   /*for (uint i = 0; i<pvd_arm_goal->size(); i++)
+	    {
+                std::cout << "Init joint " << i << " is " << (*pvd_arm_goal)[i] << std::endl;
+	    }*/
+	}
         if (this->p_motionplan->computeArmRetrieval((*pvd_arm_goal)) != 0)
         {
             return false;
@@ -69,6 +81,7 @@ bool MobileManipMotionPlanner::initAtomicOperation(
         this->b_is_atomic_deployed = false;
         this->p_mmexecutor->resetOperationTime();
         setStatus(EXECUTING_ATOMIC_OPERATION);
+	std::cout << "Atomic Operation Plan Computed " << std::endl; 
         return true;
     }
     else

@@ -179,6 +179,7 @@ public:
         const std::vector<double> &vd_arm_goal,
         const std::vector<double> &vd_arm_readings);
 
+    bool isInitArmMotionProfileEmpty();
     unsigned int computeArmRetrieval(const std::vector<double> &vd_init);
     unsigned int computeAtomicOperation();
     void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);

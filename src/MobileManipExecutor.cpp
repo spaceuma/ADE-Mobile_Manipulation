@@ -441,6 +441,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     switch (ui_mode)
     {
         case 0: // Deployment
+            std::cout << "Current init index " << this->i_current_init_index << std::endl;
             if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size() - 1)
             {
                 d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 1.0;
@@ -448,18 +449,24 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 1.0
                     <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
+                    //this->i_current_init_index = min((int)(*this->pvvd_init_arm_profile).size() - 1,this->i_current_init_index+1);
                     this->i_current_init_index++;
-                    this->updateArmCommandVectors(
+		    this->updateArmCommandVectors(
                         (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
                 }
             }
-            else if (((*this->pvd_init_time_profile)
+            else
+            {
+	        this->updateArmCommandVectors(
+                        (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
+                if (((*this->pvd_init_time_profile)
                              [(*this->pvvd_init_arm_profile).size() - 1]
                          * 1.0 < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
 
-            {
-                b_is_finished = true;
-            }
+                {
+                    b_is_finished = true;
+                }
+	    }
 	    break;
         case 1: // Retrieval
 	    if (this->i_current_retrieval_index < (*this->pvvd_retrieval_arm_profile).size() - 1)
@@ -509,6 +516,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
     // std::cout << "The Retrieval Index is " << i_current_init_index <<
     // std::endl;
+    std::cout << "Creating the proxy library Joints command" << std::endl;
     this->assignPresentCommand(j_next_arm_command);
     if (b_is_finished)
     {
@@ -563,6 +571,12 @@ bool MobileManipExecutor::isArmReady(
     const proxy_library::Joints &j_next_command,
     const proxy_library::Joints &j_present_joints)
 {
+    std::cout << "Executing isArmReady" << std::endl;
+    if (j_next_command.m_jointStates.size() != 6)
+    {
+        return false;
+    }
+    std::cout << "Checked" << std::endl;
     for (uint i = 0; i < 6; i++)
     {
         if (abs(j_next_command.m_jointStates[i].m_position

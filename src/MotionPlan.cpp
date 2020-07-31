@@ -374,9 +374,17 @@ unsigned int MotionPlan::computeArmDeployment(
             &(this->vd_init_time_profile)))
     { // TODO - This may return a segmentation fault, maybe because of a non
       // initialized elevation map...
-        if (this->isArmProfileSafe(this->vvd_init_arm_profile))
+        if(this->vvd_init_arm_profile.empty())
+	{
+            this->vvd_init_arm_profile.push_back(vd_arm_readings);    
+	    this->vd_init_time_profile.push_back(0.0);
+	}
+	if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
-            this->b_is_initialization_computed = true;
+		std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;
+	    
+	    	    
+	    this->b_is_initialization_computed = true;
             return 0;
         }
         else
@@ -538,6 +546,7 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
             &(this->vd_retrieval_time_profile)))
     { // TODO - This may return a segmentation fault, maybe because of a non
       // initialized elevation map...
+		std::cout << "The size of the retrieval profile is "  << this->vvd_init_arm_profile.size() << std::endl;
         if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
         {
             this->b_is_retrieval_computed = true;
@@ -645,6 +654,7 @@ std::vector<double> *MotionPlan::getBackArmMotionProfile()
     return &(this->vvd_arm_motion_profile.back());
 }
 
+
 std::vector<std::vector<double>> *MotionPlan::getInitArmMotionProfile()
 {
     return &(this->vvd_init_arm_profile);
@@ -654,6 +664,12 @@ std::vector<double> *MotionPlan::getBackInitArmMotionProfile()
 {
     return &(this->vvd_init_arm_profile.back());
 }
+
+bool MotionPlan::isInitArmMotionProfileEmpty()
+{
+    return this->vvd_init_arm_profile.empty();
+}
+
 
 std::vector<double> *MotionPlan::getInitArmTimeProfile()
 {
