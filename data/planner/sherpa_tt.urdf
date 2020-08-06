@@ -111,16 +111,16 @@
     <link name="nav_cam">        
         <visual>
             <material name="Gray"/>
-            <origin xyz="0.355 0 1.33" rpy="0 0 0"/>
+            <origin xyz="0.45 0 1.2" rpy="0 0 0"/>
             <geometry>
-				        <box size="0.042 0.38 0.034"/>              
+				        <box size="0.3 0.576 0.2"/>              
             </geometry>
         </visual>
         <collision>
             <material name="Gray"/>
-            <origin xyz="0.355 0 1.33" rpy="0 0 0"/>
+            <origin xyz="0.45 0 1.2" rpy="0 0 0"/>
             <geometry>
-				        <box size="0.042 0.38 0.034"/>              
+				        <box size="0.3 0.576 0.2"/>              
             </geometry>
         </collision>
     </link>

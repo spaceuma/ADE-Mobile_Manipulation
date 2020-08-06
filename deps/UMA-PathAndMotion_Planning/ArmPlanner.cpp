@@ -299,13 +299,21 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         position[2] = TBCS2Wrist[2][3];
         std::vector<double> config;
 
-        try
+	std::cout << "Im here" << std::endl;
+        config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
+        std::vector<double> wristJoints
+                = { 0.0, -config[2], 0.0 };
+
+        config.insert(config.end(), wristJoints.begin(), wristJoints.end());
+        /*try
         {
             config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
 
             roll = (*wristPath6)[wristInd][3];
             pitch = (*wristPath6)[wristInd][4];
             yaw = (*wristPath6)[wristInd][5];
+
+	    std::cout << "Waypoint " << i << " RPY = " << roll << ", " << pitch << ", " << yaw << std::endl;
 
             std::vector<double> orientation{roll, pitch, yaw};
 
@@ -319,7 +327,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
             std::cout << "Inverse kinematics failed at waypoint " << i << "!"
                       << std::endl;
             return false;
-        }
+        }*/
         // if(config == std::vector<double>(1,0))
         // armJoints->push_back((*armJoints)[armJoints->size()-1]);
         // else
@@ -956,6 +964,7 @@ void ArmPlanner::generateTunnel(
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
                     if (sherpa_tt_arm->isReachable(pos) == 2)
+                    //if ((sherpa_tt_arm->isReachable(pos) == 2)&&(sherpa_tt_arm->getDistanceToCollision(pos) > 0.05))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -969,6 +978,7 @@ void ArmPlanner::generateTunnel(
                                     / sherpa_tt_arm->getDistanceToCollision(
                                           pos);
 
+			    //std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
@@ -1043,6 +1053,7 @@ void ArmPlanner::generateTunnel(
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
                     if (sherpa_tt_arm->isReachable(pos) == 2)
+                    //if ((sherpa_tt_arm->isReachable(pos) == 2)&&(sherpa_tt_arm->getDistanceToCollision(pos) > 0.05))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -1155,6 +1166,7 @@ void ArmPlanner::generateTunnel(
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
 
                     if (sherpa_tt_arm->isReachable(pos) == 2)
+                    //if ((sherpa_tt_arm->isReachable(pos) == 2)&&(sherpa_tt_arm->getDistanceToCollision(pos) > 0.05))
                     {
                         std::vector<std::vector<double>> TW2Node
                             = dot(TW2BCS, TBCS2Node);
@@ -1263,7 +1275,7 @@ void ArmPlanner::generateReachabilityTunnel(
     std::vector<double> *maxValues = sherpa_tt_arm->maxValues;
 
     double slope = 0.5;
-
+    
     // Tunnel in the last waypoint
     int tunnelSizeX
         = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
@@ -1309,11 +1321,14 @@ void ArmPlanner::generateReachabilityTunnel(
 
                         double cost;
                         if (reachability == 2)
-                            cost
+			{    
+			    cost
                                 = 1
                                   + slope
                                         / sherpa_tt_arm->getDistanceToCollision(
                                               pos);
+			    std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
+			}    
                         else
                             cost = 10;
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1

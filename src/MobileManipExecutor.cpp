@@ -176,20 +176,21 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         case INITIALIZING:
             fixMotionCommand(
                 mc_m); // This sets the maneuver as Point Turn if needed
-            /*if (mc_m.m_manoeuvreType != 1)
-            {
-                mc_m = this->getZeroRoverCommand();
-            }*/
-	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
-	    if(isAligned(rover_pose))
+            if (mc_m.m_manoeuvreType != 1)
             {
                 mc_m = this->getZeroRoverCommand();
             }
+	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
+	    /*if(isAligned(rover_pose))
+            {
+                mc_m = this->getZeroRoverCommand();
+            }*/
 	    if(ui_status == 1)
 	    {
                 this->i_initial_segment
                     = this->waypoint_navigation.getCurrentSegment();
-                this->i_current_segment = min(40, (int)(*this->pvvd_arm_motion_profile).size() - 1);
+                //this->i_current_segment = min(40, (int)(*this->pvvd_arm_motion_profile).size() - 1);
+                this->i_current_segment = min(0, (int)(*this->pvvd_arm_motion_profile).size() - 1);
                 if (this->vpw_path.size() == 1)
 	        {
                     mc_m = this->getZeroRoverCommand();

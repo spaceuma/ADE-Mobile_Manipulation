@@ -918,6 +918,40 @@ std::vector<std::vector<double>> Manipulator::getJacobianMatrix(
     return J;
 }
 
+bool Manipulator::isFarFromMast(double joint0, double joint1)
+{
+    joint0 = abs(joint0);
+    if (joint0 > 1.51)
+    {
+        return true;
+    }
+    else
+    {
+        if(joint0 < 0.8)
+	{
+            if (joint1 > -0.8)
+	    {
+                return true;
+	    }
+	    else
+	    {
+                return false;
+	    }
+	}
+	else
+	{
+            if (joint1 > -joint0)
+	    {
+                return true;
+	    } 
+            else
+	    {
+                return false;
+	    }
+	}	
+    }
+}
+
 void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
 {
     double res4 = 30 * M_PI / 180;
@@ -967,7 +1001,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                         = getPositionJoints(position, 1, 1);
                     config.resize(6);
 
-                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)) //TODO - This is a workaround to avoid passing through pi/-pi
+                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)&&(isFarFromMast(config[0],config[1]))) //TODO - This is a workaround to avoid passing through pi/-pi
                     {
                         for (int l = 0; l < 6; l++)
                         {

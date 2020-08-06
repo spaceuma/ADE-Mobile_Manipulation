@@ -542,7 +542,8 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
     proxy_library::Pose plpose_m,
     proxy_library::Joints arm_joints)
 {
-
+    std::cout << "Updating" << std::endl;
+    std::cout << "Status is " << getStatus() << std::endl;
     unsigned int ui_error_code = 0;
     switch (getStatus())
     {
