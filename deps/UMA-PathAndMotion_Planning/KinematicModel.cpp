@@ -519,7 +519,8 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
 
 std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
                                                    int shoulder = 1,
-                                                   int elbow = 1)
+                                                   int elbow = 1,
+						   double d_error_margin)
 {
     // This function uses a geometric Inverse Kinematics Model to obtain the
     // needed configuration of the arm to reach a certain cartesian position and
@@ -558,19 +559,29 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
     double l1 = sqrt(pow(c2, 2) + pow(a2, 2));
     double l2 = sqrt(pow(a3, 2) + pow(d4, 2));
 
-    if (d > l1 + l2)
+    // d_error_margin is introduced because although two near nodes can be valid, a
+    // convex curved path passing through them may touch the forbidden volume and produce later
+    // an exception
+
+    if (d + d_error_margin > l1 + l2)
     {
-        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
-                     "and orientation\033[0m\n";*/
+                     "and orientation\033[0m\n";
+	std::cout << "d = " << d << std::endl;
+	std::cout << "l1 = " << l1 << std::endl;
+	std::cout << "l2 = " << l2 << std::endl;
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
-    else if (d < l1 - l2)
+    else if (d - d_error_margin < l1 - l2)
     {
-        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too close, unreachable position "
-                     "and orientation\033[0m\n";*/
+                     "and orientation\033[0m\n";
+       	std::cout << "d = " << d << std::endl;
+	std::cout << "l1 = " << l1 << std::endl;
+	std::cout << "l2 = " << l2 << std::endl;
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
@@ -918,18 +929,32 @@ std::vector<std::vector<double>> Manipulator::getJacobianMatrix(
     return J;
 }
 
-bool Manipulator::isFarFromMast(double joint0, double joint1, double joint2)
+bool Manipulator::isFarFromMast(double joint0, double joint1, double d_z)
 {
     joint0 = abs(joint0);
+
+   /* if ((joint0 < 0.2)||(joint0 > 3.0))
+    {
+        return false;
+    }
+    if ((joint1 < -0.7)||(joint1 > -0.3))
+    {
+        return false;
+    }
+    if ((joint2 < -1.9)||(joint2 > 0.0))
+    {
+        return false;
+    }
+    return true;*/
     if (joint0 > 1.51)
     {
         return true;
     }
     else
     {
-        if(joint0 < 0.8)
+        if(joint0 < 1.0)
 	{
-            if (joint1 > -0.8)
+            if ((joint1 > -0.7)&&(d_z < 0.9))
 	    {
                 return true;
 	    }
@@ -940,7 +965,7 @@ bool Manipulator::isFarFromMast(double joint0, double joint1, double joint2)
 	}
 	else
 	{
-            if (joint1 > -joint0)
+            if ((joint1 > -joint0)&&(d_z < 0.9))
 	    {
                 return true;
 	    } 
@@ -954,7 +979,7 @@ bool Manipulator::isFarFromMast(double joint0, double joint1, double joint2)
 
 bool Manipulator::isFarFromLeg(double joint0, double d_z)
 {
-   if ((joint0 > 0.6)&&(joint0 < 1.0)&&(d_z < 0.5))
+   if ((joint0 > 0.6)&&(joint0 < 3.14)&&(d_z < 0.5))
    {
         return false;
    }
@@ -980,12 +1005,14 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     std::vector<double> resolutions = {resXY, resXY, resZ};
     std::vector<double> minValues = {minXY, minXY, minZ};
 
+    double resXYZ = sqrt(2*pow(resXY,2)+pow(resZ,2));
+
     int sizeXY = (int)((maxXY - minXY) / resXY);
     int sizeZ = (int)((maxZ - minZ) / resZ);
 
 
     std::cout << "Size xy: " << sizeXY << ", size z: " << sizeZ << std::endl;
-    std::cout << "Res xy: " << resXY << ", res z: " << resZ << std::endl;
+    std::cout << "Res xy: " << resXY << ", res z: " << resZ << ", res xyz: " << resXYZ << std::endl;
     std::cout << "Min xy: " << minXY << ", min z: " << minZ << std::endl;
     std::cout << "Max xy: " << maxXY << ", max z: " << maxZ << std::endl;
 
@@ -1011,14 +1038,14 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                 try
                 {
                     std::vector<double> config
-                        = getPositionJoints(position, 1, 1);
+                        = getPositionJoints(position, 1, -1, resXYZ);
                     config.resize(6);
 
 		    config[3] = 0.0; 
 		    config[4] = std::max(-1.51,-config[2]); 
 		    config[5] = -2.7; 
 
-                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)&&(isFarFromMast(config[0],config[1], config[2]))&&(isFarFromLeg(config[0],position[2]))) //TODO - This is a workaround to avoid passing through pi/-pi
+                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)&&(isFarFromMast(config[0],config[1], position[2]))) //TODO - This is a workaround to avoid passing through pi/-pi
                     {
                         /*for (int l = 0; l < 6; l++)
                         {

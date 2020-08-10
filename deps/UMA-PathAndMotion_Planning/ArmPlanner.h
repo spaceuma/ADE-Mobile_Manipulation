@@ -35,7 +35,7 @@ public:
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
     double optimalLeftDeviation = 0.4;
-    double fetchingZDistance = 0.7;
+    double fetchingZDistance = 0.6;
     std::vector<double> finalEEorientation = {pi, 0, 0};
 
     // -- VARIABLES --

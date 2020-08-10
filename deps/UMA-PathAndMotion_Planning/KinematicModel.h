@@ -118,7 +118,8 @@ public:
 
     std::vector<double> getPositionJoints(std::vector<double> position,
                                           int shoulder,
-                                          int elbow);
+                                          int elbow,
+					  double d_error_margin = 0.0);
 
     std::vector<double> getWristJoints(std::vector<double> positionJoints,
                                        std::vector<double> orientation);

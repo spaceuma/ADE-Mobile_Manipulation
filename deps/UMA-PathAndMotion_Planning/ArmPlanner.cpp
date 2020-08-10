@@ -151,8 +151,9 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     samplePos.position[2]
         = (*DEM)[(int)(samplePos.position[1] / mapResolution + 0.5)]
                 [(int)(samplePos.position[0] / mapResolution + 0.5)]
-          + fetchingZDistance
-          + sherpa_tt_arm->d6; // Adding d6 to find wrist pos
+		+ 0.7 + heightGround2BCS;
+          //+ fetchingZDistance
+          //+ sherpa_tt_arm->d6; // Adding d6 to find wrist pos
 
     std::vector<double> pos{(*roverPath6)[roverPath6->size() - 1][0],
                             (*roverPath6)[roverPath6->size() - 1][1],
@@ -171,7 +172,10 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     std::vector<std::vector<double>> TBCS2Sample
         = dot(getInverse(&TW2BCS), TW2Sample);
-    TBCS2Sample[1][3] += optimalLeftDeviation;
+    TBCS2Sample[1][3] += 1.0;//optimalLeftDeviation;
+
+    std::cout << "Relative position sample - last waypoint = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
+
 
     TW2Sample = dot(TW2BCS, TBCS2Sample);
 
@@ -229,6 +233,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         return false;
     }
 
+    std::cout << "3D path computed" << std::endl;
+    std::cout << "3D path has "  << wristPath->size() << " waypoints" << std::endl;
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
@@ -299,8 +305,9 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         position[2] = TBCS2Wrist[2][3];
         std::vector<double> config;
 
-	std::cout << "Im here" << std::endl;
+	std::cout << "About to get joint config from position " << position[0] << ", " << position[1] << ", " << position[2] << std::endl;
         config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
+	std::cout << "Position is computed" << std::endl;
         std::vector<double> wristJoints;
 	double d_config4 = std::max(-config[2],-1.57); 
 	if (config[0]<0.4)
@@ -988,7 +995,7 @@ void ArmPlanner::generateTunnel(
                                     / sherpa_tt_arm->getDistanceToCollision(
                                           pos);
 
-			    std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
+			    //std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
@@ -1337,7 +1344,7 @@ void ArmPlanner::generateReachabilityTunnel(
                                   + slope
                                         / sherpa_tt_arm->getDistanceToCollision(
                                               pos);
-			    std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
+			    //std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
 			}    
                         else
                             cost = 10;
