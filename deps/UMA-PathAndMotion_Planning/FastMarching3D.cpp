@@ -44,7 +44,7 @@ bool FastMarching3D::planPath(
         return false; //UNREACHABLE
     }
 
-    //std::cout << "3d Tmap is computed" << std::endl;
+    std::cout << "3d Tmap is computed" << std::endl;
     std::vector<std::vector<double>> *path
         = new std::vector<std::vector<double>>;
 
@@ -330,8 +330,10 @@ void FastMarching3D::computePathGDM(
         std::vector<std::vector<double>>(
             (*TMap)[0].size(), std::vector<double>((*TMap)[0][0].size())));
 
+    std::cout << "Computing the 3D path" << std::endl;
     for (int k = 0; k < (int)15000 / tau; k++)
     {
+        std::cout << "\rk = " << k;
         computeGradient(TMap, path->at(path->size() - 1), G1, G2, G3);
         double dx = getInterpolatedPoint(path->at(path->size() - 1), G1);
         double dy = getInterpolatedPoint(path->at(path->size() - 1), G2);
@@ -471,6 +473,7 @@ void FastMarching3D::computePathGDM(
             break;
     }
 
+    std::cout << "...done!" << std::flush << std::endl;
     auxVector[0] = (double)endNode[0];
     auxVector[1] = (double)endNode[1];
     auxVector[2] = (double)endNode[2];

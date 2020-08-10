@@ -255,7 +255,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 this->updateArmCommandVectors();
                 if (i_current_segment < i_actual_segment)
                 {
-                    i_current_segment = min(i_actual_segment, i_current_segment + 1 + (i_actual_segment - i_current_segment)/30);
+                    i_current_segment = min(i_actual_segment, i_current_segment + 1);// + (i_actual_segment - i_current_segment)/30);
                     //i_current_segment++; // = i_actual_segment;
                 }
             }
@@ -501,7 +501,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 	    if (this->i_current_coverage_index < (*this->pvvd_arm_sweeping_profile).size() - 1)
             {
                 d_current_timelimit = (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index]
-                    * 2.0;
+                    * 1.5 + 5.0;
 	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
                 if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
@@ -512,7 +512,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             }
             else if (((*this->pvd_arm_sweeping_times)
                      [(*this->pvvd_arm_sweeping_profile).size() - 1]
-                 * 2.0
+                 * 1.5 + 5.0
              < d_elapsed_time)&&((this->isArmReady(j_next_arm_command, j_present_joints_m))))
 
             {

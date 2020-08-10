@@ -918,7 +918,7 @@ std::vector<std::vector<double>> Manipulator::getJacobianMatrix(
     return J;
 }
 
-bool Manipulator::isFarFromMast(double joint0, double joint1)
+bool Manipulator::isFarFromMast(double joint0, double joint1, double joint2)
 {
     joint0 = abs(joint0);
     if (joint0 > 1.51)
@@ -952,6 +952,19 @@ bool Manipulator::isFarFromMast(double joint0, double joint1)
     }
 }
 
+bool Manipulator::isFarFromLeg(double joint0, double d_z)
+{
+   if ((joint0 > 0.6)&&(joint0 < 1.0)&&(d_z < 0.5))
+   {
+        return false;
+   }
+   else
+   {
+
+        return true;
+   } 
+}
+
 void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
 {
     double res4 = 30 * M_PI / 180;
@@ -970,12 +983,12 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     int sizeXY = (int)((maxXY - minXY) / resXY);
     int sizeZ = (int)((maxZ - minZ) / resZ);
 
-/*
+
     std::cout << "Size xy: " << sizeXY << ", size z: " << sizeZ << std::endl;
     std::cout << "Res xy: " << resXY << ", res z: " << resZ << std::endl;
     std::cout << "Min xy: " << minXY << ", min z: " << minZ << std::endl;
     std::cout << "Max xy: " << maxXY << ", max z: " << maxZ << std::endl;
-*/
+
 
     std::vector<std::vector<std::vector<double>>> reachabilityMap(
         sizeXY,
@@ -1001,9 +1014,13 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                         = getPositionJoints(position, 1, 1);
                     config.resize(6);
 
-                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)&&(isFarFromMast(config[0],config[1]))) //TODO - This is a workaround to avoid passing through pi/-pi
+		    config[3] = 0.0; 
+		    config[4] = std::max(-1.51,-config[2]); 
+		    config[5] = -2.7; 
+
+                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)&&(isFarFromMast(config[0],config[1], config[2]))&&(isFarFromLeg(config[0],position[2]))) //TODO - This is a workaround to avoid passing through pi/-pi
                     {
-                        for (int l = 0; l < 6; l++)
+                        /*for (int l = 0; l < 6; l++)
                         {
                             config[3] = l * res4;
                             for (int m = 0; m < 12; m++)
@@ -1028,7 +1045,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                                 if (reachabilityMap[i][j][k] == 1) break;
                             }
                             if (reachabilityMap[i][j][k] == 1) break;
-                        }
+                        }*/
                     }
                     else
                     {

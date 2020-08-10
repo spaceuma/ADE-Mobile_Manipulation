@@ -87,7 +87,8 @@ public:
         = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
     std::vector<double> initialConfiguration
-        = {0.8, -0.7, 1.0, 1.0, -1.1, 2.4};
+        //= {0.8, -0.7, 1.0, 1.0, -1.1, 2.4};
+        = {1.51, -0.9, 1.48, 0.0, -1.48, -2.7};
 
     std::vector<double> iniEEorientation = {0, pi/2, 0};
 
@@ -140,7 +141,8 @@ public:
     double getDistanceToCollision(std::vector<double> position);
 
     std::vector<double> getReachabilityMapSize();
-    bool isFarFromMast(double joint0, double joint1);
+    bool isFarFromLeg(double joint0, double d_z);
+    bool isFarFromMast(double joint0, double joint1, double joint2);
 };
 } // namespace KinematicModel_lib
 #endif
