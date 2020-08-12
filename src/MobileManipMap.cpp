@@ -933,7 +933,7 @@ bool MobileManipMap::addSampleFacingObstacles()
             {
                 this->vvd_cost_map[j][i]
                     = 1.0
-                      + 10.0
+                      + 4.0
                             * (this->d_avoid_dist
                                - (double)this->vvd_proximity_map[j][i])
                             / this->d_avoid_dist;

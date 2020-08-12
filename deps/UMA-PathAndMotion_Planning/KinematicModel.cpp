@@ -565,23 +565,23 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
 
     if (d + d_error_margin > l1 + l2)
     {
-        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
                      "and orientation\033[0m\n";
 	std::cout << "d = " << d << std::endl;
 	std::cout << "l1 = " << l1 << std::endl;
-	std::cout << "l2 = " << l2 << std::endl;
+	std::cout << "l2 = " << l2 << std::endl;*/
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
     else if (d - d_error_margin < l1 - l2)
     {
-        std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
+        /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too close, unreachable position "
                      "and orientation\033[0m\n";
        	std::cout << "d = " << d << std::endl;
 	std::cout << "l1 = " << l1 << std::endl;
-	std::cout << "l2 = " << l2 << std::endl;
+	std::cout << "l2 = " << l2 << std::endl;*/
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
@@ -946,6 +946,11 @@ bool Manipulator::isFarFromMast(double joint0, double joint1, double d_z)
         return false;
     }
     return true;*/
+    if (d_z < 0.5)
+    {
+       return false;
+    }
+
     if (joint0 > 1.51)
     {
         return true;
@@ -954,7 +959,7 @@ bool Manipulator::isFarFromMast(double joint0, double joint1, double d_z)
     {
         if(joint0 < 1.0)
 	{
-            if ((joint1 > -0.7)&&(d_z < 0.9))
+            if ((joint1 > -0.8))
 	    {
                 return true;
 	    }
@@ -965,7 +970,7 @@ bool Manipulator::isFarFromMast(double joint0, double joint1, double d_z)
 	}
 	else
 	{
-            if ((joint1 > -joint0)&&(d_z < 0.9))
+            if ((joint1 > -joint0))
 	    {
                 return true;
 	    } 
@@ -1038,7 +1043,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                 try
                 {
                     std::vector<double> config
-                        = getPositionJoints(position, 1, -1, resXYZ);
+                        = getPositionJoints(position, 1, 1, resXYZ*0.2);
                     config.resize(6);
 
 		    config[3] = 0.0; 

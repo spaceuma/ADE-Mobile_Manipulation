@@ -7,7 +7,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, 2);
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, 0);
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
@@ -620,12 +620,12 @@ bool MotionPlan::isArmProfileSafe(
 {
     for (int i = 0; i < vvd_profile_m.size(); i++)
     {
-        std::cout << " Joints = " << vvd_profile_m[i][0];
+        /*std::cout << " Joints = " << vvd_profile_m[i][0];
             std::cout << " " << vvd_profile_m[i][1];
             std::cout << " " << vvd_profile_m[i][2];
             std::cout << " " << vvd_profile_m[i][3];
             std::cout << " " << vvd_profile_m[i][4];
-            std::cout << " " << vvd_profile_m[i][5];
+            std::cout << " " << vvd_profile_m[i][5];*/
         if (this->p_collision_detector->isColliding(vvd_profile_m[i]))
         {
             std::cout << "ERROR at sample " << i << std::endl;

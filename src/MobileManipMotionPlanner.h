@@ -96,13 +96,15 @@ private:
      * Configurable parameter: Max arm fetching distance (in meters)
      */
     double d_maxfetching_dist
-        = vd_kin_conf[1]
+	    = 1.3;
+        /*= vd_kin_conf[1]
           + sqrt(pow(vd_kin_conf[2] + vd_kin_conf[5], 2)
                  - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6]
                            - d_finalEE_height,
-                       2));
+                       2));*/
     double d_minfetching_dist
-        = (d_maxfetching_dist < 0.24) ? 0.0 : (d_maxfetching_dist - 0.24);
+	    = 1.0;
+        //= (d_maxfetching_dist < 0.24) ? 0.0 : (d_maxfetching_dist - 0.24);
     bool b_is_atomic_deployed;
 
 public:

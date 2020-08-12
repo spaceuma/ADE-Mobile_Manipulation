@@ -33,14 +33,15 @@ bool FastMarching3D::planPath(
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
     start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
 
-    //std::cout << "Cost Value at start is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
-    //std::cout << "Cost Value at goal is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
+    std::cout << "Cost Value at start " << start[0] << ", " << start[1] << ", " << start[2] << ", " << " is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
+    std::cout << "Cost Value at goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << ", " << " is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
     
     std::vector<std::vector<std::vector<double>>> *TMap
         = new std::vector<std::vector<std::vector<double>>>;
 
     if(!computeTMap(costMap3D, goal, start, TMap))
     {
+        std::cout << " \033[31m[----------] [ERROR] \033[0m3D Total Cost Map computation failed" << std::endl;
         return false; //UNREACHABLE
     }
 
@@ -108,11 +109,15 @@ bool FastMarching3D::computeTMap(
     std::vector<double> *nbT = new std::vector<double>;
     std::vector<std::vector<int>> *nbNodes = new std::vector<std::vector<int>>;
 
+    std::cout << "Updating the Goal" << std::endl;
     updateNode(nodeTarget, costMap3D, TMap, nbT, nbNodes, closedMap);
 
+    uint ui_iter = 1;
     while (nbT->size() > 0)
     {
-        nodeTarget = (*nbNodes)[0];
+        std::cout << "\r 3D TMap computation - Iteration: " << ui_iter;
+        ui_iter++;
+	nodeTarget = (*nbNodes)[0];
         nbNodes->erase(nbNodes->begin());
         nbT->erase(nbT->begin());
         (*closedMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 1;
@@ -121,9 +126,11 @@ bool FastMarching3D::computeTMap(
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1])
             && (nodeTarget[2] == start[2]))
         {
+            std::cout << "Done" << std::flush << std::endl;
             return true; //The propagation wave reaches the start
         }
     }
+    std::cout << "Done" << std::flush << std::endl;
     return false; //The propagation does not reach the start
 }
 

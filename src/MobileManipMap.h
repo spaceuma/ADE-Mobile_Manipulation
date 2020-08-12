@@ -79,11 +79,11 @@ private:
     /**
      * Max reachability distance
      */
-    double d_maxreach_dist = 1.584;
+    double d_maxreach_dist = 1.3;//1.584;
     /**
      * Min reachability distance
      */
-    double d_minreach_dist = 1.344;
+    double d_minreach_dist = 1.0;//1.344;
     /**
      * Occupancy radius
      */

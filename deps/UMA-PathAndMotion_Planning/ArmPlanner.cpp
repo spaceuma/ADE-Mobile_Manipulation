@@ -88,9 +88,10 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     (*roverPath6)[0][0] = (*roverPath)[0].position[0];
     (*roverPath6)[0][1] = (*roverPath)[0].position[1];
     (*roverPath6)[0][2]
-        = (*DEM)[(int)((*roverPath)[0].position[1] / mapResolution + 0.5)]
+	    = heightGround2BCS;
+        /*= (*DEM)[(int)((*roverPath)[0].position[1] / mapResolution + 0.5)]
                 [(int)((*roverPath)[0].position[0] / mapResolution + 0.5)]
-          + heightGround2BCS;
+          + heightGround2BCS;*/
     (*roverPath6)[0][3] = 0;
     (*roverPath6)[0][4] = 0;
     (*roverPath6)[0][5] = (*roverPath)[0].heading;
@@ -103,9 +104,10 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         (*roverPath6)[i][0] = (*roverPath)[i].position[0];
         (*roverPath6)[i][1] = (*roverPath)[i].position[1];
         (*roverPath6)[i][2]
-            = (*DEM)[(int)((*roverPath)[i].position[1] / mapResolution + 0.5)]
+		= heightGround2BCS;
+            /*= (*DEM)[(int)((*roverPath)[i].position[1] / mapResolution + 0.5)]
                     [(int)((*roverPath)[i].position[0] / mapResolution + 0.5)]
-              + heightGround2BCS;
+              + heightGround2BCS;*/
         (*roverPath6)[i][3] = 0;
         (*roverPath6)[i][4] = 0;
         (*roverPath6)[i][5] = (*roverPath)[i].heading;
@@ -136,7 +138,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     std::vector<std::vector<double>> initialBCS2Wrist
         = sherpa_tt_arm->getWristTransform(sherpa_tt_arm->initialConfiguration);
     std::vector<double> roverIniPos{
-        (*roverPath6)[0][0], (*roverPath6)[0][1], (*roverPath6)[0][2]};
+        (*roverPath6)[0][0], (*roverPath6)[0][1], 0.0};//(*roverPath6)[0][2]};
     std::vector<std::vector<double>> world2Wrist
         = dot(dot(getTraslation(roverIniPos), getZrot((*roverPath6)[0][5])),
               initialBCS2Wrist);
@@ -144,7 +146,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     base::Waypoint iniPos;
     iniPos.position[0] = world2Wrist[0][3];
     iniPos.position[1] = world2Wrist[1][3];
-    iniPos.position[2] = world2Wrist[2][3];
+    iniPos.position[2] = world2Wrist[2][3] + 0.7;
 
     // The sample position is slightly changed to fit in the reachability area
     // of the manipulator
@@ -155,12 +157,15 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
           //+ fetchingZDistance
           //+ sherpa_tt_arm->d6; // Adding d6 to find wrist pos
 
+    
     std::vector<double> pos{(*roverPath6)[roverPath6->size() - 1][0],
                             (*roverPath6)[roverPath6->size() - 1][1],
                             (*roverPath6)[roverPath6->size() - 1][2]};
     double roll = (*roverPath6)[roverPath6->size() - 1][3];
     double pitch = (*roverPath6)[roverPath6->size() - 1][4];
     double yaw = (*roverPath6)[roverPath6->size() - 1][5];
+
+    samplePos.position[2] = 0.7 + heightGround2BCS;
 
     std::vector<std::vector<double>> TW2BCS
         = dot(getTraslation(pos),
@@ -172,7 +177,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     std::vector<std::vector<double>> TBCS2Sample
         = dot(getInverse(&TW2BCS), TW2Sample);
-    TBCS2Sample[1][3] += 1.0;//optimalLeftDeviation;
+    TBCS2Sample[0][3] = 0.8;//1.25;
+    TBCS2Sample[1][3] += 1.25;//optimalLeftDeviation;
 
     std::cout << "Relative position sample - last waypoint = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
 
@@ -230,6 +236,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
                            samplePos,
                            wristPath))
     {
+        std::cout << "Arm Planner library: something went wrong with 3D planning" << std::endl;
         return false;
     }
 
@@ -305,9 +312,9 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         position[2] = TBCS2Wrist[2][3];
         std::vector<double> config;
 
-	std::cout << "About to get joint config from position " << position[0] << ", " << position[1] << ", " << position[2] << std::endl;
+	//std::cout << "About to get joint config from position " << position[0] << ", " << position[1] << ", " << position[2] << std::endl;
         config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
-	std::cout << "Position is computed" << std::endl;
+	//std::cout << "Position is computed" << std::endl;
         std::vector<double> wristJoints;
 	double d_config4 = std::max(-config[2],-1.57); 
 	if (config[0]<0.4)
