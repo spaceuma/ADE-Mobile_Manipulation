@@ -14,7 +14,7 @@ FastMarching::~FastMarching()
     ;
 }
 
-void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
+bool FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                             double mapResolution,
                             base::Waypoint iniPos,
                             base::Waypoint finalPos,
@@ -32,7 +32,10 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     std::vector<std::vector<double>> *TMap
         = new std::vector<std::vector<double>>;
 
-    computeTMap(costMap, goal, start, TMap);
+    if(!computeTMap(costMap, goal, start, TMap))
+    {
+        return false;
+    }
 
     std::vector<std::vector<double>> *pathPos
         = new std::vector<std::vector<double>>;
@@ -57,6 +60,7 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].position[1]
         = mapResolution * (*pathPos)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
+    return true;
 }
 
 void FastMarching::getShadowedCostMap(
@@ -225,13 +229,13 @@ void FastMarching::computeEntireTMap(
     }
 }
 
-void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
+bool FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
                                std::vector<int> goal,
                                std::vector<int> start,
                                std::vector<std::vector<double>> *TMap)
 {
-    int n = costMap->size();
-    int m = costMap[0].size();
+    int n = (*costMap).size();
+    int m = (*costMap)[0].size();
 
     std::vector<int> nodeTarget = goal;
 
@@ -277,9 +281,10 @@ void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
 
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1]))
         {
-            break;
+            return true;
         }
     }
+    return false;
 }
 
 void FastMarching::updateNode(std::vector<int> nodeTarget,

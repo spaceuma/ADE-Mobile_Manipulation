@@ -72,7 +72,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     //    std::cout << "Rover pos is " << rover_position.position[0] << ", " <<
     //    rover_position.position[1] << std::endl;
     this->w_rover_pos = rover_position;
-    if (this->bi_fast_marching.planPath(&costMap,
+    if (this->fm_planner.planPath(&costMap,
                                         this->pmm_map->getResolution(),
                                         rover_position,
                                         this->pmm_map->getSample(),
@@ -270,7 +270,8 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                            this->pmm_map->getResolution(),
                                            this->d_zres,
                                            this->pmm_map->getSample(),
-                                           &(this->vvd_arm_motion_profile)))
+                                           &(this->vvd_arm_motion_profile),
+					   this->p_collision_detector))
     {
         std::cout << " Done " << std::endl;
         // Initialization

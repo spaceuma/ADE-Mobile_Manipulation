@@ -72,7 +72,8 @@ public:
                        double _mapResolution,
                        double _zResolution,
                        base::Waypoint samplePos,
-                       std::vector<std::vector<double>> *armJoints);
+                       std::vector<std::vector<double>> *armJoints,
+		       CollisionDetector *p_collision_detector);
 
     bool planAtomicOperation(double _mapResolution,
                              double _zResolution,

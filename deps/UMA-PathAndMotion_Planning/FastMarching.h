@@ -17,7 +17,7 @@ public:
     FastMarching(double _waypointDistance = 0.5);
     ~FastMarching();
 
-    void planPath(const std::vector<std::vector<double>> *costMap,
+    bool planPath(const std::vector<std::vector<double>> *costMap,
                   double mapResolution,
                   base::Waypoint iniPos,
                   base::Waypoint finalPos,
@@ -34,7 +34,7 @@ public:
                            std::vector<std::vector<double>> *closedMap,
                            std::vector<std::vector<double>> *TMap);
 
-    void computeTMap(const std::vector<std::vector<double>> *costMap,
+    bool computeTMap(const std::vector<std::vector<double>> *costMap,
                      std::vector<int> goal,
                      std::vector<int> start,
                      std::vector<std::vector<double>> *TMap);

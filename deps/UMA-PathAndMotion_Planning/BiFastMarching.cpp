@@ -185,8 +185,6 @@ bool BiFastMarching::computeTMap(
             computeGradient(TMapStart, nodeTargetGoal, &GStartx, &GStarty);
             computeGradient(TMapGoal, nodeTargetGoal, &GGoalx, &GGoaly);
 
-            (*nodeJoin) = nodeTargetGoal;
-            return true;
 	    if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetGoal;
@@ -199,8 +197,6 @@ bool BiFastMarching::computeTMap(
             computeGradient(TMapStart, nodeTargetStart, &GStartx, &GStarty);
             computeGradient(TMapGoal, nodeTargetStart, &GGoalx, &GGoaly);
 
-            (*nodeJoin) = nodeTargetStart;
-            return true;
 	    if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetStart;
