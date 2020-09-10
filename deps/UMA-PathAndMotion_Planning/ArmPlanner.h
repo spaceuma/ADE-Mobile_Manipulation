@@ -112,7 +112,7 @@ public:
         bool isTunnelPermisive,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
 
-    void computeWaypointAssignment(std::vector<int> *pathsAssignment);
+    bool computeWaypointAssignment(std::vector<int> *pathsAssignment, CollisionDetector *p_collision_detector);
 
     void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
                                       std::vector<base::Waypoint> *newRoverPath,

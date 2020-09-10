@@ -19,14 +19,16 @@ ArmPlanner::ArmPlanner(std::string s_data_path_m,
 
     switch (deployment)
     {
-        case END:
+        case 0: //END
             horizonDistance = MIN_HORIZON;
+	    varyingHorizon = false;
             break;
-        case TRAJECTORY:
+        case 1: //TRAJECTORY
             varyingHorizon = true;
             break;
-        case BEGINNING:
+	case 2: //BEGINNING:
             horizonDistance = MAX_HORIZON;
+	    varyingHorizon = false;
             break;
         default:
             break;
@@ -292,7 +294,11 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     // Paths inbetween assignment
     std::vector<int> *pathsAssignment = new std::vector<int>;
-    computeWaypointAssignment(pathsAssignment);
+    if(!computeWaypointAssignment(pathsAssignment, p_collision_detector))
+    {
+        std::cout << "Arm Planner library: (5/8) ERROR Paths Assignment unfeasible" << std::endl;
+	return false;
+    }
     std::cout << "Arm Planner library: (5/8) Paths Assignment done" << std::endl;
 
     
@@ -340,7 +346,6 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         position[2] = TBCS2Wrist[2][3];
         std::vector<double> config;
 
-	//std::cout << "About to get joint config from position " << position[0] << ", " << position[1] << ", " << position[2] << std::endl;
 	try
 	{
             config = sherpa_tt_arm->getPositionJoints(position, 1, 1, 0.0);
@@ -1434,12 +1439,14 @@ void ArmPlanner::generateReachabilityTunnel(
             }
 }
 
-void ArmPlanner::computeWaypointAssignment(std::vector<int> *pathsAssignment)
+bool ArmPlanner::computeWaypointAssignment(std::vector<int> *pathsAssignment, CollisionDetector *p_collision_detector)
 {
     std::vector<double> armBasePos;
     (*pathsAssignment) = std::vector<int>(roverPath6->size(), 0);
 
-    for (int i = 0; i < roverPath6->size(); i++)
+    int i_maxindex = roverPath6->size() - 1, j_maxindex = wristPath6->size() - 1;
+
+    for (int i = 0; i <= i_maxindex; i++)
     {
         if (varyingHorizon)
 	{
@@ -1474,28 +1481,46 @@ void ArmPlanner::computeWaypointAssignment(std::vector<int> *pathsAssignment)
                 = dot(getInverse(&TW2BCS), TW2Wrist);
 
             pos = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
-            std::vector<double> basePos = {0, 0, sherpa_tt_arm->d0};
-            double dist = getDist3(basePos, pos);
-
-            if (TBCS2Wrist[0][3] < horizonDistance
-                && dist < sherpa_tt_arm->maxArmOptimalDistance)
-            {
-                (*pathsAssignment)[i] = j;
-                break;
-            }
+            
+	    std::vector<double> config;
+	    try
+	    {
+                config = sherpa_tt_arm->getPositionJoints(pos, 1, 1, 0.0);
+	        std::vector<double> basePos = {0, 0, sherpa_tt_arm->d0};
+                double dist = getDist3(basePos, pos);
+                if (TBCS2Wrist[0][3] < horizonDistance && (!p_collision_detector->isColliding(config))
+                    && dist < sherpa_tt_arm->maxArmOptimalDistance)
+                {
+			std::cout << "DEBUG: rover path index " << i << "has associated Wrist index " << j << " and horizon distance is " << horizonDistance << " and dist is " << dist << std::endl;
+		    (*pathsAssignment)[i] = j;
+                    break;
+                }
+	    }
+	    catch(std::exception &e)
+	    {
+                /*std::cout << "Arm Planner library: EXCEPTION inverse kinematic computation in assignation failed" << std::endl; 
+	        std::cout << "Arm Planner library: debug info" << std::endl;
+	        std::cout << " - Rover Path index = " << i << std::endl; 
+	        std::cout << " - Wrist Path index = " << j << std::endl; 
+	        std::cout << " - position = " << pos[0] << ", " << pos[1] << ", " << pos[2] << std::endl; 
+                return false;*/
+	    }
+            
         }
     }
 
-    for (int i = pathsAssignment->size() - 1; i > 0; i--)
+    for (int i = i_maxindex; i > 0; i--)
     {
         if ((*pathsAssignment)[i] < (*pathsAssignment)[i - 1])
 	{
             (*pathsAssignment)[i - 1] = (*pathsAssignment)[i];
 	}
+	i_maxindex = i;
     }
 
     (*pathsAssignment)[0] = 0;
     (*pathsAssignment)[roverPath6->size() - 1] = wristPath6->size() - 1;
+    return true;
 }
 
 void ArmPlanner::computeWaypointInterpolation(
