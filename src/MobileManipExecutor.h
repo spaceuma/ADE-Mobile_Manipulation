@@ -195,4 +195,5 @@ public:
     std::vector<double> *getFirstCoverageProfile();
     std::vector<double> *getLastCoverageProfile();
     bool isAligned(base::Pose &rover_pose);
+    void printExecutionStatus();
 };

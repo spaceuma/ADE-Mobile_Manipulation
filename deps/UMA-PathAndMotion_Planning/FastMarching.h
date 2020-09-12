@@ -202,13 +202,15 @@ public:
         double zResolution,
         base::Waypoint iniPos,
         base::Waypoint endPos,
-        std::vector<base::Waypoint> *path3D);
+        std::vector<base::Waypoint> *path3D,
+        unsigned int ui_max_iter);
 
     bool computeTMap(
         const std::vector<std::vector<std::vector<double>>> *costMap3D,
         std::vector<int> goal,
         std::vector<int> start,
-        std::vector<std::vector<std::vector<double>>> *TMap);
+        std::vector<std::vector<std::vector<double>>> *TMap,
+        unsigned int ui_max_iter);
 
     void updateNode(
         std::vector<int> nodeTarget,
@@ -222,12 +224,13 @@ public:
 
     int getInsertIndex(std::vector<double> *nbT, double T);
 
-    void computePathGDM(
+    bool computePathGDM(
         const std::vector<std::vector<std::vector<double>>> *TMap,
         std::vector<int> initNode,
         std::vector<int> endNode,
         double tau,
-        std::vector<std::vector<double>> *path);
+        std::vector<std::vector<double>> *path,
+	unsigned int ui_max_iter);
 
     void computeGradient(
         const std::vector<std::vector<std::vector<double>>> *TMap,

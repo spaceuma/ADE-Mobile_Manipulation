@@ -20,7 +20,8 @@ bool FastMarching3D::planPath(
     double zResolution,
     base::Waypoint iniPos,
     base::Waypoint finalPos,
-    std::vector<base::Waypoint> *path3D)
+    std::vector<base::Waypoint> *path3D,
+    unsigned int ui_max_iter)
 {
     std::vector<int> goal(3, 0);
     std::vector<int> start(3, 0);
@@ -33,23 +34,24 @@ bool FastMarching3D::planPath(
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
     start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
 
-    std::cout << "Cost Value at start " << start[0] << ", " << start[1] << ", " << start[2] << ", " << " is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
-    std::cout << "Cost Value at goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << ", " << " is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
-    
     std::vector<std::vector<std::vector<double>>> *TMap
         = new std::vector<std::vector<std::vector<double>>>;
 
-    if(!computeTMap(costMap3D, goal, start, TMap))
+    if(!computeTMap(costMap3D, goal, start, TMap, ui_max_iter))
     {
-        std::cout << " \033[31m[----------] [ERROR] \033[0m3D Total Cost Map computation failed" << std::endl;
+        std::cout << " \033[35m[----------] [ERROR] \033[0m [FastMarching3D::planPath()] 3D Total Cost Map computation failed" << std::endl;
         return false; //UNREACHABLE
     }
 
-    std::cout << "3d Tmap is computed" << std::endl;
+    //std::cout << "3d Tmap is computed" << std::endl;
     std::vector<std::vector<double>> *path
         = new std::vector<std::vector<double>>;
 
-    computePathGDM(TMap, start, goal, waypointDistance, path);
+    if(!computePathGDM(TMap, start, goal, waypointDistance, path, ui_max_iter))
+    { 
+        std::cout << " \033[35m[----------] [ERROR] \033[0m [FastMarching3D::planPath()] 3D Path computation from Total Cost Map failed" << std::endl;
+	return false;
+    }
 
     path3D->resize(path->size());
 
@@ -66,7 +68,8 @@ bool FastMarching3D::computeTMap(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     std::vector<int> goal,
     std::vector<int> start,
-    std::vector<std::vector<std::vector<double>>> *TMap)
+    std::vector<std::vector<std::vector<double>>> *TMap,
+    unsigned int ui_max_iter)
 {
     int n = costMap3D->size();
     int m = (*costMap3D)[0].size();
@@ -109,14 +112,26 @@ bool FastMarching3D::computeTMap(
     std::vector<double> *nbT = new std::vector<double>;
     std::vector<std::vector<int>> *nbNodes = new std::vector<std::vector<int>>;
 
-    std::cout << "Updating the Goal" << std::endl;
+    //std::cout << "Updating the Goal" << std::endl;
     updateNode(nodeTarget, costMap3D, TMap, nbT, nbNodes, closedMap);
 
     uint ui_iter = 1;
     while (nbT->size() > 0)
     {
-        std::cout << "\r 3D TMap computation - Iteration: " << ui_iter;
+        //std::cout << "\r 3D TMap computation - Iteration: " << ui_iter;
         ui_iter++;
+	if (ui_iter > ui_max_iter)
+	{
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] ERROR: number of iterations has surpassed the limit ( " << ui_max_iter << " nodes )" << std::endl;
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] Debug info:" << std::endl;
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()]  - Cost Value at start " << start[0] << ", " << start[1] << ", " << start[2] << ", " << " is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()]  - Cost Value at goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << ", " << " is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()]  - Cost Value of last node visited " << nodeTarget[0] << ", " << nodeTarget[1] << ", " << nodeTarget[2] << ", " << " is " << (*costMap3D)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] << std::endl; 
+	    nodeTarget = (*nbNodes)[0];
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()]  - Cost Value of next node to visit " << nodeTarget[0] << ", " << nodeTarget[1] << ", " << nodeTarget[2] << ", " << " is " << (*costMap3D)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] << std::endl; 
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()]  - Narrow Band Size is: " << nbT->size() << " (nbT), " << nbNodes->size() << " (nbNodes)"  << std::endl;  
+	    return false;
+	}
 	nodeTarget = (*nbNodes)[0];
         nbNodes->erase(nbNodes->begin());
         nbT->erase(nbT->begin());
@@ -126,11 +141,12 @@ bool FastMarching3D::computeTMap(
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1])
             && (nodeTarget[2] == start[2]))
         {
-            std::cout << "Done" << std::flush << std::endl;
+            //std::cout << "Done" << std::flush << std::endl;
             return true; //The propagation wave reaches the start
         }
     }
-    std::cout << "Done" << std::flush << std::endl;
+    //std::cout << "Done" << std::flush << std::endl;
+    std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] INFO The Total Cost Propagation has not reached the start node " << start[0] << ", " << start[1] << ", " << start[2] << " from goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << std::endl;
     return false; //The propagation does not reach the start
 }
 
@@ -301,12 +317,13 @@ int FastMarching3D::getInsertIndex(std::vector<double> *nbT, double T)
     return i;
 }
 
-void FastMarching3D::computePathGDM(
+bool FastMarching3D::computePathGDM(
     const std::vector<std::vector<std::vector<double>>> *TMap,
     std::vector<int> initNode,
     std::vector<int> endNode,
     double tau,
-    std::vector<std::vector<double>> *path)
+    std::vector<std::vector<double>> *path,
+    unsigned int ui_max_iter)
 {
     std::vector<double> auxVector;
     auxVector.push_back((double)initNode[0]);
@@ -337,10 +354,10 @@ void FastMarching3D::computePathGDM(
         std::vector<std::vector<double>>(
             (*TMap)[0].size(), std::vector<double>((*TMap)[0][0].size())));
 
-    std::cout << "Computing the 3D path" << std::endl;
-    for (int k = 0; k < (int)15000 / tau; k++)
+    //std::cout << "Computing the 3D path" << std::endl;
+    for (int k = 0; k < ui_max_iter; k++)
     {
-        std::cout << "\rk = " << k;
+        //std::cout << "\rk = " << k;
         computeGradient(TMap, path->at(path->size() - 1), G1, G2, G3);
         double dx = getInterpolatedPoint(path->at(path->size() - 1), G1);
         double dy = getInterpolatedPoint(path->at(path->size() - 1), G2);
@@ -480,11 +497,16 @@ void FastMarching3D::computePathGDM(
             break;
     }
 
-    std::cout << "...done!" << std::flush << std::endl;
+    //std::cout << "...done!" << std::flush << std::endl;
+    if (path->size() >= ui_max_iter)
+    {
+        return false;
+    }
     auxVector[0] = (double)endNode[0];
     auxVector[1] = (double)endNode[1];
     auxVector[2] = (double)endNode[2];
     path->push_back(auxVector);
+    return true;
 }
 
 void FastMarching3D::computeGradient(

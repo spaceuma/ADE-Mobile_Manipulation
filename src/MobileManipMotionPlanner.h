@@ -199,6 +199,8 @@ public:
      * Prints information regarding the resulting path.
      */
     void printRoverPathInfo();
+    
+    void printExecutionInfo();
 
     /**
      * Indicates the current status

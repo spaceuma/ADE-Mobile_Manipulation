@@ -231,6 +231,7 @@ public:
     bool isSampleLoaded();
 
     std::vector<double> getOffset();
+    void printDEMinfo();
 
 private:
     /**

@@ -95,11 +95,11 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
     dist = sqrt(pow(dx,2)+pow(dy,2));
     dyaw = rover_pose.getYaw();
     dtargetheading =  (*this->vpw_path.back()).heading;
-    std::cout << "ALIGNED:" << std::endl;
-    std::cout << "    dist = " << dist << std::endl;
-    std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
+    //std::cout << "ALIGNED:" << std::endl;
+    //std::cout << "    dist = " << dist << std::endl;
+    //std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
     dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
-    std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
+    //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
     if ((dist < 1.4))//&&(dacos < 0.1))
     {
         return true; 
@@ -167,10 +167,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 
     double d_step_time;
     unsigned int ui_status = 0;
-    std::cout << "The Rover Segment is " <<
-    this->waypoint_navigation.getCurrentSegment() << std::endl; std::cout <<
-    "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
-    std::cout << "The arm coupled state is " << this->armstate << std::endl;
+    //std::cout << "The Rover Segment is " << this->waypoint_navigation.getCurrentSegment() << std::endl; 
+    //std::cout << "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
+    //std::cout << "The arm coupled state is " << this->armstate << std::endl;
     switch (this->armstate)
     {
         case INITIALIZING:
@@ -243,7 +242,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         case COUPLED_MOVING:
 	    //To avoid the dummy turn waypoint
 	    i_actual_segment = min(i_actual_segment, (int)(*this->pvvd_arm_motion_profile).size() - 1);
-	    std::cout << "COUPLED_MOVING: initial segment is " << i_initial_segment << std::endl;
+	    //std::cout << "COUPLED_MOVING: initial segment is " << i_initial_segment << std::endl;
             if ((this->i_current_segment == this->i_initial_segment)
                 || (this->i_current_segment != i_actual_segment))
             {
@@ -259,7 +258,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     //i_current_segment++; // = i_actual_segment;
                 }
             }
-	    std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+	    //std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
 	    this->b_is_last_segment
                     = coupled_control.selectNextManipulatorPosition(
                         i_current_segment,
@@ -296,10 +295,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
           
             fixMotionCommand(
                 mc_m); // This sets the maneuver as Point Turn if needed
-            std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
-          << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
-        std::cout << "VAlue of b_isfinal is " << b_is_last_segment <<
-        std::endl;
+            //std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
+          //<< " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
+        //std::cout << "VAlue of b_isfinal is " << b_is_last_segment << std::endl;
             //if (this->navstate == TARGET_REACHED)
 	    //if (i_actual_segment == (int)this->vpw_path.size() - 2)
 	    if(isAligned(rover_pose))
@@ -364,6 +362,13 @@ bool MobileManipExecutor::assignPresentCommand(proxy_library::Joints &j_command)
     return true;
 }
 
+void MobileManipExecutor::printExecutionStatus()
+{
+    std::cout << "\r \033[33m[----------]\033[0m [printExecutionStatus()] EXECUTION INFORMATION" << std::endl; 
+    std::cout << "\r \033[33m[----------]\033[0m [printExecutionStatus()] - Current Timestamp: " << this->ui_current_timestamp << std::endl; 
+    std::cout << "\r \033[33m[----------]\033[0m [printExecutionStatus()] - Step Time (ms): " << (this->ui_current_timestamp - this->ui_past_timestamp) / 1000 << std::endl; 
+}
+
 unsigned int MobileManipExecutor::getAtomicCommand(
     const proxy_library::Joints &j_present_joints_m,
     proxy_library::Joints &j_next_arm_command,
@@ -414,14 +419,14 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     
 
     // TODO: introduce followingarm checker
+    this->ui_past_timestamp = this->ui_current_timestamp;
     this->ui_current_timestamp = j_present_joints_m.m_time; 
     double d_step_time = (double)this->ui_current_timestamp - (double)this->ui_past_timestamp;  
     d_step_time = std::max(0.0,d_step_time / 1000000);
     this->d_operational_time += std::min(2.0, d_step_time); 
-    this->ui_past_timestamp = this->ui_current_timestamp;
 
-    std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
-    std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
+    //std::cout << "Step Time is " << d_step_time << " seconds" << std::endl;
+    //std::cout << "Operational Time is " << this->d_operational_time << " seconds" << std::endl;
 
     double d_elapsed_time
 	= this->d_operational_time;
@@ -432,11 +437,11 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     switch (ui_mode)
     {
         case 0: // Deployment
-            std::cout << "Current init index " << this->i_current_init_index << std::endl;
+            //std::cout << "Current init index " << this->i_current_init_index << std::endl;
             if (this->i_current_init_index < (*this->pvvd_init_arm_profile).size() - 1)
             {
                 d_current_timelimit = (*this->pvd_init_time_profile)[this->i_current_init_index] * 1.0;
-	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
+	        //std::cout << "The current time limit is " << d_current_timelimit << std::endl;
                 if ((*this->pvd_init_time_profile)[this->i_current_init_index] * 1.0
                     <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
@@ -468,7 +473,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 	    if (this->i_current_retrieval_index < (*this->pvvd_retrieval_arm_profile).size() - 1)
             {
                 d_current_timelimit = (*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index] * 1.0;
-	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
+	        //std::cout << "The current time limit is " << d_current_timelimit << std::endl;
                 if ((*this->pvd_retrieval_time_profile)[this->i_current_retrieval_index]
                     * 1.0 <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
@@ -502,7 +507,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             {
                 d_current_timelimit = (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index]
                     * 1.5 + 5.0;
-	        std::cout << "The current time limit is " << d_current_timelimit << std::endl;
+	        //std::cout << "The current time limit is " << d_current_timelimit << std::endl;
                 if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_coverage_index++;
@@ -539,7 +544,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
     // std::cout << "The Retrieval Index is " << i_current_init_index <<
     // std::endl;
-    std::cout << "Creating the proxy library Joints command" << std::endl;
+    // std::cout << "Creating the proxy library Joints command" << std::endl;
     this->assignPresentCommand(j_next_arm_command);
     if (b_is_finished)
     {
@@ -594,12 +599,12 @@ bool MobileManipExecutor::isArmReady(
     const proxy_library::Joints &j_next_command,
     const proxy_library::Joints &j_present_joints)
 {
-    std::cout << "Executing isArmReady" << std::endl;
+    //std::cout << "Executing isArmReady" << std::endl;
     if (j_next_command.m_jointStates.size() != 6)
     {
         return false;
     }
-    std::cout << "Checked" << std::endl;
+    //std::cout << "Checked" << std::endl;
     for (uint i = 0; i < 6; i++)
     {
         if (abs(j_next_command.m_jointStates[i].m_position

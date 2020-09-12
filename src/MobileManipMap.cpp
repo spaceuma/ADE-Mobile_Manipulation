@@ -318,15 +318,19 @@ bool MobileManipMap::isOutside(const base::Waypoint &w_sample_localpos_m)
         || (w_sample_localpos_m.position[1]
             > ((double)this->ui_num_rows - 2) * this->d_res))
     {
-        std::cout << "[INFO] [MobileManipMap::isOutside] - dem res: "
-                  << this->d_res << "; cols: " << this->ui_num_cols
-                  << "; rows: " << this->ui_num_rows << "\n";
-        return true;
+                return true;
     }
     else
     {
         return false;
     }
+}
+
+void MobileManipMap::printDEMinfo()
+{
+    std::cout << "res: "
+                  << this->d_res << "; cols: " << this->ui_num_cols
+                  << "; rows: " << this->ui_num_rows << "; offset: (" << this->vd_global_offset[0] << ", " << this->vd_global_offset[1] << ")";
 }
 
 bool MobileManipMap::isObstacle(const base::Waypoint w_localpos_m)

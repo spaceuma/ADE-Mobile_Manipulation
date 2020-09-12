@@ -32,7 +32,7 @@ private:
      * Path Planning class that uses bi-Fast Marching
      */
     //BiFastMarching bi_fast_marching;
-    FastMarching fm_planner;
+    BiFastMarching fm_planner;
     /**
      * Class to estimate the best waypoint to fetch in an existing path
      */
@@ -120,6 +120,8 @@ public:
      * A pointer to the current rover path is returned
      */
     unsigned int getNumberWaypoints();
+    unsigned int getNumberDeploymentSamples();
+    unsigned int getNumberRetrievalSamples();
     /**
      * A pointer to the arm motion profile is returned
      */

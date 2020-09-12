@@ -100,7 +100,7 @@ public:
                              std::vector<std::vector<double>> *armJoints,
                              std::vector<double> *timeProfile);
 
-    void generateTunnel(
+    unsigned int generateTunnel(
         base::Waypoint iniPos,
         base::Waypoint samplePos,
         std::vector<std::vector<std::vector<double>>> *costMap3D);

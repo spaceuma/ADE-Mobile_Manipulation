@@ -170,7 +170,6 @@ bool MotionPlan::shortenPathForFetching()
                              - this->vw_rover_path[endWaypoint].position[1];
                 d_norm = sqrt(pow(d_segmentX, 2) + pow(d_segmentY, 2));
             }
-            std::cout << "The erase index is " << i_eraseIndex << std::endl;
             this->vw_rover_path.erase(this->vw_rover_path.begin()
                                           + i_eraseIndex,
                                       this->vw_rover_path.end());
@@ -219,8 +218,8 @@ void MotionPlan::addTurningWaypoint(double d_dev)
     base::Waypoint w_end, w_sample, w_turn;
     w_end = this->vw_rover_path.back();
     w_sample = this->pmm_map->getSample();
-    std::cout << "WAYPOINT END DATA: " <<  w_end.position[0] << " m, " << w_end.position[1] << " m, " << w_end.heading * 180.0/3.1416 << " deg" << std::endl;
-    std::cout << "WAYPOINT SAMPLE DATA: " <<  w_sample.position[0] << " m, " << w_sample.position[1] << " m, " << w_sample.heading * 180.0/3.1416 << " deg" << std::endl;
+    //std::cout << "WAYPOINT END DATA: " <<  w_end.position[0] << " m, " << w_end.position[1] << " m, " << w_end.heading * 180.0/3.1416 << " deg" << std::endl;
+    //std::cout << "WAYPOINT SAMPLE DATA: " <<  w_sample.position[0] << " m, " << w_sample.position[1] << " m, " << w_sample.heading * 180.0/3.1416 << " deg" << std::endl;
     double dx,dy,dnx,dny;
     dx = w_sample.position[1] - w_end.position[1];
     dy = w_end.position[0] - w_sample.position[0];
@@ -230,7 +229,7 @@ void MotionPlan::addTurningWaypoint(double d_dev)
     w_turn.position[1] = w_sample.position[1] + dy*d_dev;
     //w_turn.heading = atan2(w_turn.position[1] - w_end.position[1], w_turn.position[0] - w_end.position[0]);
     w_turn.heading = w_end.heading;
-    std::cout << "WAYPOINT TURN DATA: " <<  w_turn.position[0] << " m, " << w_turn.position[1] << " m, " << w_turn.heading * 180.0/3.1416 << " deg" << std::endl;
+    //std::cout << "WAYPOINT TURN DATA: " <<  w_turn.position[0] << " m, " << w_turn.position[1] << " m, " << w_turn.heading * 180.0/3.1416 << " deg" << std::endl;
     this->vw_rover_path.push_back(w_turn);
 }
 
@@ -263,7 +262,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         pvw_reference_path = &(this->vw_rover_path);
     }
 
-    std::cout << "PVW reference path size is " << pvw_reference_path->size() << std::endl; 
+    //std::cout << "PVW reference path size is " << pvw_reference_path->size() << std::endl; 
 
     if (this->p_arm_planner->planArmMotion(pvw_reference_path,
                                            &elevationMap,
@@ -273,13 +272,13 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                            &(this->vvd_arm_motion_profile),
 					   this->p_collision_detector))
     {
-        std::cout << " Done " << std::endl;
+        //std::cout << " Done " << std::endl;
         // Initialization
         if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
         {
-            std::cout << "Raw Profile is safe, with "
-                      << this->vvd_arm_motion_profile.size() << " samples"
-                      << std::endl;
+            //std::cout << "Raw Profile is safe, with "
+              //        << this->vvd_arm_motion_profile.size() << " samples"
+                //      << std::endl;
             if (this->vvd_arm_motion_profile.size()
                 > this->i_gauss_numsamples * 2)
             {
@@ -472,8 +471,8 @@ unsigned int MotionPlan::computeArmDeployment(
 
     // TODO: check if elevationMap is properly formatted
     // TODO: check if i_segment_m is valid!!
-    std::cout << "The segment is " << i_segment_m << std::endl;
-    for (uint i = 0; i < 6; i++)
+    //std::cout << "The segment is " << i_segment_m << std::endl;
+    /*for (uint i = 0; i < 6; i++)
     {
         std::cout << " Actual Joint " << i << " is " << vd_arm_readings[i]
                   << std::endl;
@@ -482,11 +481,11 @@ unsigned int MotionPlan::computeArmDeployment(
     {
         std::cout << " Goal Joint " << i << " is "
                   << this->vvd_arm_motion_profile[i_segment_m][i] << std::endl;
-    }
+    }*/
 
     double dxyres = this->pmm_map->getResolution();
-    std::cout << " Resolution is " << dxyres << std::endl;
-    std::cout << " Z-res is " << this->d_zres << std::endl;
+    //std::cout << " Resolution is " << dxyres << std::endl;
+    //std::cout << " Z-res is " << this->d_zres << std::endl;
 
     if (this->p_arm_planner->planAtomicOperation(
             dxyres,
@@ -495,8 +494,7 @@ unsigned int MotionPlan::computeArmDeployment(
             this->vvd_arm_motion_profile[i_segment_m],
             &(this->vvd_init_arm_profile),
             &(this->vd_init_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
+    {
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
             this->b_is_initialization_computed = true;
@@ -548,7 +546,7 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
             &(this->vd_retrieval_time_profile)))
     { // TODO - This may return a segmentation fault, maybe because of a non
       // initialized elevation map...
-		std::cout << "The size of the retrieval profile is "  << this->vvd_retrieval_arm_profile.size() << std::endl;
+		//std::cout << "The size of the retrieval profile is "  << this->vvd_retrieval_arm_profile.size() << std::endl;
         if(this->vvd_retrieval_arm_profile.empty())
 	{
             this->vvd_retrieval_arm_profile.push_back(vd_init);    
@@ -650,6 +648,16 @@ std::vector<base::Waypoint> *MotionPlan::getRoverPath()
 unsigned int MotionPlan::getNumberWaypoints()
 {
     return this->vw_rover_path.size();
+}
+
+unsigned int MotionPlan::getNumberDeploymentSamples()
+{
+    return this->vvd_init_arm_profile.size();
+}
+
+unsigned int MotionPlan::getNumberRetrievalSamples()
+{
+    return this->vvd_retrieval_arm_profile.size();
 }
 
 std::vector<std::vector<double>> *MotionPlan::getWristPath()

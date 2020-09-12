@@ -151,7 +151,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     iniPos.position[1] = world2Wrist[1][3];
     iniPos.position[2] = world2Wrist[2][3]; //TODO - Check this...
 
-    std::cout << "Elevation of Wrist is " << iniPos.position[2] << std::endl;
+    //std::cout << " \033[34m[----------]\033[0m [ArmPlanner::planArmMotion()] Elevation of Wrist is " << iniPos.position[2] << std::endl;
 
     // The sample position is slightly changed to fit in the reachability area
     // of the manipulator
@@ -177,8 +177,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
               dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));*/
 	    = dot(getTraslation(pos), getZrot(yaw));
 
-    std::cout << "Elevation of Base is " << pos[2] << std::endl;
-    std::cout << "Elevation of sample is " << samplePos.position[2] << std::endl;
+    //std::cout << " \033[34m[----------]\033[0m [ArmPlanner::planArmMotion()] Elevation of Base is " << pos[2] << std::endl;
+    //std::cout << " \033[34m[----------]\033[0m [ArmPlanner::planArmMotion()] Elevation of sample is " << samplePos.position[2] << std::endl;
 
     pos = {samplePos.position[0], samplePos.position[1], samplePos.position[2]};
 
@@ -192,7 +192,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     
     //TBCS2Sample[0][3] = 0.8;//1.25;
 
-    std::cout << "Relative position sample - last waypoint = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
+    //std::cout << "Relative position sample - last waypoint = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
 
 
     TW2Sample = dot(TW2BCS, TBCS2Sample);
@@ -201,7 +201,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     samplePos.position[1] = TW2Sample[1][3];
     samplePos.position[2] = TW2Sample[2][3];
 
-    std::cout << "New Elevation of sample is " << samplePos.position[2] << std::endl;
+    //std::cout << "New Elevation of sample is " << samplePos.position[2] << std::endl;
 
     // Cost map 3D computation
     int n = DEM->size();
@@ -236,36 +236,38 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     // Smoothing heading of the rover path by inserting new waypoints
     double headingThreshold = M_PI/12;
     smoothRoverPathHeading(headingThreshold);
-    std::cout << "Arm Planner library: (1/8) Rover path is smoothed with new waypoints, now has" << roverPath6->size() << " waypoints"  << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] Rover path is smoothed with new waypoints, now has" << roverPath6->size() << " waypoints"  << std::endl;
 
     
     // Generating the reachability tunnel surrounding the rover path
-    generateTunnel(iniPos, samplePos, volume_cost_map);
+    unsigned int ui_noinf_nodes = generateTunnel(iniPos, samplePos, volume_cost_map);
     clock_t endt = clock();
     double t = double(endt - init) / CLOCKS_PER_SEC;
-    std::cout << "Arm Planner library: (2/8) Tunnel is generated" << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] 3D Cost Tunnel is generated with " << ui_noinf_nodes << " out of " << n*m*l << " nodes considered traversable (" << ((double)ui_noinf_nodes/((double)n*m*l)) << " % )"<< std::endl;
 
     
     // End effector path planning
     FastMarching_lib::FastMarching3D pathPlanner3D;
     std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] Starting 3D Wrist Path Planning" << std::endl;
     clock_t inip = clock(); 
     if(!pathPlanner3D.planPath(volume_cost_map,
                            mapResolution,
                            zResolution,
                            iniPos,
                            samplePos,
-                           wristPath))
+                           wristPath,
+			   ui_noinf_nodes))
     {
-        std::cout << "Arm Planner library: (3/8) something went wrong with 3D planning" << std::endl;
-        std::cout << "Arm Planner library: debug data" << std::endl;
-        std::cout << " - IniPos = (" << iniPos.position[0] << ", " << iniPos.position[1] << ", " << iniPos.position[2] <<  ")" << std::endl; 
-        std::cout << " - samplePos = (" << samplePos.position[0] << ", " << samplePos.position[1] << ", " << samplePos.position[2] << ")" << std::endl; 
-	std::cout << " - mapResolution = " << mapResolution << std::endl;
-	std::cout << " - zResolution = " << zResolution << std::endl;
+        std::cout << " \033[35m[----------]\033[0m [ArmPlanner::planArmMotion()] Something went wrong with 3D Wrist Path Planning" << std::endl;
+        std::cout << " \033[35m[----------]\033[0m [ArmPlanner::planArmMotion()] debug data" << std::endl;
+        std::cout << " \033[35m[----------]\033[0m  - IniPos = (" << iniPos.position[0] << ", " << iniPos.position[1] << ", " << iniPos.position[2] <<  ")" << std::endl; 
+        std::cout << " \033[35m[----------]\033[0m  - samplePos = (" << samplePos.position[0] << ", " << samplePos.position[1] << ", " << samplePos.position[2] << ")" << std::endl; 
+	std::cout << " \033[35m[----------]\033[0m  - mapResolution = " << mapResolution << std::endl;
+	std::cout << " \033[35m[----------]\033[0m  - zResolution = " << zResolution << std::endl;
         return false;
     }
-    std::cout << "Arm Planner library: (3/8) 3D path computed with " << wristPath->size() << " waypoints"  << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] 3D Wrist Path computed with " << wristPath->size() << " waypoints"  << std::endl;
 
 
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
@@ -289,17 +291,17 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
               + i * (finalEEorientation[2] - sherpa_tt_arm->iniEEorientation[2])
                     / (wristPath->size() - 1);
     } 
-    std::cout << "Arm Planner library: (4/8) end effector orientation computed" << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] End effector orientation computed" << std::endl;
 
 
     // Paths inbetween assignment
     std::vector<int> *pathsAssignment = new std::vector<int>;
     if(!computeWaypointAssignment(pathsAssignment, p_collision_detector))
     {
-        std::cout << "Arm Planner library: (5/8) ERROR Paths Assignment unfeasible" << std::endl;
+        std::cout << " \033[35m[----------]\033[0m [ArmPlanner::planArmMotion()] ERROR Paths Assignment unfeasible" << std::endl;
 	return false;
     }
-    std::cout << "Arm Planner library: (5/8) Paths Assignment done" << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] Paths Assignment done" << std::endl;
 
     
     // Waypoint interpolation to smooth the movements of the arm joints
@@ -308,7 +310,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         = new std::vector<int>(roverPath6->size());
     computeWaypointInterpolation(
         pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
-    std::cout << "Arm Planner library: (6/8) Arm Joints Motion Smoothing done" << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] Arm Joints Motion Smoothing done" << std::endl;
 
     // Computing inverse kinematics
     /*First, we compute the inverse kinematics of the wrist for all the path
@@ -352,7 +354,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 	}
 	catch(std::exception &e)
 	{
-            std::cout << "Arm Planner library: (5/6) EXCEPTION inverse kinematic computation failed" << std::endl; 
+            std::cout << " \033[35m[----------]\033[0m [ArmPlanner::planArmMotion()] EXCEPTION inverse kinematic computation failed" << std::endl; 
 	    std::cout << "Arm Planner library: debug info" << std::endl;
 	    std::cout << " - function: sherpa_tt_arm->getPositionJoints()" << std::endl;
 	    std::cout << " - iteration index = " << i << std::endl; 
@@ -401,7 +403,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         // else
         if (p_collision_detector->isColliding(config))
         {
-            std::cout << "ERROR at sample " << i << std::endl;
+            std::cout << " \033[35m[----------]\033[0m [ArmPlanner::planArmMotion()] ERROR at sample " << i << std::endl;
             std::cout << " Joints = " << config[0];
             std::cout << " " << config[1];
             std::cout << " " << config[2];
@@ -413,13 +415,13 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 	armJoints->push_back(config);
     }
     
-    std::cout << "Arm Planner library: joint values computed" << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] Arm Profile computed with " << armJoints->size() << " samples"  << std::endl;
     
     (*roverPath) = (*interpolatedRoverPath);
 
     clock_t endp = clock();
     double tp = double(endp - inip) / CLOCKS_PER_SEC;
-    std::cout << "Arm Planner library: done Planning Arm Motion" << std::endl;
+    std::cout << " \033[33m[----------]\033[0m [ArmPlanner::planArmMotion()] Done Planning Arm Motion in " << tp << " seconds" << std::endl;
     return true;
 }
 
@@ -526,7 +528,8 @@ bool ArmPlanner::planAtomicOperation(
                             zResolution,
                             iniPos,
                             goalPos,
-                            wristPath);
+                            wristPath,
+			    10000);//TODO: Change this
 
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
@@ -703,7 +706,8 @@ bool ArmPlanner::planAtomicOperation(
                             zResolution,
                             iniPos,
                             goalPos,
-                            wristPath);
+                            wristPath,
+			    10000);//TODO: Change this
 
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
@@ -903,7 +907,8 @@ bool ArmPlanner::planAtomicOperation(
                             zResolution,
                             iniPos,
                             goalPos,
-                            wristPath);
+                            wristPath,
+			    10000);//TODO: Change this
 
     wristPath6->resize(wristPath->size(), std::vector<double>(6));
 
@@ -976,15 +981,19 @@ std::vector<std::vector<std::vector<double>>> *ArmPlanner::getVolumeCostMap()
     return this->volume_cost_map;
 }
 
-void ArmPlanner::generateTunnel(
+unsigned int ArmPlanner::generateTunnel(
     base::Waypoint iniPos,
     base::Waypoint samplePos,
     std::vector<std::vector<std::vector<double>>> *costMap3D)
 {
+    // Returns the number of non-infinite cost nodes
+
     int n = roverPath6->size();
     int sx = (*costMap3D).size();
     int sy = (*costMap3D)[0].size();
     int sz = (*costMap3D)[0][0].size();
+
+    unsigned int ui_noninf_nodes = 0;
 
     std::vector<std::vector<std::vector<int>>> *tunnelLabel
         = new std::vector<std::vector<std::vector<int>>>;
@@ -1029,6 +1038,8 @@ void ArmPlanner::generateTunnel(
         = dot(getTraslation(pos),
               dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
+    bool b_iscostassigned = false;
+
     for (int i = 0; i < tunnelSizeX; i++)
         for (int j = 0; j < tunnelSizeY; j++)
             for (int k = 0; k < tunnelSizeZ; k++)
@@ -1038,12 +1049,14 @@ void ArmPlanner::generateTunnel(
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
                                    + pow(z - sherpa_tt_arm->d0, 2));
+		b_iscostassigned = false;
                 if (dist < sherpa_tt_arm->maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node = {
                         {1, 0, 0, x}, {0, 1, 0, y}, {0, 0, 1, z}, {0, 0, 0, 1}};
 
                     pos = {TBCS2Node[0][3], TBCS2Node[1][3], TBCS2Node[2][3]};
+
 
                     //if (sherpa_tt_arm->isReachable(pos) == 2)
                     if ((sherpa_tt_arm->isReachable(pos) == 2)&&(sherpa_tt_arm->getDistanceToCollision(pos) > 0.05))
@@ -1065,7 +1078,11 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
-                                (*costMap3D)[iy][ix][iz] = cost;
+                                if (isinf((*costMap3D)[iy][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
+				(*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = 1;
                             }
 
@@ -1073,6 +1090,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix + 1][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix + 1][iz] = 1;
                             }
@@ -1080,6 +1101,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix - 1][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix - 1][iz] = 1;
                             }
@@ -1087,6 +1112,10 @@ void ArmPlanner::generateTunnel(
                             && iy + 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy + 1][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy + 1][ix][iz] = 1;
                             }
@@ -1094,11 +1123,20 @@ void ArmPlanner::generateTunnel(
                             && iy - 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy - 1][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy - 1][ix][iz] = 1;
                             }
                     }
+		    
                 }
+		if (b_iscostassigned)
+		{
+                    ui_noninf_nodes++;
+		}
             }
 
     // Tunnel during the rover movement
@@ -1127,6 +1165,7 @@ void ArmPlanner::generateTunnel(
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
                                    + pow(z - sherpa_tt_arm->d0, 2));
+                b_iscostassigned = false;
                 if (dist < sherpa_tt_arm->maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node = {
@@ -1153,6 +1192,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(
                                     tunnelLabel, costMap3D, ix, iy, iz, i - n/4);
                                 (*costMap3D)[iy][ix][iz] = cost;
@@ -1163,6 +1206,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix + 1][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix + 1,
@@ -1176,6 +1223,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix - 1][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix - 1,
@@ -1189,6 +1240,10 @@ void ArmPlanner::generateTunnel(
                             && iy + 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy + 1][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix,
@@ -1202,6 +1257,10 @@ void ArmPlanner::generateTunnel(
                             && iy - 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy - 1][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix,
@@ -1213,7 +1272,11 @@ void ArmPlanner::generateTunnel(
                             }
                     }
                 }
+            if (b_iscostassigned)
+            {
+                ui_noninf_nodes++;
             }
+        }
     }
 
     // Tunnel in the last waypoint
@@ -1240,6 +1303,7 @@ void ArmPlanner::generateTunnel(
                 double z = (*minValues)[2] + zResolution * k;
                 double dist = sqrt(pow(x, 2) + pow(y, 2)
                                    + pow(z - sherpa_tt_arm->d0, 2));
+                b_iscostassigned = false;
                 if (dist < sherpa_tt_arm->maxArmDistance)
                 {
                     std::vector<std::vector<double>> TBCS2Node = {
@@ -1266,6 +1330,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(
                                     tunnelLabel, costMap3D, ix, iy, iz, n /5);
                                 (*costMap3D)[iy][ix][iz] = cost;
@@ -1276,6 +1344,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix + 1][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix + 1,
@@ -1289,6 +1361,10 @@ void ArmPlanner::generateTunnel(
                             && iy < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
+                                if (isinf((*costMap3D)[iy][ix - 1][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix - 1,
@@ -1302,6 +1378,10 @@ void ArmPlanner::generateTunnel(
                             && iy + 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy + 1][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix,
@@ -1315,6 +1395,10 @@ void ArmPlanner::generateTunnel(
                             && iy - 1 < sy - 1 && iz < sz - 1)
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
+                                if (isinf((*costMap3D)[iy - 1][ix][iz]))
+				{
+                                    b_iscostassigned = true;
+				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
                                                    ix,
@@ -1326,7 +1410,12 @@ void ArmPlanner::generateTunnel(
                             }
                     }
                 }
+       	    if (b_iscostassigned)
+            {
+                ui_noninf_nodes++;
             }
+        }
+    return ui_noninf_nodes;
 }
 
 void ArmPlanner::generateReachabilityTunnel(
@@ -1491,7 +1580,7 @@ bool ArmPlanner::computeWaypointAssignment(std::vector<int> *pathsAssignment, Co
                 if (TBCS2Wrist[0][3] < horizonDistance && (!p_collision_detector->isColliding(config))
                     && dist < sherpa_tt_arm->maxArmOptimalDistance)
                 {
-			std::cout << "DEBUG: rover path index " << i << "has associated Wrist index " << j << " and horizon distance is " << horizonDistance << " and dist is " << dist << std::endl;
+			//std::cout << "DEBUG: rover path index " << i << "has associated Wrist index " << j << " and horizon distance is " << horizonDistance << " and dist is " << dist << std::endl;
 		    (*pathsAssignment)[i] = j;
                     break;
                 }
