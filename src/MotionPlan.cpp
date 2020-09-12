@@ -363,7 +363,7 @@ unsigned int MotionPlan::computeArmDeployment(
                                            + 0.5)]
           + p_arm_planner->heightGround2BCS;
     current_waypoint.heading = 0;
-    std::cout << "About to compute the deployment" << std::endl;
+    //std::cout << "About to compute the deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
             dxyres,
             this->d_zres,
@@ -372,8 +372,7 @@ unsigned int MotionPlan::computeArmDeployment(
             vd_orientation_goal,
             &(this->vvd_init_arm_profile),
             &(this->vd_init_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
+    { 
         if(this->vvd_init_arm_profile.empty())
 	{
             this->vvd_init_arm_profile.push_back(vd_arm_readings);    
@@ -381,7 +380,7 @@ unsigned int MotionPlan::computeArmDeployment(
 	}
 	if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
-		std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;
+		//std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;
 	    
 	    	    
 	    this->b_is_initialization_computed = true;
