@@ -4,13 +4,26 @@ import matplotlib.pyplot as plt
 
 from matplotlib import cm
 
+magDEM = np.loadtxt(open("../test/unit/data/results/MMMapTest/magDEM.txt"), skiprows=0)
+magGlobalDEM = np.loadtxt(open("../test/unit/data/results/MMMapTest/magGlobalDEM.txt"), skiprows=0)
+magLocCam = np.loadtxt(open("../test/unit/data/results/MMMapTest/magLocCam.txt"), skiprows=0)
+magDEMvalidity = np.loadtxt(open("../test/unit/data/results/MMMapTest/magDEMvalidity.txt"), skiprows=0)
+magDEM[np.where(magDEM == -1.5)] = np.nan
+magGlobalDEM[np.where(magGlobalDEM == -1.5)] = np.nan
+magLocCam[np.where(magLocCam == -1.5)] = np.nan
+
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
+costMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGcostMap.txt"), skiprows=0)
+costMap_Globalmag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGGlobalcostMap.txt"), skiprows=0)
 #elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv"), skiprows=0)
 elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
 #elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv"), skiprows=0)
 slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
+slopeMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGslopeMap.txt"), skiprows=0)
 validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
 sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
+sdMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGsdMap.txt"), skiprows=0)
+traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 costMap_splitted = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_splittedMap.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
@@ -129,8 +142,91 @@ ax6.set_title('Elevation Map')
 cb6 = fig3.colorbar(plot6, ax = ax6, orientation = 'horizontal')
 cb6.ax.set_title('Elevation')
 
+xMap, yMap = np.meshgrid(np.linspace(0,400,400), np.linspace(0,400,400))
+
+xMap = xMap*0.04
+yMap = yMap*0.04
+
+fig4, ax = plt.subplots(constrained_layout=True)
+plot7 = ax.contourf(xMap, yMap, magDEM, 100, cmap = cm.gist_earth, extend = 'both')
+plot7k = ax.contour(xMap, yMap, magDEM, 50, colors = 'k', alpha = .3)
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('Elevation Map')
+cb7 = fig4.colorbar(plot7, ax = ax, orientation = 'horizontal')
+cb7.ax.set_title('Elevation')
+
+fig5, ax = plt.subplots(constrained_layout=True)
+plot8 = ax.contourf(xMap, yMap, magDEMvalidity, 100)
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('Validity Map')
+cb8 = fig5.colorbar(plot8, ax = ax, orientation = 'horizontal')
+cb8.ax.set_title('Validity')
+
+fig6, ax = plt.subplots(constrained_layout=True)
+fig6.suptitle('Magellium DEM from Morocco', fontsize=16)
+
+plot9 = ax.contourf(xMap, yMap, slopeMap_mag, 40, cmap = 'Reds')
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('Slope Map')
+cb9 = fig6.colorbar(plot9, ax = ax, orientation = 'horizontal')
+cb9.ax.set_title('Slope')
+ax.set_facecolor('k')
+
+fig7, ax = plt.subplots(constrained_layout=True)
+fig7.suptitle('Magellium DEM from Morocco', fontsize=16)
+plot10 = ax.contourf(xMap, yMap, sdMap_mag, 40, vmax = 16.82, cmap = 'Oranges')
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('SD Map')
+cb10 = fig7.colorbar(plot10, ax = ax, orientation = 'horizontal')
+cb10.ax.set_title('Spherical Deviation')
+ax.set_facecolor('k')
+
+fig8, ax = plt.subplots(constrained_layout=True)
+plot11 = ax.contourf(xMap, yMap, magLocCam, 100, cmap = cm.gist_earth, extend = 'both')
+plot11k = ax.contour(xMap, yMap, magLocCam, 50, colors = 'k', alpha = .3)
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('Elevation Map')
+cb11 = fig8.colorbar(plot11, ax = ax, orientation = 'horizontal')
+cb11.ax.set_title('Elevation')
+ax.set_facecolor('w')
 
 
+xMap, yMap = np.meshgrid(np.linspace(0,160,160), np.linspace(0,160,160))
+
+xMap = xMap*0.1
+yMap = yMap*0.1
+
+
+fig9, ax = plt.subplots(constrained_layout=True)
+plot12 = ax.contourf(xMap, yMap, magGlobalDEM, 100, cmap = cm.gist_earth, extend = 'both')
+plot12k = ax.contour(xMap, yMap, magGlobalDEM, 50, colors = 'k', alpha = .3)
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('Elevation Map')
+cb12 = fig9.colorbar(plot12, ax = ax, orientation = 'horizontal')
+cb12.ax.set_title('Elevation')
+ax.set_facecolor('w')
+
+fig9, ax = plt.subplots(constrained_layout=True)
+plot13 = ax.contourf(xMap, yMap, costMap_Globalmag, 40, cmap = 'Reds')
+ax.set_aspect('equal')
+ax.set_xlabel('X-axis (m)')
+ax.set_ylabel('Y-axis (m)')
+ax.set_title('Cost Map')
+cb13 = fig9.colorbar(plot13, ax = ax, orientation = 'horizontal')
+cb13.ax.set_title('Cost')
+ax.set_facecolor('k')
 
 #fig2, ax3 = plt.subplots(constrained_layout=True)
 #plot3 = ax3.contourf(xMap, yMap, costMap_splitted, 40, cmap = 'Reds')

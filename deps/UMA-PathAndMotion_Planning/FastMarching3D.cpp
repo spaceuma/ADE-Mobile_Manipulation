@@ -39,7 +39,7 @@ bool FastMarching3D::planPath(
 
     if(!computeTMap(costMap3D, goal, start, TMap, ui_max_iter))
     {
-        std::cout << " \033[35m[----------] [ERROR] \033[0m [FastMarching3D::planPath()] 3D Total Cost Map computation failed" << std::endl;
+        std::cout << " \033[35m[--WARNING-] [FastMarching3D::planPath()] \033[0m 3D Total Cost Map computation failed" << std::endl;
         return false; //UNREACHABLE
     }
 
@@ -49,7 +49,7 @@ bool FastMarching3D::planPath(
 
     if(!computePathGDM(TMap, start, goal, waypointDistance, path, ui_max_iter))
     { 
-        std::cout << " \033[35m[----------] [ERROR] \033[0m [FastMarching3D::planPath()] 3D Path computation from Total Cost Map failed" << std::endl;
+        std::cout << " \033[35m[--WARNING-] [FastMarching3D::planPath()] \033[0m 3D Path computation from Total Cost Map failed" << std::endl;
 	return false;
     }
 

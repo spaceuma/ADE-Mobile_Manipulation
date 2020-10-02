@@ -89,18 +89,24 @@ void MobileManipExecutor::updateDeployment()
 
 bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 {
-    double dx,dy,dist,dyaw,dtargetheading, dacos;
+    double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
+    dyaw = rover_pose.getYaw();
     dx = rover_pose.position[0] - (*this->vpw_path.back()).position[0];  
     dy = rover_pose.position[1] - (*this->vpw_path.back()).position[1];  
+    dTransformAngle = dyaw - 0.5*3.1416;
+    x0 = cos(dTransformAngle)*dx - sin(dTransformAngle)*dy;
+    y0 = sin(dTransformAngle)*dx + cos(dTransformAngle)*dy;
+
     dist = sqrt(pow(dx,2)+pow(dy,2));
-    dyaw = rover_pose.getYaw();
     dtargetheading =  (*this->vpw_path.back()).heading;
     //std::cout << "ALIGNED:" << std::endl;
-    //std::cout << "    dist = " << dist << std::endl;
-    //std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
+    /*std::cout << "    dist = " << dist << std::endl;
+    std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
+    std::cout << "    x0 = " << x0 << std::endl;
+    std::cout << "    y0 = " << y0 << std::endl;*/
     dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
     //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
-    if ((dist < 1.4))//&&(dacos < 0.1))
+    if ((dist < 0.2))//&&(dacos < 0.1))
     {
         return true; 
     }
@@ -432,7 +438,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 	= this->d_operational_time;
     bool b_is_finished = false;
     bool b_is_ready = false;
-    double d_current_timelimit;
+    double d_current_timelimit, d_ratio_bef, d_ratio_aft;
     
     switch (ui_mode)
     {
@@ -446,7 +452,25 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                     <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     //this->i_current_init_index = min((int)(*this->pvvd_init_arm_profile).size() - 1,this->i_current_init_index+1);
-                    this->i_current_init_index++;
+                    d_ratio_bef = (double)this->i_current_init_index / (double)((*this->pvvd_init_arm_profile).size() - 1);
+                    d_ratio_aft = (double)(this->i_current_init_index + 1) / (double)((*this->pvvd_init_arm_profile).size() - 1);
+                    if ((d_ratio_bef < 0.25)&&(d_ratio_aft >= 0.25)) 
+                    {
+                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
+		    }
+                    if ((d_ratio_bef < 0.5)&&(d_ratio_aft >= 0.5)) 
+                    {
+                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
+		    }
+                    if ((d_ratio_bef < 0.75)&&(d_ratio_aft >= 0.75)) 
+                    {
+                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
+		    }
+                    if ((d_ratio_bef < 0.9)&&(d_ratio_aft >= 0.9)) 
+                    {
+                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
+		    }
+		    this->i_current_init_index++;
 		    this->updateArmCommandVectors(
                         (*this->pvvd_init_arm_profile)[this->i_current_init_index]);
                 }
@@ -466,6 +490,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
                 {
                     b_is_finished = true;
+                    std::cout << " \033[1;33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
                 }
 	    }
 	    break;
@@ -511,6 +536,9 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_coverage_index++;
+                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
+//                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Elapsed time: " << d_elapsed_time << "sec" << std::endl;
+//                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Time limit: " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] *1.5 + 5.0 << " sec" << std::endl;
                     this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)
                                               [this->i_current_coverage_index]);
                 }
@@ -522,6 +550,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
             {
                 b_is_finished = true;
+                std::cout << " \033[1;33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
             }
             break;
     }

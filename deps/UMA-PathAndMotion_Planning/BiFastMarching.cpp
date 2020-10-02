@@ -41,6 +41,11 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
 
     if (!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
     {
+
+        std::cout << " \033[35m[--WARNING-] [BiFastMarching::planPath()]\033[0m Could not compute T Map properly" << std::endl;
+        std::cout << " \033[35m[--DEBUG---] [BiFastMarching::planPath()]\033[0m   Goal = ( " << goal[0] <<", " << goal[1] << " )" << std::endl;
+        std::cout << " \033[35m[--DEBUG---] [BiFastMarching::planPath()]\033[0m   Start = ( " << start[0] <<", " << start[1] << " )" << std::endl;
+    
         return false;
     }
 

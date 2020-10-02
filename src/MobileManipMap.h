@@ -59,7 +59,7 @@ private:
     /**
      * Threshold for contour/valid pixels ratio
      */
-    double d_contour_ratio_threshold = .1;
+    double d_contour_ratio_threshold = .3;//.1;
     /**
      * Threshold for spherical deviation
      */

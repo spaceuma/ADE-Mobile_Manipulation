@@ -72,7 +72,8 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     //    std::cout << "Rover pos is " << rover_position.position[0] << ", " <<
     //    rover_position.position[1] << std::endl;
     this->w_rover_pos = rover_position;
-    if (this->fm_planner.planPath(&costMap,
+    std::cout << " \033[33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Using bidirectional Fast Marching" << std::endl;
+    if (this->bifm_planner.planPath(&costMap,
                                         this->pmm_map->getResolution(),
                                         rover_position,
                                         this->pmm_map->getSample(),
@@ -80,6 +81,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     {
         if (isSmoothPath())
         {
+            std::cout << " \033[1;33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path using bidirectional Fast Marching" << std::endl;
             return 0;
         }
         else
@@ -89,7 +91,27 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     }
     else
     {
-        return 4;
+        std::cout << " \033[33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Using unidirectional Fast Marching" << std::endl;
+        if (this->fm_planner.planPath(&costMap,
+                                        this->pmm_map->getResolution(),
+                                        rover_position,
+                                        this->pmm_map->getSample(),
+                                        &(this->vw_rover_path)))
+        {
+            if (isSmoothPath())
+            {
+                std::cout << " \033[1;33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path using unidirectional Fast Marching" << std::endl;
+                return 0;
+            }
+            else
+            {
+                return 5;
+            }           
+	}
+	else
+	{
+            return 4;
+	}
     }
 }
 
@@ -135,6 +157,8 @@ bool MotionPlan::shortenPathForFetching()
         &(this->vw_rover_path));
     if (endWaypoint == 0)
     {
+        return false;
+/*      
         if (this->vw_rover_path.size() > 2)
         {
             this->vw_rover_path.erase(this->vw_rover_path.begin() + 1,
@@ -145,6 +169,7 @@ bool MotionPlan::shortenPathForFetching()
         {
             return false;
         }
+*/
     }
     else
     {
@@ -251,9 +276,8 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     std::vector<base::Waypoint> vw_reference_path;
     if (this->vw_rover_path.size() < 20)
     {
-        std::cout << "Short path" << std::endl;
+        //std::cout << " \033[33m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Short Path"  << std::endl;
         vw_reference_path.resize(1); 
-        std::cout << "Resized, now size is " << vw_reference_path.size() << std::endl;
         vw_reference_path[0] = this->vw_rover_path.back(); 
 	pvw_reference_path = &(vw_reference_path);
     }

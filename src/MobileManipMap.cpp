@@ -221,11 +221,13 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
         if (d_valid_ratio < this->d_valid_ratio_threshold)
         {
             // Not enough valid pixels
+            std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The valid_ratio is " << d_valid_ratio << ", threshold is " << d_valid_ratio_threshold << std::endl;
             return 6;
         }
         if (d_contour_ratio > this->d_contour_ratio_threshold)
         {
             // Too many contour pixels
+            std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The contour_ratio is " << d_contour_ratio << ", threshold is " << d_contour_ratio_threshold << std::endl;
             return 7;
         }
         this->calculateElevationMap();
@@ -277,17 +279,6 @@ void MobileManipMap::checkValidityMap(double &d_valid_ratio,
 
     d_valid_ratio = (double)ui_valid_pixels / (double)ui_total_pixels;
     d_contour_ratio = (double)ui_point_counter / (double)ui_valid_pixels;
-/*
-    std::cout << "Done checking validity" << std::endl;
-    std::cout << "Total number of points is: " << ui_total_pixels << std::endl;
-    std::cout << "Number of contour points is: " << ui_point_counter << " ("
-              << (double)ui_point_counter / (double)ui_total_pixels * 100.0
-              << "%)" << std::endl;
-    std::cout << "Number of valid points is: " << ui_valid_pixels << " ("
-              << d_valid_ratio * 100.0 << "%)" << std::endl;
-    std::cout << "Contour/Valid ratio is: " << d_contour_ratio * 100.0 << "%"
-              << std::endl;
-*/
 }
 
 bool MobileManipMap::loadGlobalSample(const base::Waypoint &w_sample_pos_m)

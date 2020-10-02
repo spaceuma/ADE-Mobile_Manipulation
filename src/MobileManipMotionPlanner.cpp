@@ -17,21 +17,21 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     this->p_mmmap = new MobileManipMap();
     if (!this->updateNavCamDEM(navCamDEM))
     {
-        std::cout << " \033[1;31m[----------] [MobileManipMotionPlanner()]\033[0m "
-                     "ERROR in Map Class Creation" << std::endl;
+        std::cout << " \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
+                     "Map Class could not be created" << std::endl;
         this->printErrorCode();
     }
-    std::cout << " \033[32m[----------]\033[0m Map Class Successfully created" << std::endl;
+    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Map Class Successfully created" << std::endl;
     // Each class contains a pointer to the previous one
     this->p_motionplan
         = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
     this->p_motionplan->setArmGaussFilter(5.0,
                                           9); // TODO - Configurable parameters
-    std::cout << " \033[32m[----------]\033[0m Motion Plan Class Successfully created" << std::endl;
+    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
     this->p_mmexecutor
         = new MobileManipExecutor(this->p_motionplan, s_configfile_path_m);
-    std::cout << " \033[32m[----------]\033[0m Executor Class Successfully created" << std::endl;
-    std::cout << " \033[1;32m[----------] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
+    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
+    std::cout << " \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
 }
 
 bool MobileManipMotionPlanner::initAtomicOperation(
@@ -339,7 +339,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 return false;
         }
 
-        std::cout << " \033[32m[----------]\033[0m FACE operation is successfully computed" << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m FACE operation is successfully computed" << std::endl;
 	
 	//std::cout << "Local Rover Position: " << this->w_current_rover_position.position[0] << ", " << this->w_current_rover_position.position[1] << std::endl;
         
@@ -368,7 +368,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(DEGEN_PATH);
                 return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Rover Base Path is successfully computed with " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Rover Base Path is successfully computed with " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         // The rover base path is shortened to stop near the sample
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
@@ -377,7 +377,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
             setError(GOAL_TOO_CLOSE);
             return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Rover Base Path is successfully shortened, with now " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Rover Base Path is successfully shortened, with now " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         // The arm positions profile is to be computed
         ui_code = this->p_motionplan->computeArmProfilePlanning();
 	switch (ui_code)
@@ -394,7 +394,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(PLAN_WO_SAMPLE);
                 return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Arm Profile for Coupled Control is successfully computed" << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Profile for Coupled Control is successfully computed" << std::endl;
         std::vector<double> vd_arm_readings;
         vd_arm_readings.resize(6);
         for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
@@ -406,20 +406,20 @@ bool MobileManipMotionPlanner::generateMotionPlan(
             setError(COLLIDING_PROF);
             return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Arm Deployment Profile is successfully computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples"  << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Deployment Profile is successfully computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples"  << std::endl;
         std::vector<double> *pvd_last_profile
             = this->p_mmexecutor->getLastCoverageProfile();
         if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile)) != 0)
         {
             return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
         // this->p_motionplan->computeArmDeployment(0,);
 	// Adds a dummy waypoint at the end to smoothly turn the rover at the end
-	this->p_motionplan->addTurningWaypoint(0.7);
-        std::cout << " \033[32m[----------]\033[0m Added final Turning Waypoint, now path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
+	this->p_motionplan->addTurningWaypoint(0.0);
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Added final Turning Waypoint, now path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         this->p_mmexecutor->updateMotionPlan();
-        std::cout << " \033[1;32m[----------] [generateMotionPlan()]\033[0m Motion Plan is successfully computed, Executor is updated with new plan" << std::endl;
+        std::cout << " \033[1;32m[--DONE!---] [generateMotionPlan()]\033[0m Executor is updated with new plan" << std::endl;
         setStatus(READY_TO_MOVE);
         return true;
     }
@@ -542,8 +542,6 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
     proxy_library::Pose plpose_m,
     proxy_library::Joints arm_joints)
 {
-    //std::cout << "Updating" << std::endl;
-    //std::cout << "Status is " << getStatus() << std::endl;
     unsigned int ui_error_code = 0;
     switch (getStatus())
     {
@@ -579,7 +577,8 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                     return true;
                 case 2: // (Rover) Target reached
                     this->p_mmexecutor->resetOperationTime();
-                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Finished Coupled Motion, starting Arm Operation" << std::endl;
+                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Finished Coupled Motion" << std::endl;
+                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Starting Arm Operation" << std::endl;
                     setStatus(EXECUTING_ARM_OPERATION);
                     return true;
                 case 3: // Out of boundaries
@@ -587,7 +586,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                     return false;
                 case 4: // Either no trajectory or no pose
                     // TODO - Is this situation even possible to reach??
-                    std::cout << "An strange error occurred, there is no pose??"
+                    std::cout << " \033[1;31m[--ERROR!--] [updateRoverArmPos()]\033[0m An strange error occurred, there is no pose??"
                               << std::endl;
                     setError(INCOMPLETE_INPUT);
                     return false;
@@ -598,7 +597,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                     setError(COLLIDING_ARM);
                     return false;
                 case 7:
-                    std::cout << " \033[1;31m[----------]\033[0m [updateRoverArmPos()] ERROR: Arm is not responding" << std::endl;
+                    std::cout << " \033[1;31m[--ERROR!--] [updateRoverArmPos()]\033[0m ERROR: Arm is not responding" << std::endl;
                     setError(NON_RESP_ARM); // TODO - Shouldnt be better
                                             // NON_FOLLOWING_ARM?
                     return false;
@@ -615,20 +614,20 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
             if (ui_error_code == 1)
             {
-                    std::cout << " \033[32m[----------]\033[0m Finished retrieving the arm" << std::endl;
-                    std::cout << " \033[1;32m[----------] [updateRoverArmPos()]\033[0m Mobile Manipulation Task is successfully finished" << std::endl;
+                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Finished retrieving the arm" << std::endl;
+                    std::cout << " \033[1;32m[--DONE!---] [updateRoverArmPos()]\033[0m Mobile Manipulation Task is successfully finished" << std::endl;
 		setStatus(FINISHED);
                 return false;
             }
             if (ui_error_code == 4)
 	    {
-                    std::cout << " \033[31m[----------]\033[0m [updateRoverArmPos()] ERROR: Arm is in collidable configuration" << std::endl;
+                    std::cout << " \033[31m[--ERROR!--] [updateRoverArmPos()]\033[0m Arm is in collidable configuration" << std::endl;
                 setError(COLLIDING_ARM);
 		return false;
 	    }
             if (ui_error_code == 5)
 	    {
-                std::cout << " \033[31m[----------]\033[0m [updateRoverArmPos()] ERROR: Arm is not responding" << std::endl;
+                std::cout << " \033[31m[--ERROR!--] [updateRoverArmPos()]\033[0m Arm is not responding" << std::endl;
                 setError(NON_RESP_ARM);
 		return false;
 	    }
@@ -643,18 +642,19 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             if (ui_error_code == 1)
             {
                 this->p_mmexecutor->resetOperationTime();
-                    std::cout << " \033[32m[----------]\033[0m [updateRoverArmPos()] Finished Arm Operation, retrieving arm" << std::endl;
+                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Finished Arm Operation" << std::endl;
+                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Retrieving arm" << std::endl;
                 setStatus(RETRIEVING_ARM);
             }
             if (ui_error_code == 4)
 	    {
-                std::cout << " \033[31m[----------]\033[0m [updateRoverArmPos()] ERROR: Arm is in collidable configuration" << std::endl;
+                std::cout << " \033[31m[--ERROR!--] [updateRoverArmPos()]\033[0m Arm is in collidable configuration" << std::endl;
                 setError(COLLIDING_ARM);
 		return false;
 	    }
             if (ui_error_code == 5)
 	    {
-                std::cout << " \033[31m[----------]\033[0m [updateRoverArmPos()] ERROR: Arm is not responding" << std::endl;
+                std::cout << " \033[31m[--ERROR!--] [updateRoverArmPos()]\033[0m Arm is not responding" << std::endl;
                 setError(NON_RESP_ARM);
 		return false;
 	    }

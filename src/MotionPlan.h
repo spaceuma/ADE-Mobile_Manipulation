@@ -32,7 +32,8 @@ private:
      * Path Planning class that uses bi-Fast Marching
      */
     //BiFastMarching bi_fast_marching;
-    BiFastMarching fm_planner;
+    BiFastMarching bifm_planner;
+    FastMarching fm_planner;
     /**
      * Class to estimate the best waypoint to fetch in an existing path
      */
