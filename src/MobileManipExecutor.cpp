@@ -106,7 +106,8 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
     std::cout << "    y0 = " << y0 << std::endl;*/
     dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
     //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
-    if ((dist < 0.2))//&&(dacos < 0.1))
+    //if ((dist < 0.2))//&&(dacos < 0.1))
+    if ((dist < 1.4))//&&(dacos < 0.1))
     {
         return true; 
     }

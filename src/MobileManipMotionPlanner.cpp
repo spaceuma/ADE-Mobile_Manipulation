@@ -416,7 +416,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
         // this->p_motionplan->computeArmDeployment(0,);
 	// Adds a dummy waypoint at the end to smoothly turn the rover at the end
-	this->p_motionplan->addTurningWaypoint(0.0);
+	//this->p_motionplan->addTurningWaypoint(0.0);
+	this->p_motionplan->addTurningWaypoint(0.7);
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Added final Turning Waypoint, now path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         this->p_mmexecutor->updateMotionPlan();
         std::cout << " \033[1;32m[--DONE!---] [generateMotionPlan()]\033[0m Executor is updated with new plan" << std::endl;
