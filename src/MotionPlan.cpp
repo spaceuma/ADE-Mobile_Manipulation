@@ -274,6 +274,9 @@ unsigned int MotionPlan::computeArmProfilePlanning()
 
     std::vector<base::Waypoint> *pvw_reference_path;
     std::vector<base::Waypoint> vw_reference_path;
+
+    pvw_reference_path = &(this->vw_rover_path);
+/*
     if (this->vw_rover_path.size() < 20)
     {
         //std::cout << " \033[33m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Short Path"  << std::endl;
@@ -285,7 +288,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     {
         pvw_reference_path = &(this->vw_rover_path);
     }
-
+*/
     //std::cout << "PVW reference path size is " << pvw_reference_path->size() << std::endl; 
 
     if (this->p_arm_planner->planArmMotion(pvw_reference_path,
@@ -534,8 +537,9 @@ unsigned int MotionPlan::computeArmDeployment(
     }
 }
 
-unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
+unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init, int mode)
 {
+	//mode: 0 = atomic, 1 = coupled
     this->vvd_retrieval_arm_profile.clear();
     this->b_is_retrieval_computed = false;
     std::vector<std::vector<double>> elevationMap;
@@ -566,7 +570,8 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
             vd_init,
             this->vd_retrieval_position,
             &(this->vvd_retrieval_arm_profile),
-            &(this->vd_retrieval_time_profile)))
+            &(this->vd_retrieval_time_profile),
+	    mode))
     { // TODO - This may return a segmentation fault, maybe because of a non
       // initialized elevation map...
 		//std::cout << "The size of the retrieval profile is "  << this->vvd_retrieval_arm_profile.size() << std::endl;

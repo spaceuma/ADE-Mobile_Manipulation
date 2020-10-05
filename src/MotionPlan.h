@@ -184,7 +184,7 @@ public:
         const std::vector<double> &vd_arm_readings);
 
     bool isInitArmMotionProfileEmpty();
-    unsigned int computeArmRetrieval(const std::vector<double> &vd_init);
+    unsigned int computeArmRetrieval(const std::vector<double> &vd_init, int mode = 0);
     unsigned int computeAtomicOperation();
     void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);
     void addTurningWaypoint(double d_dev);

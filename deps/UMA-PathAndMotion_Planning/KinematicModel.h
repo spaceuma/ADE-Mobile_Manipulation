@@ -95,8 +95,10 @@ public:
     std::vector<double> iniEEorientation = {0, pi/2, 0};
 
     // -- VARIABLES --
-    std::vector<std::vector<std::vector<double>>> *reachabilityMap;
-    std::vector<std::vector<std::vector<double>>> *reachabilityDistances;
+    std::vector<std::vector<std::vector<double>>> *reachabilityMap_Atomic;
+    std::vector<std::vector<std::vector<double>>> *reachabilityMap_Coupled;
+    std::vector<std::vector<std::vector<double>>> *reachabilityDistances_Atomic;
+    std::vector<std::vector<std::vector<double>>> *reachabilityDistances_Coupled;
     std::vector<double> *resolutions;
     std::vector<double> *minValues;
     std::vector<double> *maxValues;
@@ -135,13 +137,13 @@ public:
 
     void computeReachabilityMap(const double resXY, const double resZ);
 
-    int isReachable(std::vector<double> position);
+    int isReachable(std::vector<double> position, int mode);
 
     std::vector<double> getRelativePosition(std::vector<double> position);
 
     std::vector<double> getAbsolutePosition(std::vector<double> position);
 
-    double getDistanceToCollision(std::vector<double> position);
+    double getDistanceToCollision(std::vector<double> position, int mode);
 
     std::vector<double> getReachabilityMapSize();
     bool isFarFromLeg(double joint0, double d_z);

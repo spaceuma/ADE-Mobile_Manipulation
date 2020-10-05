@@ -105,6 +105,12 @@ bool FastMarching3D::computeTMap(
         }
     }
 
+    if((*closedMap)[start[1]][start[0]][start[2]] == 1)
+    {
+        std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] ERROR: start is already closed" << std::endl;
+        std::cout << " \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m INFO The Total Cost Propagation cannot reach the start node " << start[0] << ", " << start[1] << ", " << start[2] << " from goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << std::endl;
+    } 
+
     (*closedMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 1;
 
     (*TMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 0;
@@ -146,7 +152,8 @@ bool FastMarching3D::computeTMap(
         }
     }
     //std::cout << "Done" << std::flush << std::endl;
-    std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] INFO The Total Cost Propagation has not reached the start node " << start[0] << ", " << start[1] << ", " << start[2] << " from goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << std::endl;
+    std::cout << " \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m INFO The Total Cost Propagation has not reached the start node " << start[0] << ", " << start[1] << ", " << start[2] << " from goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << std::endl;
+    std::cout << " \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m INFO Iterations: " << ui_iter << std::endl;
     return false; //The propagation does not reach the start
 }
 

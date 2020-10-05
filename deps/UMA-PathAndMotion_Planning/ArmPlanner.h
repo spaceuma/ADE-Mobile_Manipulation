@@ -80,7 +80,8 @@ public:
                              std::vector<double> initialArmConfiguration,
                              std::vector<double> goalArmConfiguration,
                              std::vector<std::vector<double>> *armJoints,
-                             std::vector<double> *timeProfile);
+                             std::vector<double> *timeProfile,
+			     int mode = 0);
 
     bool planAtomicOperation(double _mapResolution,
                              double _zResolution,
@@ -110,7 +111,8 @@ public:
         base::Waypoint goalPos,
         std::vector<double> roverPose6,
         bool isTunnelPermisive,
-        std::vector<std::vector<std::vector<double>>> *costMap3D);
+        std::vector<std::vector<std::vector<double>>> *costMap3D,
+	int mode = 0);
 
     bool computeWaypointAssignment(std::vector<int> *pathsAssignment, CollisionDetector *p_collision_detector);
 

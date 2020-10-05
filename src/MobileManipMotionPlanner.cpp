@@ -84,7 +84,7 @@ bool MobileManipMotionPlanner::initAtomicOperation(
         {
             return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Arm retrieval motion plan computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples" << std::endl;
+        std::cout << " \033[32m[----------]\033[0m Arm retrieval motion plan computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
         this->p_mmexecutor->updateDeployment();
         this->p_mmexecutor->updateRetrieval();
         this->b_is_atomic_deployed = false;
@@ -409,7 +409,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Deployment Profile is successfully computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples"  << std::endl;
         std::vector<double> *pvd_last_profile
             = this->p_mmexecutor->getLastCoverageProfile();
-        if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile)) != 0)
+        if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile),1) != 0)
         {
             return false;
         }
