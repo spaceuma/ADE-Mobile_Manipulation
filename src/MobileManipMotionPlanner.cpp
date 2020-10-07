@@ -250,28 +250,34 @@ bool MobileManipMotionPlanner::updateNavCamDEM(
     switch (ui_error_code)
     {
         case 0:
+            std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m NavCam DEM is successfully loaded" << std::endl;
             return true;
         case 1:
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM resolution is zero or less";
             setError(POOR_DEM);
             return false;
         case 2:
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM rows are less than 5";
             setError(POOR_DEM);
             return false;
         case 3:
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM columns are less than 5";
             setError(POOR_DEM);
             return false;
         case 4:
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Cannot read the DEM offset";
             setError(POOR_DEM);
             return false;
         case 5:
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM info could not be allocated in memory";
             setError(BAD_DEM_ALLOC);
             return false;
         case 6:
-            std::cout << "\033[32m[----------]\033[0m [updateNavCamDEM()] Not enough valid pixels in input NavCamDEM";
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Not enough valid pixels in input NavCamDEM";
             setError(POOR_DEM);
             return false;
         case 7:
-            std::cout << "\033[32m[----------]\033[0m [updateNavCamDEM()] Too many holes within NavCamDEM valid area";
+            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Too many holes within NavCamDEM valid area";
             setError(POOR_DEM);
             return false;
     }
@@ -361,7 +367,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(PLAN_WO_SAMPLE);
                 return false;
             case 4:
-		std::cout << "ComputeRoverBasePathPlanning returned Goal too close" << std::endl;
+		std::cout << "\033[31m[----------] [generateMotionPlan()]\033[0m ComputeRoverBasePathPlanning returned Goal too close" << std::endl;
                 setError(UNREACH_GOAL);
                 return false;
             case 5:
@@ -372,7 +378,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         // The rover base path is shortened to stop near the sample
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
-	    std::cout << "shortenPathForFetching returned Goal too close" << std::endl;
+	    std::cout << "\033[32m[----------] [generateMotionPlan()]\033[0m shortenPathForFetching returned Goal too close" << std::endl;
             this->printRoverPathInfo();
             setError(GOAL_TOO_CLOSE);
             return false;
