@@ -968,6 +968,11 @@ bool Manipulator::isFarFromMast(double joint0, double joint1, double d_z)
         return false;
     }
 
+    if ((joint0 > 1.75)&&(d_z < 0.65))
+    {
+        return false;
+    }
+
 /*
     if ((joint0 > 0.7)&&(d_z < 0.5))
     {

@@ -50,10 +50,16 @@ surf = ax.plot_surface(XX,YY,Rmatrix, cmap=cm.coolwarm,
 
 import pandas as pd
 RmatrixToCSV = pd.DataFrame(data=Rmatrix.astype(float))
-RmatrixToCSV.to_csv('LSC_TurningRadius.csv', sep=' ', header=False, float_format='%.3f', index=False)
+RmatrixToCSV.to_csv('LSC_TurningRadius.txt', sep=' ', header=False, float_format='%.3f', index=False)
 
 OmegaToCSV = pd.DataFrame(data=omegamatrix.astype(float))
-OmegaToCSV.to_csv('LSC_TurningAngle.csv', sep=' ', header=False, float_format='%.3f', index=False)
+OmegaToCSV.to_csv('LSC_TurningAngle.txt', sep=' ', header=False, float_format='%.3f', index=False)
+
+XToCSV = pd.DataFrame(data=x0Array.astype(float))
+XToCSV.to_csv('LSC_X0.txt', sep=' ', header=False, float_format='%.3f', index=False)
+
+YToCSV = pd.DataFrame(data=y0Array.astype(float))
+YToCSV.to_csv('LSC_Y0.txt', sep=' ', header=False, float_format='%.3f', index=False)
 
 #ax.set_zlim(0.0, 2.0)
 

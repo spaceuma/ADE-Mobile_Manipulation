@@ -147,7 +147,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         = dot(dot(getTraslation(roverIniPos), getZrot((*roverPath6)[0][5])),
               initialBCS2Wrist);
 
-    std::cout << " \033[34m[----------] [ArmPlanner::planArmMotion()]\033[0m [ArmPlanner::planArmMotion()] Rover Initial Position is (" << roverIniPos[0] << ", " << roverIniPos[1] << ", " << roverIniPos[2] << ") "<< std::endl;
+    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Rover Initial Position is (" << roverIniPos[0] << ", " << roverIniPos[1] << ", " << roverIniPos[2] << ") "<< std::endl;
     base::Waypoint iniPos;
     iniPos.position[0] = world2Wrist[0][3];
     iniPos.position[1] = world2Wrist[1][3];
@@ -199,7 +199,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     TBCS2Sample[0][3] = 0.8;
     TBCS2Sample[1][3] += 1.25;//optimalLeftDeviation;
     TBCS2Sample[2][3] = 0.75;//optimalLeftDeviation;
-*/ 
+ */
 
     std::cout << "Relative position sample - last waypoint = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
 
@@ -326,6 +326,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     Then, according to the orientation commanded, which is relative, we compute
     the last three joints of the arm, using the transform of the wrist. */
 
+    double d_previousconfig3;
     for (int i = 0; i < interpolatedRoverPath->size(); i++)
     {
         int wristInd = (*interpolatedAssignment)[i];
@@ -373,8 +374,28 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 	//std::cout << "Position is computed" << std::endl;
         std::vector<double> wristJoints;
 	double d_config4 = std::max(-config[2],-1.57); 
+
+        if (config[0] < 0.65)
+	{
+            wristJoints
+                = { std::max(3.1416,std::max(d_previousconfig3, 1.57 + 1.57 * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
+	}
+	else if (config[0] < 1.57)
+	{
+            wristJoints
+                = { 1.57, -1.57, -2.7 };
+	}
+	else
+	{
+            wristJoints
+                = { 3.1416 - config[0], -1.57, -2.7 };
+	}
+        d_previousconfig3 = config[3];
+	
+/*
 	if (config[0]<0.4)
         {
+            //d_config4 = (0.7 - config[0]) * 5.0; 
             wristJoints
                 = { 0.0, 0.0, -2.7 };
         }
@@ -383,6 +404,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
             wristJoints
                 = { 0.0, d_config4, -2.7 };
 	}
+*/
         config.insert(config.end(), wristJoints.begin(), wristJoints.end());
         /*try
         {

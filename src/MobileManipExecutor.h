@@ -44,6 +44,10 @@ private:
      */
     int i_current_segment;
     /**
+     * Distance from rover to sample
+     */
+    double d_dist_to_sample;
+    /**
      * Index to initial segment
      */
     int i_initial_segment;
@@ -73,6 +77,22 @@ private:
      * The sweeping arm motion profile
      */
     std::vector<std::vector<double>> *pvvd_arm_sweeping_profile;
+    /**
+     * LSC: Turning Radius Matrix
+     */
+    std::vector<std::vector<double>> *pvvd_turning_radius_matrix;
+    /**
+     * LSC: Turning Angle Matrix
+     */
+    std::vector<std::vector<double>> *pvvd_turning_angle_matrix;
+    /**
+     * LSC: X0 
+     */
+    std::vector<double> *pvd_lsc_x0;
+    /**
+     * LSC: Y0
+     */
+    std::vector<double> *pvd_lsc_y0;
     /**
      * The initial arm motion times
      */

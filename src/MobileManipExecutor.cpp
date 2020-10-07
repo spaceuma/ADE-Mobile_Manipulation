@@ -17,6 +17,22 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
     this->pvvd_arm_sweeping_profile = new std::vector<std::vector<double>>;
     this->pvd_arm_sweeping_times = new std::vector<double>;
+    this->d_dist_to_sample = 10000;
+
+    this->pvvd_turning_radius_matrix = new std::vector<std::vector<double>>;
+    this->pvvd_turning_angle_matrix = new std::vector<std::vector<double>>;
+    this->pvd_lsc_x0 = new std::vector<double>;
+    this->pvd_lsc_y0 = new std::vector<double>;
+
+    readMatrixFile(s_urdf_path_m + "/LastSectionControl/LSC_TurningRadius.txt",
+                   (*this->pvvd_turning_radius_matrix));
+    readMatrixFile(s_urdf_path_m + "/LastSectionControl/LSC_TurningAngle.txt",
+                   (*this->pvvd_turning_angle_matrix));
+    readVectorFile(s_urdf_path_m + "/LastSectionControl/LSC_X0.txt",
+                   (*this->pvd_lsc_x0));
+    readVectorFile(s_urdf_path_m + "/LastSectionControl/LSC_Y0.txt",
+                   (*this->pvd_lsc_y0));
+  
     readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt",
                    (*this->pvvd_arm_sweeping_profile));
     readVectorFile(s_urdf_path_m + "/sweepingTimes.txt",
@@ -99,14 +115,47 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 
     dist = sqrt(pow(dx,2)+pow(dy,2));
     dtargetheading =  (*this->vpw_path.back()).heading;
-    //std::cout << "ALIGNED:" << std::endl;
-    /*std::cout << "    dist = " << dist << std::endl;
+
+    //Finding x0 indexes 
+    if ((x0 <=(*this->pvd_lsc_x0)[0])||(x0 >= (*this->pvd_lsc_x0).back()))
+    {
+        std::cout << " It is not in Last Section" << std::endl;
+    }
+    else if ((y0 <=(*this->pvd_lsc_y0)[0])||(y0 >= (*this->pvd_lsc_y0).back()))
+    { 
+        std::cout << " It is not in Last Section" << std::endl;
+    }
+    else
+    {
+        std::cout << " In Last Section" << std::endl;
+    }
+
+/*
+    for (uint i = 0; i<this->pvd_lsc_x0->size(); i++)
+    {
+        
+    }
+*/
+
+    std::cout << "ALIGNED:" << std::endl;
+    std::cout << "    dist = " << dist << std::endl;
     std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
     std::cout << "    x0 = " << x0 << std::endl;
-    std::cout << "    y0 = " << y0 << std::endl;*/
+    std::cout << "    y0 = " << y0 << std::endl;
     dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
     //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
     //if ((dist < 0.2))//&&(dacos < 0.1))
+
+    if ((dist < 2.3)&&(this->d_dist_to_sample >= 2.3)) //This would be d_inner_sampling_dist from the map class
+    {
+        std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
+       
+    }
+    if ((dist < 1.4)&&(this->d_dist_to_sample >= 1.4)) //This would be d_inner_sampling_dist from the map class
+    {
+        std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
+       
+    }this->d_dist_to_sample = dist;
     if ((dist < 1.4))//&&(dacos < 0.1))
     {
         return true; 

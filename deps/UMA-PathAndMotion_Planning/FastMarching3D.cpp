@@ -126,7 +126,7 @@ bool FastMarching3D::computeTMap(
     {
         //std::cout << "\r 3D TMap computation - Iteration: " << ui_iter;
         ui_iter++;
-	if (ui_iter > ui_max_iter)
+	if (ui_iter > ui_max_iter*2)
 	{
             std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] ERROR: number of iterations has surpassed the limit ( " << ui_max_iter << " nodes )" << std::endl;
             std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] Debug info:" << std::endl;
@@ -147,6 +147,7 @@ bool FastMarching3D::computeTMap(
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1])
             && (nodeTarget[2] == start[2]))
         {
+            std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] Done with " << ui_iter << " iterations" << std::endl;
             //std::cout << "Done" << std::flush << std::endl;
             return true; //The propagation wave reaches the start
         }
