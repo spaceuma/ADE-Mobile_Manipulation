@@ -119,15 +119,15 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
     //Finding x0 indexes 
     if ((x0 <=(*this->pvd_lsc_x0)[0])||(x0 >= (*this->pvd_lsc_x0).back()))
     {
-        std::cout << " It is not in Last Section" << std::endl;
+        //std::cout << " It is not in Last Section" << std::endl;
     }
     else if ((y0 <=(*this->pvd_lsc_y0)[0])||(y0 >= (*this->pvd_lsc_y0).back()))
     { 
-        std::cout << " It is not in Last Section" << std::endl;
+        //std::cout << " It is not in Last Section" << std::endl;
     }
     else
     {
-        std::cout << " In Last Section" << std::endl;
+        //std::cout << " In Last Section" << std::endl;
     }
 
 /*
@@ -136,12 +136,13 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
         
     }
 */
-
+/*
     std::cout << "ALIGNED:" << std::endl;
     std::cout << "    dist = " << dist << std::endl;
     std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
     std::cout << "    x0 = " << x0 << std::endl;
     std::cout << "    y0 = " << y0 << std::endl;
+*/
     dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
     //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
     //if ((dist < 0.2))//&&(dacos < 0.1))

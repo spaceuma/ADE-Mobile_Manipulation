@@ -1073,7 +1073,9 @@ unsigned int ArmPlanner::generateTunnel(
     bool b_iscostassigned = false;
 
     for (int i = 0; i < tunnelSizeX; i++)
+    {
         for (int j = 0; j < tunnelSizeY; j++)
+	{
             for (int k = 0; k < tunnelSizeZ; k++)
             {
                 double x = (*minValues)[0] + mapResolution * i;
@@ -1108,69 +1110,81 @@ unsigned int ArmPlanner::generateTunnel(
 			    //std::cout << "Cost = " << cost << " and dist = " << sherpa_tt_arm->getDistanceToCollision(pos) << std::endl;
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
 				(*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = 1;
                             }
-
+                        }
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix + 1][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix + 1][iz] = 1;
                             }
+			}
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix - 1][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix - 1][iz] = 1;
                             }
+			}
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy + 1][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy + 1][ix][iz] = 1;
                             }
+			}
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy - 1][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy - 1][ix][iz] = 1;
                             }
+			}
                     }
 		    
                 }
-		if (b_iscostassigned)
-		{
-                    ui_noninf_nodes++;
-		}
             }
-
+        }
+    }
+    
     // Tunnel during the rover movement
     tunnelSizeY = (int)(abs((*maxValues)[1] - 0) / mapResolution + 0.5);
     tunnelSizeZ
@@ -1186,6 +1200,7 @@ unsigned int ArmPlanner::generateTunnel(
                      dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
         for (int j = 0; j < tunnelSizeY; j++)
+	{
             for (int k = 0; k < tunnelSizeZ; k++)
             {
                 if (varyingHorizon)
@@ -1222,25 +1237,29 @@ unsigned int ArmPlanner::generateTunnel(
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(
                                     tunnelLabel, costMap3D, ix, iy, iz, i - n/4);
                                 (*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = i;
                             }
-
+			}
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix + 1][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1251,13 +1270,16 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix + 1][iz] = i;
                             }
+			}
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix - 1][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1268,13 +1290,16 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix - 1][iz] = i;
                             }
+			}
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy + 1][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1285,13 +1310,16 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy + 1][ix][iz] = i;
                             }
+			}
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy - 1][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1302,12 +1330,10 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy - 1][ix][iz] = i;
                             }
+			}
                     }
                 }
-            if (b_iscostassigned)
-            {
-                ui_noninf_nodes++;
-            }
+	    }
         }
     }
 
@@ -1327,7 +1353,9 @@ unsigned int ArmPlanner::generateTunnel(
                  dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
 
     for (int i = 0; i < tunnelSizeX; i++)
+    {
         for (int j = 0; j < tunnelSizeY; j++)
+	{
             for (int k = 0; k < tunnelSizeZ; k++)
             {
                 double x = 0 + mapResolution * i;
@@ -1360,25 +1388,29 @@ unsigned int ArmPlanner::generateTunnel(
 
                         if (ix > 0 && iy > 0 && iz > 0 && ix < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(
                                     tunnelLabel, costMap3D, ix, iy, iz, n /5);
                                 (*costMap3D)[iy][ix][iz] = cost;
                                 (*tunnelLabel)[iy][ix][iz] = n;
                             }
-
+			}
                         if (ix + 1 > 0 && iy > 0 && iz > 0 && ix + 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix + 1][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix + 1][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1389,13 +1421,16 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy][ix + 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix + 1][iz] = n;
                             }
+			}
                         if (ix - 1 > 0 && iy > 0 && iz > 0 && ix - 1 < sx - 1
                             && iy < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy][ix - 1][iz])
                             {
                                 if (isinf((*costMap3D)[iy][ix - 1][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1406,13 +1441,16 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy][ix - 1][iz] = cost;
                                 (*tunnelLabel)[iy][ix - 1][iz] = n;
                             }
+			}
                         if (ix > 0 && iy + 1 > 0 && iz > 0 && ix < sx - 1
                             && iy + 1 < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy + 1][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy + 1][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1423,13 +1461,16 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy + 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy + 1][ix][iz] = n;
                             }
+			}
                         if (ix > 0 && iy - 1 > 0 && iz > 0 && ix < sx - 1
                             && iy - 1 < sy - 1 && iz < sz - 1)
+			{
                             if (cost < (*costMap3D)[iy - 1][ix][iz])
                             {
                                 if (isinf((*costMap3D)[iy - 1][ix][iz]))
 				{
                                     b_iscostassigned = true;
+                                    ui_noninf_nodes++;
 				}
                                 checkIntersections(tunnelLabel,
                                                    costMap3D,
@@ -1440,13 +1481,12 @@ unsigned int ArmPlanner::generateTunnel(
                                 (*costMap3D)[iy - 1][ix][iz] = cost;
                                 (*tunnelLabel)[iy - 1][ix][iz] = n;
                             }
+			}
                     }
                 }
-       	    if (b_iscostassigned)
-            {
-                ui_noninf_nodes++;
             }
-        }
+	}
+    }
     return ui_noninf_nodes;
 }
 
