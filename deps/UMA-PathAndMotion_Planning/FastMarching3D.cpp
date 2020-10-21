@@ -362,10 +362,10 @@ bool FastMarching3D::computePathGDM(
         std::vector<std::vector<double>>(
             (*TMap)[0].size(), std::vector<double>((*TMap)[0][0].size())));
 
-    //std::cout << "Computing the 3D path" << std::endl;
+    std::cout << "Computing the 3D path" << std::endl;
     for (int k = 0; k < ui_max_iter; k++)
     {
-        //std::cout << "\rk = " << k;
+        std::cout << "\rk = " << k;
         computeGradient(TMap, path->at(path->size() - 1), G1, G2, G3);
         double dx = getInterpolatedPoint(path->at(path->size() - 1), G1);
         double dy = getInterpolatedPoint(path->at(path->size() - 1), G2);
@@ -505,7 +505,7 @@ bool FastMarching3D::computePathGDM(
             break;
     }
 
-    //std::cout << "...done!" << std::flush << std::endl;
+    std::cout << "...done!" << std::flush << std::endl;
     if (path->size() >= ui_max_iter)
     {
         return false;

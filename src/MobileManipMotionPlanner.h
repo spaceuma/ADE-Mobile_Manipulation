@@ -145,7 +145,7 @@ public:
      * PAUSE state.
      */
     bool resumeOperation();
-    unsigned int updateAtomicOperation(Joints &arm_command, Joints arm_joints,
+    unsigned int updateAtomicOperation(proxy_library::Joints &arm_command, proxy_library::Joints arm_joints,
 		                       bool b_display_status = false);
 
     /**
@@ -250,12 +250,12 @@ public:
      */
     void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
                          proxy_library::Pose rover_position,
-                         Joints arm_joints);
+                         proxy_library::Joints arm_joints);
 
     /**
      * It serves to perform an operation with only the arm.
      */
-    bool initAtomicOperation(const Joints &j_present_readings,
+    bool initAtomicOperation(const proxy_library::Joints &j_present_readings,
 		             const base::Waypoint &w_goal,
 			     double d_roll = 0.0,
 			     double d_pitch = 3.1416,

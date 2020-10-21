@@ -17,10 +17,13 @@ TEST(MMMapTest, nominal_working_test)
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
   */
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/GalopprennbahnWest_Zone01blurred_10cmDEM.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
 
+/*
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RH1_Zone1_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
-  
+ */ 
 /*
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv",
                    vvd_elevation_data)) << "Input DEM file is missing";
@@ -59,8 +62,8 @@ TEST(MMMapTest, nominal_working_test)
     std::cout << vvd_elevation_data[0][0] << std::endl; 
 
     base::Waypoint samplePos;
-    samplePos.position[0] = 9.8;//5.6;
-    samplePos.position[1] = 5.1;
+    samplePos.position[0] = 17.885;//5.6;
+    samplePos.position[1] = 12.405;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
     MobileManipMap dummyMap(true);

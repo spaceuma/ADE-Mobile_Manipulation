@@ -50,11 +50,6 @@ file(GLOB WP_SRC
     "../../deps/ESA-Trajectory_Control/WaypointNavigation.cpp"
 )  
 
-file(GLOB CC_SRC
-    "../../deps/UMA-Coupled_Control/src/coupledControl.hpp"
-    "../../deps/UMA-Coupled_Control/src/coupledControl.cpp"
-)  
-
 # Link runTests with what we want to test and the GTest and pthread library
 add_executable(runUnitTests 
                UnitTests.cpp 
@@ -67,13 +62,11 @@ add_executable(runUnitTests
                ${MM_types_SRC_proxy_library}
 	       ${MMML_SRC}
 	       ${FM_SRC}
-               ${WP_SRC}
-	       ${CC_SRC})
+               ${WP_SRC})
 target_include_directories(runUnitTests PRIVATE ../../src/types)
 target_include_directories(runUnitTests PRIVATE ../../src/types/base)
 target_include_directories(runUnitTests PRIVATE ../../src/types/proxy_library)
 target_include_directories(runUnitTests PRIVATE ../../src/mmFileManagerLib)
 target_include_directories(runUnitTests PRIVATE ../../deps/UMA-PathAndMotion_Planning)
 target_include_directories(runUnitTests PRIVATE ../../deps/ESA-Trajectory_Control)
-target_include_directories(runUnitTests PRIVATE ../../deps/UMA-Coupled_Control/src)
 target_link_libraries(runUnitTests ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread Eigen3::Eigen dart dart-utils-urdf dart-gui)

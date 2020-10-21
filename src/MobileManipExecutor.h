@@ -4,11 +4,9 @@
 #include "MotionCommand.h"
 #include "MotionPlan.h"
 #include "WaypointNavigation.hpp"
-#include "coupledControl.hpp"
 
 // using namespace proxy_library;
 using namespace waypoint_navigation_lib;
-using namespace coupled_control;
 
 enum ArmExecutionState
 {
@@ -62,10 +60,6 @@ private:
      */
     proxy_library::MotionCommand motion_command;
     /**
-     * Coupled Control class
-     */
-    coupledControl coupled_control;
-    /**
      * Collision Detector class
      */
     CollisionDetector *p_collision_detector;
@@ -80,7 +74,7 @@ private:
     /**
      * LSC: Turning Radius Matrix
      */
-    std::vector<std::vector<double>> *pvvd_turning_radius_matrix;
+    std::vector<std::vector<double>> *pvvd_turning_curvature_matrix;
     /**
      * LSC: Turning Angle Matrix
      */
@@ -132,14 +126,17 @@ private:
      */
     NavigationState navstate;
     // Temporal fix for motion command bug
-    void fixMotionCommand(MotionCommand &mc_m);
+    void fixMotionCommand(proxy_library::MotionCommand &mc_m);
 
-    bool updateArmPresentReadings(const Joints &j_present_joints_m);
+    bool updateArmPresentReadings(const proxy_library::Joints &j_present_joints_m);
     bool updateArmCommandVectors();
     bool updateArmCommandVectors(
         const std::vector<double> &vd_present_command_m);
+    double computeBilinearInterpolation(double x, double y, 
+		double x1, double x2, double y1, double y2, double Q11, 
+		double Q12, double Q21, double Q22);
 
-    bool assignPresentCommand(Joints &j_command);
+    bool assignPresentCommand(proxy_library::Joints &j_command);
     std::vector<double> vd_arm_posmargin
         = {0.2,
            0.2,
@@ -158,7 +155,8 @@ public:
      * Class Constructor using the present motion plan
      */
     MobileManipExecutor(MotionPlan *presentMotionPlan,
-                        std::string s_urdf_path_m);
+                        std::string s_urdf_path_m,
+			unsigned int ui_operation_mode = 3);
     /**
      * Update the data extracted from the motion plan
      */
@@ -178,8 +176,8 @@ public:
         const proxy_library::Joints &j_arm_present_readings_m,
         proxy_library::MotionCommand &mc_m,
         proxy_library::Joints &j_next_arm_command_m);
-    unsigned int getAtomicCommand(const Joints &j_arm_present_readings_m,
-                                      Joints &j_next_arm_command_m,
+    unsigned int getAtomicCommand(const proxy_library::Joints &j_arm_present_readings_m,
+                                      proxy_library::Joints &j_next_arm_command_m,
 				      unsigned int ui_mode);
     /**
      * Checks if the arm is at Ready position
@@ -193,14 +191,14 @@ public:
     /**
      * Checks if the arm is still following the arm commands
      */
-    bool isArmFollowing(const Joints &j_next_command,
-                        const Joints &j_present_joints);
-    bool isArmMoving(const Joints &j_present_joints);
+    bool isArmFollowing(const proxy_library::Joints &j_next_command,
+                        const proxy_library::Joints &j_present_joints);
+    bool isArmMoving(const proxy_library::Joints &j_present_joints);
     /**
      * Returns a (0,0,0) rover command
      */
     proxy_library::MotionCommand getZeroRoverCommand();
-
+    bool getLastSectionCommand(base::Pose &rover_pose, proxy_library::MotionCommand &mc);
     /**
      * Returns a Point Turn rover command
      */
@@ -209,7 +207,7 @@ public:
     /**
      * Arm Variables Initialization
      */
-    void initializeArmVariables(const Joints &j_present_readings);
+    void initializeArmVariables(const proxy_library::Joints &j_present_readings);
     void resetOperationTime();
     std::vector<double> *getArmCurrentReadings();
     std::vector<double> *getFirstCoverageProfile();

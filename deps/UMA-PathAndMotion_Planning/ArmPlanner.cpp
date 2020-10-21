@@ -375,20 +375,21 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         std::vector<double> wristJoints;
 	double d_config4 = std::max(-config[2],-1.57); 
 
-        if (config[0] < 0.65)
+/*        if (config[0] < 0.65)
 	{
             wristJoints
                 = { std::max(3.1416,std::max(d_previousconfig3, 1.57 + 1.57 * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
 	}
-	else if (config[0] < 1.57)
+	else */
+	if (config[0] < 1.57)
 	{
             wristJoints
-                = { 1.57, -1.57, -2.7 };
+                = { 1.57, -1.4, -2.7 };
 	}
 	else
 	{
             wristJoints
-                = { 3.1416 - config[0], -1.57, -2.7 };
+                = { 3.1416 - config[0], -1.4, -2.7 };
 	}
         d_previousconfig3 = config[3];
 	

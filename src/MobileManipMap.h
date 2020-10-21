@@ -63,7 +63,7 @@ private:
     /**
      * Threshold for spherical deviation
      */
-    double d_sd_threshold = 16.82;
+    double d_sd_threshold = 12.0;//16.82;
     /**
      * Threshold for average slope
      */
@@ -75,11 +75,11 @@ private:
     /**
      * Avoidance distance for risk area
      */
-    double d_avoid_dist = 1.0;
+    double d_avoid_dist = 1.5;
     /**
      * Max reachability distance
      */
-    double d_maxreach_dist = 1.3;//1.584;
+    double d_maxreach_dist = 1.5;//1.584;
     /**
      * Min reachability distance
      */

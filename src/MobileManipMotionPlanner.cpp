@@ -35,7 +35,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
 }
 
 bool MobileManipMotionPlanner::initAtomicOperation(
-    const Joints &j_present_readings,
+    const proxy_library::Joints &j_present_readings,
     const base::Waypoint &w_goal,
     double d_roll,
     double d_pitch,
@@ -102,8 +102,8 @@ bool MobileManipMotionPlanner::initAtomicOperation(
 }
 
 unsigned int MobileManipMotionPlanner::updateAtomicOperation(
-    Joints &arm_command,
-    Joints arm_joints,
+    proxy_library::Joints &arm_command,
+    proxy_library::Joints arm_joints,
     bool b_display_status)
 {
     unsigned int ui_error_code = 0;
@@ -286,7 +286,7 @@ bool MobileManipMotionPlanner::updateNavCamDEM(
 //-- Generate Motion Plan
 bool MobileManipMotionPlanner::generateMotionPlan(
     proxy_library::Pose plpose_m,
-    const Joints &j_present_readings,
+    const proxy_library::Joints &j_present_readings,
     double d_sample_pos_x,
     double d_sample_pos_y)
 {
@@ -422,8 +422,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
         // this->p_motionplan->computeArmDeployment(0,);
 	// Adds a dummy waypoint at the end to smoothly turn the rover at the end
-	//this->p_motionplan->addTurningWaypoint(0.0);
-	this->p_motionplan->addTurningWaypoint(0.7);
+	this->p_motionplan->addTurningWaypoint(0.0);
+	//this->p_motionplan->addTurningWaypoint(0.7);
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Added final Turning Waypoint, now path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         this->p_mmexecutor->updateMotionPlan();
         std::cout << " \033[1;32m[--DONE!---] [generateMotionPlan()]\033[0m Executor is updated with new plan" << std::endl;

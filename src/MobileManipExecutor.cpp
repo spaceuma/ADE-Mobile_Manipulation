@@ -4,7 +4,8 @@
 #include "mmFileManager.h"
 
 MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
-                                         std::string s_urdf_path_m)
+                                         std::string s_urdf_path_m,
+					 unsigned int ui_operation_mode)
 {
     // this->initializeArmVariables(j_present_readings);
     this->vd_arm_previous_command.resize(6);
@@ -19,24 +20,44 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
     this->pvd_arm_sweeping_times = new std::vector<double>;
     this->d_dist_to_sample = 10000;
 
-    this->pvvd_turning_radius_matrix = new std::vector<std::vector<double>>;
+    this->pvvd_turning_curvature_matrix = new std::vector<std::vector<double>>;
     this->pvvd_turning_angle_matrix = new std::vector<std::vector<double>>;
     this->pvd_lsc_x0 = new std::vector<double>;
     this->pvd_lsc_y0 = new std::vector<double>;
 
-    readMatrixFile(s_urdf_path_m + "/LastSectionControl/LSC_TurningRadius.txt",
-                   (*this->pvvd_turning_radius_matrix));
+    readMatrixFile(s_urdf_path_m + "/LastSectionControl/LSC_TurningCurvature.txt",
+                   (*this->pvvd_turning_curvature_matrix));
     readMatrixFile(s_urdf_path_m + "/LastSectionControl/LSC_TurningAngle.txt",
                    (*this->pvvd_turning_angle_matrix));
     readVectorFile(s_urdf_path_m + "/LastSectionControl/LSC_X0.txt",
                    (*this->pvd_lsc_x0));
     readVectorFile(s_urdf_path_m + "/LastSectionControl/LSC_Y0.txt",
                    (*this->pvd_lsc_y0));
-  
-    readMatrixFile(s_urdf_path_m + "/sweepingProfile.txt",
+    switch(ui_operation_mode)
+    {
+        case 0: //PICK
+            readMatrixFile(s_urdf_path_m + "/arm_pick_profile.txt",
                    (*this->pvvd_arm_sweeping_profile));
-    readVectorFile(s_urdf_path_m + "/sweepingTimes.txt",
+            readVectorFile(s_urdf_path_m + "/arm_pick_times.txt",
                    (*this->pvd_arm_sweeping_times));
+            std::cout << " \033[33m[----------] [MobileManipExecutor::MobileManipExecutor()]\033[0m Pick Operation Selected"  << std::endl;
+	    break;
+        case 1: //DROP
+            readMatrixFile(s_urdf_path_m + "/arm_drop_profile.txt",
+                   (*this->pvvd_arm_sweeping_profile));
+            readVectorFile(s_urdf_path_m + "/arm_drop_times.txt",
+                   (*this->pvd_arm_sweeping_times));
+            std::cout << " \033[33m[----------] [MobileManipExecutor::MobileManipExecutor()]\033[0m Drop Operation Selected"  << std::endl;
+	    break;
+        default: //SWEEPING
+            readMatrixFile(s_urdf_path_m + "/arm_sweeping_profile.txt",
+                   (*this->pvvd_arm_sweeping_profile));
+            readVectorFile(s_urdf_path_m + "/arm_sweeping_times.txt",
+                   (*this->pvd_arm_sweeping_times));
+            std::cout << " \033[33m[----------] [MobileManipExecutor::MobileManipExecutor()]\033[0m Sweeping Operation Selected"  << std::endl;
+	    break;
+     
+    } 
 
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
@@ -103,6 +124,16 @@ void MobileManipExecutor::updateDeployment()
     this->pvd_init_time_profile = this->p_motion_plan->getInitArmTimeProfile();
 }
 
+double MobileManipExecutor::computeBilinearInterpolation(double x, double y, 
+		double x1, double x2, double y1, double y2, double Q11, 
+		double Q12, double Q21, double Q22)
+{
+    double A = ( (x2 - x)*Q11 + (x - x1)*Q21 ) * ( y2 - y );
+    double B = ( (x2 - x)*Q12 + (x - x1)*Q22 ) * ( y - y1 );
+    double C = ( x2 - x1 ) * ( y2 - y1 );
+    return ( A + B ) / C ; 
+}
+
 bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 {
     double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
@@ -116,33 +147,10 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
     dist = sqrt(pow(dx,2)+pow(dy,2));
     dtargetheading =  (*this->vpw_path.back()).heading;
 
-    //Finding x0 indexes 
-    if ((x0 <=(*this->pvd_lsc_x0)[0])||(x0 >= (*this->pvd_lsc_x0).back()))
-    {
-        //std::cout << " It is not in Last Section" << std::endl;
-    }
-    else if ((y0 <=(*this->pvd_lsc_y0)[0])||(y0 >= (*this->pvd_lsc_y0).back()))
-    { 
-        //std::cout << " It is not in Last Section" << std::endl;
-    }
-    else
-    {
-        //std::cout << " In Last Section" << std::endl;
-    }
-
-/*
-    for (uint i = 0; i<this->pvd_lsc_x0->size(); i++)
-    {
-        
-    }
-*/
-/*
-    std::cout << "ALIGNED:" << std::endl;
-    std::cout << "    dist = " << dist << std::endl;
-    std::cout << "    heading = " << dyaw*180.0/3.1416 << " / " << dtargetheading*180.0/3.1416 << std::endl;
-    std::cout << "    x0 = " << x0 << std::endl;
-    std::cout << "    y0 = " << y0 << std::endl;
-*/
+    unsigned int ui_counter, ui_x0_min, ui_x0_max, ui_y0_min, ui_y0_max;
+    double R, d_x, d_y, d_x1, d_x2, d_y1, d_y2, d_R11, d_R12, d_R21, d_R22;
+    //Finding x0 indexes
+ 
     dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
     //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
     //if ((dist < 0.2))//&&(dacos < 0.1))
@@ -157,7 +165,7 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
         std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
        
     }this->d_dist_to_sample = dist;
-    if ((dist < 1.4))//&&(dacos < 0.1))
+    if ((dist < 1.1))//&&(dacos < 0.1))
     {
         return true; 
     }
@@ -178,6 +186,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
     // Getting Rover Command
     waypoint_navigation.setPose(rover_pose);
     waypoint_navigation.update(mc_m);
+
+    getLastSectionCommand(rover_pose, mc_m); 
 
     // Evaluating state of Rover Path Following
     this->navstate = waypoint_navigation.getNavigationState();
@@ -316,12 +326,25 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 }
             }
 	    //std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
-	    this->b_is_last_segment
-                    = coupled_control.selectNextManipulatorPosition(
-                        i_current_segment,
-                        this->pvvd_arm_motion_profile,
-                        &(this->vd_arm_present_command),
-                        true);
+            double d_angle, d_na;
+            for (unsigned int i = 0; i < this->vd_arm_present_command.size(); i++)
+            {
+                d_angle = (*this->pvvd_arm_motion_profile)[i_current_segment][i];
+                d_na = atan2(sin(d_angle), cos(d_angle));
+                if (d_na < -3.1416)
+		{
+		    d_na = d_na + 2 * 3.1416;
+		}
+                if (d_na > 3.1416)
+		{
+		    d_na = d_na - 2 * 3.1416;
+		}
+		this->vd_arm_present_command[i] = d_na;
+            }
+            // Returns true if it is the last position
+            this->b_is_last_segment = (i_current_segment == (*this->pvvd_arm_motion_profile).size() - 1);
+
+	    
             this->assignPresentCommand(j_next_arm_command_m);
             if ((!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))&&
 		(!isArmMoving(j_arm_present_readings_m)))
@@ -749,6 +772,102 @@ proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
     mc_zero.m_speed_ms = 0.0;       // in meters/seconds
     mc_zero.m_turnRate_rads = 0.0;  // in radians/seconds
     return mc_zero;
+}
+
+bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_library::MotionCommand &mc)
+{
+    // Returns whether the rover is in last section or not
+    double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
+    dyaw = rover_pose.getYaw();
+    dx = (*this->vpw_path.back()).position[0] - rover_pose.position[0];  
+    dy = (*this->vpw_path.back()).position[1] - rover_pose.position[1];  
+    dTransformAngle = dyaw - 0.5*3.1416;
+    x0 = cos(dTransformAngle)*dx + sin(dTransformAngle)*dy;
+    y0 = - sin(dTransformAngle)*dx + cos(dTransformAngle)*dy;
+    /*
+	std::cout << " - dyaw = " << dyaw << std::endl; 
+	std::cout << " - dtransform = " << dTransformAngle << std::endl; 
+	std::cout << " - dx = " << dx << std::endl; 
+	std::cout << " - dy = " << dy << std::endl; 
+	std::cout << " - x0 = " << x0 << std::endl; 
+	std::cout << " - y0 = " << y0 << std::endl; 
+*/
+    dist = sqrt(pow(dx,2)+pow(dy,2));
+    dtargetheading =  (*this->vpw_path.back()).heading;
+
+    unsigned int ui_counter, ui_x0_min, ui_x0_max, ui_y0_min, ui_y0_max;
+    double d_K, d_x, d_y, d_x1, d_x2, d_y1, d_y2, d_R11, d_R12, d_R21, d_R22;
+    //Finding x0 indexes 
+    if ((x0 <=(*this->pvd_lsc_x0)[0])||(x0 >= (*this->pvd_lsc_x0).back()))
+    {
+        std::cout << " It is not in Last Section" << std::endl;
+	return false;
+    }
+    else if ((y0 <=(*this->pvd_lsc_y0)[0])||(y0 >= (*this->pvd_lsc_y0).back()))
+    { 
+        std::cout << " It is not in Last Section" << std::endl;
+	return false;
+    }
+    else
+    {
+	ui_counter = 1;
+        while(ui_counter < this->pvd_lsc_x0->size())
+	{
+            if ((*this->pvd_lsc_x0)[ui_counter] > x0)
+	    {
+                ui_x0_min = ui_counter-1;
+	        ui_x0_max = ui_counter;
+	        break;	
+	    }
+	    ui_counter++;
+	}       
+        ui_counter = 1;	
+	while(ui_counter < this->pvd_lsc_y0->size())
+	{
+            if ((*this->pvd_lsc_y0)[ui_counter] > y0)
+	    {
+                ui_y0_min = ui_counter-1;
+	        ui_y0_max = ui_counter;
+	        break;	
+	    }
+	    ui_counter++;
+	}
+        d_x = x0; 
+	d_y = y0;
+        d_x1 = (*this->pvd_lsc_x0)[ui_x0_min];
+        d_x2 = (*this->pvd_lsc_x0)[ui_x0_max];
+        d_y1 = (*this->pvd_lsc_y0)[ui_y0_min];
+        d_y2 = (*this->pvd_lsc_y0)[ui_y0_max];
+        d_R11 = (*this->pvvd_turning_curvature_matrix)[ui_y0_min][ui_x0_min];
+        d_R12 = (*this->pvvd_turning_curvature_matrix)[ui_y0_max][ui_x0_min];
+        d_R21 = (*this->pvvd_turning_curvature_matrix)[ui_y0_min][ui_x0_max];
+        d_R22 = (*this->pvvd_turning_curvature_matrix)[ui_y0_max][ui_x0_max];
+        d_K = - computeBilinearInterpolation(d_x, d_y, d_x1, d_x2, d_y1, d_y2, d_R11, d_R12, d_R21, d_R22);  // It must be negative, it is turning right always
+        std::cout << " In Last Section" << std::endl;
+        std::cout << "  - x0 indexes: " << ui_x0_min << " and " << ui_x0_max << std::endl;
+        std::cout << "  - y0 indexes: " << ui_y0_min << " and " << ui_y0_max << std::endl;
+        std::cout << " Size of Curvature matrix is " << (*this->pvvd_turning_curvature_matrix).size() << " x " << (*this->pvvd_turning_curvature_matrix)[0].size() << std::endl; 
+	std::cout << " - dyaw = " << dyaw << std::endl; 
+	std::cout << " - dtransform = " << dTransformAngle << std::endl; 
+	std::cout << " - x0 = " << d_x << std::endl; 
+	std::cout << " - y0 = " << d_y << std::endl; 
+	std::cout << " - R11 = " << d_R11 << std::endl; 
+	std::cout << " - R12 = " << d_R12 << std::endl; 
+	std::cout << " - R21 = " << d_R21 << std::endl;  
+	std::cout << " - R22 = " << d_R22 << std::endl; 
+	std::cout << " - K = " << d_K << std::endl; 
+	std::cout << " - Radius = " << 1.0/d_K << std::endl; 
+        std::cout << " Size of Omegamatrix is " << (*this->pvvd_turning_angle_matrix).size() << " x " << (*this->pvvd_turning_angle_matrix)[0].size() << std::endl; 
+        std::cout << " - manoeuvre is " << mc.m_manoeuvreType << std::endl;
+        std::cout << " - curvature is " << mc.m_curvature_radm << std::endl;
+        std::cout << " - speed is " << mc.m_speed_ms << std::endl;
+        std::cout << " - turnrate is " << mc.m_turnRate_rads << std::endl;
+        mc.m_manoeuvreType = 0;
+	mc.m_curvature_radm = d_K;
+	mc.m_speed_ms = 0.1;
+	mc.m_turnRate_rads = 0.1*d_K;
+	return true;
+    }
 }
 
 proxy_library::MotionCommand MobileManipExecutor::getPointTurnRoverCommand(double d_turnSpeed_rads)
