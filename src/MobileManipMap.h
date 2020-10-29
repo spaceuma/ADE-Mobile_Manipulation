@@ -63,7 +63,7 @@ private:
     /**
      * Threshold for spherical deviation
      */
-    double d_sd_threshold = 12.0;//16.82;
+    double d_sd_threshold = 16.82;
     /**
      * Threshold for average slope
      */
