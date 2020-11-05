@@ -8,6 +8,165 @@
 
 using namespace cv;
 
+TEST(MMMapTest, nominal_working_test_galopprennbahnwest)
+{
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
+    
+    // A dummy Rover Guidance based DEM is created
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/GalopprennbahnWest_Zone01blurred_10cmDEM.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
+    double res = 0.1; // meters
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    int8_t validityArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
+    prgd_dummy_dem->mapOrigin_m_Mlg[0] = 0.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[1] = 0.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[2] = 0.0;
+    for (uint j = 0; j < vvd_elevation_data.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
+                = vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = 1;
+        }
+    }
+
+    MobileManipMap dummyMap(false);
+    ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
+
+    base::Waypoint samplePos;
+    samplePos.position[0] = 17.885;
+    samplePos.position[1] = 12.405;
+
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    std::cout << "Cost map is computed" << std::endl; 
+    double d_elevation_min = dummyMap.getMinElevation();
+
+    std::vector<std::vector<double>> costMap, slopeMap, sdMap;
+    std::vector<std::vector<int>> traversabilityMap;
+    std::vector<std::vector<int8_t>> validityMap;
+    costMap.resize(prgd_dummy_dem->rows);
+    traversabilityMap.resize(prgd_dummy_dem->rows);
+    validityMap.resize(prgd_dummy_dem->rows);
+    for (uint i = 0; i < prgd_dummy_dem->rows; i++)
+    {
+        costMap[i].resize(prgd_dummy_dem->cols);
+        validityMap[i].resize(prgd_dummy_dem->cols);
+    }
+    dummyMap.getCostMap(costMap);
+    dummyMap.getValidityMap(validityMap);
+    dummyMap.getSlopeMap(slopeMap);
+    dummyMap.getSDMap(sdMap);
+    dummyMap.getTraversabilityMap(traversabilityMap);
+
+    std::ofstream validityMapFile, costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
+    writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_validityMap.txt", validityMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_costMap.txt", costMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_slopeMap.txt", slopeMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_sdMap.txt", sdMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_traversabilityMap.txt", traversabilityMap);    
+}
+
+TEST(MMMapTest, nominal_working_test_exrColmenar)
+{
+    // Checking EXR DEM sent by GMV
+    cv::FileStorage opencv_file("test/unit/data/input/MMMapTest/1212.1628281354.363863_colmenar_subdem_id_1.ext", cv::FileStorage::READ);
+    if (!opencv_file.isOpened())
+    {
+        std::cout << "Did not open" << std::endl;
+    }
+    cv::Mat exrDEM;
+    opencv_file["mapMatrix"] >> exrDEM;
+    std::cout << "Size is " << exrDEM.size() << std::endl; 
+    //cv::Mat mGlobalDEM = cv::imread("test/unit/data/input/MMMapTest/1212.1628281354.363863_colmenar_subdem_id_1ag.ext", cv::IMREAD_ANYDEPTH); 
+    cv::imshow("exr", exrDEM);
+    waitKey(0);
+    
+    opencv_file.release();
+    std::ofstream demFile;
+    demFile.open("test/unit/data/results/MMMapTest/exrColmenar.txt");
+    for (int j = 0; j < 301; j++)
+    {
+        for (int i = 0; i < 301; i++)
+        {
+            demFile << exrDEM.at<float>(j, i) << " ";
+        }
+        demFile << "\n";
+    }
+
+    
+    double d_global_res = 0.1; // meters
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    unsigned int ui_cols, ui_rows;
+    ui_cols = 301;
+    ui_rows = 301;
+    double dummyArray[ui_cols * ui_rows];
+    int8_t validityArray[ui_cols * ui_rows];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
+    prgd_dummy_dem->cols = ui_cols;
+    prgd_dummy_dem->rows = ui_rows;
+    prgd_dummy_dem->nodeSize_m = d_global_res;
+    prgd_dummy_dem->mapOrigin_m_Mlg[0] = -15.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[1] = -15.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[2] = 0.0;
+    for (uint j = 0; j < ui_rows; j++)
+    {
+        for (uint i = 0; i < ui_cols; i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * ui_cols]
+                = exrDEM.at<float>(j, i);
+            prgd_dummy_dem->p_pointValidityFlag[i + j * ui_cols] = 1;
+        }
+    }
+
+    base::Waypoint samplePos;
+    samplePos.position[0] = 3.0;
+    samplePos.position[1] = 3.0;
+
+    MobileManipMap dummyMap(false);
+    ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
+    std::cout << "DEM is loaded" << std::endl; 
+    std::ofstream validityMapFile, costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
+    
+    std::vector<std::vector<double>> costMap, slopeMap, sdMap;
+    std::vector<std::vector<int>> traversabilityMap;
+    std::vector<std::vector<int8_t>> validityMap;
+    dummyMap.getValidityMap(validityMap);
+    dummyMap.getSlopeMap(slopeMap);
+    dummyMap.getSDMap(sdMap);
+
+    writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_validityMap.txt", validityMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_slopeMap.txt", slopeMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_sdMap.txt", sdMap);    
+
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    std::cout << "Cost map is computed" << std::endl; 
+
+    costMap.resize(prgd_dummy_dem->rows);
+    traversabilityMap.resize(prgd_dummy_dem->rows);
+    validityMap.resize(prgd_dummy_dem->rows);
+    for (uint i = 0; i < prgd_dummy_dem->rows; i++)
+    {
+        costMap[i].resize(prgd_dummy_dem->cols);
+        validityMap[i].resize(prgd_dummy_dem->cols);
+    }
+    dummyMap.getCostMap(costMap);
+
+    writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_costMap.txt", costMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_traversabilityMap.txt", traversabilityMap);     
+}
+
+
+
+
 TEST(MMMapTest, nominal_working_test)
 {
     // Input Elevation Matrix is read
@@ -66,7 +225,7 @@ TEST(MMMapTest, nominal_working_test)
     samplePos.position[1] = 12.405;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
-    MobileManipMap dummyMap(true);
+    MobileManipMap dummyMap(false);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
     ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
@@ -235,7 +394,7 @@ TEST(MMMapTest, nominal_working_test_MagLocCam)
     samplePos.position[1] = 10.0;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
-    MobileManipMap dummyMap(true);
+    MobileManipMap dummyMap(false);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
     ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);

@@ -4,6 +4,59 @@ import matplotlib.pyplot as plt
 
 from matplotlib import cm
 
+
+### EXR COLMENAR ###
+exrColmenar_elevationMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrColmenar.txt"), skiprows=0)
+exrColmenar_slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrcolmenar_slopeMap.txt"), skiprows=0)
+exrColmenar_sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrcolmenar_sdMap.txt"), skiprows=0)
+exrColmenar_costMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrcolmenar_costMap.txt"), skiprows=0)
+res = 0.1
+xMap, yMap = np.meshgrid(np.linspace(0,300,301), np.linspace(0,300,301))
+
+fig3, ax6 = plt.subplots(constrained_layout=True)
+xMap = xMap*res
+yMap = yMap*res
+plot6 = ax6.contourf(xMap, yMap, exrColmenar_elevationMap, 100, cmap = cm.gist_earth, extend = 'both')
+plot6k = ax6.contour(xMap, yMap, exrColmenar_elevationMap, 50, colors = 'k', alpha = .3)
+ax6.set_aspect('equal')
+ax6.set_xlabel('X-axis (m)')
+ax6.set_ylabel('Y-axis (m)')
+ax6.set_title('Elevation Map - exrColmenar')
+cb6 = fig3.colorbar(plot6, ax = ax6, orientation = 'horizontal')
+cb6.ax.set_title('Elevation')
+
+
+fig2, (ax3,ax4) = plt.subplots(1,2,constrained_layout=True)
+
+plot3 = ax3.contourf(xMap, yMap, exrColmenar_slopeMap, 40, vmax = 20.0, cmap = 'Reds')
+ax3.set_aspect('equal')
+ax3.set_xlabel('X-axis (m)')
+ax3.set_ylabel('Y-axis (m)')
+ax3.set_title('Slope Map')
+cb3 = fig2.colorbar(plot3, ax = ax3, orientation = 'horizontal')
+cb3.ax.set_title('Slope')
+
+plot4 = ax4.contourf(xMap, yMap, exrColmenar_sdMap, 40, vmax = 16.82, cmap = 'Oranges')
+ax4.set_aspect('equal')
+ax4.set_xlabel('X-axis (m)')
+ax4.set_ylabel('Y-axis (m)')
+ax4.set_title('Spherical Deviation')
+cb4 = fig2.colorbar(plot4, ax = ax4, orientation = 'horizontal')
+cb4.ax.set_title('Spherical Deviation')
+
+fig1, ax1 = plt.subplots(constrained_layout=True)
+fig1.suptitle('EXR Colmenar Cost Map', fontsize=16)
+
+plot1 = ax1.contourf(xMap, yMap, exrColmenar_costMap, 40, cmap = 'Reds')
+ax1.set_aspect('equal')
+ax1.set_xlabel('X-axis (m)')
+ax1.set_ylabel('Y-axis (m)')
+ax1.set_title('Cost Map')
+cb1 = fig1.colorbar(plot1, ax = ax1, orientation = 'horizontal')
+cb1.ax.set_title('Cost')
+ax1.set_facecolor('k')
+
+
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
 costMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGcostMap.txt"), skiprows=0)
 costMap_Globalmag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGGlobalcostMap.txt"), skiprows=0)
