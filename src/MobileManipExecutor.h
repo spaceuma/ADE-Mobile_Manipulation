@@ -182,7 +182,7 @@ public:
     /**
      * Checks if the arm is at Ready position
      */
-    bool isArmReady(const proxy_library::Joints &j_next_command,
+    bool isArmReady(proxy_library::Joints &j_next_command,
                     const proxy_library::Joints &j_present_joints);
     /**
      * Checks if the arm is currently colliding

@@ -626,6 +626,15 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 b_is_finished = true;
                 std::cout << " \033[1;33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
             }
+	    else
+	    {
+                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is still not finished" << std::endl;
+                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - Elapsed time: " << d_elapsed_time << " seconds" << std::endl;
+                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - Time to reach: " << (*this->pvd_arm_sweeping_times)
+                     [(*this->pvvd_arm_sweeping_profile).size() - 1]
+                 * 1.5 + 5.0 <<  " seconds " << std::endl;
+                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - isArmReady() is returning " << ((this->isArmReady(j_next_arm_command, j_present_joints_m))) << std::endl;
+	    }
             break;
     }
 
@@ -699,13 +708,17 @@ bool MobileManipExecutor::isArmColliding()
 }
 
 bool MobileManipExecutor::isArmReady(
-    const proxy_library::Joints &j_next_command,
+    proxy_library::Joints &j_next_command,
     const proxy_library::Joints &j_present_joints)
 {
     //std::cout << "Executing isArmReady" << std::endl;
     if (j_next_command.m_jointStates.size() != 6)
     {
-        return false;
+        std::cout << " \033[1;33m[----------] [MobileManipExecutor::isArmReady()]\033[0m WARNING: The input j_next_command is empty" << std::endl;
+        if (!this->assignPresentCommand(j_next_command))
+	{
+	    return false;
+	}
     }
     //std::cout << "Checked" << std::endl;
     for (uint i = 0; i < 6; i++)
