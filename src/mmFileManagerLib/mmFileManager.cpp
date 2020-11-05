@@ -25,6 +25,57 @@ void readVectorFile(std::string vector_file,
     }
 }
 
+void writeMatrixFile(std::string s_matrix_dir,
+                    std::vector<std::vector<double>> &vvd_inputmatrix)
+{
+    std::ofstream of_targetfile;
+    
+    of_targetfile.open(s_matrix_dir);
+    for (int j = 0; j < vvd_inputmatrix.size(); j++)
+    {
+        for (int i = 0; i < vvd_inputmatrix[0].size(); i++)
+        {
+            of_targetfile << (double)vvd_inputmatrix[j][i] << " ";
+        }
+        of_targetfile << "\n";
+    }
+    of_targetfile.close();
+}
+
+void writeMatrixFile(std::string s_matrix_dir,
+                    std::vector<std::vector<int>> &vvd_inputmatrix)
+{
+    std::ofstream of_targetfile;
+    
+    of_targetfile.open(s_matrix_dir);
+    for (int j = 0; j < vvd_inputmatrix.size(); j++)
+    {
+        for (int i = 0; i < vvd_inputmatrix[0].size(); i++)
+        {
+            of_targetfile << (double)vvd_inputmatrix[j][i] << " ";
+        }
+        of_targetfile << "\n";
+    }
+    of_targetfile.close();
+}
+
+void writeMatrixFile(std::string s_matrix_dir,
+                    std::vector<std::vector<int8_t>> &vvd_inputmatrix)
+{
+    std::ofstream of_targetfile;
+    
+    of_targetfile.open(s_matrix_dir);
+    for (int j = 0; j < vvd_inputmatrix.size(); j++)
+    {
+        for (int i = 0; i < vvd_inputmatrix[0].size(); i++)
+        {
+            of_targetfile << (double)vvd_inputmatrix[j][i] << " ";
+        }
+        of_targetfile << "\n";
+    }
+    of_targetfile.close();
+}
+
 void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData)
 {

@@ -14,6 +14,12 @@ using namespace base;
 
 void readVectorFile(std::string vector_file,
                     std::vector<double> &vector);
+void writeMatrixFile(std::string s_matrix_dir,
+                    std::vector<std::vector<double>> &vvd_inputmatrix);
+void writeMatrixFile(std::string s_matrix_dir,
+                    std::vector<std::vector<int>> &vvd_inputmatrix);
+void writeMatrixFile(std::string s_matrix_dir,
+                    std::vector<std::vector<int8_t>> &vvd_inputmatrix);
 void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData);
 void readReachabilityMap(std::string map_file,
