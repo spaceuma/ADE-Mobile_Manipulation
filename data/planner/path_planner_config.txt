@@ -1,0 +1,8 @@
+Slope threshold:
+20.0
+SD threshold:
+16.82
+Valid Ratio:
+0.5
+Contour Ratio:
+0.3
