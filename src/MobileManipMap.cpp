@@ -10,6 +10,68 @@ MobileManipMap::MobileManipMap(bool b_debug_mode_m)
     this->b_debug_mode = b_debug_mode_m;
 }
 
+
+void MobileManipMap::setThresholdValues(double d_temptative_slope_threshold, 
+		                        double d_temptative_sd_threshold, 
+				        double d_temptative_valid_ratio_threshold,
+				        double d_temptative_contour_ratio_threshold)
+{
+ 
+    if ((d_temptative_slope_threshold < 0.0)||(d_temptative_slope_threshold > 90.0))
+    {
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold value remains as " <<  this->d_slope_threshold
+		 << " degrees, since temptative value " << d_temptative_slope_threshold << " degrees is out of range [0.0, 90.0] " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Slope threshold is " <<  
+		d_temptative_slope_threshold << " degrees, previous was " << 
+		this->d_slope_threshold << " degrees "<< std::endl;
+        this->d_slope_threshold = d_temptative_slope_threshold;
+    }
+
+    if ((d_temptative_sd_threshold < 0.0)||(d_temptative_sd_threshold > 90.0))
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold value remains as " <<  this->d_sd_threshold
+		 << " degrees, since temptative value " << d_temptative_sd_threshold << " degrees is out of range [0.0, 90.0] " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of SD threshold is " <<  
+		d_temptative_sd_threshold << " degrees, previous was " << 
+		this->d_sd_threshold << " degrees "<< std::endl;
+        this->d_sd_threshold = d_temptative_sd_threshold;
+    }
+
+    if ((d_temptative_valid_ratio_threshold < 0.0)||(d_temptative_valid_ratio_threshold > 1.0))
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold value remains as " <<  this->d_valid_ratio_threshold
+		 << " , since temptative value " << d_temptative_valid_ratio_threshold << " is out of range [0.0, 1.0] " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Valid Ratio threshold is " <<  
+		d_temptative_valid_ratio_threshold << " , previous was " << 
+		this->d_valid_ratio_threshold << std::endl;
+        this->d_valid_ratio_threshold = d_temptative_valid_ratio_threshold;
+    }
+    
+    if ((d_temptative_contour_ratio_threshold < 0.0)||(d_temptative_contour_ratio_threshold > 1.0))
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold value remains as " <<  this->d_contour_ratio_threshold
+		 << " , since temptative value " << d_temptative_contour_ratio_threshold << " is out of range [0.0, 1.0] " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Contour Ratio threshold is " <<  
+		d_temptative_contour_ratio_threshold << " , previous was " << 
+		this->d_contour_ratio_threshold << std::endl;
+        this->d_contour_ratio_threshold = d_temptative_contour_ratio_threshold;
+    }
+    std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Finished setting Threshold values " << std::endl; 
+}
+
+
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
                                unsigned int &ui_isDEM_loaded,
                                bool b_debug_mode_m)

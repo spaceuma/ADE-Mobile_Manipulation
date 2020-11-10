@@ -52,22 +52,15 @@ private:
      * Radius of sampling inner ring
      */
     double d_inner_sampling_dist;
+    
     /**
-     * Threshold for valid pixels ratio
+     * THRESHOLD VALUES
      */
-    double d_valid_ratio_threshold = .5;
-    /**
-     * Threshold for contour/valid pixels ratio
-     */
-    double d_contour_ratio_threshold = .3;//.1;
-    /**
-     * Threshold for spherical deviation
-     */
-    double d_sd_threshold = 16.82;
-    /**
-     * Threshold for average slope
-     */
-    double d_slope_threshold = 20.0;
+    double d_slope_threshold = 20.0; // Average slope
+    double d_sd_threshold = 16.82; // Spherical deviation
+    double d_valid_ratio_threshold = .5; //Valid pixels ratio
+    double d_contour_ratio_threshold = .3; //contour/valid pixels ratio
+    
     /**
      * Iterations for the morphological CLOSE operation on validity map
      */
@@ -232,6 +225,14 @@ public:
 
     std::vector<double> getOffset();
     void printDEMinfo();
+
+    /**
+     * Function to set new config values
+     */
+    void setThresholdValues(double d_temptative_slope_threshold, 
+                            double d_temptative_sd_threshold, 
+                            double d_temptative_valid_ratio_threshold,
+                            double d_temptative_contour_ratio_threshold);
 
 private:
     /**

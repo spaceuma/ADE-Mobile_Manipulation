@@ -8,6 +8,12 @@
 
 using namespace cv;
 
+TEST(MMMapTest, set_config_test)
+{
+    MobileManipMap mmmap(false);
+    mmmap.setThresholdValues( 0.0,-1.0,-1.0,-1.0);
+}
+
 TEST(MMMapTest, nominal_working_test_galopprennbahnwest)
 {
     // Input Elevation Matrix is read

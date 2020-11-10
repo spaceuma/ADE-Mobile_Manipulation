@@ -12,9 +12,46 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating classes" << std::endl;
     this->status = IDLE;
     this->error = NO_ERROR;
-    // DEM is introduced into the map class
+     // DEM is introduced into the map class
     unsigned int ui_error_code = 0;
     this->p_mmmap = new MobileManipMap();
+    
+     // Setting Threshold values 
+    std::string s_config_path = s_configfile_path_m + "/path_planner_config.txt"; 
+    try
+    {
+        std::ifstream e_file(s_config_path.c_str(), std::ios::in);
+        if (e_file.is_open())
+        {
+            std::string cell;
+            double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, d_contour_ratio_threshold;
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_slope_threshold = stof(cell);
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_sd_threshold = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_valid_ratio_threshold = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_contour_ratio_threshold = stof(cell);
+	    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m "
+                     "Temptative threshold values are " << d_slope_threshold << ", " <<
+		    d_sd_threshold << ", " << d_valid_ratio_threshold << ", " << d_contour_ratio_threshold << std::endl;
+            this->p_mmmap->setThresholdValues(d_slope_threshold, 
+			                      d_sd_threshold, 
+					      d_valid_ratio_threshold, 
+					      d_contour_ratio_threshold);
+        }
+        else
+        {
+            throw std::exception();
+        }   
+    }
+    catch (std::exception &e)
+    {
+        std::cout << " \033[31m[----------] [MobileManipMotionPlanner()]\033[0m "
+                     "Config file could not be read, using default values instead" << std::endl;
+    }
+
     if (!this->updateNavCamDEM(navCamDEM))
     {
         std::cout << " \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
