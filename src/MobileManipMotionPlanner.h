@@ -67,6 +67,10 @@ private:
 
     base::Waypoint w_current_rover_position;
     /**
+     * Path to the configuration folder
+     */
+    std::string s_configfile_path;
+    /**
      * Configurable parameter: Z resolution (in meters)
      */
     double d_zres = 0.08;
@@ -112,8 +116,11 @@ public:
      * Constructor, it receives a DEM and generates the Map object.
      */
     MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
-                             std::string s_urdf_path_m);
+                             std::string s_urdf_path_m,
+			     unsigned int ui_operation = 2);
 
+    bool setArmTargetOperation(unsigned int ui_operation);
+    
     /**
      * It generates a motion plan based on the Map, the rover pose and the
      * sample position.

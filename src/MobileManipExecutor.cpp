@@ -40,21 +40,18 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
                    (*this->pvvd_arm_sweeping_profile));
             readVectorFile(s_urdf_path_m + "/arm_pick_times.txt",
                    (*this->pvd_arm_sweeping_times));
-            std::cout << " \033[33m[----------] [MobileManipExecutor::MobileManipExecutor()]\033[0m Pick Operation Selected"  << std::endl;
 	    break;
         case 1: //DROP
             readMatrixFile(s_urdf_path_m + "/arm_drop_profile.txt",
                    (*this->pvvd_arm_sweeping_profile));
             readVectorFile(s_urdf_path_m + "/arm_drop_times.txt",
                    (*this->pvd_arm_sweeping_times));
-            std::cout << " \033[33m[----------] [MobileManipExecutor::MobileManipExecutor()]\033[0m Drop Operation Selected"  << std::endl;
 	    break;
         default: //SWEEPING
             readMatrixFile(s_urdf_path_m + "/arm_sweeping_profile.txt",
                    (*this->pvvd_arm_sweeping_profile));
             readVectorFile(s_urdf_path_m + "/arm_sweeping_times.txt",
                    (*this->pvd_arm_sweeping_times));
-            std::cout << " \033[33m[----------] [MobileManipExecutor::MobileManipExecutor()]\033[0m Sweeping Operation Selected"  << std::endl;
 	    break;
      
     } 
@@ -62,6 +59,33 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
 }
+
+
+void MobileManipExecutor::setOperationMode(unsigned int ui_operation_mode, std::string s_urdf_path_m)
+{
+    switch(ui_operation_mode)
+    {
+        case 0: //PICK
+            readMatrixFile(s_urdf_path_m + "/arm_pick_profile.txt",
+                   (*this->pvvd_arm_sweeping_profile));
+            readVectorFile(s_urdf_path_m + "/arm_pick_times.txt",
+                   (*this->pvd_arm_sweeping_times));
+	    break;
+        case 1: //DROP
+            readMatrixFile(s_urdf_path_m + "/arm_drop_profile.txt",
+                   (*this->pvvd_arm_sweeping_profile));
+            readVectorFile(s_urdf_path_m + "/arm_drop_times.txt",
+                   (*this->pvd_arm_sweeping_times));
+	    break;
+        default: //SWEEPING
+            readMatrixFile(s_urdf_path_m + "/arm_sweeping_profile.txt",
+                   (*this->pvvd_arm_sweeping_profile));
+            readVectorFile(s_urdf_path_m + "/arm_sweeping_times.txt",
+                   (*this->pvd_arm_sweeping_times));
+	    break;     
+    } 
+}
+
 
 void MobileManipExecutor::initializeArmVariables(
     const proxy_library::Joints &j_present_readings)
@@ -628,12 +652,12 @@ unsigned int MobileManipExecutor::getAtomicCommand(
             }
 	    else
 	    {
-                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is still not finished" << std::endl;
-                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - Elapsed time: " << d_elapsed_time << " seconds" << std::endl;
-                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - Time to reach: " << (*this->pvd_arm_sweeping_times)
+                //std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is still not finished" << std::endl;
+                //std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - Elapsed time: " << d_elapsed_time << " seconds" << std::endl;
+                /*std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - Time to reach: " << (*this->pvd_arm_sweeping_times)
                      [(*this->pvvd_arm_sweeping_profile).size() - 1]
-                 * 1.5 + 5.0 <<  " seconds " << std::endl;
-                std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - isArmReady() is returning " << ((this->isArmReady(j_next_arm_command, j_present_joints_m))) << std::endl;
+                 * 1.5 + 5.0 <<  " seconds " << std::endl;*/
+                //std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m  - isArmReady() is returning " << ((this->isArmReady(j_next_arm_command, j_present_joints_m))) << std::endl;
 	    }
             break;
     }
@@ -813,12 +837,12 @@ bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_li
     //Finding x0 indexes 
     if ((x0 <=(*this->pvd_lsc_x0)[0])||(x0 >= (*this->pvd_lsc_x0).back()))
     {
-        std::cout << " It is not in Last Section" << std::endl;
+        //std::cout << " It is not in Last Section" << std::endl;
 	return false;
     }
     else if ((y0 <=(*this->pvd_lsc_y0)[0])||(y0 >= (*this->pvd_lsc_y0).back()))
     { 
-        std::cout << " It is not in Last Section" << std::endl;
+        //std::cout << " It is not in Last Section" << std::endl;
 	return false;
     }
     else
@@ -856,7 +880,8 @@ bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_li
         d_R21 = (*this->pvvd_turning_curvature_matrix)[ui_y0_min][ui_x0_max];
         d_R22 = (*this->pvvd_turning_curvature_matrix)[ui_y0_max][ui_x0_max];
         d_K = - computeBilinearInterpolation(d_x, d_y, d_x1, d_x2, d_y1, d_y2, d_R11, d_R12, d_R21, d_R22);  // It must be negative, it is turning right always
-        std::cout << " In Last Section" << std::endl;
+        /*
+	std::cout << " In Last Section" << std::endl;
         std::cout << "  - x0 indexes: " << ui_x0_min << " and " << ui_x0_max << std::endl;
         std::cout << "  - y0 indexes: " << ui_y0_min << " and " << ui_y0_max << std::endl;
         std::cout << " Size of Curvature matrix is " << (*this->pvvd_turning_curvature_matrix).size() << " x " << (*this->pvvd_turning_curvature_matrix)[0].size() << std::endl; 
@@ -875,6 +900,7 @@ bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_li
         std::cout << " - curvature is " << mc.m_curvature_radm << std::endl;
         std::cout << " - speed is " << mc.m_speed_ms << std::endl;
         std::cout << " - turnrate is " << mc.m_turnRate_rads << std::endl;
+	*/
         mc.m_manoeuvreType = 0;
 	mc.m_curvature_radm = d_K;
 	mc.m_speed_ms = 0.1;

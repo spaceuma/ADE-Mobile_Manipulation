@@ -157,6 +157,12 @@ public:
     MobileManipExecutor(MotionPlan *presentMotionPlan,
                         std::string s_urdf_path_m,
 			unsigned int ui_operation_mode = 3);
+ 
+    /**
+     * Sets the operation mode meant to be executed with the arm
+     */
+    void setOperationMode(unsigned int ui_operation_mode, std::string s_urdf_path_m);
+    
     /**
      * Update the data extracted from the motion plan
      */

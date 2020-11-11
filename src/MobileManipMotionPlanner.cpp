@@ -7,7 +7,8 @@ using namespace std;
 
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
-    string s_configfile_path_m)
+    string s_configfile_path_m,
+    unsigned int ui_operation)
 {
     std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating classes" << std::endl;
     this->status = IDLE;
@@ -15,7 +16,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
      // DEM is introduced into the map class
     unsigned int ui_error_code = 0;
     this->p_mmmap = new MobileManipMap();
-    
+    this->s_configfile_path = s_configfile_path_m; 
      // Setting Threshold values 
     std::string s_config_path = s_configfile_path_m + "/path_planner_config.txt"; 
     try
@@ -48,7 +49,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     }
     catch (std::exception &e)
     {
-        std::cout << " \033[31m[----------] [MobileManipMotionPlanner()]\033[0m "
+        std::cout << " \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m "
                      "Config file could not be read, using default values instead" << std::endl;
     }
 
@@ -67,9 +68,45 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
     this->p_mmexecutor
         = new MobileManipExecutor(this->p_motionplan, s_configfile_path_m);
+    this->setArmTargetOperation(ui_operation);
     std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
     std::cout << " \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
 }
+
+
+bool MobileManipMotionPlanner::setArmTargetOperation(unsigned int ui_operation)
+{
+  /*
+   * 0 = PICK 
+   * 1 = DROP
+   * default = SWEEPING
+   *
+   */
+    if (this->status == IDLE)
+    {
+        this->p_mmexecutor->setOperationMode(ui_operation, this->s_configfile_path);
+        std::cout << " \033[32m[----------] [setOperationMode()]\033[0m Target Arm Operation is ";
+	switch (ui_operation)
+	{
+            case 0:
+		    std::cout << " PICK" << std::endl;
+		    break;
+            case 1:
+		    std::cout << " DROP" << std::endl;
+		    break;
+            default:
+		    std::cout << " SWEEPING" << std::endl;
+		    break;
+	}
+	return true;
+    }
+    else
+    {
+        setError(IMPROPER_CALL);
+        return false;
+    }
+}
+
 
 bool MobileManipMotionPlanner::initAtomicOperation(
     const proxy_library::Joints &j_present_readings,
