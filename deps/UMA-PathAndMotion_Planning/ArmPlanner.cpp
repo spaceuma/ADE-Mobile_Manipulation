@@ -44,22 +44,26 @@ void ArmPlanner::setApproach(bool _approach)
     approach = _approach;
 }
 
-void ArmPlanner::setDeployment(int _deployment)
+bool ArmPlanner::setDeployment(unsigned int _deployment)
 {
     deployment = _deployment;
 
     switch (deployment)
     {
-        case END:
+        case 0: //END
             horizonDistance = MIN_HORIZON;
-            break;
-        case TRAJECTORY:
+            return true;
+	    break;
+        case 1: //TRAJECTORY
             varyingHorizon = true;
+	    return true;
             break;
-        case BEGINNING:
+        case 2: //BEGINNING
             horizonDistance = MAX_HORIZON;
+	    return true;
             break;
         default:
+	    return false;
             break;
     }
 }

@@ -100,7 +100,8 @@ public:
      */
     MotionPlan(MobileManipMap *pmmmap_m,
                double d_zres_m,
-               std::string s_urdf_path_m);
+               std::string s_urdf_path_m,
+	       unsigned int ui_deployment = 2); //BEGINNING deployment type by default 
     /**
      * An existing path and profile are introduced into the motion plan
      */
@@ -188,6 +189,7 @@ public:
     unsigned int computeAtomicOperation();
     void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);
     void addTurningWaypoint(double d_dev);
+    void setDeployment(unsigned int ui_deployment);
 };
 
 #endif

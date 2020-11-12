@@ -59,7 +59,7 @@ public:
 
     void setApproach(bool _approach);
 
-    void setDeployment(int _deployment);
+    bool setDeployment(unsigned int _deployment);
 
     std::vector<base::Waypoint> *getInterpolatedRoverPath();
 

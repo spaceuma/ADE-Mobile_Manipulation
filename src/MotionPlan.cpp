@@ -2,12 +2,13 @@
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
                        double d_zres_m,
-                       std::string s_urdf_path_m)
+                       std::string s_urdf_path_m,
+		       unsigned int ui_deployment)
 {
     this->pmm_map = pmmmap_m;
     this->d_zres = d_zres_m;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, 2);
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, ui_deployment);
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
@@ -50,6 +51,11 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
         this->vvd_arm_motion_profile.push_back(row);
         row.clear();
     }
+}
+
+void MotionPlan::setDeployment(unsigned int ui_deployment)
+{
+    this->p_arm_planner->setDeployment(ui_deployment);
 }
 
 unsigned int MotionPlan::computeRoverBasePathPlanning(
