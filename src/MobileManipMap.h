@@ -62,25 +62,13 @@ private:
     double d_contour_ratio_threshold = .3; //contour/valid pixels ratio
     
     /**
-     * Iterations for the morphological CLOSE operation on validity map
+     * CONFIG VALUES 
      */
-    int i_validity_morph_iterations = 2;
-    /**
-     * Avoidance distance for risk area
-     */
-    double d_avoid_dist = 1.5;
-    /**
-     * Max reachability distance
-     */
-    double d_maxreach_dist = 1.5;//1.584;
-    /**
-     * Min reachability distance
-     */
-    double d_minreach_dist = 1.0;//1.344;
-    /**
-     * Occupancy radius
-     */
-    double d_occupancy_dist = 1.6;
+    int i_validity_morph_iterations = 2; //Iterations for the morphological CLOSE operation on validity map
+    double d_avoid_dist = 1.5; //Avoidance distance for risk area
+    double d_occupancy_dist = 1.6; // Occupancy radius
+    double d_minreach_dist = 1.0;//1.344; // Min reachability distance
+    double d_maxreach_dist = 1.5;//1.584; // Max reachability distance
     /**
      * Map minimal value of elevation in meters
      */
@@ -233,6 +221,11 @@ public:
                             double d_temptative_sd_threshold, 
                             double d_temptative_valid_ratio_threshold,
                             double d_temptative_contour_ratio_threshold);
+    void setConfigValues(int i_close_iter,
+		         double d_avoid_dist, 
+                         double d_occ_radius, 
+                         double d_min_reach,
+                         double d_max_reach);
 
 private:
     /**

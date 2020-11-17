@@ -72,6 +72,69 @@ void MobileManipMap::setThresholdValues(double d_temptative_slope_threshold,
 }
 
 
+void MobileManipMap::setConfigValues(int i_temptative_close_iter,
+		         double d_temptative_avoid_dist, 
+                         double d_temptative_occ_radius, 
+                         double d_temptative_min_reach,
+                         double d_temptative_max_reach)
+{
+    if (i_temptative_close_iter < 0)
+    {
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m CLOSE iterations value remains as " <<  this->i_validity_morph_iterations
+		 << ", since temptative value " << i_temptative_close_iter << " is less than zero " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of CLOSE iterations is " <<  
+		i_temptative_close_iter << ", previous was " << 
+		this->i_validity_morph_iterations << std::endl;
+        this->i_validity_morph_iterations = i_temptative_close_iter;
+    }
+    
+    if (d_temptative_avoid_dist < 0.0)
+    {
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Avoidance distance value remains as " <<  this->d_avoid_dist
+		 << " meters, since temptative value " << d_temptative_avoid_dist << " meters is less than zero " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Avoidance distance is " <<  
+		d_temptative_avoid_dist << " meters, previous was " << 
+		this->d_avoid_dist << std::endl;
+        this->d_avoid_dist = d_temptative_avoid_dist;
+    }
+
+
+    if (d_temptative_occ_radius < 0.0)
+    {
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Occupancy radius value remains as " <<  this->d_occupancy_dist
+		 << " meters, since temptative value " << d_temptative_occ_radius << " meters is less than zero " << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Occupancy radius is " <<  
+		d_temptative_occ_radius << " meters, previous was " << 
+		this->d_occupancy_dist << std::endl;
+        this->d_occupancy_dist = d_temptative_occ_radius;
+    }
+
+    if ((d_temptative_min_reach < 0.0)||(d_temptative_max_reach < 0.0)||(d_temptative_min_reach > d_temptative_max_reach))
+    {
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Reachability distance values remain as " <<  this->d_minreach_dist
+		 << " meters (min) and " << this->d_maxreach_dist << " meters (max), since temptative values " << d_temptative_min_reach << " meters min and " << d_temptative_max_reach << " meters max are not valid" << std::endl;
+    }
+    else
+    {
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New values of Reachability are " <<  
+		d_temptative_min_reach << " meters (min) and " << d_temptative_max_reach << " meters (max), previous were " << 
+		this->d_minreach_dist << " and " << this->d_maxreach_dist << "meters respectively" << std::endl;
+        this->d_minreach_dist = d_temptative_min_reach;
+        this->d_maxreach_dist = d_temptative_max_reach;
+    }
+}
+
+
+
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
                                unsigned int &ui_isDEM_loaded,
                                bool b_debug_mode_m)

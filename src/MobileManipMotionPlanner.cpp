@@ -25,7 +25,8 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
         if (e_file.is_open())
         {
             std::string cell;
-            double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, d_contour_ratio_threshold;
+            double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, d_contour_ratio_threshold, d_avoid_dist, d_occ_radius, d_min_reach, d_max_reach;
+	    int i_close_iter;
             std::getline(e_file, cell); std::getline(e_file, cell); 
 	    d_slope_threshold = stof(cell);
 	    std::getline(e_file, cell); std::getline(e_file, cell); 
@@ -34,6 +35,16 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
 	    d_valid_ratio_threshold = stof(cell);
             std::getline(e_file, cell); std::getline(e_file, cell); 
 	    d_contour_ratio_threshold = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    i_close_iter = (int)stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_avoid_dist = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_occ_radius = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_min_reach = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_max_reach = stof(cell);
 	    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m "
                      "Temptative threshold values are " << d_slope_threshold << ", " <<
 		    d_sd_threshold << ", " << d_valid_ratio_threshold << ", " << d_contour_ratio_threshold << std::endl;
@@ -41,6 +52,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
 			                      d_sd_threshold, 
 					      d_valid_ratio_threshold, 
 					      d_contour_ratio_threshold);
+	    // this->p_mmmap->setConfigValues(i_close_iter, d_avoid_dist, d_occ_radius, d_min_reach, d_max_reach);
         }
         else
         {
@@ -610,11 +622,23 @@ bool MobileManipMotionPlanner::resumeOperation()
 }
 
 void MobileManipMotionPlanner::updateLocCamDEM(
-    RoverGuidance_Dem locCamDEM,
-    proxy_library::Pose rover_position,
-    proxy_library::Joints arm_joints)
+    RoverGuidance_Dem locCamDEM)
 {
-    throw "Not yet implemented";
+    if (getStatus() == REPLANNING)
+    {
+        // Process locCamDEM and check whether the path collides or not
+        // Here the MMMap loads and processes the input LocCamDEM
+	//ui_error_code = this->p_mmmap->loadLocDEM(locCamDEM);
+	// MotionPlan checks whether the current path is on obstacles or not in the local cost map
+	//this->p_motionplan->checkNewObstacles();
+        std::cout << " \033[32m[----------] [updateLocCamDEM()]\033[0m Replanning " << std::endl;
+	// If the checking is negative, then the status comes back to EXECUTING_MOTION_PLAN
+	setStatus(EXECUTING_MOTION_PLAN);
+    }
+    else
+    {
+        setError(IMPROPER_CALL);
+    }
 }
 
 bool MobileManipMotionPlanner::updateRoverArmPos(
@@ -685,6 +709,10 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                 case 8:// TODO - CHECK THIS
                     setError(UNFEASIBLE_INIT);
                     return false;
+		case 9: // A Replanning is triggered
+                    std::cout << " \033[32m[----------] [updateRoverArmPos()]\033[0m Triggering Replanning Checking" << std::endl;
+		    setStatus(REPLANNING);
+		    return false;
             }
             return false;
             break;
@@ -740,6 +768,10 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
 		return false;
 	    }
             return true;
+	case REPLANNING:
+            rover_command = this->p_mmexecutor->getZeroRoverCommand();
+            std::cout << " \033[1;32m[----------] [updateRoverArmPos()]\033[0m It is in Replanning status" << std::endl;
+	    return false;
         case ERROR:
             return false;
         default:

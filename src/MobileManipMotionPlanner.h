@@ -255,9 +255,7 @@ public:
     /**
      * It procceses the input LocCamDEM and triggers a replanning if necessary.
      */
-    void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
-                         proxy_library::Pose rover_position,
-                         proxy_library::Joints arm_joints);
+    void updateLocCamDEM(RoverGuidance_Dem locCamDEM);
 
     /**
      * It serves to perform an operation with only the arm.

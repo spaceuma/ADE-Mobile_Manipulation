@@ -230,18 +230,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             return 4;
         }
     }
-    // TODO - Modify these configurable variables properly
-    double gain = 2.0;
-    double max_speed = 0.05;
-
-    // Create Profile for initial operation
-
-    /*for (uint i = 0; i < 6; i++)
-    {
-            std::cout << " Executor Goal Joint " << i << " is " <<
-    (*this->pvvd_arm_motion_profile)[this->waypoint_navigation.getCurrentSegment()][i]
-    << std::endl;
-    }*/
 
     this->updateArmPresentReadings(j_arm_present_readings_m);
 
@@ -255,6 +243,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         mc_m = this->getZeroRoverCommand();
         return 6;
     }
+
 
     double d_step_time;
     unsigned int ui_status = 0;
@@ -271,10 +260,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 mc_m = this->getZeroRoverCommand();
             }
 	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
-	    /*if(isAligned(rover_pose))
-            {
-                mc_m = this->getZeroRoverCommand();
-            }*/
 	    if(ui_status == 1)
 	    {
                 this->i_initial_segment
@@ -293,6 +278,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 	        {
                     mc_m = this->getZeroRoverCommand();
                     this->armstate = COUPLED_MOVING;
+                    this->i_replan_segment = this->i_initial_segment + 10; //TODO: make this configurable
+	            std::cout << "Initial segment is " << i_initial_segment << std::endl;
+	            std::cout << "Replan segment is " << i_replan_segment << std::endl;
 		    return 1;
 	        }
 	    //this->armstate = READY;
@@ -328,6 +316,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 	    {
                 mc_m = this->getZeroRoverCommand();
                 this->armstate = COUPLED_MOVING;
+                this->i_replan_segment = this->i_initial_segment + 10; //TODO: make this configurable
+	        std::cout << "Initial segment is " << i_initial_segment << std::endl;
+	        std::cout << "Replan segment is " << i_initial_segment << std::endl;
 		return 1;
 	    }
         case COUPLED_MOVING:
@@ -349,7 +340,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     //i_current_segment++; // = i_actual_segment;
                 }
             }
-	    //std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+	    std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
             double d_angle, d_na;
             for (unsigned int i = 0; i < this->vd_arm_present_command.size(); i++)
             {
@@ -382,21 +373,20 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 mc_m = this->getZeroRoverCommand();
                 return 7;
             }
-            /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion
-          Command before MotionControl is (translation speed = " <<
-          mc_m.m_speed_ms
-          << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
-          and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
-            */
-            /*this->coupled_control.modifyMotionCommand(gain,
-                                                      vd_arm_present_command,
-                                                      vd_arm_previous_command,
-                                                      max_speed,
-                                                      vd_arm_abs_speed,
-                                                      mc_m);
 
-            std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion  Command before fixing is (translation speed = " << mc_m.m_speed_ms << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;*/
-          
+	    // Checks if the rover has travelled long enough to trigger a replanning
+            if (this->i_current_segment >= this->i_replan_segment)
+	    {
+                this->i_replan_segment += 20; //TODO: make this configurable
+                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+                {
+                    j_next_arm_command_m.m_jointStates[i].m_position
+                        = j_arm_present_readings_m.m_jointStates[i].m_position;
+                }               
+                mc_m = this->getZeroRoverCommand();
+		return 9;
+            }
+        
             fixMotionCommand(
                 mc_m); // This sets the maneuver as Point Turn if needed
             //std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
