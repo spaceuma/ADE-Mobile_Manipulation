@@ -89,7 +89,7 @@ private:
         const std::vector<std::vector<double>> &vvd_profile_m);
     base::Waypoint w_rover_pos;
     double d_gauss_sigma = 5.0;
-    int i_gauss_numsamples = 5;
+    int i_gauss_numsamples = 9;
 
     bool b_is_retrieval_computed;
     bool b_is_initialization_computed;

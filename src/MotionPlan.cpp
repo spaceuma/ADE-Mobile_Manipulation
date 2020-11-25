@@ -309,9 +309,9 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         // Initialization
         if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
         {
-            //std::cout << "Raw Profile is safe, with "
-              //        << this->vvd_arm_motion_profile.size() << " samples"
-                //      << std::endl;
+            std::cout << "Raw Profile is safe, with "
+                      << this->vvd_arm_motion_profile.size() << " samples"
+                      << std::endl;
             if (this->vvd_arm_motion_profile.size()
                 > this->i_gauss_numsamples * 2)
             {

@@ -4,6 +4,103 @@ import matplotlib.pyplot as plt
 
 from matplotlib import cm
 
+### SPACE HALL ###
+exrSpaceHall_elevationMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_elevationMap.txt"), skiprows=0)
+exrSpaceHall_slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_slopeMap.txt"), skiprows=0)
+exrSpaceHall_sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_sdMap.txt"), skiprows=0)
+exrSpaceHall_validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_validityMap.txt"), skiprows=0)
+exrSpaceHall_costMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_costMap.txt"), skiprows=0)
+exrSpaceHall_traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_traversabilityMap.txt"), skiprows=0)
+
+res = 0.1
+xMap, yMap = np.meshgrid(np.linspace(0,300,301), np.linspace(0,300,301))
+
+xMap = xMap*res - 11.05
+yMap = yMap*res - 6.05
+
+fig, ax = plt.subplots(constrained_layout=True)
+plott = ax.contourf(xMap, yMap, exrSpaceHall_validityMap)
+cbb = fig.colorbar(plott, ax = ax, orientation = 'horizontal')
+cbb.ax.set_title('Validity')
+
+fig, ax = plt.subplots(constrained_layout=True)
+plott = ax.contourf(xMap, yMap, exrSpaceHall_slopeMap, 100, cmap = 'nipy_spectral')
+cbb = fig.colorbar(plott, ax = ax, orientation = 'horizontal')
+cbb.ax.set_title('Slope')
+
+fig, ax = plt.subplots(constrained_layout=True)
+plott = ax.contourf(xMap, yMap, exrSpaceHall_sdMap, 100, cmap = 'nipy_spectral')
+cbb = fig.colorbar(plott, ax = ax, orientation = 'horizontal')
+cbb.ax.set_title('Spherical Deviation')
+
+
+fig, ax = plt.subplots(constrained_layout=True)
+plott = ax.contourf(xMap, yMap, exrSpaceHall_elevationMap, 100, cmap = cm.gist_earth, extend = 'both')
+cbb = fig.colorbar(plott, ax = ax, orientation = 'horizontal')
+cbb.ax.set_title('Elevation')
+
+
+fig1, ax1 = plt.subplots(constrained_layout=True)
+plot1 = ax1.contourf(xMap, yMap, exrSpaceHall_costMap, 40, cmap = 'Reds')
+ax1.set_aspect('equal')
+ax1.set_xlabel('X-axis (m)')
+ax1.set_ylabel('Y-axis (m)')
+ax1.set_title('Cost Map')
+cb1 = fig1.colorbar(plot1, ax = ax1, orientation = 'horizontal')
+cb1.ax.set_title('Cost')
+ax1.set_facecolor('k')
+
+
+fig2, ax2 = plt.subplots(constrained_layout=True)
+plot2 = ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 0)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 0)],
+        c = 'r',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 1)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 1)],
+        c = 'orange',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 2)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 2)],
+        c = 'yellow',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 3)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 3)],
+        c = 'green',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 4)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 4)],
+        c = 'c',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 5)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 5)],
+        c = 'lime',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 6)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 6)],
+        c = 'grey',
+        s = 20
+        )
+ax2.scatter(xMap[np.where(exrSpaceHall_traversabilityMap == 7)],
+        yMap[np.where(exrSpaceHall_traversabilityMap == 7)],
+        c = 'black',
+        s = 20
+        )
+ax2.set_aspect('equal')
+ax2.set_xlabel('X-axis')
+ax2.set_ylabel('Y-axis')
+ax2.set_title('Traversability Map')
+#s2 = ax2.plot(sample[0], sample[1], 'ob')
+s2 = ax2.plot(6.0, 7.0, 'ob')
+ax2.set_xlim([xMap[0,0],xMap[0,-1]])
+ax2.set_ylim([yMap[0,0],yMap[-1,0]])
+
 
 ### EXR COLMENAR ###
 exrColmenar_elevationMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrColmenar.txt"), skiprows=0)
@@ -55,6 +152,7 @@ ax1.set_title('Cost Map')
 cb1 = fig1.colorbar(plot1, ax = ax1, orientation = 'horizontal')
 cb1.ax.set_title('Cost')
 ax1.set_facecolor('k')
+
 
 
 costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)

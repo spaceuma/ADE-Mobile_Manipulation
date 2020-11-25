@@ -54,8 +54,9 @@ private:
      */
     MMStatus priorStatus;
     /**
-     * The current position of the arm joints.
+     * Read external config and threshold values
      */
+    bool readConfigFile();
     /**
      * Set the current status
      */
@@ -120,40 +121,38 @@ public:
 			     unsigned int ui_operation = 2);
 
     bool setArmTargetOperation(unsigned int ui_operation);
-    
     /**
-     * It generates a motion plan based on the Map, the rover pose and the
-     * sample position.
+     * DEM input and processing
+     */
+    bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM);
+    bool updateLocCamDEM(RoverGuidance_Dem locCamDEM,
+                         proxy_library::Joints &arm_command,
+                         proxy_library::MotionCommand &rover_command,
+                         proxy_library::Joints arm_joints);
+
+   
+    /**
+     * Coupled/Atomic Motion Plan Generation.
      */
     bool generateMotionPlan(proxy_library::Pose plpose_m,
                             const proxy_library::Joints &j_present_readings,
                             double d_sample_pos_x,
                             double d_sample_pos_y);
+    bool initAtomicOperation(const proxy_library::Joints &j_present_readings,
+		             const base::Waypoint &w_goal,
+			     double d_roll = 0.0,
+			     double d_pitch = 3.1416,
+			     double d_yaw = 0.0);
 
     /**
-     * Serves to actively start moving the rover and arm once a motion plan is
-     * available.
+     * Harness Execution Control Functions.
      */
-    bool start();
-
-    /**
-     * It makes the software finish immediately.
-     */
-    bool abort();
-
-    /**
-     * It makes the software enter into the PAUSE state, first creating commands
-     * to stop the rover base.
-     */
-    bool pause(proxy_library::MotionCommand &rover_command);
-
-    /**
-     * It returns to the state indicated by priorStatus. Useful to exit the
-     * PAUSE state.
-     */
-    bool resumeOperation();
-    unsigned int updateAtomicOperation(proxy_library::Joints &arm_command, proxy_library::Joints arm_joints,
-		                       bool b_display_status = false);
+    bool start(); // Actively starts rover motion execution
+    bool abort(); // Execution finishes immediately
+    bool pause(proxy_library::MotionCommand &rover_command); // Goes to PAUSE
+    bool resumeOperation(); // Returns from PAUSE
+    void resumeError(); // Handles ERROR state
+    bool ack(); // Acknowledges the operation is finished
 
     /**
      * It provides commands depending on the current position of the rover and
@@ -163,6 +162,8 @@ public:
                            proxy_library::MotionCommand &rover_command,
                            proxy_library::Pose rover_position,
                            proxy_library::Joints arm_joints);
+    unsigned int updateAtomicOperation(proxy_library::Joints &arm_command, proxy_library::Joints arm_joints,
+		                       bool b_display_status = false);
 
     /**
      * Goal is updated during the execution of the motion plan. It requires to
@@ -170,17 +171,6 @@ public:
      * received DEM.
      */
     void updateSamplePos(proxy_library::Pose sample);
-
-    /**
-     * It serves to acknowledge by the user that the operation is completely
-     * finished.
-     */
-    bool ack();
-
-    /**
-     * It handles the error and behaves according to its type.
-     */
-    void resumeError();
 
     /**
      * Returns the indication of which error affects the software.
@@ -196,11 +186,6 @@ public:
      * Sets the value of Z-resolution in meters.
      */
     bool setZres(double d_zres_m);
-
-    /**
-     * Sets the value of avoidance distance in meters.
-     */
-    bool setAvoidanceDistance(double d_avoid_dist_m);
 
     /**
      * Prints information regarding the resulting path.
@@ -249,20 +234,4 @@ public:
      * A pointer to the 3d cost map is returned
      */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
-
-    bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM);
-
-    /**
-     * It procceses the input LocCamDEM and triggers a replanning if necessary.
-     */
-    void updateLocCamDEM(RoverGuidance_Dem locCamDEM);
-
-    /**
-     * It serves to perform an operation with only the arm.
-     */
-    bool initAtomicOperation(const proxy_library::Joints &j_present_readings,
-		             const base::Waypoint &w_goal,
-			     double d_roll = 0.0,
-			     double d_pitch = 3.1416,
-			     double d_yaw = 0.0);
 };

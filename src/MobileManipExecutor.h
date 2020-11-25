@@ -42,10 +42,6 @@ private:
      */
     int i_current_segment;
     /**
-     * Limit Index to trigger replanning
-     */
-    int i_replan_segment = 0;
-    /**
      * Distance from rover to sample
      */
     double d_dist_to_sample;
