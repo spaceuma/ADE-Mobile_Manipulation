@@ -6,3 +6,13 @@ Valid Ratio:
 0.5
 Contour Ratio:
 0.3
+Morph CLOSE iterations:
+2
+Avoidance Distance:
+1.5
+Occupancy Radius:
+1.6
+Min Reach Distance:
+1.0
+Max Reach Distance:
+1.5

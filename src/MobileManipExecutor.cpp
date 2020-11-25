@@ -103,31 +103,38 @@ void MobileManipExecutor::initializeArmVariables(
 void MobileManipExecutor::updateMotionPlan()
 {
     // Extract the rover path
+    std::cout << "Getting the path" << std::endl;
     std::vector<base::Waypoint> *rover_path
         = this->p_motion_plan->getRoverPath();
 
     // Set the path into the Waypoint Navigation class
+    std::cout << "Preparing the path" << std::endl;
     this->vpw_path.resize(rover_path->size());
     for (size_t i = 0; i < rover_path->size(); i++)
     {
         rover_path->at(i).tol_position = 0.1;
         this->vpw_path.at(i) = (&rover_path->at(i));
     }
+    std::cout << "Configuring Tolerance" << std::endl;
     this->waypoint_navigation.configureTol(
         0.1, 5.0 / 180.0 * 3.1416); // tolpos,tolheading
+    std::cout << "Setting Trajectory with " << this->vpw_path.size() << " waypoints"  << std::endl;
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
     // Extract and store the joints profile
+    std::cout << "Getting Arm Motion Profile" << std::endl;
     this->pvvd_arm_motion_profile = this->p_motion_plan->getArmMotionProfile();
     this->i_initial_segment = 0;
     this->b_is_last_segment = false;
     this->d_operational_time = 0.0;
+    std::cout << "Updating Deployment" << std::endl;
     this->updateDeployment();
     this->ui_current_timestamp = 0;
     this->ui_past_timestamp = 0;
+    std::cout << "Updating Retrieval" << std::endl;
     this->updateRetrieval();
 }
 
@@ -230,18 +237,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             return 4;
         }
     }
-    // TODO - Modify these configurable variables properly
-    double gain = 2.0;
-    double max_speed = 0.05;
-
-    // Create Profile for initial operation
-
-    /*for (uint i = 0; i < 6; i++)
-    {
-            std::cout << " Executor Goal Joint " << i << " is " <<
-    (*this->pvvd_arm_motion_profile)[this->waypoint_navigation.getCurrentSegment()][i]
-    << std::endl;
-    }*/
 
     this->updateArmPresentReadings(j_arm_present_readings_m);
 
@@ -255,6 +250,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         mc_m = this->getZeroRoverCommand();
         return 6;
     }
+
 
     double d_step_time;
     unsigned int ui_status = 0;
@@ -271,10 +267,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 mc_m = this->getZeroRoverCommand();
             }
 	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
-	    /*if(isAligned(rover_pose))
-            {
-                mc_m = this->getZeroRoverCommand();
-            }*/
 	    if(ui_status == 1)
 	    {
                 this->i_initial_segment
@@ -315,21 +307,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 }
 	    }
             return 0;
-        case READY:
-	    if (this->vpw_path.size() == 1)
-	    {
-                mc_m = this->getZeroRoverCommand();
-                this->armstate = SAMPLING_POS;
-                this->i_current_coverage_index = 0;
-                this->i_current_retrieval_index = 0;
-                return 2;
-	    }
-	    else
-	    {
-                mc_m = this->getZeroRoverCommand();
-                this->armstate = COUPLED_MOVING;
-		return 1;
-	    }
         case COUPLED_MOVING:
 	    //To avoid the dummy turn waypoint
 	    i_actual_segment = min(i_actual_segment, (int)(*this->pvvd_arm_motion_profile).size() - 1);
@@ -349,7 +326,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     //i_current_segment++; // = i_actual_segment;
                 }
             }
-	    //std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+	    std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
             double d_angle, d_na;
             for (unsigned int i = 0; i < this->vd_arm_present_command.size(); i++)
             {
@@ -382,23 +359,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 mc_m = this->getZeroRoverCommand();
                 return 7;
             }
-            /*std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion
-          Command before MotionControl is (translation speed = " <<
-          mc_m.m_speed_ms
-          << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "
-          and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
-            */
-            /*this->coupled_control.modifyMotionCommand(gain,
-                                                      vd_arm_present_command,
-                                                      vd_arm_previous_command,
-                                                      max_speed,
-                                                      vd_arm_abs_speed,
-                                                      mc_m);
-
-            std::cout << "\033[32m[----------]\033[0m [INFO] Rover Motion  Command before fixing is (translation speed = " << mc_m.m_speed_ms << " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << " and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;*/
-          
-            fixMotionCommand(
-                mc_m); // This sets the maneuver as Point Turn if needed
+	     
+            fixMotionCommand(mc_m); // This sets the maneuver as Point Turn if needed
             //std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is (translation speed = " << mc_m.m_speed_ms
           //<< " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "and the maneuvre type is "<< mc_m.m_manoeuvreType << std::endl;
         //std::cout << "VAlue of b_isfinal is " << b_is_last_segment << std::endl;
@@ -408,12 +370,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             {
                 mc_m = this->getZeroRoverCommand();
             }
-	    //std::cout << "Navstate = " << this->navstate << std::endl;
-	    //std::cout << "Target reached = " << TARGET_REACHED << std::endl;
             if ((b_is_last_segment) && 
 			   (isAligned(rover_pose))
-		           //(this->navstate == TARGET_REACHED) 
-			   //(i_actual_segment == (int)this->vpw_path.size() - 2)
                 && (this->isArmReady(j_next_arm_command_m,
                                      j_arm_present_readings_m)))
             {
@@ -423,6 +381,11 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 this->i_current_retrieval_index = 0;
                 return 2;
             }
+	    else if((b_is_last_segment) && 
+			   (isAligned(rover_pose)) )
+	    {
+                std::cout << "For some reason the arm is not yet ready" << std::endl;
+	    }
             return 1;
         case SAMPLING_POS:
             mc_m = this->getZeroRoverCommand();
@@ -554,19 +517,19 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                     d_ratio_aft = (double)(this->i_current_init_index + 1) / (double)((*this->pvvd_init_arm_profile).size() - 1);
                     if ((d_ratio_bef < 0.25)&&(d_ratio_aft >= 0.25)) 
                     {
-                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
+                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.5)&&(d_ratio_aft >= 0.5)) 
                     {
-                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
+                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.75)&&(d_ratio_aft >= 0.75)) 
                     {
-                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
+                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.9)&&(d_ratio_aft >= 0.9)) 
                     {
-                        std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
+                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
 		    }
 		    this->i_current_init_index++;
 		    this->updateArmCommandVectors(
@@ -588,7 +551,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
                 {
                     b_is_finished = true;
-                    std::cout << " \033[1;33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
+                    std::cout << " \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
                 }
 	    }
 	    break;

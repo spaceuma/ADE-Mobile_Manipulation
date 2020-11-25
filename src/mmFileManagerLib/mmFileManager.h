@@ -22,6 +22,8 @@ void writeMatrixFile(std::string s_matrix_dir,
                     std::vector<std::vector<int8_t>> &vvd_inputmatrix);
 void readMatrixFile(std::string map_file,
                     std::vector<std::vector<double>> &vector_elevationData);
+void readMatrixFileCommas(std::string map_file,
+                    std::vector<std::vector<double>> &vector_elevationData);
 void readReachabilityMap(std::string map_file,
                          std::vector<std::vector<std::vector<double>>> * reachabilityMap,
                          std::vector<double> * resolutions,

@@ -12,11 +12,15 @@
 using namespace cv;
 using namespace FastMarching_lib;
 
+
+/**
+ * MMMap Component internal states
+ */
 enum MMMapState
 {
-    NO_DEM,
-    DEM_LOADED,
-    FACE_COMPUTED
+    NO_DEM, // There is currently no usable DEM
+    DEM_LOADED, // The DEM is loaded, but remains to be prepared for planning
+    FACE_COMPUTED // DEM is ready for path planning
 };
 
 /**
@@ -26,32 +30,47 @@ class MobileManipMap
 {
 
 private:
+
     /**
      * The mapping of the data (row/column) onto the 1D data arrays (single
      * index) is defined as follows:
      * * index = row * cols + col
      */
     RoverGuidance_Dem rg_dem;
+    
     /**
-     * Number of map columns
+     * Map Data Status
      */
-    unsigned int ui_num_cols;
+    MMMapState mapstate;
+    
     /**
-     * Number of map rows
-     */
-    unsigned int ui_num_rows;
+     * Debugging messages activation
+     */ 
+    bool b_debug_mode = false;
+    
     /**
-     * Map resolution in meters
+     * DEM structure data
      */
-    double d_res;
+    unsigned int ui_num_cols; // Number of columns 
+    unsigned int ui_num_rows; // Number of rows
+    double d_res; // Resolution (in meters)  
+    std::vector<double> vd_global_offset{0, 0, 0}; // Global offset (bottom left node, in meters)
+
     /**
-     * Radius of sampling outter ring
+     * DEM geometry data
      */
-    double d_outter_sampling_dist;
-    /**
-     * Radius of sampling inner ring
-     */
-    double d_inner_sampling_dist;
+    std::vector<std::vector<double>> vvd_elevation_map; // Elevation (meters)
+    std::vector<std::vector<double>> vvd_smoothed_elevation_map; // Processed Elevation (meters)
+    std::vector<std::vector<double>> vvd_sd_map; // Spherical deviation (in degrees)
+    std::vector<std::vector<double>> vvd_nx_map; // X-component of normal vector field
+    std::vector<std::vector<double>> vvd_ny_map; // Y-component of normal vector field
+    std::vector<std::vector<double>> vvd_nz_map; // Z-component of normal vector field 
+    std::vector<std::vector<double>> vvd_slope_map; // Slope steepness (in degrees) 
+    std::vector<std::vector<double>> vvd_aspect_map; // Slope Aspect direction (in radians)
+    std::vector<std::vector<int8_t>> vvi_validity_map; // Valid(1)-Nonvalid(0) pixels 
+    std::vector<std::vector<double>> vvd_loc_elevation_map; // Elevation (meters)
+    std::vector<std::vector<int8_t>> vvi_loc_validity_map; // Valid(1)-Nonvalid(0) pixels 
+    double d_elevation_min; // Existing minimal value of elevation (in meters)
     
     /**
      * THRESHOLD VALUES
@@ -62,80 +81,42 @@ private:
     double d_contour_ratio_threshold = .3; //contour/valid pixels ratio
     
     /**
-     * Iterations for the morphological CLOSE operation on validity map
+     * CONFIG VALUES 
      */
-    int i_validity_morph_iterations = 2;
-    /**
-     * Avoidance distance for risk area
-     */
-    double d_avoid_dist = 1.5;
-    /**
-     * Max reachability distance
-     */
-    double d_maxreach_dist = 1.5;//1.584;
-    /**
-     * Min reachability distance
-     */
-    double d_minreach_dist = 1.0;//1.344;
-    /**
-     * Occupancy radius
-     */
-    double d_occupancy_dist = 1.6;
-    /**
-     * Map minimal value of elevation in meters
-     */
-    double d_elevation_min;
-    /**
-     * Global offset of bottom left node (local frame origin)
-     */
-    std::vector<double> vd_global_offset{0, 0, 0};
-    /**
-     * Sample position in waypoint format
-     */
-    base::Waypoint w_sample_pos;
-    /**
-     * Fast Marching class for sample facing cost update
-     */
-    FastMarching fm_sample_facing;
-    /**
-     * Matrix containing elevation values
-     */
-    std::vector<std::vector<double>> vvd_elevation_map;
-    std::vector<std::vector<double>> vvd_smoothed_elevation_map;
-    std::vector<std::vector<int8_t>> vvi_validity_map;
-    std::vector<std::vector<double>> vvd_slope_map;
-    std::vector<std::vector<double>> vvd_aspect_map;
-    std::vector<std::vector<double>> vvd_sd_map;
-    std::vector<std::vector<double>> vvd_nx_map;
-    std::vector<std::vector<double>> vvd_ny_map;
-    std::vector<std::vector<double>> vvd_nz_map;
-    /**
-     * Matrix containing values regarding obstacles
-     * 0 => obstacle
-     * 1 => safe
-     */
-    std::vector<std::vector<int>> vvi_obstacle_map;
-    /**
-     * Matrix containing values regarding traversability
-     * 0 => Area occupied by obstacles
-     * 1 => Dilatation of obstacles, neither rover or sample can be placed here
-     * 2 => Second dilatation of obstacles, the sampling area can remove part of
-     * this 3 => Possible locations for the rover and the sampling area 4 =>
-     * Sampling Area
-     */
-    std::vector<std::vector<int>> vvi_traversability_map;
-    /**
-     * Matrix containing cost values (cost for obstacles is INFINITY)
-     */
-    std::vector<std::vector<double>> vvd_cost_map;
-    /**
-     * Matrix containing minimum distance to obstacles
-     */
-    std::vector<std::vector<double>> vvd_proximity_map;
-    MMMapState mapstate;
-    bool b_debug_mode = false;
+    int i_validity_morph_iterations = 2; //Iterations for the morphological CLOSE operation on validity map
+    double d_avoid_dist = 1.5; //Avoidance distance for risk area
+    double d_occupancy_dist = 1.6; // Occupancy radius
+    double d_minreach_dist = 1.0;//1.344; // Min reachability distance
+    double d_maxreach_dist = 1.5;//1.584; // Max reachability distance
 
+    /**
+     * DEM Navigation Data 
+     */
+    std::vector<std::vector<int>> vvi_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<int>> vvi_loc_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_proximity_map; // Distance to closest obstacle (meters)
+    std::vector<std::vector<int>> vvi_traversability_map; // Obstacle(0)-FirstDilatation(1)-SecondDilatation(2)-RoverTraversableArea(3)-SamplingArea(4)
+    std::vector<std::vector<double>> vvd_cost_map; // Cost Map (obstacles are INFINITY)
+
+    /**
+     * FACE (Frontal Approach Cost Edition)
+     */
+    FastMarching fm_sample_facing; // Fast Marching class
+    double d_outter_sampling_dist; // Sampling Ring Outter Radius
+    double d_inner_sampling_dist; // Sampling Ring Inner Radius
+    base::Waypoint w_sample_pos; // Sample position
+
+
+    /**
+     * Internal Functions
+     */
     void checkValidityMap(double &d_valid_ratio, double &d_contour_ratio);
+    bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
+    bool calculateElevationMap();
+    bool calculateTraversabilityMap();
+    bool calculateProximityToObstaclesMap();
+    void calculateCostValues();
+    bool addSampleFacingObstacles();
 
 public:
     MobileManipMap(bool b_debug_mode_m = false);
@@ -159,6 +140,16 @@ public:
      * RG DEM is checked and loaded into MobileManipMap
      */
     unsigned int loadDEM(const RoverGuidance_Dem &rg_dem_m);
+    /**
+     * RG DEM from LocCam is checked and loaded into MobileManipMap
+     */
+    unsigned int loadLocDEM(const RoverGuidance_Dem &rg_dem_m);
+ 
+    /**
+     * RG DEM from LocCam is checked and loaded into MobileManipMap
+     */
+    bool checkObstacles(std::vector<base::Waypoint> &vw_rover_path_m);
+
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
@@ -233,33 +224,12 @@ public:
                             double d_temptative_sd_threshold, 
                             double d_temptative_valid_ratio_threshold,
                             double d_temptative_contour_ratio_threshold);
+    void setConfigValues(int i_close_iter,
+		         double d_avoid_dist, 
+                         double d_occ_radius, 
+                         double d_min_reach,
+                         double d_max_reach);
 
-private:
-    /**
-     * RG DEM is checked and loaded into MobileManipMap
-     */
-    bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
-    /**
-     * The elevation map vvd_elevation_map is calculated from rg_dem
-     */
-    bool calculateElevationMap();
-    /**
-     * The traversability map vvi_traversability_map is calculated
-     */
-    bool calculateTraversabilityMap();
-    /**
-     * The proximity map vvd_proximity_map is calculated
-     */
-    bool calculateProximityToObstaclesMap();
-    /**
-     * Cost values are assigned to the cost map
-     */
-    void calculateCostValues();
-    /**
-     * Cost Map is modified
-     */
-    bool addSampleFacingObstacles();
-    bool addValidityCost();
 };
 
 #endif

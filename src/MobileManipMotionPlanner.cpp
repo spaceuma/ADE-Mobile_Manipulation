@@ -3,29 +3,73 @@
 
 using namespace std;
 
-//--CONSTRUCTOR
-
+/*
+ * CONSTRUCTOR
+ */
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
     string s_configfile_path_m,
     unsigned int ui_operation)
 {
+    
     std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating classes" << std::endl;
+    
+    /*
+     * Initializing internal variables
+     */
     this->status = IDLE;
     this->error = NO_ERROR;
-     // DEM is introduced into the map class
     unsigned int ui_error_code = 0;
-    this->p_mmmap = new MobileManipMap();
     this->s_configfile_path = s_configfile_path_m; 
-     // Setting Threshold values 
-    std::string s_config_path = s_configfile_path_m + "/path_planner_config.txt"; 
-    try
+    
+    /*
+     * Creating Mobile Manipulation Map Class
+     */ 
+    this->p_mmmap = new MobileManipMap();
+    if (!this->readConfigFile()) // Reading Configuration File
     {
+        std::cout << " \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m "
+                     "Config file could not be read, using default values instead" << std::endl;
+    }
+    if (!this->updateNavCamDEM(navCamDEM)) // Introducing Input NavCAM DEM
+    {
+        std::cout << " \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
+                     "Map Class could not be created" << std::endl;
+        this->printErrorCode();
+    }
+    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Map Class Successfully created" << std::endl;
+    
+    /* 
+     * Creating Motion Plan Class
+     */
+    this->p_motionplan
+        = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
+    //this->p_motionplan->setArmGaussFilter(5.0, 9);
+    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
+    
+    /* 
+     * Creating Mobile Manipulation Executor Class
+     */  
+    this->p_mmexecutor
+        = new MobileManipExecutor(this->p_motionplan, s_configfile_path_m);
+    this->setArmTargetOperation(ui_operation);
+    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
+    std::cout << " \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
+}
+
+bool MobileManipMotionPlanner::readConfigFile()
+{
+    try // Configuration // TODO - Maybe make all this using a function
+    {
+        std::string s_config_path = this->s_configfile_path + "/path_planner_config.txt"; 
         std::ifstream e_file(s_config_path.c_str(), std::ios::in);
         if (e_file.is_open())
         {
             std::string cell;
-            double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, d_contour_ratio_threshold;
+            double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, 
+		   d_contour_ratio_threshold, d_avoid_dist, d_occ_radius, 
+		   d_min_reach, d_max_reach;
+	    int i_close_iter;
             std::getline(e_file, cell); std::getline(e_file, cell); 
 	    d_slope_threshold = stof(cell);
 	    std::getline(e_file, cell); std::getline(e_file, cell); 
@@ -34,13 +78,27 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
 	    d_valid_ratio_threshold = stof(cell);
             std::getline(e_file, cell); std::getline(e_file, cell); 
 	    d_contour_ratio_threshold = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    i_close_iter = (int)stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_avoid_dist = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_occ_radius = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_min_reach = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_max_reach = stof(cell);
 	    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m "
-                     "Temptative threshold values are " << d_slope_threshold << ", " <<
-		    d_sd_threshold << ", " << d_valid_ratio_threshold << ", " << d_contour_ratio_threshold << std::endl;
+                     "Temptative threshold values are " << d_slope_threshold << 
+		     ", " << d_sd_threshold << ", " << d_valid_ratio_threshold << ", " << 
+		     d_contour_ratio_threshold << std::endl;
             this->p_mmmap->setThresholdValues(d_slope_threshold, 
 			                      d_sd_threshold, 
 					      d_valid_ratio_threshold, 
 					      d_contour_ratio_threshold);
+	    this->p_mmmap->setConfigValues(i_close_iter, d_avoid_dist, d_occ_radius,
+			                   d_min_reach, d_max_reach);
+	    return true;
         }
         else
         {
@@ -49,30 +107,10 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     }
     catch (std::exception &e)
     {
-        std::cout << " \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m "
-                     "Config file could not be read, using default values instead" << std::endl;
+        return false;
     }
 
-    if (!this->updateNavCamDEM(navCamDEM))
-    {
-        std::cout << " \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
-                     "Map Class could not be created" << std::endl;
-        this->printErrorCode();
-    }
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Map Class Successfully created" << std::endl;
-    // Each class contains a pointer to the previous one
-    this->p_motionplan
-        = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
-    this->p_motionplan->setArmGaussFilter(5.0,
-                                          9); // TODO - Configurable parameters
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
-    this->p_mmexecutor
-        = new MobileManipExecutor(this->p_motionplan, s_configfile_path_m);
-    this->setArmTargetOperation(ui_operation);
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
-    std::cout << " \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
 }
-
 
 bool MobileManipMotionPlanner::setArmTargetOperation(unsigned int ui_operation)
 {
@@ -320,38 +358,48 @@ bool MobileManipMotionPlanner::updateNavCamDEM(
     const RoverGuidance_Dem &navCamDEM)
 {
     unsigned int ui_error_code = 0;
-    ui_error_code = this->p_mmmap->loadDEM(navCamDEM);
+    if (getStatus() == IDLE)
+    {
+        ui_error_code = this->p_mmmap->loadDEM(navCamDEM);
+    }
+    else
+    {
+        std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Function called in wrong status";
+        setError(IMPROPER_CALL);
+	return false;
+    }
+    
     switch (ui_error_code)
     {
         case 0:
             std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m NavCam DEM is successfully loaded" << std::endl;
             return true;
         case 1:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM resolution is zero or less";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM resolution is zero or less";
             setError(POOR_DEM);
             return false;
         case 2:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM rows are less than 5";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM rows are less than 5";
             setError(POOR_DEM);
             return false;
         case 3:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM columns are less than 5";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM columns are less than 5";
             setError(POOR_DEM);
             return false;
         case 4:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Cannot read the DEM offset";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Cannot read the DEM offset";
             setError(POOR_DEM);
             return false;
         case 5:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM info could not be allocated in memory";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM info could not be allocated in memory";
             setError(BAD_DEM_ALLOC);
             return false;
         case 6:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Not enough valid pixels in input NavCamDEM";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Not enough valid pixels in input NavCamDEM";
             setError(POOR_DEM);
             return false;
         case 7:
-            std::cout << "\033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Too many holes within NavCamDEM valid area";
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Too many holes within NavCamDEM valid area";
             setError(POOR_DEM);
             return false;
     }
@@ -385,20 +433,19 @@ bool MobileManipMotionPlanner::generateMotionPlan(
     w_sample_globalposition.position[0] = d_sample_pos_x;
     w_sample_globalposition.position[1] = d_sample_pos_y;
 
-    // Can only be called in IDLE state
-    if (getStatus() == IDLE)
+    // Can only be called in IDLE or REPLANNING states
+    if ((getStatus() == IDLE)||(getStatus() == REPLANNING))
     {
         unsigned int ui_code = 0;
         // TODO - Since for now there is no computation, the state will go to
         // READY_TO_MOVE
-        setStatus(GENERATING_MOTION_PLAN);
+        //setStatus(GENERATING_MOTION_PLAN);
         this->p_mmexecutor->initializeArmVariables(j_present_readings);
         // The cost map must be computed based on FACE method
         ui_code = this->p_mmmap->computeFACE(w_sample_globalposition,
                                              this->d_avoid_dist,
                                              this->d_minfetching_dist,
-                                             this->d_maxfetching_dist);
-        
+                                             this->d_maxfetching_dist); 
 	switch (ui_code)
         {
             case 0:
@@ -441,6 +488,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(PLAN_WO_SAMPLE);
                 return false;
             case 4:
+		//TODO: Check this
 		std::cout << "\033[31m[----------] [generateMotionPlan()]\033[0m ComputeRoverBasePathPlanning returned Goal too close" << std::endl;
                 setError(UNREACH_GOAL);
                 return false;
@@ -448,17 +496,19 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 setError(DEGEN_PATH);
                 return false;
         }
-        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Rover Base Path is successfully computed with " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
+        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Raw Rover Base Path is successfully computed with " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
+
         // The rover base path is shortened to stop near the sample
         if (!(this->p_motionplan->shortenPathForFetching()))
         {
-	    std::cout << "\033[32m[----------] [generateMotionPlan()]\033[0m shortenPathForFetching returned Goal too close" << std::endl;
+	    std::cout << "\033[32m[----------] [generateMotionPlan()]\033[0m Goal is too close, cannot fetch" << std::endl;
             this->printRoverPathInfo();
             setError(GOAL_TOO_CLOSE);
             return false;
         }
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Rover Base Path is successfully shortened, with now " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
-        // The arm positions profile is to be computed
+
+	// The arm positions profile is to be computed
         ui_code = this->p_motionplan->computeArmProfilePlanning();
 	switch (ui_code)
         {
@@ -475,33 +525,46 @@ bool MobileManipMotionPlanner::generateMotionPlan(
                 return false;
         }
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Profile for Coupled Control is successfully computed" << std::endl;
-        std::vector<double> vd_arm_readings;
-        vd_arm_readings.resize(6);
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-        {
-            vd_arm_readings[i] = j_present_readings.m_jointStates[i].m_position;
-        }
-        if (this->p_motionplan->computeArmDeployment(0, vd_arm_readings) != 0)
-        {
-            setError(COLLIDING_PROF);
-            return false;
-        }
-        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Deployment Profile is successfully computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples"  << std::endl;
-        std::vector<double> *pvd_last_profile
-            = this->p_mmexecutor->getLastCoverageProfile();
-        if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile),1) != 0)
-        {
-            return false;
-        }
-        std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
-        // this->p_motionplan->computeArmDeployment(0,);
+       
+        if (this->getStatus() == IDLE)
+	{	
+	    // Deployment Computation
+	    std::vector<double> vd_arm_readings;
+            vd_arm_readings.resize(6);
+            for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+            {
+                vd_arm_readings[i] = j_present_readings.m_jointStates[i].m_position;
+            }
+            if (this->p_motionplan->computeArmDeployment(0, vd_arm_readings) != 0)
+            {
+                setError(COLLIDING_PROF);
+                return false;
+            }
+            std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Deployment Profile is successfully computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples"  << std::endl;
+        
+	    // Retrieval Computation
+	    std::vector<double> *pvd_last_profile
+                = this->p_mmexecutor->getLastCoverageProfile();
+            if (this->p_motionplan->computeArmRetrieval((*pvd_last_profile),1) != 0)
+            {
+                return false;
+            }
+            std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
+	}
+	// this->p_motionplan->computeArmDeployment(0,);
 	// Adds a dummy waypoint at the end to smoothly turn the rover at the end
 	this->p_motionplan->addTurningWaypoint(0.0);
-	//this->p_motionplan->addTurningWaypoint(0.7);
         std::cout << " \033[32m[----------] [generateMotionPlan()]\033[0m Added final Turning Waypoint, now path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         this->p_mmexecutor->updateMotionPlan();
         std::cout << " \033[1;32m[--DONE!---] [generateMotionPlan()]\033[0m Executor is updated with new plan" << std::endl;
-        setStatus(READY_TO_MOVE);
+        if (this->getStatus() == IDLE)
+	{
+	    setStatus(READY_TO_MOVE);
+	}
+	else //REPLANNING
+	{
+            setStatus(EXECUTING_MOTION_PLAN);
+	}
         return true;
     }
     else
@@ -609,12 +672,42 @@ bool MobileManipMotionPlanner::resumeOperation()
     }
 }
 
-void MobileManipMotionPlanner::updateLocCamDEM(
+bool MobileManipMotionPlanner::updateLocCamDEM(
     RoverGuidance_Dem locCamDEM,
-    proxy_library::Pose rover_position,
+    proxy_library::Joints &arm_command,
+    proxy_library::MotionCommand &rover_command,
     proxy_library::Joints arm_joints)
 {
-    throw "Not yet implemented";
+    if (getStatus() == EXECUTING_MOTION_PLAN)
+    {
+        // Process locCamDEM and check whether the path collides or not
+        // Here the MMMap loads and processes the input LocCamDEM
+	//ui_error_code = this->p_mmmap->loadLocDEM(locCamDEM);
+	// MotionPlan checks whether the current path is on obstacles or not in the local cost map
+	//if this->p_motionplan->checkNewObstacles();
+	//   here it means there is in fact a new obstacle in the way 
+        std::cout << " \033[32m[----------] [updateLocCamDEM()]\033[0m Checking LocCAM " << std::endl;
+        /*rover_command = this->p_mmexecutor->getZeroRoverCommand();
+        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            arm_command.m_jointStates[i].m_position
+                = arm_joints.m_jointStates[i].m_position;
+        }*/
+	// else
+        std::cout << " \033[1;32m[----------] [updateLocCamDEM()]\033[0m To be implemented" << std::endl;
+	// If the checking is negative, then the status comes back to EXECUTING_MOTION_PLAN
+	//setStatus(EXECUTING_MOTION_PLAN);
+	return true;
+    }
+    else if ((this->getStatus() == RETRIEVING_ARM) || (this->getStatus() == EXECUTING_ARM_OPERATION))
+    {
+        std::cout << " \033[1;32m[----------] [updateLocCamDEM()]\033[0m InputLocCAM discarded, replanning not needed" << std::endl;
+    }
+    else
+    {
+	setError(IMPROPER_CALL);
+	return false;
+    }
 }
 
 bool MobileManipMotionPlanner::updateRoverArmPos(
@@ -740,6 +833,10 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
 		return false;
 	    }
             return true;
+	case REPLANNING:
+            rover_command = this->p_mmexecutor->getZeroRoverCommand();
+            std::cout << " \033[1;32m[----------] [updateRoverArmPos()]\033[0m It is in Replanning status" << std::endl;
+	    return false;
         case ERROR:
             return false;
         default:
@@ -1012,20 +1109,6 @@ bool MobileManipMotionPlanner::setZres(double d_zres_m)
     if (d_zres_m > 0)
     {
         this->d_zres = d_zres_m;
-        return true;
-    }
-    else
-    {
-        setError(POOR_CONFIG);
-        return false;
-    }
-}
-
-bool MobileManipMotionPlanner::setAvoidanceDistance(double d_avoid_dist_m)
-{
-    if (d_avoid_dist_m > 0)
-    {
-        this->d_avoid_dist = d_avoid_dist_m;
         return true;
     }
     else

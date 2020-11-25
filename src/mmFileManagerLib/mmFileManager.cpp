@@ -115,6 +115,45 @@ void readMatrixFile(std::string map_file,
     }
 }
 
+void readMatrixFileCommas(std::string map_file,
+                    std::vector<std::vector<double>> &vector_elevationData)
+{
+    std::string line;
+    std::ifstream e_file(map_file.c_str(), std::ios::in);
+
+    double n_row = 0;
+    double n_col = 0;
+    vector_elevationData.clear();
+    std::vector <double> row;
+    if (e_file.is_open())
+    {
+        while (std::getline(e_file, line))
+        {
+            std::stringstream ss(line);
+            std::string cell;
+            while (std::getline(ss, cell, ','))
+            {
+                double val;
+                std::stringstream numeric_value(cell);
+                numeric_value >> val;
+                row.push_back(val);
+                n_col++;
+            }
+	    vector_elevationData.push_back(row);
+	    row.clear();
+            n_row++;
+        }
+        e_file.close();
+
+        n_col /= n_row;
+    }
+    else
+    {
+        std::cout << "[readMatrixFile] Problem opening the path file " << map_file << std::endl;
+	throw std::exception();
+    }
+}
+
 void readReachabilityMap(std::string map_file,
                          std::vector<std::vector<std::vector<double>>> * reachabilityMap,
                          std::vector<double> * resolutions,

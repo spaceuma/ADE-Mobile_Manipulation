@@ -12,7 +12,82 @@ TEST(MMMapTest, set_config_test)
 {
     MobileManipMap mmmap(false);
     mmmap.setThresholdValues( 0.0,-1.0,-1.0,-1.0);
+    // Do the same with config values
 }
+
+
+TEST(MMMapTest, nominal_working_test_spacehall)
+{
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
+    
+    // A dummy Rover Guidance based DEM is created
+    ASSERT_NO_THROW(readMatrixFileCommas("test/unit/data/input/MMMapTest/RgDem.p_heightData_m.csv",
+                   vvd_elevation_data)) << "Input DEM file is missing";
+    
+    ASSERT_NO_THROW(readMatrixFileCommas("test/unit/data/input/MMMapTest/RgDem.p_pointValidityFlag.csv",
+                   vvd_validity_data)) << "Input DEM file is missing";
+    std::cout << "Matrix size is " << vvd_elevation_data[0].size() << "x" << vvd_elevation_data.size() << std::endl; 
+    std::cout << "Matrix size is " << vvd_validity_data[0].size() << "x" << vvd_validity_data.size() << std::endl; 
+    double res = 0.1; // meters
+    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    int8_t validityArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
+    prgd_dummy_dem->mapOrigin_m_Mlg[0] = -11.05;
+    prgd_dummy_dem->mapOrigin_m_Mlg[1] = -6.05;
+    prgd_dummy_dem->mapOrigin_m_Mlg[2] = 0.0;
+    for (uint j = 0; j < vvd_elevation_data.size(); j++)
+    {
+        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
+                = vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = vvd_validity_data[j][i];
+        }
+    }
+
+    base::Waypoint samplePos;
+    samplePos.position[0] = 3.0;
+    samplePos.position[1] = 14.0;
+
+    MobileManipMap dummyMap(true);
+    dummyMap.setThresholdValues( -1.0,-1.0,0.01,-1.0);
+    ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
+
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, 0.5, 1.0, 1.3),0);
+    
+    std::vector<std::vector<double>> costMap, elevationMap, slopeMap, sdMap;
+    std::vector<std::vector<int>> traversabilityMap;
+    std::vector<std::vector<int8_t>> validityMap;
+    costMap.resize(prgd_dummy_dem->rows);
+    validityMap.resize(prgd_dummy_dem->rows);
+    for (uint i = 0; i < prgd_dummy_dem->rows; i++)
+    {
+        costMap[i].resize(prgd_dummy_dem->cols);
+        validityMap[i].resize(prgd_dummy_dem->cols);
+    }
+    dummyMap.getCostMap(costMap);
+    dummyMap.getTraversabilityMap(traversabilityMap);
+    dummyMap.getValidityMap(validityMap);
+    dummyMap.getElevationMap(elevationMap);
+    dummyMap.getSlopeMap(slopeMap);
+    dummyMap.getSDMap(sdMap);
+
+    writeMatrixFile("test/unit/data/results/MMMapTest/spacehall_validityMap.txt", validityMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/spacehall_elevationMap.txt", elevationMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/spacehall_slopeMap.txt", slopeMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/spacehall_sdMap.txt", sdMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/spacehall_costMap.txt", costMap);    
+    writeMatrixFile("test/unit/data/results/MMMapTest/spacehall_traversabilityMap.txt", traversabilityMap);    
+
+}
+
+
 
 TEST(MMMapTest, nominal_working_test_galopprennbahnwest)
 {
@@ -72,7 +147,6 @@ TEST(MMMapTest, nominal_working_test_galopprennbahnwest)
     dummyMap.getSDMap(sdMap);
     dummyMap.getTraversabilityMap(traversabilityMap);
 
-    std::ofstream validityMapFile, costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
     writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_validityMap.txt", validityMap);    
     writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_costMap.txt", costMap);    
     writeMatrixFile("test/unit/data/results/MMMapTest/gbwest_slopeMap.txt", slopeMap);    
