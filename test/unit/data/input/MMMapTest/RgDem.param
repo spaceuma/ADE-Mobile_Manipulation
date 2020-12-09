@@ -3,6 +3,6 @@
 rows = 301
 cols = 301
 nodeSize_m = 0.1000000000000000
-mapOrigin_m_Mlg[0] = -11.0500008566045000
-mapOrigin_m_Mlg[1] = -6.0500008566045498
-mapOrigin_m_Mlg[2] = -0.0000000001193163
+mapOrigin_m_Mlg[0] = -19.1575649254419282
+mapOrigin_m_Mlg[1] = -11.0202161821915112
+mapOrigin_m_Mlg[2] = 0.0627672024568288

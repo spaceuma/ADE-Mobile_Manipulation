@@ -6,7 +6,7 @@ using namespace cv;
 
 MobileManipMap::MobileManipMap(bool b_debug_mode_m)
 {
-    mapstate = NO_DEM;
+    this->mapstate = NO_DEM;
     this->b_debug_mode = b_debug_mode_m;
 }
 
@@ -14,7 +14,7 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
                                unsigned int &ui_isDEM_loaded,
                                bool b_debug_mode_m)
 {
-    mapstate = NO_DEM;
+    this->mapstate = NO_DEM;
     ui_isDEM_loaded = this->loadDEM(dem);
     if (ui_isDEM_loaded == 0)
     {
@@ -27,119 +27,165 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
  * loadDEM()
  * Function to load and process input DEM
  */
-unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
+unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem, bool b_update)
 {
-    this->mapstate = NO_DEM;
-    
-    /*
-     *  Check Input Data is ok
-     */
-    if (dem.nodeSize_m <= 0) // Resolution
+    if (b_update) // This DEM updates the previous one
     {
-        std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
-		      << dem.nodeSize_m << " is invalid (equal or less than zero)" << std::endl;
-        return 1;
+        if (this->mapstate == NO_DEM)
+	{
+            return 8; // There is no DEM to update
+	}
+	if (dem.nodeSize_m != this->d_res)
+	{
+            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
+		      << dem.nodeSize_m << " meters is not equal to original DEM resolution "
+		      << this->d_res << " meters"  << std::endl;
+            return 1;
+	}
+
+	this->rg_dem = dem;
     }
-    if (dem.rows < 5) // Rows
+    else
     {
-        std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Number of rows " 
-		      << dem.rows << " is invalid (less than five)" << std::endl;
-        return 2;
-    }
-    if (dem.cols < 5) // Columns
-    {
-        std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of columns " 
-		      << dem.cols << " is invalid (less than five)" << std::endl;
-        return 3;
-    }
-    
-    /*
-     * Assignation
-     */
-    this->d_res = dem.nodeSize_m;
-    this->ui_num_rows = dem.rows;
-    this->ui_num_cols = dem.cols;
-    try // Offset
-    {
-        for (unsigned int i = 0; i < 3; i++)
+        std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m New incoming Nav DEM " << std::endl;
+        this->mapstate = NO_DEM;
+        /*
+         *  Check Input Data is ok
+         */
+        if (dem.nodeSize_m <= 0) // Resolution
         {
-            this->vd_global_offset[i] = dem.mapOrigin_m_Mlg[i];
+            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
+		      << dem.nodeSize_m << " is invalid (equal or less than zero)" << std::endl;
+            return 1;
         }
+        if (dem.rows < 5) // Rows
+        {
+            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Number of rows " 
+		      << dem.rows << " is invalid (less than five)" << std::endl;
+            return 2;
+        }
+        if (dem.cols < 5) // Columns
+        {
+            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of columns " 
+		      << dem.cols << " is invalid (less than five)" << std::endl;
+            return 3;
+        }
+    
+        /*
+         * Assignation
+         */
+        this->d_res = dem.nodeSize_m;
+        this->ui_num_rows = dem.rows;
+        this->ui_num_cols = dem.cols;
+        try // Offset
+        {
+            for (unsigned int i = 0; i < 3; i++)
+            {
+                this->vd_global_offset[i] = dem.mapOrigin_m_Mlg[i];
+            }
+        }
+        catch (exception &e)
+        {
+            return 4;
+        }
+        this->rg_nav_dem = dem;
+        this->rg_dem = dem;
     }
-    catch (exception &e)
-    {
-        return 4;
-    }
-    this->rg_dem = dem;
+    
 
     /*
      *  DEM processing
      */
     try
     {
-        
-        // Empty matrices
-        // Nav
-        this->vvd_elevation_map.clear();
-        this->vvd_smoothed_elevation_map.clear();
-        this->vvi_validity_map.clear();
-        this->vvd_slope_map.clear();
-        this->vvd_aspect_map.clear();
-        this->vvd_sd_map.clear();
-        this->vvd_nx_map.clear();
-        this->vvd_ny_map.clear();
-        this->vvd_nz_map.clear();
-        this->vvi_obstacle_map.clear();
-        this->vvi_traversability_map.clear();
-        this->vvd_cost_map.clear();
-        this->vvd_proximity_map.clear();
-        // Loc
-        this->vvd_loc_elevation_map.clear();	
-        this->vvi_loc_validity_map.clear();
-        this->vvi_loc_obstacle_map.clear();
+        if (!b_update)
+	{	
+            std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Allocating new maps" << std::endl;
+            // Empty matrices
+            // Common - Used for computation only
+            this->vvd_elevation_map.clear();
+            this->vvd_smoothed_elevation_map.clear();
+            this->vvi_validity_map.clear();
+            this->vvd_slope_map.clear();
+            this->vvd_local_slope_map.clear();
+            this->vvd_aspect_map.clear();
+            this->vvd_local_aspect_map.clear();
+            this->vvd_sd_map.clear();
+            this->vvd_nx_map.clear();
+            this->vvd_ny_map.clear();
+            this->vvd_nz_map.clear();
+            this->vvi_obstacle_map.clear();
+            this->vvi_loc_obstacle_map.clear();
+            this->vvi_nav_obstacle_map.clear();
+            this->vvi_traversability_map.clear();
+            this->vvd_cost_map.clear();
+            this->vvd_proximity_map.clear();
+            this->vvd_loc_proximity_map.clear();
+	
+	    // Nav
+	    //this->vvd_nav_elevation_map.clear();	
+            //this->vvi_nav_validity_map.clear();
+            //this->vvi_nav_obstacle_map.clear();
 
-	// Matrices initialization
-        std::vector<double> vd_row(this->ui_num_cols);
-        std::vector<int> vi_row(this->ui_num_cols, 0);
-        std::vector<int8_t> vit_row(this->ui_num_cols);
-        for (uint j = 0; j < this->ui_num_rows; j++)
-        {
-            this->vvd_elevation_map.push_back(vd_row);
-            this->vvd_loc_elevation_map.push_back(vd_row);
-            this->vvd_smoothed_elevation_map.push_back(vd_row);
-            this->vvi_validity_map.push_back(vit_row);
-            this->vvi_loc_validity_map.push_back(vit_row);
-            this->vvd_slope_map.push_back(vd_row);
-            this->vvd_aspect_map.push_back(vd_row);
-            this->vvd_sd_map.push_back(vd_row);
-            this->vvd_nx_map.push_back(vd_row);
-            this->vvd_ny_map.push_back(vd_row);
-            this->vvd_nz_map.push_back(vd_row);
-            this->vvi_obstacle_map.push_back(vi_row);
-            this->vvi_loc_obstacle_map.push_back(vi_row);
-            this->vvi_traversability_map.push_back(vi_row);
-            this->vvd_cost_map.push_back(vd_row);
-            this->vvd_proximity_map.push_back(vd_row);
-        } // Assignation of dummy values
+            // Loc
+            this->vvd_loc_elevation_map.clear();	
+            this->vvi_loc_validity_map.clear();
 
+	    // Matrices initialization
+            std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Initializing new maps" << std::endl;
+            std::vector<double> vd_row(this->ui_num_cols);
+            std::vector<int> vi_row(this->ui_num_cols, 0);
+            std::vector<int8_t> vit_row(this->ui_num_cols);
+            for (uint j = 0; j < this->ui_num_rows; j++)
+            {
+                this->vvd_elevation_map.push_back(vd_row);
+                this->vvd_loc_elevation_map.push_back(vd_row);
+                this->vvd_smoothed_elevation_map.push_back(vd_row);
+                this->vvi_validity_map.push_back(vit_row);
+                this->vvi_loc_validity_map.push_back(vit_row);
+                this->vvi_nav_validity_map.push_back(vit_row);
+                this->vvi_loc_validity_map.push_back(vit_row);
+                this->vvd_slope_map.push_back(vd_row);
+                this->vvd_local_slope_map.push_back(vd_row);
+                this->vvd_aspect_map.push_back(vd_row);
+                this->vvd_local_aspect_map.push_back(vd_row);
+                this->vvd_sd_map.push_back(vd_row);
+                this->vvd_nx_map.push_back(vd_row);
+                this->vvd_ny_map.push_back(vd_row);
+                this->vvd_nz_map.push_back(vd_row);
+                this->vvi_obstacle_map.push_back(vi_row);
+                this->vvi_loc_obstacle_map.push_back(vi_row);
+                this->vvi_nav_obstacle_map.push_back(vi_row);
+                this->vvi_traversability_map.push_back(vi_row);
+                this->vvd_cost_map.push_back(vd_row);
+                this->vvd_proximity_map.push_back(vd_row);
+                this->vvd_loc_proximity_map.push_back(vd_row);
+            } // Assignation of dummy values
+        }
         double d_valid_ratio, d_contour_ratio;
-        this->checkValidityMap(d_valid_ratio, d_contour_ratio);
-        if (d_valid_ratio < this->d_valid_ratio_threshold)
-        {
-            // Not enough valid pixels
-            std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The valid_ratio is " 
+        std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Importing Validity Map" << std::endl;
+        this->checkValidityMap(d_valid_ratio, d_contour_ratio, b_update);
+	if (!b_update)
+	{
+	    if (d_valid_ratio < this->d_valid_ratio_threshold)
+            {
+                // Not enough valid pixels
+                std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The valid_ratio is " 
 		      << d_valid_ratio << ", threshold is " << d_valid_ratio_threshold << std::endl;
-            return 6;
-        }
-        if (d_contour_ratio > this->d_contour_ratio_threshold)
-        {
-            // Too many contour pixels
-            std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The contour_ratio is " 
+                return 6;
+            }
+            if (d_contour_ratio > this->d_contour_ratio_threshold)
+            {
+                // Too many contour pixels
+                std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The contour_ratio is " 
 		      << d_contour_ratio << ", threshold is " << d_contour_ratio_threshold << std::endl;
-            return 7;
-        }
-        this->calculateElevationMap();
+                return 7;
+            }
+	}
+        std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Importing Elevation Map" << std::endl;
+        this->calculateElevationMap(b_update);
         mapstate = DEM_LOADED;
+        std::cout << " \033[1;35m[----------] [MobileManipMap::loadDEM()]\033[0m DEM successfully imported" << std::endl;
     }
     catch (bad_alloc &ba)
     {
@@ -149,74 +195,29 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem)
     return 0;
 }
 
-
-unsigned int MobileManipMap::loadLocDEM(const RoverGuidance_Dem &dem)
-{
-    if (mapstate == NO_DEM)
-    {
-        return 2; // There is no DEM from NavCAM
-    }
-    if ((this->ui_num_rows != dem.rows)||(this->ui_num_cols != dem.cols))
-    {
-        return 3; // Wrong number of rows or columns
-    }
-    // calculateLocElevationMap(); //here we have to compute vvi_loc_obstacle_map
-}
-
 bool MobileManipMap::checkObstacles(std::vector<base::Waypoint> &vw_rover_path_m) // Introduce here the path
 {
-    Mat mat_loc_obstacle_map
-        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    Mat mat_loc_trav_map
-        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    Mat mat_proximity_map;
-    
-    for (int j = 0; j < mat_loc_trav_map.rows; j++)
+    std::vector<int> vi_pos(2, 0);
+    for (uint i = 0; i < vw_rover_path_m.size(); i++)
     {
-        for (int i = 0; i < mat_loc_trav_map.cols; i++)
+        vi_pos[0] = (int)(vw_rover_path_m[i].position[0] / this->d_res + 0.5);
+        vi_pos[1] = (int)(vw_rover_path_m[i].position[1] / this->d_res + 0.5);
+    // TODO - take care of exceptions regarding unvalid indexes
+        if (this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] <= this->d_occupancy_dist)
         {
-            mat_loc_trav_map.at<float>(j, i)
-                = 1.0 - (float)this->vvi_loc_obstacle_map[j][i];
+            std::cout << "Detected obstacle near waypoint " << i << ", which is ( " << vw_rover_path_m[i].position[0] << ", " << vw_rover_path_m[i].position[1] << " ), where proximity is " << this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] << std::endl;
+            return true;
         }
     }
-    if (this->b_debug_mode)
-    {
-        std::cout << "Local Traversable Mat is computed" << std::endl;
-        imshow("Local Traversable Matrix", mat_loc_trav_map);
-        waitKey(0);
-    }
-
-    threshold(
-        mat_loc_trav_map, mat_loc_obstacle_map, 0.5, 255, THRESH_BINARY);
-    if (this->b_debug_mode)
-    {
-        std::cout << "A Threshold is applied to the local trav mat" << std::endl;
-        imshow("Obstacle Matrix 2", mat_loc_obstacle_map);
-        waitKey(0);
-    }
-
-    mat_loc_obstacle_map.convertTo(mat_loc_obstacle_map, CV_8UC1);
-
-    // Preliminar Proximity map is computed
-    distanceTransform(mat_loc_obstacle_map, mat_proximity_map, DIST_L2, 5);
-    mat_proximity_map = mat_proximity_map * this->d_res;
-
-    if (b_debug_mode)
-    {
-        std::cout << "Preliminar Proximity Map is computed" << std::endl;
-        imshow("Proximity Matrix", mat_proximity_map);
-        waitKey(0);
-    }
-    
-    // Here a for loop checks for each waypoint the value of proximity to obstacles
-
+    return false;
 }
 
 // Valid ratio is the ratio between the number of valid pixels and the total
 // Contour ratio is the ratio between the number of corner pixels and valid
 // pixels
 void MobileManipMap::checkValidityMap(double &d_valid_ratio,
-                                      double &d_contour_ratio)
+                                      double &d_contour_ratio,
+				      bool b_isLoc)
 {
     Mat mat_valid_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
@@ -229,6 +230,14 @@ void MobileManipMap::checkValidityMap(double &d_valid_ratio,
         {
             this->vvi_validity_map[j][i]
                 = this->rg_dem.p_pointValidityFlag[i + j * this->ui_num_cols];
+	    if (b_isLoc)
+	    {
+                this->vvi_loc_validity_map[j][i] = this->vvi_validity_map[j][i];
+	    }
+	    else
+	    {
+                this->vvi_nav_validity_map[j][i] = this->vvi_validity_map[j][i];
+	    }
             mat_valid_map.at<float>(j, i) = (float)this->vvi_validity_map[j][i];
             if (this->vvi_validity_map[j][i] == 1)
             {
@@ -253,7 +262,7 @@ void MobileManipMap::checkValidityMap(double &d_valid_ratio,
 }
 
 
-bool MobileManipMap::calculateElevationMap()
+bool MobileManipMap::calculateElevationMap(bool b_isLoc)
 {
     std::vector<double> row;
     d_elevation_min = INFINITY;
@@ -381,18 +390,18 @@ bool MobileManipMap::calculateElevationMap()
                          / (2 * this->d_res);
                 }
 
-                this->vvd_slope_map[j][i] = atan(sqrt(pow(dx, 2) + pow(dy, 2)));
-                this->vvd_aspect_map[j][i] = atan2(dy, dx);
-                this->vvd_nx_map[j][i] = sin(this->vvd_aspect_map[j][i])
-                                         * sin(this->vvd_slope_map[j][i]);
-                this->vvd_ny_map[j][i] = cos(this->vvd_aspect_map[j][i])
-                                         * sin(this->vvd_slope_map[j][i]);
-                this->vvd_nz_map[j][i] = cos(this->vvd_slope_map[j][i]);
-            }
+                this->vvd_local_slope_map[j][i] = atan(sqrt(pow(dx, 2) + pow(dy, 2)));
+                this->vvd_local_aspect_map[j][i] = atan2(dy, dx);
+                this->vvd_nx_map[j][i] = sin(this->vvd_local_aspect_map[j][i])
+                                         * sin(this->vvd_local_slope_map[j][i]);
+                this->vvd_ny_map[j][i] = cos(this->vvd_local_aspect_map[j][i])
+                                         * sin(this->vvd_local_slope_map[j][i]);
+                this->vvd_nz_map[j][i] = cos(this->vvd_local_slope_map[j][i]);
+	    }
             else
             {
-                this->vvd_slope_map[j][i] = 0.0;
-                this->vvd_aspect_map[j][i] = 0.0;
+                this->vvd_local_slope_map[j][i] = 0.0;
+                this->vvd_local_aspect_map[j][i] = 0.0;
                 this->vvd_nx_map[j][i] = 0.0;
                 this->vvd_ny_map[j][i] = 0.0;
                 this->vvd_nz_map[j][i] = 0.0;
@@ -460,6 +469,17 @@ bool MobileManipMap::calculateElevationMap()
                 this->vvd_slope_map[j][i]
                     = atan(sqrt(pow(dx, 2) + pow(dy, 2))) * 180.0 / 3.1416;
                 this->vvd_aspect_map[j][i] = atan2(dy, dx);
+                if (this->vvd_slope_map[j][i] >= this->d_slope_threshold)
+	        {
+                    if(b_isLoc)
+		    {
+                        this->vvi_loc_obstacle_map[j][i] = 1;
+		    }
+		    else
+		    {
+                        this->vvi_nav_obstacle_map[j][i] = 1;
+		    } 
+	        } 
             }
             else
             {
@@ -520,6 +540,17 @@ bool MobileManipMap::calculateElevationMap()
                     std::cout << "  log = " << log(d_R / (double)i_nodes)
                               << std::endl;
                 }
+                if (this->vvd_sd_map[j][i] >= this->d_sd_threshold)
+	        {
+                    if(b_isLoc)
+		    {
+                        this->vvi_loc_obstacle_map[j][i] = 1;
+		    }
+		    else
+		    {
+                        this->vvi_nav_obstacle_map[j][i] = 1;
+		    } 
+	        } 
             }
             else
             {
@@ -536,6 +567,37 @@ bool MobileManipMap::calculateElevationMap()
         std::cout << "i_occupancy_kernel = " << i_occupancy_kernel << std::endl;
     }
 
+    // Here compute a proximity map
+    Mat mat_proximity_map;
+    Mat mat_obstacle_map
+        = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
+    if (b_isLoc) // TODO: Optimize this by only executing when an obstacle is found
+    {
+        for (int j = 0; j < this->ui_num_rows; j++)
+        {
+            for (int i = 0; i < this->ui_num_cols; i++)
+            {
+                if ((vvi_loc_obstacle_map[j][i] == 1)&&(vvi_loc_validity_map[j][i] == 1))
+                {
+                    mat_obstacle_map.at<float>(j, i) = 0;
+                }
+                else
+                {
+                    mat_obstacle_map.at<float>(j, i) = 1;
+                }
+            }
+        }        
+        mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
+        distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
+        mat_proximity_map = mat_proximity_map * this->d_res;
+        for (int j = 0; j < this->ui_num_rows; j++)
+        {
+            for (int i = 0; i < this->ui_num_cols; i++)
+            {
+                this->vvd_loc_proximity_map[j][i] = mat_proximity_map.at<float>(j, i);
+            }
+        }
+    }
     return true;
 }
 
@@ -595,10 +657,7 @@ MobileManipMap::MobileManipMap(
     this->mapstate = FACE_COMPUTED;
 }
 
-unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
-                                         double d_avoid_dist_m,
-                                         double d_minreach_dist_m,
-                                         double d_maxreach_dist_m)
+unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
 {
     if (mapstate == NO_DEM)
     {
@@ -614,9 +673,6 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
     }
 
     // FACE distances
-    this->d_avoid_dist = d_avoid_dist_m;
-    this->d_minreach_dist = d_minreach_dist_m;
-    this->d_maxreach_dist = d_maxreach_dist_m;
     this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist;
     this->d_outter_sampling_dist
         = this->d_inner_sampling_dist
@@ -625,7 +681,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
     try
     {
         // Compute vvb_obstacle_map
-        this->calculateTraversabilityMap();
+        this->calculateTraversabilityMap(); //TODO: Include here the option to consider the initial position as well
         if (this->b_debug_mode)
         {
             std::cout << "Computed Traversability Map" << std::endl;
@@ -650,6 +706,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
     mapstate = FACE_COMPUTED;
     return 0;
 }
+
 
 bool MobileManipMap::loadGlobalSample(const base::Waypoint &w_sample_pos_m)
 {
@@ -726,20 +783,22 @@ void MobileManipMap::getCostMap(
     vvd_cost_map_m = this->vvd_cost_map;
 }
 
+std::vector<std::vector<double>> *MobileManipMap::getCostMap()
+{
+    return &(this->vvd_cost_map);
+}
+
+
 void MobileManipMap::getSlopeMap(
     std::vector<std::vector<double>> &vvd_slope_map_m)
 {
     vvd_slope_map_m = this->vvd_slope_map;
 }
 
-void MobileManipMap::getSDMap(std::vector<std::vector<double>> &vvd_sd_map_m)
+void MobileManipMap::getSDMap(
+		std::vector<std::vector<double>> &vvd_sd_map_m)
 {
     vvd_sd_map_m = this->vvd_sd_map;
-}
-
-std::vector<std::vector<double>> *MobileManipMap::getCostMap()
-{
-    return &(this->vvd_cost_map);
 }
 
 void MobileManipMap::getTraversabilityMap(
@@ -841,7 +900,7 @@ bool MobileManipMap::calculateTraversabilityMap()
         for (int i = 0; i < mat_validity_map.cols; i++)
         {
             mat_validity_map.at<float>(j, i)
-                = (float)this->vvi_validity_map[j][i];
+                = (float)this->vvi_nav_validity_map[j][i];
         }
     }
     if (this->b_debug_mode)
@@ -1026,7 +1085,6 @@ bool MobileManipMap::addSampleFacingObstacles()
     return true;
 }
 
-
 bool MobileManipMap::calculateProximityToObstaclesMap()
 {
     Mat mat_proximity_map;
@@ -1095,6 +1153,11 @@ double MobileManipMap::getResolution()
     return this->d_res;
 }
 
+std::vector<double> *MobileManipMap::getPointer2Offset()
+{
+    return &(this->vd_global_offset);
+}
+
 std::vector<double> MobileManipMap::getOffset()
 {
     return this->vd_global_offset;
@@ -1108,53 +1171,41 @@ void MobileManipMap::setThresholdValues(double d_temptative_slope_threshold,
  
     if ((d_temptative_slope_threshold < 0.0)||(d_temptative_slope_threshold > 90.0))
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold value remains as " <<  this->d_slope_threshold
-		 << " degrees, since temptative value " << d_temptative_slope_threshold << " degrees is out of range [0.0, 90.0] " << std::endl;
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold = " <<  this->d_slope_threshold << " degrees" << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Slope threshold is " <<  
-		d_temptative_slope_threshold << " degrees, previous was " << 
-		this->d_slope_threshold << " degrees "<< std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold " <<  this->d_slope_threshold << " to " << d_temptative_slope_threshold << " degrees" << std::endl;
         this->d_slope_threshold = d_temptative_slope_threshold;
     }
 
     if ((d_temptative_sd_threshold < 0.0)||(d_temptative_sd_threshold > 90.0))
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold value remains as " <<  this->d_sd_threshold
-		 << " degrees, since temptative value " << d_temptative_sd_threshold << " degrees is out of range [0.0, 90.0] " << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold value = " <<  this->d_sd_threshold << " degrees" << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of SD threshold is " <<  
-		d_temptative_sd_threshold << " degrees, previous was " << 
-		this->d_sd_threshold << " degrees "<< std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold " <<  this->d_sd_threshold << " to " << d_temptative_sd_threshold << " degrees" << std::endl;
         this->d_sd_threshold = d_temptative_sd_threshold;
     }
 
     if ((d_temptative_valid_ratio_threshold < 0.0)||(d_temptative_valid_ratio_threshold > 1.0))
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold value remains as " <<  this->d_valid_ratio_threshold
-		 << " , since temptative value " << d_temptative_valid_ratio_threshold << " is out of range [0.0, 1.0] " << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold = " <<  this->d_valid_ratio_threshold << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Valid Ratio threshold is " <<  
-		d_temptative_valid_ratio_threshold << " , previous was " << 
-		this->d_valid_ratio_threshold << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold " <<  this->d_valid_ratio_threshold << " to " << d_temptative_valid_ratio_threshold << std::endl;
         this->d_valid_ratio_threshold = d_temptative_valid_ratio_threshold;
     }
     
     if ((d_temptative_contour_ratio_threshold < 0.0)||(d_temptative_contour_ratio_threshold > 1.0))
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold value remains as " <<  this->d_contour_ratio_threshold
-		 << " , since temptative value " << d_temptative_contour_ratio_threshold << " is out of range [0.0, 1.0] " << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold is " <<  this->d_contour_ratio_threshold << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Contour Ratio threshold is " <<  
-		d_temptative_contour_ratio_threshold << " , previous was " << 
-		this->d_contour_ratio_threshold << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold " <<  this->d_contour_ratio_threshold << " to " << d_temptative_contour_ratio_threshold << std::endl;
         this->d_contour_ratio_threshold = d_temptative_contour_ratio_threshold;
     }
     std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Finished setting Threshold values " << std::endl; 
@@ -1169,12 +1220,12 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
 {
     if (i_temptative_close_iter < 0)
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m CLOSE iterations value remains as " <<  this->i_validity_morph_iterations
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m CLOSE iterations value remains as " <<  this->i_validity_morph_iterations
 		 << ", since temptative value " << i_temptative_close_iter << " is less than zero " << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of CLOSE iterations is " <<  
+        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of CLOSE iterations is " <<  
 		i_temptative_close_iter << ", previous was " << 
 		this->i_validity_morph_iterations << std::endl;
         this->i_validity_morph_iterations = i_temptative_close_iter;
@@ -1182,12 +1233,12 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
     
     if (d_temptative_avoid_dist < 0.0)
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Avoidance distance value remains as " <<  this->d_avoid_dist
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Avoidance distance value remains as " <<  this->d_avoid_dist
 		 << " meters, since temptative value " << d_temptative_avoid_dist << " meters is less than zero " << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Avoidance distance is " <<  
+        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of Avoidance distance is " <<  
 		d_temptative_avoid_dist << " meters, previous was " << 
 		this->d_avoid_dist << std::endl;
         this->d_avoid_dist = d_temptative_avoid_dist;
@@ -1196,12 +1247,12 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
 
     if (d_temptative_occ_radius < 0.0)
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Occupancy radius value remains as " <<  this->d_occupancy_dist
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Occupancy radius value remains as " <<  this->d_occupancy_dist
 		 << " meters, since temptative value " << d_temptative_occ_radius << " meters is less than zero " << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New value of Occupancy radius is " <<  
+        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of Occupancy radius is " <<  
 		d_temptative_occ_radius << " meters, previous was " << 
 		this->d_occupancy_dist << std::endl;
         this->d_occupancy_dist = d_temptative_occ_radius;
@@ -1209,17 +1260,18 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
 
     if ((d_temptative_min_reach < 0.0)||(d_temptative_max_reach < 0.0)||(d_temptative_min_reach > d_temptative_max_reach))
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Reachability distance values remain as " <<  this->d_minreach_dist
+        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Reachability distance values remain as " <<  this->d_minreach_dist
 		 << " meters (min) and " << this->d_maxreach_dist << " meters (max), since temptative values " << d_temptative_min_reach << " meters min and " << d_temptative_max_reach << " meters max are not valid" << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m New values of Reachability are " <<  
+        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New values of Reachability are " <<  
 		d_temptative_min_reach << " meters (min) and " << d_temptative_max_reach << " meters (max), previous were " << 
 		this->d_minreach_dist << " and " << this->d_maxreach_dist << "meters respectively" << std::endl;
         this->d_minreach_dist = d_temptative_min_reach;
         this->d_maxreach_dist = d_temptative_max_reach;
     }
+    std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Finished setting Configuration values " << std::endl; 
 }
 
 

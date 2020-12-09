@@ -51,15 +51,18 @@ TEST(MMMapTest, nominal_working_test_spacehall)
         }
     }
 
-    base::Waypoint samplePos;
-    samplePos.position[0] = 3.0;
-    samplePos.position[1] = 14.0;
+    base::Waypoint samplePos, roverPos;
+    samplePos.position[0] = 10.0;
+    samplePos.position[1] = 16.0;
+    roverPos.position[0] = 3.9;
+    roverPos.position[1] = 9.0;
 
     MobileManipMap dummyMap(true);
-    dummyMap.setThresholdValues( -1.0,-1.0,0.01,-1.0);
+    dummyMap.setThresholdValues( 80.0, 80.0,0.01,-1.0);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 0.5, 1.0, 1.3),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos),3);
+    //ASSERT_EQ(dummyMap.modifyUnderneath(roverPos),true);
     
     std::vector<std::vector<double>> costMap, elevationMap, slopeMap, sdMap;
     std::vector<std::vector<int>> traversabilityMap;
@@ -126,7 +129,7 @@ TEST(MMMapTest, nominal_working_test_galopprennbahnwest)
     samplePos.position[0] = 17.885;
     samplePos.position[1] = 12.405;
 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
 
@@ -227,7 +230,7 @@ TEST(MMMapTest, nominal_working_test_exrColmenar)
     writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_slopeMap.txt", slopeMap);    
     writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_sdMap.txt", sdMap);    
 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos),0);
     std::cout << "Cost map is computed" << std::endl; 
 
     costMap.resize(prgd_dummy_dem->rows);
@@ -308,7 +311,7 @@ TEST(MMMapTest, nominal_working_test)
     MobileManipMap dummyMap(false);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -477,7 +480,7 @@ TEST(MMMapTest, nominal_working_test_MagLocCam)
     MobileManipMap dummyMap(false);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -629,7 +632,7 @@ TEST(MMMapTest, nominal_working_test_MagDEMs)
     MobileManipMap dummyMap(true);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -877,22 +880,22 @@ TEST(MMMapTest, sample_pos_error_test)
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - First Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_one, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_one),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Second Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_two, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_two),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Third Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_three, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_three),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Fourth Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_four, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_four),
                  2);
      
 }

@@ -15,8 +15,8 @@ exrSpaceHall_traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMa
 res = 0.1
 xMap, yMap = np.meshgrid(np.linspace(0,300,301), np.linspace(0,300,301))
 
-xMap = xMap*res - 11.05
-yMap = yMap*res - 6.05
+xMap = xMap*res - 19.0688738623660825
+yMap = yMap*res - 10.9856070496854024
 
 fig, ax = plt.subplots(constrained_layout=True)
 plott = ax.contourf(xMap, yMap, exrSpaceHall_validityMap)
@@ -97,10 +97,10 @@ ax2.set_xlabel('X-axis')
 ax2.set_ylabel('Y-axis')
 ax2.set_title('Traversability Map')
 #s2 = ax2.plot(sample[0], sample[1], 'ob')
-s2 = ax2.plot(6.0, 7.0, 'ob')
+#s2 = ax2.plot(3.9, 9.0, 'ob')
 ax2.set_xlim([xMap[0,0],xMap[0,-1]])
 ax2.set_ylim([yMap[0,0],yMap[-1,0]])
-
+#ax2.add_artist(plt.Circle((3.9,10.6),1.6, color = 'b'))
 
 ### EXR COLMENAR ###
 exrColmenar_elevationMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrColmenar.txt"), skiprows=0)

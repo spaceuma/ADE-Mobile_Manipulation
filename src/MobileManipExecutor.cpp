@@ -103,38 +103,31 @@ void MobileManipExecutor::initializeArmVariables(
 void MobileManipExecutor::updateMotionPlan()
 {
     // Extract the rover path
-    std::cout << "Getting the path" << std::endl;
     std::vector<base::Waypoint> *rover_path
         = this->p_motion_plan->getRoverPath();
 
     // Set the path into the Waypoint Navigation class
-    std::cout << "Preparing the path" << std::endl;
     this->vpw_path.resize(rover_path->size());
     for (size_t i = 0; i < rover_path->size(); i++)
     {
         rover_path->at(i).tol_position = 0.1;
         this->vpw_path.at(i) = (&rover_path->at(i));
     }
-    std::cout << "Configuring Tolerance" << std::endl;
     this->waypoint_navigation.configureTol(
         0.1, 5.0 / 180.0 * 3.1416); // tolpos,tolheading
-    std::cout << "Setting Trajectory with " << this->vpw_path.size() << " waypoints"  << std::endl;
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
     // Extract and store the joints profile
-    std::cout << "Getting Arm Motion Profile" << std::endl;
     this->pvvd_arm_motion_profile = this->p_motion_plan->getArmMotionProfile();
     this->i_initial_segment = 0;
     this->b_is_last_segment = false;
     this->d_operational_time = 0.0;
-    std::cout << "Updating Deployment" << std::endl;
     this->updateDeployment();
     this->ui_current_timestamp = 0;
     this->ui_past_timestamp = 0;
-    std::cout << "Updating Retrieval" << std::endl;
     this->updateRetrieval();
 }
 
@@ -188,12 +181,12 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 
     if ((dist < 2.3)&&(this->d_dist_to_sample >= 2.3)) //This would be d_inner_sampling_dist from the map class
     {
-        std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
        
     }
     if ((dist < 1.4)&&(this->d_dist_to_sample >= 1.4)) //This would be d_inner_sampling_dist from the map class
     {
-        std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
+        std::cout << " \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
        
     }this->d_dist_to_sample = dist;
     if ((dist < 1.1))//&&(dacos < 0.1))
@@ -326,7 +319,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     //i_current_segment++; // = i_actual_segment;
                 }
             }
-	    std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+	    //std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
             double d_angle, d_na;
             for (unsigned int i = 0; i < this->vd_arm_present_command.size(); i++)
             {
@@ -384,7 +377,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 	    else if((b_is_last_segment) && 
 			   (isAligned(rover_pose)) )
 	    {
-                std::cout << "For some reason the arm is not yet ready" << std::endl;
+                //std::cout << "For some reason the arm is not yet ready" << std::endl;
 	    }
             return 1;
         case SAMPLING_POS:
@@ -597,9 +590,9 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_coverage_index++;
-                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
-//                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Elapsed time: " << d_elapsed_time << "sec" << std::endl;
-//                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Time limit: " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] *1.5 + 5.0 << " sec" << std::endl;
+                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
+//                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Elapsed time: " << d_elapsed_time << "sec" << std::endl;
+//                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Time limit: " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] *1.5 + 5.0 << " sec" << std::endl;
                     this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)
                                               [this->i_current_coverage_index]);
                 }
@@ -611,7 +604,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
             {
                 b_is_finished = true;
-                std::cout << " \033[1;33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
+                std::cout << " \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
             }
 	    else
 	    {
@@ -733,6 +726,11 @@ bool MobileManipExecutor::isArmMoving(
 	}
     }
     return isMoving;
+}
+
+bool MobileManipExecutor::isCoupledMoving()
+{
+    return this->armstate == COUPLED_MOVING;
 }
 
 bool MobileManipExecutor::isArmFollowing(

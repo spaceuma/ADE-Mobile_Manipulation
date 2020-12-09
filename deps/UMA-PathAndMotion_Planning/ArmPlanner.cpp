@@ -80,7 +80,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     this->zResolution = _zResolution;
     this->DEM = _DEM;
 
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Computing the Arm Motion Profile"  << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Computing the Arm Motion Profile"  << std::endl;
     // Rover z coordinate and heading computation
     (*roverPath)[roverPath->size() - 1].heading = atan2(
         samplePos.position[1] - (*roverPath)[roverPath->size() - 1].position[1],
@@ -151,7 +151,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         = dot(dot(getTraslation(roverIniPos), getZrot((*roverPath6)[0][5])),
               initialBCS2Wrist);
 
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Rover Initial Position is (" << roverIniPos[0] << ", " << roverIniPos[1] << ", " << roverIniPos[2] << ") "<< std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Rover Initial Position is (" << roverIniPos[0] << ", " << roverIniPos[1] << ", " << roverIniPos[2] << ") "<< std::endl;
     base::Waypoint iniPos;
     iniPos.position[0] = world2Wrist[0][3];
     iniPos.position[1] = world2Wrist[1][3];
@@ -205,7 +205,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     TBCS2Sample[2][3] = 0.75;//optimalLeftDeviation;
  */
 
-    std::cout << "Relative position sample - last waypoint = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Relative last waypoint to sample position = " <<  TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3]  << ", " << TBCS2Sample[2][3] << std::endl; 
 
 
     TW2Sample = dot(TW2BCS, TBCS2Sample);
@@ -249,21 +249,21 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     // Smoothing heading of the rover path by inserting new waypoints
     double headingThreshold = M_PI/12;
     smoothRoverPathHeading(headingThreshold);
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Reference base path heading is smoothed"  << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Reference base path heading is smoothed"  << std::endl;
 
     
     // Generating the reachability tunnel surrounding the rover path
     unsigned int ui_noinf_nodes = generateTunnel(iniPos, samplePos, volume_cost_map);
     clock_t endt = clock();
     double t = double(endt - init) / CLOCKS_PER_SEC;
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D Cost Tunnel is generated" << std::endl;
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Tunnel uses " << ui_noinf_nodes << " / " << n*m*l << " nodes (" << ((double)ui_noinf_nodes/((double)n*m*l)) << " % )"<< std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D Cost Tunnel is generated" << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Tunnel uses " << ui_noinf_nodes << " / " << n*m*l << " nodes (" << ((double)ui_noinf_nodes/((double)n*m*l)) << " % )"<< std::endl;
 
     
     // End effector path planning
     FastMarching_lib::FastMarching3D pathPlanner3D;
     std::vector<base::Waypoint> *wristPath = new std::vector<base::Waypoint>;
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Starting 3D Wrist Path Planning" << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Starting 3D Wrist Path Planning" << std::endl;
     clock_t inip = clock(); 
     if(!pathPlanner3D.planPath(volume_cost_map,
                            mapResolution,
@@ -280,7 +280,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 	std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m  - zResolution = " << zResolution << std::endl;
         return false;
     }
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D Wrist Path computed with " << wristPath->size() << " waypoints"  << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D Wrist Path computed with " << wristPath->size() << " waypoints"  << std::endl;
 
 
     // Orientation (roll, pitch, yaw) of the end effector at each waypoint
@@ -304,7 +304,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
               + i * (finalEEorientation[2] - sherpa_tt_arm->iniEEorientation[2])
                     / (wristPath->size() - 1);
     } 
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m End effector orientation computed" << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m End effector orientation computed" << std::endl;
 
 
     // Paths inbetween assignment
@@ -314,7 +314,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         std::cout << " \033[35m[--ERROR!--] [ArmPlanner::planArmMotion()]\033[0m ERROR Paths Assignment unfeasible" << std::endl;
 	return false;
     }
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Paths Assignment done with " << pathsAssignment->size() << " assignments" << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Paths Assignment done with " << pathsAssignment->size() << " assignments" << std::endl;
 
     
     // Waypoint interpolation to smooth the movements of the arm joints
@@ -323,7 +323,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         = new std::vector<int>(roverPath6->size());
     computeWaypointInterpolation(
         pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Joints Motion Smoothing done" << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Joints Motion Smoothing done" << std::endl;
 
     // Computing inverse kinematics
     /*First, we compute the inverse kinematics of the wrist for all the path
@@ -451,13 +451,13 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 	armJoints->push_back(config);
     }
     
-    std::cout << " \033[33m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Profile computed with " << armJoints->size() << " samples"  << std::endl;
+    std::cout << " \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Profile computed with " << armJoints->size() << " samples"  << std::endl;
     
     (*roverPath) = (*interpolatedRoverPath);
 
     clock_t endp = clock();
     double tp = double(endp - inip) / CLOCKS_PER_SEC;
-    std::cout << " \033[1;33m[----------] [ArmPlanner::planArmMotion()]\033[0m Done Planning Arm Motion in " << tp << " seconds" << std::endl;
+    std::cout << " \033[1;35m[----------] [ArmPlanner::planArmMotion()]\033[0m Done Planning Arm Motion in " << tp << " seconds" << std::endl;
     return true;
 }
 

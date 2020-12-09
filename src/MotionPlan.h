@@ -80,7 +80,7 @@ private:
     /**
      * Value of Z resolution
      */
-    double d_zres;
+    double d_zres = 0.08;
     /**
      * Checks if the current path is smooth
      */
@@ -99,17 +99,16 @@ public:
      * Class Constructor.
      */
     MotionPlan(MobileManipMap *pmmmap_m,
-               double d_zres_m,
                std::string s_urdf_path_m,
 	       unsigned int ui_deployment = 2); //BEGINNING deployment type by default 
     /**
      * An existing path and profile are introduced into the motion plan
      */
     MotionPlan(MobileManipMap *pmmmap_m,
-               double d_zres_m,
                std::string s_urdf_path_m,
                std::vector<Waypoint> &vw_rover_path_m,
                std::vector<std::vector<double>> &vj_joints_profile_m);
+    bool isPathColliding();
     /**
      * A pointer to the current end effector path is returned
      */

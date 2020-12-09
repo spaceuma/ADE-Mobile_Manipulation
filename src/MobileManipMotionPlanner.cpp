@@ -12,7 +12,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     unsigned int ui_operation)
 {
     
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating classes" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating Mobile Manipulation Component" << std::endl;
     
     /*
      * Initializing internal variables
@@ -20,32 +20,34 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     this->status = IDLE;
     this->error = NO_ERROR;
     unsigned int ui_error_code = 0;
-    this->s_configfile_path = s_configfile_path_m; 
-    
+    this->s_configfile_path = s_configfile_path_m;  
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Initialized internal variables" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Path to Configuration File is " << s_configfile_path_m << std::endl;
+
     /*
      * Creating Mobile Manipulation Map Class
      */ 
     this->p_mmmap = new MobileManipMap();
     if (!this->readConfigFile()) // Reading Configuration File
     {
-        std::cout << " \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m "
+        std::cout << "[MM] \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m "
                      "Config file could not be read, using default values instead" << std::endl;
     }
     if (!this->updateNavCamDEM(navCamDEM)) // Introducing Input NavCAM DEM
     {
-        std::cout << " \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
+        std::cout << "[MM] \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
                      "Map Class could not be created" << std::endl;
         this->printErrorCode();
     }
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Map Class Successfully created" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Map Class Successfully created" << std::endl;
     
     /* 
      * Creating Motion Plan Class
      */
     this->p_motionplan
-        = new MotionPlan(this->p_mmmap, this->d_zres, s_configfile_path_m);
+        = new MotionPlan(this->p_mmmap, s_configfile_path_m);
     //this->p_motionplan->setArmGaussFilter(5.0, 9);
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
     
     /* 
      * Creating Mobile Manipulation Executor Class
@@ -53,8 +55,8 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(
     this->p_mmexecutor
         = new MobileManipExecutor(this->p_motionplan, s_configfile_path_m);
     this->setArmTargetOperation(ui_operation);
-    std::cout << " \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
-    std::cout << " \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
+    std::cout << "[MM] \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
 }
 
 bool MobileManipMotionPlanner::readConfigFile()
@@ -442,10 +444,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         //setStatus(GENERATING_MOTION_PLAN);
         this->p_mmexecutor->initializeArmVariables(j_present_readings);
         // The cost map must be computed based on FACE method
-        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition,
-                                             this->d_avoid_dist,
-                                             this->d_minfetching_dist,
-                                             this->d_maxfetching_dist); 
+        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition);
 	switch (ui_code)
         {
             case 0:
@@ -678,21 +677,73 @@ bool MobileManipMotionPlanner::updateLocCamDEM(
     proxy_library::MotionCommand &rover_command,
     proxy_library::Joints arm_joints)
 {
+    unsigned int ui_error_code = 0;
     if (getStatus() == EXECUTING_MOTION_PLAN)
     {
+	if (!this->p_mmexecutor->isCoupledMoving())
+	{
+            std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m Input LocCam DEM discarded, system not in coupled movement" << std::endl;
+            return true;
+	}
+
+        ui_error_code = this->p_mmmap->loadDEM(locCamDEM, true);
+    
+        switch (ui_error_code)
+        {
+        case 0:
+            std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m LocCam DEM is successfully loaded, checking obstacles" << std::endl;
+            if(this->p_motionplan->isPathColliding())
+	    {
+                std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m Detected obstacle close to current path, going to REPLANNING status" << std::endl;
+                rover_command = this->p_mmexecutor->getZeroRoverCommand();
+                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+                {
+                    arm_command.m_jointStates[i].m_position
+                        = arm_joints.m_jointStates[i].m_position;
+                }
+		setStatus(REPLANNING);
+		return false;
+	    }
+	    else
+	    {
+                std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m No obstacles on current path" << std::endl;
+                return true;
+	    }
+        case 1:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM resolution is zero or less";
+            setError(POOR_DEM);
+            return false;
+        case 2:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM rows are less than 5";
+            setError(POOR_DEM);
+            return false;
+        case 3:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM columns are less than 5";
+            setError(POOR_DEM);
+            return false;
+        case 4:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Cannot read the DEM offset";
+            setError(POOR_DEM);
+            return false;
+        case 5:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] DEM info could not be allocated in memory";
+            setError(BAD_DEM_ALLOC);
+            return false;
+        case 6:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Not enough valid pixels in input NavCamDEM";
+            setError(POOR_DEM);
+            return false;
+        case 7:
+            std::cout << " \033[31m[--ERROR!--]\033[0m [updateNavCamDEM()] Too many holes within NavCamDEM valid area";
+            setError(POOR_DEM);
+            return false;
+        }
         // Process locCamDEM and check whether the path collides or not
         // Here the MMMap loads and processes the input LocCamDEM
 	//ui_error_code = this->p_mmmap->loadLocDEM(locCamDEM);
 	// MotionPlan checks whether the current path is on obstacles or not in the local cost map
 	//if this->p_motionplan->checkNewObstacles();
 	//   here it means there is in fact a new obstacle in the way 
-        std::cout << " \033[32m[----------] [updateLocCamDEM()]\033[0m Checking LocCAM " << std::endl;
-        /*rover_command = this->p_mmexecutor->getZeroRoverCommand();
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
-        {
-            arm_command.m_jointStates[i].m_position
-                = arm_joints.m_jointStates[i].m_position;
-        }*/
 	// else
         std::cout << " \033[1;32m[----------] [updateLocCamDEM()]\033[0m To be implemented" << std::endl;
 	// If the checking is negative, then the status comes back to EXECUTING_MOTION_PLAN
@@ -1067,28 +1118,6 @@ void MobileManipMotionPlanner::printErrorCode()
     std::cout << std::endl;
 }
 
-void MobileManipMotionPlanner::printConfig()
-{
-    std::cout << " \033[32m[----------] [printConfig()]\033[0m MMMP Configuration Values: " << std::endl;
-    std::cout << " \033[32m[----------]\033[0m  - Z resolution: " << this->d_zres << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m  - Kinematic distances: " << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - Base height from ground: " << this->d_base_height
-              << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - d0: " << this->vd_kin_conf[0] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - a1: " << this->vd_kin_conf[1] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - a2: " << this->vd_kin_conf[2] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - c2: " << this->vd_kin_conf[3] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - a3: " << this->vd_kin_conf[4] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - d4: " << this->vd_kin_conf[5] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m    - d6: " << this->vd_kin_conf[6] << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m  - End Effector Z distance margin: "
-              << this->d_finalEE_height << " m" << std::endl;
-    std::cout << " \033[32m[----------]\033[0m  - Max Fetching distance: " << this->d_maxfetching_dist << " m"
-              << std::endl;
-    std::cout << " \033[32m[----------]\033[0m  - Min Fetching distance: " << this->d_minfetching_dist << " m"
-              << std::endl;
-}
-
 void MobileManipMotionPlanner::setError(MMError error_m)
 {
     if (error_m != NO_ERROR)
@@ -1102,20 +1131,6 @@ void MobileManipMotionPlanner::setStatus(MMStatus status_m)
 {
     this->priorStatus = getStatus();
     this->status = status_m;
-}
-
-bool MobileManipMotionPlanner::setZres(double d_zres_m)
-{
-    if (d_zres_m > 0)
-    {
-        this->d_zres = d_zres_m;
-        return true;
-    }
-    else
-    {
-        setError(POOR_CONFIG);
-        return false;
-    }
 }
 
 double MobileManipMotionPlanner::getCurrentRoverYaw()
@@ -1133,9 +1148,49 @@ std::vector<base::Waypoint> *MobileManipMotionPlanner::getRoverPath()
     return this->p_motionplan->getRoverPath();
 }
 
+std::vector<double> *MobileManipMotionPlanner::getOffset()
+{
+    return this->p_mmmap->getPointer2Offset();
+}
+
 std::vector<std::vector<double>> *MobileManipMotionPlanner::getCostMap()
 {
     return this->p_mmmap->getCostMap();
+}
+
+
+bool MobileManipMotionPlanner::getMorphMaps(
+    std::vector<std::vector<double>> &vvd_elevation_map_m,
+    std::vector<std::vector<double>> &vvd_slope_map_m,
+    std::vector<std::vector<double>> &vvd_sd_map_m,
+    std::vector<std::vector<int8_t>> &vvi_validity_map_m)
+{
+    std::cout << " \033[32m[MM][----------] [getMorphMaps()]\033[0m Getting Elevation Map" << std::endl;
+    if (!this->p_mmmap->getElevationMap(vvd_elevation_map_m))
+    {
+        std::cout << " \033[1;33m[MM][--ERROR---] [getMorphMaps()]\033[0m DEM is not loaded" << std::endl;
+        return false;    
+    }
+    std::cout << " \033[32m[MM][----------] [getMorphMaps()]\033[0m Getting Slope Map" << std::endl;
+    this->p_mmmap->getSlopeMap(vvd_slope_map_m);
+    std::cout << " \033[32m[MM][----------] [getMorphMaps()]\033[0m Getting Roughness Map" << std::endl;
+    this->p_mmmap->getSDMap(vvd_sd_map_m);
+    std::cout << " \033[32m[MM][----------] [getMorphMaps()]\033[0m Getting Validity Map" << std::endl;
+    this->p_mmmap->getValidityMap(vvi_validity_map_m);
+    std::cout << " \033[1;32m[MM][----------] [getMorphMaps()]\033[0m All morph maps are obtained" << std::endl;
+    return true;
+}
+
+bool MobileManipMotionPlanner::getNavigationMaps(
+    std::vector<std::vector<int>> &vvi_traversability_map_m,
+    std::vector<std::vector<double>> &vvd_cost_map_m)
+{
+    std::cout << " \033[32m[MM][----------] [getNavigationMaps()]\033[0m Getting Traversability Map" << std::endl;
+    this->p_mmmap->getTraversabilityMap(vvi_traversability_map_m);
+    std::cout << " \033[32m[MM][----------] [getNavigationMaps()]\033[0m Getting Cost Map" << std::endl;
+    this->p_mmmap->getCostMap(vvd_cost_map_m);
+    std::cout << " \033[1;32m[MM][----------] [getNavigationMaps()]\033[0m All navigation maps are obtained" << std::endl;
+    return true;
 }
 
 std::vector<std::vector<double>>

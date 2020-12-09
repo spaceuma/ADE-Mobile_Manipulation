@@ -1,12 +1,12 @@
 #include "MotionPlan.h"
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
-                       double d_zres_m,
                        std::string s_urdf_path_m,
 		       unsigned int ui_deployment)
 {
     this->pmm_map = pmmmap_m;
-    this->d_zres = d_zres_m;
+    this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m; 
+    std::cout << " \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
     this->s_urdf_path = s_urdf_path_m;
     this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, ui_deployment);
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
@@ -24,13 +24,13 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
 }
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
-                       double d_zres_m,
                        std::string s_urdf_path_m,
                        std::vector<Waypoint> &vw_rover_path_m,
                        std::vector<std::vector<double>> &m_arm_motion_profile)
 {
     this->pmm_map = pmmmap_m;
-    this->d_zres = d_zres_m;
+    this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m;
+    std::cout << " \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
     this->s_urdf_path = s_urdf_path_m;
     this->vw_rover_path.clear();
     this->p_arm_planner = new ArmPlanner(s_urdf_path_m, false, 1);
@@ -74,11 +74,12 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     {
         return 3;
     }
+    std::cout << " \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Getting the Cost Map" << std::endl;
     this->pmm_map->getCostMap(costMap);
     //    std::cout << "Rover pos is " << rover_position.position[0] << ", " <<
     //    rover_position.position[1] << std::endl;
     this->w_rover_pos = rover_position;
-    std::cout << " \033[33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Using bidirectional Fast Marching" << std::endl;
+    std::cout << " \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Starting Path Planning with biFM" << std::endl;
     if (this->bifm_planner.planPath(&costMap,
                                         this->pmm_map->getResolution(),
                                         rover_position,
@@ -87,7 +88,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     {
         if (isSmoothPath())
         {
-            std::cout << " \033[1;33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path using bidirectional Fast Marching" << std::endl;
+            std::cout << " \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with biFM" << std::endl;
             return 0;
         }
         else
@@ -97,7 +98,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     }
     else
     {
-        std::cout << " \033[33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Using unidirectional Fast Marching" << std::endl;
+        std::cout << " \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Changing to (uni)FM" << std::endl;
         if (this->fm_planner.planPath(&costMap,
                                         this->pmm_map->getResolution(),
                                         rover_position,
@@ -106,7 +107,7 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
         {
             if (isSmoothPath())
             {
-                std::cout << " \033[1;33m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path using unidirectional Fast Marching" << std::endl;
+                std::cout << " \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with (uni)FM" << std::endl;
                 return 0;
             }
             else
@@ -119,6 +120,11 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
             return 4;
 	}
     }
+}
+
+bool MotionPlan::isPathColliding()
+{
+    return this->pmm_map->checkObstacles(this->vw_rover_path);
 }
 
 bool MotionPlan::isSmoothPath()

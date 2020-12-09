@@ -47,7 +47,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path);
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path);
 
 
     // 1st Case with Shadowing 
@@ -97,7 +97,7 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path);
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path);
     // 2nd Case with Shadowing
     clock_t ini2D = clock();
     ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
@@ -268,7 +268,7 @@ TEST(MMMotionPlanTest, non_reachable_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan(&mmmap, zRes, s_urdf_path);
+    MotionPlan mplan(&mmmap, s_urdf_path);
 
 
     // 1st Case: Without Shadowing
@@ -310,7 +310,7 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     } 
-    MotionPlan mplan(&mmmap, zRes, s_urdf_path);
+    MotionPlan mplan(&mmmap, s_urdf_path);
 
 
     // 1st Case: Without Shadowing
@@ -354,7 +354,7 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     } 
-    MotionPlan mplan(&mmmap,zRes, s_urdf_path);
+    MotionPlan mplan(&mmmap, s_urdf_path);
 
 
     // 1st Case: Without Shadowing

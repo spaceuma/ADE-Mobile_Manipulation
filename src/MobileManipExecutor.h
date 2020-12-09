@@ -200,6 +200,7 @@ public:
     bool isArmFollowing(const proxy_library::Joints &j_next_command,
                         const proxy_library::Joints &j_present_joints);
     bool isArmMoving(const proxy_library::Joints &j_present_joints);
+    bool isCoupledMoving();
     /**
      * Returns a (0,0,0) rover command
      */
