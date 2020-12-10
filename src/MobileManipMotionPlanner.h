@@ -48,7 +48,7 @@ private:
     base::Waypoint w_current_rover_position;  // Rover Current Position (Local)
     std::string s_configfile_path; // Path to Configuration File
     bool b_is_atomic_deployed; // Flag for Atomic Operation
-
+    bool b_clear_underneath = false; // Sets the underneath as traversable or not
 public:
 
     /**

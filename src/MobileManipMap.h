@@ -92,6 +92,8 @@ private:
     double d_occupancy_dist = 1.6; // Occupancy radius
     double d_minreach_dist = 1.0;//1.344; // Min reachability distance
     double d_maxreach_dist = 1.3;//1.584; // Max reachability distance
+    double d_dilation = 1.0; // Ratio of allowed dilation
+    bool b_clear_underneath = false; // Underneath is ad-hoc traversable or not
 
     /**
      * DEM Navigation Data 
@@ -119,7 +121,7 @@ private:
     void checkValidityMap(double &d_valid_ratio, double &d_contour_ratio, bool b_isLoc);
     bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
     bool calculateElevationMap(bool b_isLoc);
-    bool calculateTraversabilityMap();
+    bool calculateTraversabilityMap(base::Waypoint w_rover_pos_m);
     bool calculateProximityToObstaclesMap();
     void calculateCostValues();
     bool addSampleFacingObstacles();
@@ -148,7 +150,7 @@ public:
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
-    unsigned int computeFACE(base::Waypoint w_sample_pos_m);
+    unsigned int computeFACE(base::Waypoint w_sample_pos_m, base::Waypoint w_rover_pos_m);
     
     /**
      * Output Variables Functions
@@ -190,7 +192,9 @@ public:
 		         double d_avoid_dist, 
                          double d_occ_radius, 
                          double d_min_reach,
-                         double d_max_reach);
+                         double d_max_reach,
+			 double d_dilation,
+			 bool b_clear_underneath);
 
 };
 

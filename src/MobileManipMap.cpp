@@ -657,7 +657,7 @@ MobileManipMap::MobileManipMap(
     this->mapstate = FACE_COMPUTED;
 }
 
-unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
+unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m, base::Waypoint w_rover_pos_m)
 {
     if (mapstate == NO_DEM)
     {
@@ -681,7 +681,7 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m)
     try
     {
         // Compute vvb_obstacle_map
-        this->calculateTraversabilityMap(); //TODO: Include here the option to consider the initial position as well
+        this->calculateTraversabilityMap(w_rover_pos_m); //TODO: Include here the option to consider the initial position as well
         if (this->b_debug_mode)
         {
             std::cout << "Computed Traversability Map" << std::endl;
@@ -853,7 +853,7 @@ double MobileManipMap::getMinElevation()
     return this->d_elevation_min;
 }
 
-bool MobileManipMap::calculateTraversabilityMap()
+bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
 {
     // TODO - Detect whether the sample is at a distance from obstacles too
     // close, being UNREACHABLE
@@ -981,14 +981,22 @@ bool MobileManipMap::calculateTraversabilityMap()
     {
         for (int i = 0; i < this->ui_num_cols; i++)
         {
-            if (mat_proximity_map.at<float>(j, i) <= 0.0)
+            if ((this->b_clear_underneath)&&(sqrt(pow((double)i * this->d_res
+                 - w_rover_pos_m.position[0],2) + pow((double)j * this->d_res
+                 - w_rover_pos_m.position[1],2))
+                    <= this->d_occupancy_dist))
+            {
+                    this->vvi_obstacle_map[j][i] = 1;
+                    this->vvi_traversability_map[j][i] = 3;
+	    }
+	    else if (mat_proximity_map.at<float>(j, i) <= 0.0)
             {
                 this->vvi_obstacle_map[j][i] = 0;
                 this->vvi_traversability_map[j][i] = 0;
             }
             else if ((mat_proximity_map.at<float>(j, i)
                       <= max(0.0,
-                             this->d_occupancy_dist - this->d_minreach_dist))
+                             this->d_dilation*this->d_occupancy_dist - this->d_minreach_dist))
                      || (i == 0) || (j == 0) || (i == this->ui_num_cols - 1)
                      || (j == this->ui_num_rows - 1))
             {
@@ -996,7 +1004,7 @@ bool MobileManipMap::calculateTraversabilityMap()
                 this->vvi_traversability_map[j][i] = 1;
             }
             else if (mat_proximity_map.at<float>(j, i)
-                     <= this->d_occupancy_dist)
+                     <= this->d_dilation*this->d_occupancy_dist)
             {
                 if (sqrt(pow((double)i * this->d_res
                                  - this->w_sample_pos.position[0],
@@ -1216,7 +1224,9 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
 		         double d_temptative_avoid_dist, 
                          double d_temptative_occ_radius, 
                          double d_temptative_min_reach,
-                         double d_temptative_max_reach)
+                         double d_temptative_max_reach,
+			 double d_temptative_dilation,
+			 bool b_temptative_clear_underneath)
 {
     if (i_temptative_close_iter < 0)
     {
@@ -1261,6 +1271,28 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
         this->d_minreach_dist = d_temptative_min_reach;
         this->d_maxreach_dist = d_temptative_max_reach;
     }
+
+    if ((d_temptative_dilation < 0.0)||(d_temptative_dilation > 1.0))
+    {
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Dilation Ratio = " <<  this->d_dilation << std::endl;
+    }
+    else
+    {
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m Dilation Ratio " <<  this->d_dilation << " to " << d_temptative_dilation << std::endl; 
+        this->d_dilation = d_temptative_dilation;
+	if (this->d_dilation < 1.0)
+	{
+            std::cout << "[MM] \033[1;35m[-WARNING!--] [MobileManipMap::setConfigValues()]\033[0m Dilation distance is reduced, rover traverse may be compromised by nearby obstacles" << std::endl; 
+	}
+    }
+
+    std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m Custom Traversable underneath " <<  this->b_clear_underneath << " to " << b_temptative_clear_underneath << std::endl; 
+        this->b_clear_underneath = b_temptative_clear_underneath;
+    if (b_clear_underneath)
+    {
+        std::cout << "[MM] \033[1;35m[-WARNING!--] [MobileManipMap::setConfigValues()]\033[0m Setting Rover Underneath as traversable, please ensure there is no visible obstacle nearby using external means" << std::endl; 
+    }
+
     std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Finished setting Configuration values " << std::endl; 
 }
 

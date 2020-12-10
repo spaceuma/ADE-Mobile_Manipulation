@@ -76,8 +76,9 @@ bool MobileManipMotionPlanner::readConfigFile()
             std::string cell;
             double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, 
 		   d_contour_ratio_threshold, d_avoid_dist, d_occ_radius, 
-		   d_min_reach, d_max_reach;
+		   d_min_reach, d_max_reach, d_dilation;
 	    int i_close_iter;
+	    bool b_clear_underneath;
             std::getline(e_file, cell); std::getline(e_file, cell); 
 	    d_slope_threshold = stof(cell);
 	    std::getline(e_file, cell); std::getline(e_file, cell); 
@@ -96,6 +97,10 @@ bool MobileManipMotionPlanner::readConfigFile()
 	    d_min_reach = stof(cell);
             std::getline(e_file, cell); std::getline(e_file, cell); 
 	    d_max_reach = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    d_dilation = stof(cell);
+            std::getline(e_file, cell); std::getline(e_file, cell); 
+	    b_clear_underneath = (bool)stof(cell);
 	    std::cout << "[MM] \033[32m[----------] [readConfigFile()]\033[0m "
                      "Temptative threshold values are " << d_slope_threshold << 
 		     ", " << d_sd_threshold << ", " << d_valid_ratio_threshold << ", " << 
@@ -105,7 +110,7 @@ bool MobileManipMotionPlanner::readConfigFile()
 					      d_valid_ratio_threshold, 
 					      d_contour_ratio_threshold);
 	    this->p_mmmap->setConfigValues(i_close_iter, d_avoid_dist, d_occ_radius,
-			                   d_min_reach, d_max_reach);
+			                   d_min_reach, d_max_reach, d_dilation, b_clear_underneath);
 	    return true;
         }
         else
@@ -456,7 +461,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
         //setStatus(GENERATING_MOTION_PLAN);
         this->p_mmexecutor->initializeArmVariables(j_present_readings);
         // The cost map must be computed based on FACE method
-        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition);
+        ui_code = this->p_mmmap->computeFACE(w_sample_globalposition, this->w_current_rover_position);
 	switch (ui_code)
         {
             case 0:
