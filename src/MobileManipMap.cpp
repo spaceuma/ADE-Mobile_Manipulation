@@ -37,7 +37,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem, bool b_update
 	}
 	if (dem.nodeSize_m != this->d_res)
 	{
-            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
+            std::cout << "[MM] \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
 		      << dem.nodeSize_m << " meters is not equal to original DEM resolution "
 		      << this->d_res << " meters"  << std::endl;
             return 1;
@@ -47,26 +47,26 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem, bool b_update
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m New incoming Nav DEM " << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m New incoming Nav DEM " << std::endl;
         this->mapstate = NO_DEM;
         /*
          *  Check Input Data is ok
          */
         if (dem.nodeSize_m <= 0) // Resolution
         {
-            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
+            std::cout << "[MM] \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of resolution " 
 		      << dem.nodeSize_m << " is invalid (equal or less than zero)" << std::endl;
             return 1;
         }
         if (dem.rows < 5) // Rows
         {
-            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Number of rows " 
+            std::cout << "[MM] \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Number of rows " 
 		      << dem.rows << " is invalid (less than five)" << std::endl;
             return 2;
         }
         if (dem.cols < 5) // Columns
         {
-            std::cout << " \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of columns " 
+            std::cout << "[MM] \033[35m[---ERROR--] [MobileManipMap::loadDEM()]\033[0m Value of columns " 
 		      << dem.cols << " is invalid (less than five)" << std::endl;
             return 3;
         }
@@ -100,7 +100,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem, bool b_update
     {
         if (!b_update)
 	{	
-            std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Allocating new maps" << std::endl;
+            std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Allocating new maps" << std::endl;
             // Empty matrices
             // Common - Used for computation only
             this->vvd_elevation_map.clear();
@@ -132,7 +132,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem, bool b_update
             this->vvi_loc_validity_map.clear();
 
 	    // Matrices initialization
-            std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Initializing new maps" << std::endl;
+            std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Initializing new maps" << std::endl;
             std::vector<double> vd_row(this->ui_num_cols);
             std::vector<int> vi_row(this->ui_num_cols, 0);
             std::vector<int8_t> vit_row(this->ui_num_cols);
@@ -163,29 +163,29 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem, bool b_update
             } // Assignation of dummy values
         }
         double d_valid_ratio, d_contour_ratio;
-        std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Importing Validity Map" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Importing Validity Map" << std::endl;
         this->checkValidityMap(d_valid_ratio, d_contour_ratio, b_update);
 	if (!b_update)
 	{
 	    if (d_valid_ratio < this->d_valid_ratio_threshold)
             {
                 // Not enough valid pixels
-                std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The valid_ratio is " 
+                std::cout << "[MM] \033[31m[--ERROR---] [MobileManipMap::loadDEM()]\033[0m The valid_ratio is " 
 		      << d_valid_ratio << ", threshold is " << d_valid_ratio_threshold << std::endl;
                 return 6;
             }
             if (d_contour_ratio > this->d_contour_ratio_threshold)
             {
                 // Too many contour pixels
-                std::cout << " \033[35m[--WARNING-] [MobileManipMap::loadDEM()]\033[0m The contour_ratio is " 
+                std::cout << "[MM] \033[31m[--ERROR---] [MobileManipMap::loadDEM()]\033[0m The contour_ratio is " 
 		      << d_contour_ratio << ", threshold is " << d_contour_ratio_threshold << std::endl;
                 return 7;
             }
 	}
-        std::cout << " \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Importing Elevation Map" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Importing Elevation Map" << std::endl;
         this->calculateElevationMap(b_update);
         mapstate = DEM_LOADED;
-        std::cout << " \033[1;35m[----------] [MobileManipMap::loadDEM()]\033[0m DEM successfully imported" << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::loadDEM()]\033[0m DEM successfully imported" << std::endl;
     }
     catch (bad_alloc &ba)
     {
@@ -1171,44 +1171,44 @@ void MobileManipMap::setThresholdValues(double d_temptative_slope_threshold,
  
     if ((d_temptative_slope_threshold < 0.0)||(d_temptative_slope_threshold > 90.0))
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold = " <<  this->d_slope_threshold << " degrees" << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold = " <<  this->d_slope_threshold << " degrees" << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold " <<  this->d_slope_threshold << " to " << d_temptative_slope_threshold << " degrees" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Slope threshold " <<  this->d_slope_threshold << " to " << d_temptative_slope_threshold << " degrees" << std::endl;
         this->d_slope_threshold = d_temptative_slope_threshold;
     }
 
     if ((d_temptative_sd_threshold < 0.0)||(d_temptative_sd_threshold > 90.0))
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold value = " <<  this->d_sd_threshold << " degrees" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold value = " <<  this->d_sd_threshold << " degrees" << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold " <<  this->d_sd_threshold << " to " << d_temptative_sd_threshold << " degrees" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m SD threshold " <<  this->d_sd_threshold << " to " << d_temptative_sd_threshold << " degrees" << std::endl;
         this->d_sd_threshold = d_temptative_sd_threshold;
     }
 
     if ((d_temptative_valid_ratio_threshold < 0.0)||(d_temptative_valid_ratio_threshold > 1.0))
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold = " <<  this->d_valid_ratio_threshold << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold = " <<  this->d_valid_ratio_threshold << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold " <<  this->d_valid_ratio_threshold << " to " << d_temptative_valid_ratio_threshold << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Valid Ratio threshold " <<  this->d_valid_ratio_threshold << " to " << d_temptative_valid_ratio_threshold << std::endl;
         this->d_valid_ratio_threshold = d_temptative_valid_ratio_threshold;
     }
     
     if ((d_temptative_contour_ratio_threshold < 0.0)||(d_temptative_contour_ratio_threshold > 1.0))
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold is " <<  this->d_contour_ratio_threshold << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold is " <<  this->d_contour_ratio_threshold << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold " <<  this->d_contour_ratio_threshold << " to " << d_temptative_contour_ratio_threshold << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Contour Ratio threshold " <<  this->d_contour_ratio_threshold << " to " << d_temptative_contour_ratio_threshold << std::endl;
         this->d_contour_ratio_threshold = d_temptative_contour_ratio_threshold;
     }
-    std::cout << " \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Finished setting Threshold values " << std::endl; 
+    std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setThresholdValues()]\033[0m Finished setting Threshold values " << std::endl; 
 }
 
 
@@ -1220,58 +1220,48 @@ void MobileManipMap::setConfigValues(int i_temptative_close_iter,
 {
     if (i_temptative_close_iter < 0)
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m CLOSE iterations value remains as " <<  this->i_validity_morph_iterations
-		 << ", since temptative value " << i_temptative_close_iter << " is less than zero " << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m CLOSE iterations = " <<  this->i_validity_morph_iterations << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of CLOSE iterations is " <<  
-		i_temptative_close_iter << ", previous was " << 
-		this->i_validity_morph_iterations << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of CLOSE iterations " <<  this->i_validity_morph_iterations << " to " << i_temptative_close_iter << std::endl; 
         this->i_validity_morph_iterations = i_temptative_close_iter;
     }
     
     if (d_temptative_avoid_dist < 0.0)
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Avoidance distance value remains as " <<  this->d_avoid_dist
-		 << " meters, since temptative value " << d_temptative_avoid_dist << " meters is less than zero " << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Avoidance distance = " <<  this->d_avoid_dist << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of Avoidance distance is " <<  
-		d_temptative_avoid_dist << " meters, previous was " << 
-		this->d_avoid_dist << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m Avoidance distance " <<  this->d_avoid_dist << " to " << d_temptative_avoid_dist << std::endl;
         this->d_avoid_dist = d_temptative_avoid_dist;
     }
 
 
     if (d_temptative_occ_radius < 0.0)
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Occupancy radius value remains as " <<  this->d_occupancy_dist
-		 << " meters, since temptative value " << d_temptative_occ_radius << " meters is less than zero " << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Occupancy radius = " <<  this->d_occupancy_dist << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New value of Occupancy radius is " <<  
-		d_temptative_occ_radius << " meters, previous was " << 
-		this->d_occupancy_dist << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m Occupancy radius " <<  this->d_occupancy_dist << " to " << d_temptative_occ_radius << " meters"<< std::endl; 
         this->d_occupancy_dist = d_temptative_occ_radius;
     }
 
     if ((d_temptative_min_reach < 0.0)||(d_temptative_max_reach < 0.0)||(d_temptative_min_reach > d_temptative_max_reach))
     {
-        std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Reachability distance values remain as " <<  this->d_minreach_dist
-		 << " meters (min) and " << this->d_maxreach_dist << " meters (max), since temptative values " << d_temptative_min_reach << " meters min and " << d_temptative_max_reach << " meters max are not valid" << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Min Reachability = " <<  this->d_minreach_dist << " meters" << std::endl;
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Min Reachability = " <<  this->d_maxreach_dist << " meters" << std::endl;
     }
     else
     {
-        std::cout << " \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m New values of Reachability are " <<  
-		d_temptative_min_reach << " meters (min) and " << d_temptative_max_reach << " meters (max), previous were " << 
-		this->d_minreach_dist << " and " << this->d_maxreach_dist << "meters respectively" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m Min Reachability " << this->d_minreach_dist << " to " << d_temptative_min_reach << " meters" << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::setConfigValues()]\033[0m Max Reachability " << this->d_maxreach_dist << " to " << d_temptative_max_reach << " meters" << std::endl;
         this->d_minreach_dist = d_temptative_min_reach;
         this->d_maxreach_dist = d_temptative_max_reach;
     }
-    std::cout << " \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Finished setting Configuration values " << std::endl; 
+    std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::setConfigValues()]\033[0m Finished setting Configuration values " << std::endl; 
 }
 
 

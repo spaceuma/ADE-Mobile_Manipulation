@@ -181,12 +181,12 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 
     if ((dist < 2.3)&&(this->d_dist_to_sample >= 2.3)) //This would be d_inner_sampling_dist from the map class
     {
-        std::cout << " \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
        
     }
     if ((dist < 1.4)&&(this->d_dist_to_sample >= 1.4)) //This would be d_inner_sampling_dist from the map class
     {
-        std::cout << " \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
        
     }this->d_dist_to_sample = dist;
     if ((dist < 1.1))//&&(dacos < 0.1))
@@ -510,19 +510,19 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                     d_ratio_aft = (double)(this->i_current_init_index + 1) / (double)((*this->pvvd_init_arm_profile).size() - 1);
                     if ((d_ratio_bef < 0.25)&&(d_ratio_aft >= 0.25)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.5)&&(d_ratio_aft >= 0.5)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.75)&&(d_ratio_aft >= 0.75)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.9)&&(d_ratio_aft >= 0.9)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
 		    }
 		    this->i_current_init_index++;
 		    this->updateArmCommandVectors(
@@ -544,7 +544,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
                 {
                     b_is_finished = true;
-                    std::cout << " \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
+                    std::cout << "[MM] \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
                 }
 	    }
 	    break;
@@ -590,7 +590,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_coverage_index++;
-                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
+                    std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
 //                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Elapsed time: " << d_elapsed_time << "sec" << std::endl;
 //                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Time limit: " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] *1.5 + 5.0 << " sec" << std::endl;
                     this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)
@@ -604,7 +604,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
             {
                 b_is_finished = true;
-                std::cout << " \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
+                std::cout << "[MM] \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
             }
 	    else
 	    {

@@ -6,7 +6,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
 {
     this->pmm_map = pmmmap_m;
     this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m; 
-    std::cout << " \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
     this->s_urdf_path = s_urdf_path_m;
     this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, ui_deployment);
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
@@ -21,6 +21,8 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
     this->vd_retrieval_position[3] = 0.0*deg2rad;//0.0;
     this->vd_retrieval_position[4] = -65.0*deg2rad;//-0.5;
     this->vd_retrieval_position[5] = 134.9*deg2rad;//2.354;
+    
+    std::cout << "[MM] \033[1;35m[----------] [MotionPlan::MotionPlan()]\033[0m Motion Plan successfully constructed" << std::endl;
 }
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
@@ -30,7 +32,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
 {
     this->pmm_map = pmmmap_m;
     this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m;
-    std::cout << " \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
     this->s_urdf_path = s_urdf_path_m;
     this->vw_rover_path.clear();
     this->p_arm_planner = new ArmPlanner(s_urdf_path_m, false, 1);
@@ -51,6 +53,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
         this->vvd_arm_motion_profile.push_back(row);
         row.clear();
     }
+    std::cout << "[MM] \033[1;35m[----------] [MotionPlan::MotionPlan()]\033[0m Motion Plan successfully constructed" << std::endl;
 }
 
 void MotionPlan::setDeployment(unsigned int ui_deployment)
@@ -74,49 +77,53 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     {
         return 3;
     }
-    std::cout << " \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Getting the Cost Map" << std::endl;
+    
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Getting Cost Map from MMMap" << std::endl;
     this->pmm_map->getCostMap(costMap);
-    //    std::cout << "Rover pos is " << rover_position.position[0] << ", " <<
-    //    rover_position.position[1] << std::endl;
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Got the Cost Map" << std::endl;
     this->w_rover_pos = rover_position;
-    std::cout << " \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Starting Path Planning with biFM" << std::endl;
-    if (this->bifm_planner.planPath(&costMap,
-                                        this->pmm_map->getResolution(),
-                                        rover_position,
-                                        this->pmm_map->getSample(),
-                                        &(this->vw_rover_path)))
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Starting Path Planning with biFM" << std::endl;
+    
+    if (this->bifm_planner.planPath(&costMap, //this->pmm_map->getCostMap(),
+                                    this->pmm_map->getResolution(),
+                                    rover_position,
+                                    this->pmm_map->getSample(),
+                                    &(this->vw_rover_path)))
     {
         if (isSmoothPath())
         {
-            std::cout << " \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with biFM" << std::endl;
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with biFM" << std::endl;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Path is degenerated, input cost map not smooth enough" << std::endl;
             return 5;
         }
     }
     else
     {
-        std::cout << " \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Changing to (uni)FM" << std::endl;
-        if (this->fm_planner.planPath(&costMap,
-                                        this->pmm_map->getResolution(),
-                                        rover_position,
-                                        this->pmm_map->getSample(),
-                                        &(this->vw_rover_path)))
+        std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Changing to (uni)FM" << std::endl;
+        if (this->fm_planner.planPath(&costMap, //this->pmm_map->getCostMap(), 
+                                      this->pmm_map->getResolution(),
+                                      rover_position,
+                                      this->pmm_map->getSample(),
+                                      &(this->vw_rover_path)))
         {
             if (isSmoothPath())
             {
-                std::cout << " \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with (uni)FM" << std::endl;
+                std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with (uni)FM" << std::endl;
                 return 0;
             }
             else
             {
+                std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Path is degenerated, input cost map not smooth enough" << std::endl;
                 return 5;
             }           
 	}
 	else
 	{
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m There is no feasible path to obtain" << std::endl;
             return 4;
 	}
     }
@@ -169,26 +176,13 @@ bool MotionPlan::shortenPathForFetching()
         &(this->vw_rover_path));
     if (endWaypoint == 0)
     {
+        std::cout << "[MM] \033[35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Cannot Shorten the path" << std::endl;
         return false;
-/*      
-        if (this->vw_rover_path.size() > 2)
-        {
-            this->vw_rover_path.erase(this->vw_rover_path.begin() + 1,
-                                      this->vw_rover_path.end());
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-*/
     }
     else
     {
         int i_eraseIndex = endWaypoint + 1;
-        // std::cout << "The path size is " << this->vw_rover_path.size() <<
-        // std::endl; std::cout << "The endWaypoint is " << endWaypoint <<
-        // std::endl;
+        std::cout << "[MM] \033[35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Shortening the path to waypoint " << endWaypoint << std::endl;
         if (endWaypoint < this->vw_rover_path.size() - 3)
         {
             double d_segmentX = this->vw_rover_path[i_eraseIndex].position[0]
@@ -217,31 +211,8 @@ bool MotionPlan::shortenPathForFetching()
                                           + 1,
                                       this->vw_rover_path.end());
         }
-        // Here we shorten the path as well at the beginning
-        /*int i_path_index = 0;
-        if (this->vw_rover_path.size()>3)
-        {
-            double d_segmentX = this->vw_rover_path[i_path_index].position[0] -
-        this->vw_rover_path[0].position[0]; double d_segmentY =
-        this->vw_rover_path[i_path_index].position[1] -
-        this->vw_rover_path[0].position[1]; double d_norm =
-        sqrt(pow(d_segmentX,2)+pow(d_segmentY,2)); while ((i_path_index <
-        this->vw_rover_path.size() - 2)&&(d_norm < 0.5))//TODO-Introduce here
-        configurable position tolerance
-            {
-                    i_path_index += 1;
-                    d_segmentX = this->vw_rover_path[i_path_index].position[0] -
-        this->vw_rover_path[0].position[0]; d_segmentY =
-        this->vw_rover_path[i_path_index].position[1] -
-        this->vw_rover_path[0].position[1]; d_norm =
-        sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
-            }
-            std::cout << "The initial erase index is " << i_path_index <<
-        std::endl; this->vw_rover_path.erase(this->vw_rover_path.begin(),
-                                  this->vw_rover_path.begin() + i_path_index);
-
-        }*/
     }
+    std::cout << "[MM] \033[1;35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Path is shortened" << std::endl;
     return true;
 }
 
@@ -279,29 +250,20 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     this->b_is_initialization_computed = false;
     if (!this->pmm_map->isSampleLoaded())
     {
+        std::cout << "[MM] \033[1;33m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Sample was not loaded " << std::endl;
         return 3;
     }
+
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Getting Elevation Map from MMMap class" << std::endl;
     std::vector<std::vector<double>> elevationMap;
+    // TODO: Check this! Using a pointer would be much better
     this->pmm_map->getElevationMapToZero(elevationMap);
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Got Elevation Map from MMMap class" << std::endl;
 
     std::vector<base::Waypoint> *pvw_reference_path;
     std::vector<base::Waypoint> vw_reference_path;
 
     pvw_reference_path = &(this->vw_rover_path);
-/*
-    if (this->vw_rover_path.size() < 20)
-    {
-        //std::cout << " \033[33m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Short Path"  << std::endl;
-        vw_reference_path.resize(1); 
-        vw_reference_path[0] = this->vw_rover_path.back(); 
-	pvw_reference_path = &(vw_reference_path);
-    }
-    else
-    {
-        pvw_reference_path = &(this->vw_rover_path);
-    }
-*/
-    //std::cout << "PVW reference path size is " << pvw_reference_path->size() << std::endl; 
 
     if (this->p_arm_planner->planArmMotion(pvw_reference_path,
                                            &elevationMap,
@@ -315,7 +277,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         // Initialization
         if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
         {
-            std::cout << "Raw Profile is safe, with "
+            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is safe, with "
                       << this->vvd_arm_motion_profile.size() << " samples"
                       << std::endl;
             if (this->vvd_arm_motion_profile.size()
@@ -348,11 +310,12 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                         = this->vvd_smoothed_arm_motion_profile;
                 }
             }
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Motion Profile Computed and Smoothed" << std::endl;
             return 0;
         }
         else
         {
-            std::cout << "Raw Profile is not safe, with "
+            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not safe, with "
                       << this->vvd_arm_motion_profile.size() << " samples"
                       << std::endl;
             return 1;

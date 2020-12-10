@@ -189,6 +189,8 @@ public:
     void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);
     void addTurningWaypoint(double d_dev);
     void setDeployment(unsigned int ui_deployment);
+    std::vector<std::vector<std::vector<double>>> vvvd_dummy_3d_costmap;
+    std::vector<std::vector<double>> vvd_dummy_wristpath;
 };
 
 #endif
