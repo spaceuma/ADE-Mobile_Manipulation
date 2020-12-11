@@ -100,6 +100,12 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         = (*DEM)[(int)((*roverPath)[0].position[1] / mapResolution + 0.5)]
                 [(int)((*roverPath)[0].position[0] / mapResolution + 0.5)]
           + heightGround2BCS;
+
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m The interpolated value from DEM is " << (*DEM)[(int)((*roverPath)[0].position[1] / mapResolution + 0.5)]
+                [(int)((*roverPath)[0].position[0] / mapResolution + 0.5)] << std::endl;
+
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m The heightGround2BCS constant is " << heightGround2BCS  << std::endl;
+    
     (*roverPath6)[0][3] = 0;
     (*roverPath6)[0][4] = 0;
     (*roverPath6)[0][5] = (*roverPath)[0].heading;
