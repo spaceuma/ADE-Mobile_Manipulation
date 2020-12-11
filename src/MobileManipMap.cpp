@@ -289,14 +289,14 @@ bool MobileManipMap::calculateElevationMap(bool b_isLoc)
 
     if (this->b_clear_underneath)
     {
-        std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Filling nonvalid pixels with min value of elevation = " << this->d_elevation_min << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Filling nonvalid pixels with min value of elevation = -0.64" << std::endl;
         for (int j = 0; j < this->ui_num_rows; j++)
         {
             for (int i = 0; i < this->ui_num_cols; i++)
             {
                 if (this->vvi_validity_map[j][i] == 0)
                 {
-                    this->vvd_elevation_map[j][i] = this->d_elevation_min;
+                    this->vvd_elevation_map[j][i] = -0.64;
                 }
             }
         } 
