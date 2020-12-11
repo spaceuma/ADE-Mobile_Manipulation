@@ -271,12 +271,19 @@ bool MobileManipMap::calculateElevationMap(bool b_isLoc)
     {
         for (int i = 0; i < this->ui_num_cols; i++)
         {
-            this->vvd_elevation_map[j][i]
+            if (this->vvi_validity_map[j][i] == 1)
+	    {
+	        this->vvd_elevation_map[j][i]
                 = this->rg_dem.p_heightData_m[i + j * this->ui_num_cols];
-            if (this->vvd_elevation_map[j][i] < this->d_elevation_min)
-            {
-                this->d_elevation_min = this->vvd_elevation_map[j][i];
-            }
+                if (this->vvd_elevation_map[j][i] < this->d_elevation_min)
+                {
+                    this->d_elevation_min = this->vvd_elevation_map[j][i];
+                }
+	    }
+	    else
+	    {
+	        this->vvd_elevation_map[j][i] = INFINITY;
+	    }
         }
     }
 
