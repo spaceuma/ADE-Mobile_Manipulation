@@ -170,7 +170,7 @@ bool MobileManipMotionPlanner::initAtomicOperation(
 {
     if (this->status == IDLE)
     {
-        std::cout << " \033[32m[----------] [initAtomicOperation()]\033[0m Planning Atomic Operation Motion" << std::endl;
+        std::cout << "[MM] \033[32m[----------] [initAtomicOperation()]\033[0m Planning Atomic Operation Motion" << std::endl;
         this->p_mmexecutor->resetOperationTime();
         std::vector<double> vd_arm_readings;
         vd_arm_readings.resize(6);
@@ -183,18 +183,22 @@ bool MobileManipMotionPlanner::initAtomicOperation(
         vd_orientation_goal[0] = d_roll;
         vd_orientation_goal[1] = d_pitch;
         vd_orientation_goal[2] = d_yaw;
-        std::cout << " \033[32m[----------]\033[0m Computing arm deployment motion plan" << std::endl;
-        if (this->p_motionplan->computeArmDeployment(
-                w_goal, vd_orientation_goal, vd_arm_readings)
-            != 0)
+        std::cout << "[MM] \033[32m[----------] [initAtomicOperation()]\033[0m Computing arm deployment motion plan" << std::endl;
+        
+        unsigned int ui_code = this->p_motionplan->computeArmDeployment(
+                w_goal, vd_orientation_goal, vd_arm_readings);
+	if (ui_code != 0)
         {
-            return false;//TODO - It must set the corresponding error
+            
+            std::cout << "[MM] \033[1;31m[----------]\033[0m Could not compute arm deployment" << std::endl;
+	    setError(UNREACH_GOAL);
+	    return false;//TODO - It must set the corresponding error
         }
-        std::cout << " \033[32m[----------]\033[0m Arm deployment motion plan computed" << std::endl;
+        std::cout << "[MM] \033[32m[----------] [initAtomicOperation()]\033[0m Arm deployment motion plan computed" << std::endl;
         std::vector<double> *pvd_arm_goal;
 	if (this->p_motionplan->isInitArmMotionProfileEmpty())
 	{
-            std::cout << " \033[32m[----------]\033[0m Arm deployment motion plan is empty" << std::endl;
+            std::cout << " \033[32m[----------] [initAtomicOperation()]\033[0m Arm deployment motion plan is empty" << std::endl;
             pvd_arm_goal = &(vd_arm_readings);
 	}
 	else
@@ -205,20 +209,20 @@ bool MobileManipMotionPlanner::initAtomicOperation(
                 std::cout << "Init joint " << i << " is " << (*pvd_arm_goal)[i] << std::endl;
 	    }*/
 	}
-        std::cout << " \033[32m[----------]\033[0m Arm deployment motion plan computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples" << std::endl;
-        std::cout << " \033[32m[----------]\033[0m Computing arm retrieval motion plan" << std::endl;
+        std::cout << "[MM] \033[32m[----------] [initAtomicOperation()]\033[0m Arm deployment motion plan computed with " << this->p_motionplan->getNumberDeploymentSamples() << " samples" << std::endl;
+        std::cout << "[MM] \033[32m[----------] [initAtomicOperation()]\033[0m Computing arm retrieval motion plan" << std::endl;
         if (this->p_motionplan->computeArmRetrieval((*pvd_arm_goal)) != 0)
         {
             return false;
         }
-        std::cout << " \033[32m[----------]\033[0m Arm retrieval motion plan computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
+        std::cout << "[MM] \033[32m[----------]\033[0m Arm retrieval motion plan computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
         this->p_mmexecutor->updateDeployment();
         this->p_mmexecutor->updateRetrieval();
         this->b_is_atomic_deployed = false;
         this->p_mmexecutor->resetOperationTime();
-        std::cout << " \033[32m[----------]\033[0m Executor is updated with new motion plans" << std::endl;
+        std::cout << "[MM] \033[32m[----------]\033[0m Executor is updated with new motion plans" << std::endl;
         setStatus(EXECUTING_ATOMIC_OPERATION);
-        std::cout << " \033[1;32m[----------] [initAtomicOperation()]\033[0m Atomic Operation Plan Computed, current status is EXECUTING_ATOMIC_OPERATION" << std::endl; 
+        std::cout << "[MM] \033[1;32m[----------] [initAtomicOperation()]\033[0m Atomic Operation Plan Computed, current status is EXECUTING_ATOMIC_OPERATION" << std::endl; 
         return true;
     }
     else
@@ -942,18 +946,39 @@ void MobileManipMotionPlanner::resumeError()
     switch (this->error)
     {
         case NO_ERROR:
+            std::cout << "[MM] \033[32m[----------] [resumeError()]\033[0m It is not in ERROR state" << std::endl;
             break;
         case POOR_DEM:
-            break;
+            std::cout << "[MM] \033[32m[----------] [resumeError()]\033[0m Going to previous state" << std::endl;
+            this->setStatus(priorStatus);
+            this->setError(NO_ERROR);
+            this->printStatus();
+           break;
         case POOR_CONFIG:
             break;
         case OOB_ROVER_POS:
+            std::cout << "[MM] \033[32m[----------] [resumeError()]\033[0m Going to previous state" << std::endl;
+            this->setStatus(priorStatus);
+            this->setError(NO_ERROR);
+            this->printStatus();
             break;
         case OOB_GOAL_POS:
-            break;
+             std::cout << "[MM] \033[32m[----------] [resumeError()]\033[0m Going to previous state" << std::endl;
+            this->setStatus(priorStatus);
+            this->setError(NO_ERROR);
+            this->printStatus();
+           break;
         case OBS_ROVER_POS:
+            std::cout << "[MM] \033[32m[----------] [resumeError()]\033[0m Going to previous state" << std::endl;
+            this->setStatus(priorStatus);
+            this->setError(NO_ERROR);
+            this->printStatus();
             break;
         case OBS_GOAL_POS:
+            std::cout << "[MM] \033[32m[----------] [resumeError()]\033[0m Going to previous state" << std::endl;
+            this->setStatus(priorStatus);
+            this->setError(NO_ERROR);
+            this->printStatus();
             break;
         case PLAN_WO_SAMPLE:
             break;

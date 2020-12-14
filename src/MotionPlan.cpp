@@ -335,11 +335,6 @@ unsigned int MotionPlan::computeArmDeployment(
     this->vvd_init_arm_profile.clear();
     this->vd_init_time_profile.clear();
     this->b_is_initialization_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
-    {
-        return 3;
-    }
 
     double dxyres = this->pmm_map->getResolution();
     if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
@@ -349,23 +344,11 @@ unsigned int MotionPlan::computeArmDeployment(
 
     if (((w_goal.position[1] >= 0.0)&&(vd_arm_readings[0] <= 0.0))||((w_goal.position[1] <= 0.0)&&(vd_arm_readings[0] >= 0.0)))
     {
-        std::cout << "Goal position hemisphere is not the same as arm's" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Goal position hemisphere is not the same as arm's " << std::endl;
         return 4; 
     }
 
-
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = dxyres * (double)elevationMap[0].size() / 2.0; // TODO - Fix This
-    current_waypoint.position[1] = dxyres * (double)elevationMap.size() / 2.0;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
-    //std::cout << "About to compute the deployment" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m Starting to plan the arm deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
             dxyres,
             this->d_zres,
@@ -382,19 +365,20 @@ unsigned int MotionPlan::computeArmDeployment(
 	}
 	if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
-		//std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;
-	    
-	    	    
+		//std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;  
 	    this->b_is_initialization_computed = true;
+            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Calculated profile for arm deployment is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Arm deployment computation not feasible" << std::endl;
         return 2;
     }
 }

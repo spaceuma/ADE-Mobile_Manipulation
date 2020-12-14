@@ -661,6 +661,7 @@ bool ArmPlanner::planAtomicOperation(
     wristPath6 = new std::vector<std::vector<double>>;
 
     // Initial arm pos computation
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Getting Transformation Matrix from rover base to goal"  << std::endl;
     std::vector<std::vector<double>> TBCS2Wrist
         = sherpa_tt_arm->getWristTransform(initialArmConfiguration);
 
@@ -668,6 +669,9 @@ bool ArmPlanner::planAtomicOperation(
 
     std::vector<double> pos
         = {TBCS2Wrist[0][3], TBCS2Wrist[1][3], TBCS2Wrist[2][3]};
+
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Checking current arm configuration"  << std::endl;
+    
     if (sherpa_tt_arm->isReachable(pos,0) == 1)
     {
         // std::cout<<"WARNING[planAtomicOperation]: initial arm configuration
@@ -676,11 +680,12 @@ bool ArmPlanner::planAtomicOperation(
     }
     else if (sherpa_tt_arm->isReachable(pos,0) == 0)
     {
-        std::cout << "ERROR[planAtomicOperation]: initial arm configuration is "
-                     "colliding or unreachable\n";
+        std::cout << "[MM] \033[1;31m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Initial arm configuration is either colliding or unreachable"  << std::endl;
         return false;
     }
 
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Current arm configuration is valid"  << std::endl;
+    
     std::vector<double> relativePos = sherpa_tt_arm->getRelativePosition(pos);
 
     base::Waypoint iniPos;
@@ -691,10 +696,20 @@ bool ArmPlanner::planAtomicOperation(
     // Final arm pos computation
     std::vector<double> goalPosition = {goalEEPosition.position[0],
                                         goalEEPosition.position[1],
-                                        goalEEPosition.position[2]};
-    std::vector<double> goalArmConfiguration
-        = sherpa_tt_arm->getManipJoints(goalPosition, goalEEOrientation,1,1);
-
+                                        goalEEPosition.position[2]}; 
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Getting configuration to goal position"  << std::endl;
+    std::vector<double> goalArmConfiguration = {0,0,0,0,0,0};
+    try
+    {
+        goalArmConfiguration
+            = sherpa_tt_arm->getManipJoints(goalPosition, goalEEOrientation,1,1);
+    }
+    catch(std::exception &e)
+    {
+        std::cout << "[MM] \033[1;31m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Goal arm configuration is unfeasible"  << std::endl;
+	return false;
+    }
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Getting Transformation Matrix from rover base to goal"  << std::endl;
     TBCS2Wrist = sherpa_tt_arm->getWristTransform(goalArmConfiguration);
 
     pos = {TBCS2Wrist[0][3],TBCS2Wrist[1][3],TBCS2Wrist[2][3]};
@@ -707,11 +722,12 @@ bool ArmPlanner::planAtomicOperation(
     }
     else if (sherpa_tt_arm->isReachable(pos,0) == 0)
     {
-        std::cout << "ERROR[planAtomicOperation]: goal arm configuration will "
-                     "lead to collision or is unreachable\n";
+        std::cout << "[MM] \033[1;31m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Goal arm configuration is either colliding or unreachable"  << std::endl;
         return false;
     }
 
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planAtomicOperation()]\033[0m Both origin and goal arm configurations checked"  << std::endl;
+    
     relativePos = sherpa_tt_arm->getRelativePosition(pos);
 
     base::Waypoint goalPos;
