@@ -287,21 +287,6 @@ bool MobileManipMap::calculateElevationMap(bool b_isLoc)
         }
     }
 
-    if (this->b_clear_underneath)
-    {
-        std::cout << "[MM] \033[35m[----------] [MobileManipMap::loadDEM()]\033[0m Filling nonvalid pixels with min value of elevation = -0.64" << std::endl;
-        for (int j = 0; j < this->ui_num_rows; j++)
-        {
-            for (int i = 0; i < this->ui_num_cols; i++)
-            {
-                if (this->vvi_validity_map[j][i] == 0)
-                {
-                    this->vvd_elevation_map[j][i] = -0.64;
-                }
-            }
-        } 
-    }
-
     if (this->b_debug_mode)
     {
         std::cout << "Elevation Map is saved as vector<vector<double>>"
@@ -852,6 +837,7 @@ bool MobileManipMap::getElevationMap(
 bool MobileManipMap::getElevationMapToZero(
     std::vector<std::vector<double>> &vvd_elevation_map_m)
 {
+    // This is a map for the ArmPlanner library
     if (this->mapstate != NO_DEM)
     {
         vvd_elevation_map_m = this->vvd_elevation_map;
@@ -859,7 +845,14 @@ bool MobileManipMap::getElevationMapToZero(
         {
             for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
             {
-                vvd_elevation_map_m[j][i] -= getMinElevation();
+                if (vvd_elevation_map[j][i] == INFINITY)
+		{
+                    vvd_elevation_map_m[j][i] = 0.0;
+		}
+		else
+		{
+                    vvd_elevation_map_m[j][i] -= getMinElevation();
+		}
             }
         }
         return true;
@@ -998,6 +991,12 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
         waitKey(0);
     }
 
+    // Interpolate values for elevation
+    if (this->b_clear_underneath)
+    {
+        this->rectifyElevationUnderneath(w_rover_pos_m);
+    }
+
     // Traversability and Obstacle maps are computed
     for (int j = 0; j < this->ui_num_rows; j++)
     {
@@ -1073,6 +1072,54 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
     }
     return true;
 }
+
+
+bool MobileManipMap::rectifyElevationUnderneath(base::Waypoint w_rover_pos_m)
+{
+    double d_sum_elevation = 0.0, d_num_valid = 0.0, d_average_elevation;
+    std::cout << "[MM] \033[35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m Getting average elevation value underneath" << std::endl; 
+    for (int j = 0; j < this->ui_num_rows; j++)
+    {
+        for (int i = 0; i < this->ui_num_cols; i++)
+        {
+            if ((this->vvi_validity_map[j][i] == 1)&&(sqrt(pow((double)i * this->d_res
+                 - w_rover_pos_m.position[0],2) + pow((double)j * this->d_res
+                 - w_rover_pos_m.position[1],2))
+                    <= this->d_occupancy_dist))
+            {
+                d_sum_elevation += this->vvd_elevation_map[j][i];
+		d_num_valid += 1.0;
+	    }
+	}
+    }
+
+    if (d_num_valid < 0.01)
+    {
+        std::cout << "[MM] \033[35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m All nodes under " << this->d_occupancy_dist << " m from rover are invalid" << std::endl; 
+        std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m Could not set any elevation data underneath" << std::endl; 
+        return false;
+    }
+
+    d_average_elevation = d_sum_elevation / d_num_valid;
+    
+    std::cout << "[MM] \033[35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m Average elevation underneath is " << d_average_elevation << " m"  << std::endl; 
+    for (int j = 0; j < this->ui_num_rows; j++)
+    {
+        for (int i = 0; i < this->ui_num_cols; i++)
+        {
+            if ((this->vvi_validity_map[j][i] == 0)&&(sqrt(pow((double)i * this->d_res
+                 - w_rover_pos_m.position[0],2) + pow((double)j * this->d_res
+                 - w_rover_pos_m.position[1],2))
+                    <= this->d_occupancy_dist))
+            {
+                this->vvd_elevation_map[j][i] = d_average_elevation;
+	    }
+	}
+    }     
+    std::cout << "[MM] \033[1;35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m Finished setting elevation values underneath" << std::endl; 
+    return true;
+}
+
 
 bool MobileManipMap::addSampleFacingObstacles()
 {

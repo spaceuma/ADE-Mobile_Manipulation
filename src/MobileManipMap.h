@@ -122,6 +122,7 @@ private:
     bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
     bool calculateElevationMap(bool b_isLoc);
     bool calculateTraversabilityMap(base::Waypoint w_rover_pos_m);
+    bool rectifyElevationUnderneath(base::Waypoint w_rover_pos_m);
     bool calculateProximityToObstaclesMap();
     void calculateCostValues();
     bool addSampleFacingObstacles();

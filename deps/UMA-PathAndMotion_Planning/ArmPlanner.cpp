@@ -220,7 +220,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     samplePos.position[1] = TW2Sample[1][3];
     samplePos.position[2] = TW2Sample[2][3];
 
-    //std::cout << "New Elevation of sample is " << samplePos.position[2] << std::endl;
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m New Relative Elevation of sample is " << samplePos.position[2] << std::endl;
 
     // Cost map 3D computation
     int n = DEM->size();
@@ -228,9 +228,16 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
 
     double maxz = 0;
     for (int i = 0; i < DEM->size(); i++)
+    {
         for (int j = 0; j < (*DEM)[0].size(); j++)
-            if ((*DEM)[i][j] > maxz) maxz = (*DEM)[i][j];
-
+	{
+            if (((*DEM)[i][j] > maxz) && ((*DEM)[i][j] != INFINITY))
+	    {
+                maxz = (*DEM)[i][j];
+	    }
+	}
+    }
+   
     int l
         = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution
                 + 0.5);
