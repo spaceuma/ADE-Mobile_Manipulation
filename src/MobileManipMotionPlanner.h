@@ -76,6 +76,7 @@ public:
 			     double d_roll = 0.0,
 			     double d_pitch = 3.1416,
 			     double d_yaw = 0.0);
+    bool initArmReset(const proxy_library::Joints &j_present_readings);
 
     /**
      * Harness Execution Control Functions.

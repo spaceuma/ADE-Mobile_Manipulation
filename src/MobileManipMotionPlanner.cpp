@@ -160,6 +160,45 @@ bool MobileManipMotionPlanner::setArmTargetOperation(unsigned int ui_operation)
     }
 }
 
+bool MobileManipMotionPlanner::initArmReset(
+    const proxy_library::Joints &j_present_readings)
+{
+    if (this->status == IDLE)
+    {
+        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Planning Arm Reset Motion" << std::endl;
+        this->p_mmexecutor->resetOperationTime();
+        
+	std::vector<double> vd_arm_readings;
+        vd_arm_readings.resize(6);
+	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        {
+            vd_arm_readings[i] = j_present_readings.m_jointStates[i].m_position;
+        }
+
+        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Arm deployment motion plan computed" << std::endl;
+
+	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Computing arm retrieval motion plan" << std::endl;
+        if (this->p_motionplan->computeArmRetrieval(vd_arm_readings) != 0)
+        {
+            return false;
+        }
+        
+	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Arm retrieval motion plan computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
+        this->p_mmexecutor->updateRetrieval();
+        this->b_is_atomic_deployed = true;
+        this->p_mmexecutor->resetOperationTime();
+        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Executor is updated with new motion plans" << std::endl;
+        setStatus(EXECUTING_ATOMIC_OPERATION);
+        std::cout << "[MM] \033[1;32m[----------] [initArmReset()]\033[0m Arm Reset Plan Computed, current status is EXECUTING_ATOMIC_OPERATION" << std::endl; 
+        return true;
+    }
+    else
+    {
+        setError(IMPROPER_CALL);
+        return false;
+    }
+}
+
 
 bool MobileManipMotionPlanner::initAtomicOperation(
     const proxy_library::Joints &j_present_readings,
@@ -190,7 +229,7 @@ bool MobileManipMotionPlanner::initAtomicOperation(
 	if (ui_code != 0)
         {
             
-            std::cout << "[MM] \033[1;31m[----------]\033[0m Could not compute arm deployment" << std::endl;
+            std::cout << "[MM] \033[1;31m[----------] [initAtomicOperation()]\033[0m Could not compute arm deployment" << std::endl;
 	    setError(UNREACH_GOAL);
 	    return false;//TODO - It must set the corresponding error
         }

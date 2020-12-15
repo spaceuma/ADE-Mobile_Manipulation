@@ -339,6 +339,9 @@ unsigned int MotionPlan::computeArmDeployment(
     double dxyres = this->pmm_map->getResolution();
     if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
     {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Z res = " << this->d_zres << std::endl;
         return 3;
     }
 
@@ -389,29 +392,18 @@ unsigned int MotionPlan::computeArmDeployment(
 {
     this->vvd_init_arm_profile.clear();
     this->vd_init_time_profile.clear();
-    this->b_is_initialization_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
+    double dxyres = this->pmm_map->getResolution();
+
+    if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
     {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Z res = " << this->d_zres << std::endl;
         return 3;
     }
-    // TODO: check if elevationMap is properly formatted
-    // TODO: check if i_segment_m is valid!!
-    double dxyres = this->pmm_map->getResolution();
-    std::cout << " Resolution is " << dxyres << std::endl;
-    std::cout << " Z-res is " << this->d_zres << std::endl;
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = 3; // TODO - Fix This
-    current_waypoint.position[1] = 3;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
 
+
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m Starting to plan the arm deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
             dxyres,
             this->d_zres,
@@ -419,20 +411,22 @@ unsigned int MotionPlan::computeArmDeployment(
             vd_arm_goal,
             &(this->vvd_init_arm_profile),
             &(this->vd_init_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
+    { 
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
+            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             this->b_is_initialization_computed = true;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Calculated profile for arm deployment is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Arm deployment computation not feasible" << std::endl;
         return 2;
     }
 }
@@ -443,13 +437,6 @@ unsigned int MotionPlan::computeArmDeployment(
 {
     this->vvd_init_arm_profile.clear();
     this->b_is_initialization_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
-    {
-        return 3;
-    }
-
-
     // Here we deploy not to 0, but to a more advanced segment
     i_segment_m = min(0, (int)(this->vvd_arm_motion_profile.size()-1));
     //i_segment_m = min(40, (int)(this->vvd_arm_motion_profile.size()-1));
@@ -469,8 +456,13 @@ unsigned int MotionPlan::computeArmDeployment(
     }*/
 
     double dxyres = this->pmm_map->getResolution();
-    //std::cout << " Resolution is " << dxyres << std::endl;
-    //std::cout << " Z-res is " << this->d_zres << std::endl;
+    if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
+    {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Z res = " << this->d_zres << std::endl;
+        return 3;
+    }
 
     if (this->p_arm_planner->planAtomicOperation(
             dxyres,
@@ -482,16 +474,19 @@ unsigned int MotionPlan::computeArmDeployment(
     {
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
+            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             this->b_is_initialization_computed = true;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Calculated profile for arm deployment is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Arm deployment computation not feasible" << std::endl;
         return 2;
     }
 }
@@ -501,28 +496,16 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init,
 	//mode: 0 = atomic, 1 = coupled
     this->vvd_retrieval_arm_profile.clear();
     this->b_is_retrieval_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
-    {
-        return 3;
-    }
     double dxyres = this->pmm_map->getResolution();
-        if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
+    if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
     {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmRetrieval()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmRetrieval()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmRetrieval()]\033[0m Z res = " << this->d_zres << std::endl;
         return 3;
     }
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = dxyres * (double)elevationMap[0].size() / 2.0; // TODO - Fix This
-    current_waypoint.position[1] = dxyres * (double)elevationMap.size() / 2.0;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
 
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmRetrieval()]\033[0m Starting to plan the arm retrieval" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
             dxyres,
             this->d_zres,
@@ -531,9 +514,7 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init,
             &(this->vvd_retrieval_arm_profile),
             &(this->vd_retrieval_time_profile),
 	    mode))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
-		//std::cout << "The size of the retrieval profile is "  << this->vvd_retrieval_arm_profile.size() << std::endl;
+    { 
         if(this->vvd_retrieval_arm_profile.empty())
 	{
             this->vvd_retrieval_arm_profile.push_back(vd_init);    
@@ -541,16 +522,19 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init,
 	}
 	if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
         {
+            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmRetrieval()]\033[0m The arm retrieval is calculated with a profile size of " << this->vvd_retrieval_arm_profile.size() << " samples" << std::endl;
             this->b_is_retrieval_computed = true;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmRetrieval()]\033[0m Calculated profile for arm retrieval is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmRetrieval()]\033[0m Arm retrieval computation not feasible" << std::endl;
         return 2;
     }
 }
