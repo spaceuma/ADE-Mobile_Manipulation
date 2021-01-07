@@ -312,166 +312,154 @@ if len(sys.argv) != 2:
 
 representationNumber = str(int(sys.argv[1])+1)
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
-
-armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_0"+representationNumber+".txt",'r'), skiprows=0)
+cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), skiprows=1)
+cMap2d[np.where(cMap2d == 0)] = 0.0001
+cMap2d[np.isinf(cMap2d)] = 0
 
 sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
-xsize = int(sizes[1])
-ysize = int(sizes[0])
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
+
+xsize = int(sizes[0])
+ysize = int(sizes[1])
 zsize = int(sizes[2])
 
 res = resolutions[0]
 resz = resolutions[1]
+
+costMap3D = np.zeros([ysize, xsize, zsize])
+c = 0
+k = 0
+
+for i in range(2, xsize):
+    c = 0
+    k = 0
+    for j in range(0, ysize*zsize):
+        costMap3D[k][i][c] = cMap2d[i][j]
+        c += 1
+        if c > zsize-1:
+            c = 0
+            k += 1
+
+armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_0"+representationNumber+".txt",'r'), skiprows=0)
 
 DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_Nominal_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
 
-xMap= np.linspace(0,res*xsize,xsize)
-yMap= np.linspace(0,res*ysize,ysize)
+xMap= np.linspace(0,res*ysize,ysize)
+yMap= np.linspace(0,res*xsize,xsize)
 x,y = np.meshgrid(xMap,yMap)
-
-T = DKM(armJoints[0,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
-rotT = T
-rotT[0,3] = 0   
-rotT[1,3] = 0   
-rotT[2,3] = 0   
-
-Tbx = dot(rotZ(path[0,3]), traslation([1,0,0]))
-Tby = dot(rotZ(path[0,3]), traslation([0,1,0]))
-Tbz = dot(rotZ(path[0,3]), traslation([0,0,1]))
-
-Tx = dot(rotT, traslation([1,0,0]))
-Ty = dot(rotT, traslation([0,1,0]))
-Tz = dot(rotT, traslation([0,0,1]))
-
-px,py,pz = plotArm(armJoints[0,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
-px = np.array(px)
-py = np.array(py)
-pz = np.array(pz)
 
 d = np.zeros(len(path))
 for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
+stopx = xsize*res
+stopy = ysize*res
+stopz = zsize*resz
+
+complexSizex = complex(0,xsize)
+complexSizey = complex(0,ysize)
+complexSizez = complex(0,zsize)
+"""x = np.linspace(0,stopx,xsize)
+y = np.linspace(0,stopy,ysize)
+z = np.linspace(0,stopz,zsize)"""
+
+X, Y, Z = np.mgrid[0:stopx:complexSizex,0:stopy:complexSizey,0:stopz:complexSizez]
+
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
+#mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
 mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255)) #np.flipud(np.fliplr(DEM0)))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
-mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)
-mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
+mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04)
+mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04)
+mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[round(path3D[-1][0]/res),round(path3D[-1][1]/res)], scale_factor = 0.2, color=(192/255,192/255,192/255))
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
+
+n = np.size(armJoints,0)
+for i in range(0,n,round(n/5)):
+  T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
+  rotT = T
+  rotT[0,3] = 0   
+  rotT[1,3] = 0   
+  rotT[2,3] = 0   
+
+  Tbx = dot(rotZ(path[i,3]), traslation([1,0,0]))
+  Tby = dot(rotZ(path[i,3]), traslation([0,1,0]))
+  Tbz = dot(rotZ(path[i,3]), traslation([0,0,1]))
+
+  Tx = dot(rotT, traslation([1,0,0]))
+  Ty = dot(rotT, traslation([0,1,0]))
+  Tz = dot(rotT, traslation([0,0,1]))
+
+  px,py,pz = plotArm(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
+  px = np.array(px)
+  py = np.array(py)
+  pz = np.array(pz)
+
+  plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
+  plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
+
+  mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
+  mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
+  mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 0.3, color=(0,0,1))
+
+  """mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
+  mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
+  mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))"""
+
+T = DKM(armJoints[n-1,:], path[n-1,np.array([0,1,2])], [0,0,path[n-1,3]])
+rotT = T
+rotT[0,3] = 0   
+rotT[1,3] = 0   
+rotT[2,3] = 0   
+
+Tbx = dot(rotZ(path[n-1,3]), traslation([1,0,0]))
+Tby = dot(rotZ(path[n-1,3]), traslation([0,1,0]))
+Tbz = dot(rotZ(path[n-1,3]), traslation([0,0,1]))
+
+Tx = dot(rotT, traslation([1,0,0]))
+Ty = dot(rotT, traslation([0,1,0]))
+Tz = dot(rotT, traslation([0,0,1]))
+
+px,py,pz = plotArm(armJoints[n-1,:], path[n-1,np.array([0,1,2])], [0,0,path[n-1,3]])
+px = np.array(px)
+py = np.array(py)
+pz = np.array(pz)
+
 plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
 plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
-plt_ee_x = mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
-plt_ee_y = mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
-plt_ee_z = mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 0.3, color=(0,0,1))
 
-plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
-plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
-plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
+mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
+mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 0.3, color=(0,0,1))
 
-#The code with f must be maintained, otherwise a ValueError is arised
-f = mlab.gcf();
-f.scene._lift();
-duration = 10
-def make_frame(t):
-        i = (int)(t*len(armJoints)/duration)
-        T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
-        rotT = T
-        rotT[0,3] = 0   
-        rotT[1,3] = 0   
-        rotT[2,3] = 0   
+#mlab.volume_slice(X,Y,Z,costMap3D, plane_orientation='x_axes', opacity = 0, plane_opacity = 0, transparent = True)
 
-        Tx = dot(rotT, traslation([1,0,0]))
-        Ty = dot(rotT, traslation([0,1,0]))
-        Tz = dot(rotT, traslation([0,0,1]))
-
-        Tbx = dot(rotZ(path[i,3]), traslation([1,0,0]))
-        Tby = dot(rotZ(path[i,3]), traslation([0,1,0]))
-        Tbz = dot(rotZ(path[i,3]), traslation([0,0,1]))
-
-        px,py,pz = plotArm(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
-        px = np.array(px)
-        py = np.array(py)
-        pz = np.array(pz)
-
-        plt_arm.mlab_source.set(x=px,y=py,z=pz)
-        plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
-
-        plt_ee_x.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tx[0,3], v = Tx[1,3], w = Tx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_ee_y.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Ty[0,3], v = Ty[1,3], w = Ty[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_ee_z.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tz[0,3], v = Tz[1,3], w = Tz[2,3], scale_factor = 0.3, color=(0,0,1))
-
-        plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
-        mlab.view(azimuth = 45, elevation = 80, distance = 11, focalpoint = np.array([4,4,1]))
-        #mlab.view(azimuth = 0, elevation = 20, distance = 16, focalpoint = np.array([4,4,0]))
-        return mlab.screenshot(antialiased=True)
-
-#animation = mpy.VideoClip(make_frame, duration=duration)
-#animation.write_gif("sampling.gif", fps=12, program='imageio',opt = 'nq')
-
-
-@mlab.animate(delay = 10000, ui = True)
-def anim():
-    mlab.gcf()
-    for i in range(0,len(armJoints)):
-        T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
-        rotT = T
-        rotT[0,3] = 0   
-        rotT[1,3] = 0   
-        rotT[2,3] = 0   
-
-        Tx = dot(rotT, traslation([1,0,0]))
-        Ty = dot(rotT, traslation([0,1,0]))
-        Tz = dot(rotT, traslation([0,0,1]))
-
-        Tbx = dot(rotZ(path[i,3]), traslation([1,0,0]))
-        Tby = dot(rotZ(path[i,3]), traslation([0,1,0]))
-        Tbz = dot(rotZ(path[i,3]), traslation([0,0,1]))
-
-        px,py,pz = plotArm(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
-        px = np.array(px)
-        py = np.array(py)
-        pz = np.array(pz)
-
-        plt_arm.mlab_source.set(x=px,y=py,z=pz)
-        plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
-        plt_ee_x.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tx[0,3], v = Tx[1,3], w = Tx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_ee_y.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Ty[0,3], v = Ty[1,3], w = Ty[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_ee_z.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tz[0,3], v = Tz[1,3], w = Tz[2,3], scale_factor = 0.3, color=(0,0,1))
-
-        plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
-#        mlab.view(azimuth = -110+i/2.0, elevation = 50)
-        yield
-
-anim()
+"""mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
+mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
+mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))"""
 
 mlab.show()
 
-"""fig, ax = plt.subplots()
+fig, ax = plt.subplots()
 plt.scatter(d, armJoints[:, 0], label = 'First joint', s = 17)
 plt.scatter(d, armJoints[:, 1], label = 'Second joint', s = 17)
 plt.scatter(d, armJoints[:, 2], label = 'Third joint', s = 17)
 plt.scatter(d, armJoints[:, 3], label = 'Fourth joint', s = 17)
 plt.scatter(d, armJoints[:, 4], label = 'Fifth joint', s = 17)
 plt.scatter(d, armJoints[:, 5], label = 'Sixth joint', s = 17)
-plt.title("Arm profile evolution along the trajectory", fontsize = 20)
+#plt.title("Arm profile evolution along the trajectory", fontsize = 20)
 plt.xlabel("Length of the trajectory covered (m)", fontsize = 20)
 plt.ylabel("Joint position (rad)", fontsize = 20)
-plt.legend()
-plt.show()"""
+plt.legend(fontsize = 17)
+plt.show()
 
 
