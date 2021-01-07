@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 import scipy.ndimage
 from mayavi import mlab
 
-sizes = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), skiprows = 1, max_rows=1)
-minValues = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), skiprows = 2, max_rows=1)
-reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), skiprows=3)
+sizes = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), max_rows=1)
+resolutions = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), skiprows = 1, max_rows=1)
+minValues = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), skiprows = 2, max_rows=1)
+reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), skiprows=3)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -36,10 +36,21 @@ for i in range(2, xsize):
             c = 0
             k += 1
 
-costs = scipy.ndimage.morphology.distance_transform_edt(np.array(reachabilityMap3D),sampling = [resXY, resXY, resZ])
+costs = np.zeros([np.size(reachabilityMap3D,0), np.size(reachabilityMap3D,1), np.size(reachabilityMap3D,2)])
+reachabilityMapSafe = np.zeros([np.size(reachabilityMap3D,0), np.size(reachabilityMap3D,1), np.size(reachabilityMap3D,2)])
+for i in range(0,np.size(reachabilityMap3D,0)):
+  for j in range(0,np.size(reachabilityMap3D,1)):
+    for k in range(0,np.size(reachabilityMap3D,2)):
+      if reachabilityMap3D[i][j][k] == 2:
+        reachabilityMapSafe[i][j][k] = 1
+slice_ = np.zeros([np.size(reachabilityMap3D,1), np.size(reachabilityMap3D,2)])
+
+for i in range(0,np.size(reachabilityMap3D,0)):
+  slice_ = reachabilityMapSafe[i][:][:]
+  costs[i][:][:] = scipy.ndimage.morphology.distance_transform_edt(np.array(slice_), sampling = [resXY, resZ])
 
 # Write the array to disk
-with open('../data/planner/reachabilityDistances.txt', 'w') as outfile:
+with open('../data/planner/reachabilityDistancesAccess.txt', 'w') as outfile:
     np.savetxt(outfile, sizes, fmt='%-1d', newline=" ")
     outfile.write("\n")
     np.savetxt(outfile, resolutions, fmt='%-4f', newline=" ")
