@@ -883,95 +883,167 @@ bool MobileManipMotionPlanner::resumeOperation()
     }
 }
 
+
+/*
+ * updateLocCamDEM()
+ *  - Receives a Local DEM and checks if a replanning is needed
+ */
+
 bool MobileManipMotionPlanner::updateLocCamDEM(
     RoverGuidance_Dem locCamDEM,
     proxy_library::Joints &arm_command,
     proxy_library::MotionCommand &rover_command,
     proxy_library::Joints arm_joints)
 {
+
+    // Variable to store the error code received each time a function is called
     unsigned int ui_error_code = 0;
+
+    // Check if the robot is executing the motion plan (moving)
     if (getStatus() == EXECUTING_MOTION_PLAN)
     {
-	if (!this->p_mmexecutor->isCoupledMoving())
+        
+        // Checks if the rover is not moving (e.g. stopped near the sample)	    
+        if (!this->p_mmexecutor->isCoupledMoving())
 	{
-            std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m Input LocCam DEM discarded, system not in coupled movement" << std::endl;
+           
+            // As the rover is not going to move, replanning is not needed	
+            std::cout << " \033[32m[----------] [updateNavCamDEM()]\033[0m"
+		         " Input LocCam DEM discarded, system not in coupled"
+			 " movement" << std::endl;
             return true;
+
 	}
 
-        ui_error_code = this->p_mmmap->loadDEM(locCamDEM, true);
-    
-        switch (ui_error_code)
+	// The DEM is loaded, the boolean true indicates it is a LocDEM
+        ui_error_code = this->p_mmmap->loadDEM(locCamDEM, true); 
+	switch (ui_error_code)
         {
-        case 0:
-            std::cout << "[MM] \033[32m[----------] [updateNavCamDEM()]\033[0m LocCam DEM is successfully loaded, checking obstacles" << std::endl;
-            if(this->p_motionplan->isPathColliding())
-	    {
-                std::cout << "[MM] \033[32m[----------] [updateNavCamDEM()]\033[0m Detected obstacle close to current path, going to REPLANNING status" << std::endl;
-                rover_command = this->p_mmexecutor->getZeroRoverCommand();
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+           
+            // LocDEM is successfully loaded, internal DEM is updated
+            case 0:
+
+                std::cout << "[MM] \033[32m[----------]"
+			" [updateNavCamDEM()]\033[0m LocCam DEM is "
+			"successfully loaded, checking obstacles" << std::endl;
+                
+	        // Check if current path collides with obstacles	
+		if(this->p_motionplan->isPathColliding())
                 {
-                    arm_command.m_jointStates[i].m_position
-                        = arm_joints.m_jointStates[i].m_position;
-                }
-		setStatus(REPLANNING);
-		return false;
-	    }
-	    else
-	    {
-                std::cout << "[MM] \033[32m[----------] [updateNavCamDEM()]\033[0m No obstacles on current path" << std::endl;
-                return true;
-	    }
-        case 1:
-            std::cout << "[MM] \033[1;31m[--ERROR!--] [updateNavCamDEM()]\033[0m DEM resolution is zero or less" << std::endl;
-            setError(POOR_DEM);
-            return false;
-        case 2:
-            std::cout << "[MM] \033[31m[--ERROR!--] [updateNavCamDEM()]\033[0m DEM rows are less than 5" << std::endl;
-            setError(POOR_DEM);
-            return false;
-        case 3:
-            std::cout << "[MM] \033[31m[--ERROR!--] [updateNavCamDEM()]\033[0m DEM columns are less than 5" << std::endl;
-            setError(POOR_DEM);
-            return false;
-        case 4:
-            std::cout << "[MM] \033[31m[--ERROR!--] [updateNavCamDEM()]\033[0m Cannot read the DEM offset" << std::endl;
-            setError(POOR_DEM);
-            return false;
-        case 5:
-            std::cout << "[MM] \033[31m[--ERROR!--] [updateNavCamDEM()]\033[0m DEM info could not be allocated in memory" << std::endl;
-            setError(BAD_DEM_ALLOC);
-            return false;
-        case 6:
-            std::cout << "[MM] \033[31m[--ERROR!--] [updateNavCamDEM()]\033[0m Not enough valid pixels in input NavCamDEM" << std::endl;
-            setError(POOR_DEM);
-            return false;
-        case 7:
-            std::cout <<"[MM] \033[31m[--ERROR!--] [updateNavCamDEM()]\033[0m Too many holes within NavCamDEM valid area" << std::endl;
-            setError(POOR_DEM);
-            return false;
-        }
-        // Process locCamDEM and check whether the path collides or not
-        // Here the MMMap loads and processes the input LocCamDEM
-	//ui_error_code = this->p_mmmap->loadLocDEM(locCamDEM);
-	// MotionPlan checks whether the current path is on obstacles or not in the local cost map
-	//if this->p_motionplan->checkNewObstacles();
-	//   here it means there is in fact a new obstacle in the way 
-	// else
-        std::cout << " \033[1;32m[----------] [updateLocCamDEM()]\033[0m To be implemented" << std::endl;
-	// If the checking is negative, then the status comes back to EXECUTING_MOTION_PLAN
-	//setStatus(EXECUTING_MOTION_PLAN);
+
+                    std::cout << "[MM] \033[32m[----------]"
+			    " [updateNavCamDEM()]\033[0m Detected obstacle"
+			    " close to current path, going to REPLANNING status"
+			    << std::endl;
+                    
+		    // Create a command to stop the rover
+		    rover_command = this->p_mmexecutor->getZeroRoverCommand();
+                    
+		    // Create a command to stop the arm
+		    for (uint i = 0; i < 6; i++) // TODO: adhoc joints = 6
+                    {
+                        arm_command.m_jointStates[i].m_position
+                            = arm_joints.m_jointStates[i].m_position;
+                    }
+
+		    // The status is set to REPLANNING
+	    	    setStatus(REPLANNING);
+	    	    return false;
+
+	        }
+	        else
+	        {
+
+                    // Path is still safe to follow, no need to replan
+                    std::cout << "[MM] \033[32m[----------]"
+			    " [updateNavCamDEM()]\033[0m No obstacles on"
+			    " current path" << std::endl;
+                    return true;
+
+	        }
+
+            // Error in locDEM resolution
+            case 1:
+                std::cout << "[MM] \033[1;31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m DEM resolution is zero or"
+			" less" << std::endl;
+                setError(POOR_DEM);
+                return false;
+
+            // Error in number of rows
+            case 2:
+                std::cout << "[MM] \033[31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m DEM rows are less than 5"
+		       	<< std::endl;
+                setError(POOR_DEM);
+                return false;
+
+            // Error in number of columns
+            case 3:
+                std::cout << "[MM] \033[31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m DEM columns are less than"
+			" 5" << std::endl;
+                setError(POOR_DEM);
+                return false;
+
+            // Error in offset value
+	    case 4:
+                std::cout << "[MM] \033[31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m Cannot read the DEM offset"
+		       	<< std::endl;
+                setError(POOR_DEM);
+                return false;
+
+            // Error in memory allocation
+	    case 5:
+                std::cout << "[MM] \033[31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m DEM info could not be"
+			" allocated in memory" << std::endl;
+                setError(BAD_DEM_ALLOC);
+                return false;
+
+            // Error in amount of valid pixels
+	    case 6:
+                std::cout << "[MM] \033[31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m Not enough valid pixels"
+			" in input NavCamDEM" << std::endl;
+                setError(POOR_DEM);
+                return false;
+
+            // Error in the quality of the DEM (holes inside)
+	    case 7:
+                std::cout <<"[MM] \033[31m[--ERROR!--]"
+			" [updateNavCamDEM()]\033[0m Too many holes within"
+			" NavCamDEM valid area" << std::endl;
+                setError(POOR_DEM);
+                return false;
+
+	}
+        
 	return true;
+
     }
-    else if ((this->getStatus() == RETRIEVING_ARM) || (this->getStatus() == EXECUTING_ARM_OPERATION))
+    else if ((this->getStatus() == RETRIEVING_ARM) || 
+	     (this->getStatus() == EXECUTING_ARM_OPERATION))
     {
-        std::cout << " \033[1;32m[----------] [updateLocCamDEM()]\033[0m InputLocCAM discarded, replanning not needed" << std::endl;
+
+        // The rover is stopped, there is no need to replan
+        std::cout << " \033[1;32m[----------] [updateLocCamDEM()]\033[0m"
+		" InputLocCAM discarded, replanning not needed" << std::endl;
+        return true;
+
     }
     else
     {
-	setError(IMPROPER_CALL);
+
+        setError(IMPROPER_CALL);
 	return false;
+
     }
+
 }
+
+
 
 bool MobileManipMotionPlanner::updateRoverArmPos(
     proxy_library::Joints &arm_command,
