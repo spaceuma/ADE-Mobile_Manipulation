@@ -3,202 +3,349 @@
 
 using namespace std;
 
+
 /*
- * CONSTRUCTOR
+ * MOBILEMANIPMOTIONPLANNER CONSTRUCTOR
  */
+
 MobileManipMotionPlanner::MobileManipMotionPlanner(
     const RoverGuidance_Dem &navCamDEM,
     string s_configfile_path_m,
     unsigned int ui_operation)
-{
-    
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating Mobile Manipulation Component" << std::endl;
-    
-    /*
-     * Initializing internal variables
-     */
-    this->status = IDLE;
-    this->error = NO_ERROR;
-    unsigned int ui_error_code = 0;
-    this->s_configfile_path = s_configfile_path_m;  
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Initialized internal variables" << std::endl;
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Path to Configuration File is " << s_configfile_path_m << std::endl;
+{   
 
     /*
-     * Creating Mobile Manipulation Map Class
-     */     
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating MMMap Class"<< std::endl;
+     * 1 --Initialization--
+     */
+
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m" 
+	         "Creating Mobile Manipulation Component" << std::endl;
+    
+    // Software always starts in IDLE status and error code is NO_ERROR
+    this->status = IDLE;
+    this->error = NO_ERROR;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
+	         "Initialized status to IDLE" << std::endl;
+
+    // Storing the path to the configuration files 
+    this->s_configfile_path = s_configfile_path_m;  
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m" 
+	         "Path to Configuration File is " << s_configfile_path_m << 
+		 std::endl;
+
+
+    /*
+     * 2 --Creating Mobile Manipulation Map Class--
+     */   
+
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m" 
+	         "Creating MMMap Class"<< std::endl;
+
+    // New instance of MobileManipMap() is created
     this->p_mmmap = new MobileManipMap();
-    if (!this->readConfigFile()) // Reading Configuration File
+
+    // Reading configuration values for the map 
+    if (!this->readConfigFile())
     {
-        std::cout << "[MM] \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m "
-                     "Config file could not be read, using default values instead" << std::endl;
+        std::cout << 
+		 "[MM] \033[31m[-WARNING--] [MobileManipMotionPlanner()]\033[0m"
+                 "Config file could not be read, using default values instead" 
+		  << std::endl;
     }
-    if (!this->updateNavCamDEM(navCamDEM)) // Introducing Input NavCAM DEM
+
+    // Storing and processing the input Navigation DEM
+    if (!this->updateNavCamDEM(navCamDEM))
     {
-        std::cout << "[MM] \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m "
-                     "Map Class could not be created" << std::endl;
+        std::cout << 
+	       "[MM] \033[1;31m[--ERROR!--] [MobileManipMotionPlanner()]\033[0m"
+               " Map Class could not be created" << std::endl;
         this->printErrorCode();
     }
     else
     {
-        std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Map Class Successfully created" << std::endl;
+        std::cout << 
+	       "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
+	       " Map Class Successfully created" << std::endl;
     }
-    
+
+
     /* 
-     * Creating Motion Plan Class
+     * 3 --Creating Motion Plan Class--
      */
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating MotionPlan Class"<< std::endl;
-    this->p_motionplan
-        = new MotionPlan(this->p_mmmap, s_configfile_path_m);
-    //this->p_motionplan->setArmGaussFilter(5.0, 9);
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Motion Plan Class Successfully created" << std::endl;
+   
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
+	         " Creating MotionPlan Class"<< std::endl;
     
+    // New instance of MotionPlan is created
+    this->p_motionplan = new MotionPlan(this->p_mmmap, s_configfile_path_m); 
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
+	         " Motion Plan Class Successfully created" << std::endl;
+   
+
     /* 
-     * Creating Mobile Manipulation Executor Class
+     * 4 --Creating Mobile Manipulation Executor Class--
      */  
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Creating MMExecutor Class"<< std::endl;
-    this->p_mmexecutor
-        = new MobileManipExecutor(this->p_motionplan, s_configfile_path_m);
+
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
+	         " Creating MMExecutor Class"<< std::endl;
+
+    // New instance of Executor is created
+    this->p_mmexecutor = new MobileManipExecutor(this->p_motionplan, 
+		                                 s_configfile_path_m);
+    
+    // The type of arm-sample operation is set
     this->setArmTargetOperation(ui_operation);
-    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m Executor Class Successfully created" << std::endl;
-    std::cout << "[MM] \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m MMMP Class Successfully created" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
+	    " Executor Class Successfully created" << std::endl;
+    
+    std::cout << 
+	       "[MM] \033[1;32m[--DONE!---] [MobileManipMotionPlanner()]\033[0m"
+	       " MMMP Class Successfully created" << std::endl;
+
+
 }
+
+
+/*
+ * readConfigFile()
+ *  - It reads the configuration values from a file to later build the cost map
+ */
 
 bool MobileManipMotionPlanner::readConfigFile()
 {
-    try // Configuration // TODO - Maybe make all this using a function
+
+    // Reading a external file may trigger an exception
+    // We use the try() statement to handle this
+
+    try
     {
-        std::string s_config_path = this->s_configfile_path + "/path_planner_config.txt"; 
-        std::ifstream e_file(s_config_path.c_str(), std::ios::in);
-        if (e_file.is_open())
+        
+	// Complete the path with the name of the configuration file
+	std::string s_config_path = this->s_configfile_path + 
+		                    "/path_planner_config.txt"; 
+        
+	// Creating an ifstream variable linked to the conf. path
+	std::ifstream e_file(s_config_path.c_str(), std::ios::in);
+        
+        // Check if the file exists	
+	if (e_file.is_open())
         {
-            std::string cell;
-            double d_slope_threshold, d_sd_threshold, d_valid_ratio_threshold, 
-		   d_contour_ratio_threshold, d_avoid_dist, d_occ_radius, 
-		   d_min_reach, d_max_reach, d_dilation;
-	    int i_close_iter;
-	    bool b_clear_underneath;
-            std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_slope_threshold = stof(cell);
+            // The string to store the characters read 
+	    std::string cell;
+           
+	    // Reading the slope threshold 
 	    std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_sd_threshold = stof(cell);
+	    double d_slope_threshold = stof(cell);
+	    
+	    // Reading the spherical deviation (roughness) threshold 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_sd_threshold = stof(cell);
+            
+	    // Reading the Valid/Total Pixels Ratio Threshold 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_valid_ratio_threshold = stof(cell);
+            
+	    // Reading the Contour/Valid Pixels Ratio Threshold
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_contour_ratio_threshold = stof(cell);
+            
+	    // Reading the number of CLOSE operation iterations 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    int i_close_iter = (int)stof(cell);
+
+	    // Reading the Avoidance distance
             std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_valid_ratio_threshold = stof(cell);
+	    double d_avoid_dist = stof(cell);
+            
+	    // Reading the Occupancy Radius
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_occ_radius = stof(cell);
+
+            // Reading the Minimal Reachable Distance
             std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_contour_ratio_threshold = stof(cell);
+	    double d_min_reach = stof(cell);
+            
+	    // Reading the Maximum Reachable Distance 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_max_reach = stof(cell);
+
+            // Reading the Obstacle Dilation Distance
             std::getline(e_file, cell); std::getline(e_file, cell); 
-	    i_close_iter = (int)stof(cell);
+	    double d_dilation = stof(cell);
+
+            // Reading the Underneath Cost Clearing Option
             std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_avoid_dist = stof(cell);
-            std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_occ_radius = stof(cell);
-            std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_min_reach = stof(cell);
-            std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_max_reach = stof(cell);
-            std::getline(e_file, cell); std::getline(e_file, cell); 
-	    d_dilation = stof(cell);
-            std::getline(e_file, cell); std::getline(e_file, cell); 
-	    b_clear_underneath = (bool)stof(cell);
-	    std::cout << "[MM] \033[32m[----------] [readConfigFile()]\033[0m "
-                     "Temptative threshold values are " << d_slope_threshold << 
-		     ", " << d_sd_threshold << ", " << d_valid_ratio_threshold << ", " << 
-		     d_contour_ratio_threshold << std::endl;
-            this->p_mmmap->setThresholdValues(d_slope_threshold, 
+	    bool b_clear_underneath = (bool)stof(cell);
+
+	    std::cout << "[MM] \033[32m[----------] [readConfigFile()]\033[0m"
+                     " Temptative threshold values are " << d_slope_threshold << 
+		    ", " << d_sd_threshold << ", " << d_valid_ratio_threshold <<
+		    ", " << d_contour_ratio_threshold << std::endl;
+            
+	    // The Threshold Values for the Cost Map are set
+	    this->p_mmmap->setThresholdValues(d_slope_threshold, 
 			                      d_sd_threshold, 
 					      d_valid_ratio_threshold, 
 					      d_contour_ratio_threshold);
+	    
+	    // The Configuration Variables for the Cost Map are set
 	    this->p_mmmap->setConfigValues(i_close_iter, d_avoid_dist, d_occ_radius,
-			                   d_min_reach, d_max_reach, d_dilation, b_clear_underneath);
+			                   d_min_reach, d_max_reach, d_dilation, 
+					   b_clear_underneath);
+	    
+	    // Correct Configuration File Reading
 	    return true;
+
         }
         else
         {
-            throw std::exception();
+            
+	    // File is not accesible
+	    throw std::exception();
+
         }   
     }
     catch (std::exception &e)
     {
+        
+        // Something happened that prevented from successfully reading
         return false;
+
     }
 
 }
 
+
+/*
+ * setArmTargetOperation()
+ *  - Function to set the operation the arm will perform with the sample
+ */
+
 bool MobileManipMotionPlanner::setArmTargetOperation(unsigned int ui_operation)
 {
-  /*
-   * 0 = PICK 
-   * 1 = DROP
-   * default = SWEEPING
-   *
-   */
-    std::cout << "[MM] \033[32m[----------] [setOperationMode()]\033[0m Setting new Arm Operation" << std::endl;
+
+    std::cout << "[MM] \033[32m[----------] [setOperationMode()]\033[0m"
+	         " Setting new Arm Operation" << std::endl;
+    
+    // Check if the software is in the initial (IDLE) state 
     if (this->status == IDLE)
     {
-        this->p_mmexecutor->setOperationMode(ui_operation, this->s_configfile_path);
-        std::cout << "[MM] \033[1;32m[----------] [setOperationMode()]\033[0m Target Arm Operation is ";
+   
+        this->p_mmexecutor->setOperationMode(ui_operation, 
+			                     this->s_configfile_path);
+        std::cout << "[MM] \033[1;32m[----------] [setOperationMode()]\033[0m"
+		     " Target Arm Operation is ";
+	
+	// An operation is chosen
 	switch (ui_operation)
 	{
+	
+            // PICK operation: the arm deploys and takes something
             case 0:
 		    std::cout << " PICK" << std::endl;
 		    break;
-            case 1:
+            
+	    // DROP operation: the arm deploys and drops something
+	    case 1:
 		    std::cout << " DROP" << std::endl;
 		    break;
-            default:
+            
+	    // The arm makes a coverage movement with the arm
+	    default:
 		    std::cout << " SWEEPING" << std::endl;
 		    break;
 	}
 	return true;
+
     }
     else
     {
-        std::cout << "[MM] \033[1;31m[--ERROR---] [setOperationMode()]\033[0m MM not in IDLE Status";
+
+        std::cout << "[MM] \033[1;31m[--ERROR---] [setOperationMode()]\033[0m"
+		     " MM not in IDLE Status";
         setError(IMPROPER_CALL);
         return false;
+
     }
+
 }
+
+
+/*
+ * initArmReset()
+ *  - Initialize an Arm Reset Operation
+ *  - This operation makes the arm return to its home position
+ */
 
 bool MobileManipMotionPlanner::initArmReset(
     const proxy_library::Joints &j_present_readings)
 {
+    
+    // Check if the software is in the initial (IDLE) state 
     if (this->status == IDLE)
     {
-        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Planning Arm Reset Motion" << std::endl;
-        this->p_mmexecutor->resetOperationTime();
         
+        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m"
+		     " Planning Arm Reset Motion" << std::endl;
+        
+	// TODO: (remove this?) Executor resets its internal operation clock
+	this->p_mmexecutor->resetOperationTime();
+       
+        // Getting the values of position from each joint	
 	std::vector<double> vd_arm_readings;
-        vd_arm_readings.resize(6);
+        vd_arm_readings.resize(6); // TODO: adhoc number of joints = 6
 	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
         {
             vd_arm_readings[i] = j_present_readings.m_jointStates[i].m_position;
         }
 
-        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Arm deployment motion plan computed" << std::endl;
-
-	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Computing arm retrieval motion plan" << std::endl;
+        // MotionPlan generates a profile for the arm retrieval
+	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m"
+		     " Computing arm retrieval motion plan" << std::endl;
         if (this->p_motionplan->computeArmRetrieval(vd_arm_readings) != 0)
         {
             return false;
-        }
+        } 
+	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m"
+		     " Arm retrieval motion plan computed with " << 
+		     this->p_motionplan->getNumberRetrievalSamples() << 
+		     " samples" << std::endl;
         
-	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Arm retrieval motion plan computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
-        this->p_mmexecutor->updateRetrieval();
+        // The executor is updated with the new plan for the retrieval	
+	this->p_mmexecutor->updateRetrieval();
+	std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m"
+		     " Executor is updated with new motion plans" << std::endl;
+
+        // The arm is considered already deployed
         this->b_is_atomic_deployed = true;
+	
+	// Executor resets its internal operation clock
         this->p_mmexecutor->resetOperationTime();
-        std::cout << "[MM] \033[32m[----------] [initArmReset()]\033[0m Executor is updated with new motion plans" << std::endl;
+       
+        // Going directly to execution status	
         setStatus(EXECUTING_ATOMIC_OPERATION);
-        std::cout << "[MM] \033[1;32m[----------] [initArmReset()]\033[0m Arm Reset Plan Computed, current status is EXECUTING_ATOMIC_OPERATION" << std::endl; 
-        return true;
+        
+	std::cout << "[MM] \033[1;32m[----------] [initArmReset()]\033[0m"
+		     " Arm Reset Plan Computed, current status is "
+		     "EXECUTING_ATOMIC_OPERATION" << std::endl; 
+        
+	return true;
+
     }
     else
     {
+        
         setError(IMPROPER_CALL);
         return false;
+
     }
 }
 
+
+/*
+ * initAtomicOperation()
+ *  - This operation makes the arm move while the rover stands still.
+ */
 
 bool MobileManipMotionPlanner::initAtomicOperation(
     const proxy_library::Joints &j_present_readings,
