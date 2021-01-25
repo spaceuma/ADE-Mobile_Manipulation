@@ -98,13 +98,14 @@ private:
     /**
      * DEM Navigation Data 
      */
-    std::vector<std::vector<int>> vvi_obstacle_map; // Obstacle(0)-Safe(1)
-    std::vector<std::vector<int>> vvi_loc_obstacle_map; // Obstacle(0)-Safe(1)
-    std::vector<std::vector<int>> vvi_nav_obstacle_map; // Obstacle(0)-Safe(1)
-    std::vector<std::vector<double>> vvd_proximity_map; // Distance to closest obstacle (meters)
-    std::vector<std::vector<double>> vvd_loc_proximity_map; // Distance to closest obstacle in LocCam (meters)
+    std::vector<std::vector<int>> vvi_face_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_face_proximity_map; // Distance to closest obstacle (meters)
     std::vector<std::vector<int>> vvi_traversability_map; // Obstacle(0)-FirstDilatation(1)-SecondDilatation(2)-RoverTraversableArea(3)-SamplingArea(4)
     std::vector<std::vector<double>> vvd_cost_map; // Cost Map (obstacles are INFINITY)
+    std::vector<std::vector<int>> vvi_loc_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_loc_proximity_map; // Distance to closest obstacle in LocCam (meters)
+    std::vector<std::vector<int>> vvi_nav_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_nav_proximity_map; // Distance to closest obstacle in LocCam (meters)
 
     /**
      * FACE (Frontal Approach Cost Edition)
@@ -118,14 +119,13 @@ private:
     /**
      * Internal Functions
      */
-    void checkValidityMap(double &d_valid_ratio, double &d_contour_ratio, bool b_isLoc);
+    void processValidityMap(double &d_valid_ratio, double &d_contour_ratio, bool b_isLoc);
+    bool processElevationMap(bool b_isLoc);
+    void calculateObstacleProximityMap(bool b_isUpdate);
     bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
-    bool calculateElevationMap(bool b_isLoc);
     bool calculateTraversabilityMap(base::Waypoint w_rover_pos_m);
     bool rectifyElevationUnderneath(base::Waypoint w_rover_pos_m);
-    bool calculateProximityToObstaclesMap();
-    void calculateCostValues();
-    bool addSampleFacingObstacles();
+    bool calculateCostMap(base::Waypoint w_rover_pos_m);
 
 public:
 

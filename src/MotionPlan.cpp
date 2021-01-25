@@ -264,67 +264,83 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     std::vector<base::Waypoint> vw_reference_path;
 
     pvw_reference_path = &(this->vw_rover_path);
-
-    if (this->p_arm_planner->planArmMotion(pvw_reference_path,
-                                           &elevationMap,
-                                           this->pmm_map->getResolution(),
-                                           this->d_zres,
-                                           this->pmm_map->getSample(),
-                                           &(this->vvd_arm_motion_profile),
-					   this->p_collision_detector))
+    unsigned int ui_deployment = 2; //TODO: make this take the true current one
+    while(ui_deployment >= 0)
     {
-        //std::cout << " Done " << std::endl;
-        // Initialization
-        if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
+        if (this->p_arm_planner->planArmMotion(pvw_reference_path,
+                                               &elevationMap,
+                                               this->pmm_map->getResolution(),
+                                               this->d_zres,
+                                               this->pmm_map->getSample(),
+                                               &(this->vvd_arm_motion_profile),
+            				   this->p_collision_detector))
         {
-            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is safe, with "
-                      << this->vvd_arm_motion_profile.size() << " samples"
-                      << std::endl;
-            if (this->vvd_arm_motion_profile.size()
-                > this->i_gauss_numsamples * 2)
+            //std::cout << " Done " << std::endl;
+            // Initialization
+            if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
             {
-                this->p_arm_planner->computeArmProfileGaussSmoothening(
-                    &(this->vvd_arm_motion_profile),
-                    &(this->vvd_smoothed_arm_motion_profile),
-                    this->d_gauss_sigma,
-                    this->i_gauss_numsamples);
-                if (this->isArmProfileSafe(
-                        this->vvd_smoothed_arm_motion_profile))
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is safe, with "
+                          << this->vvd_arm_motion_profile.size() << " samples"
+                          << std::endl;
+                if (this->vvd_arm_motion_profile.size()
+                    > this->i_gauss_numsamples * 2)
                 {
-                    this->vvd_arm_motion_profile.clear();
-                    std::vector<double> row;
-                    for (uint j = 0; j < vvd_smoothed_arm_motion_profile.size();
-                         j++)
+                    this->p_arm_planner->computeArmProfileGaussSmoothening(
+                        &(this->vvd_arm_motion_profile),
+                        &(this->vvd_smoothed_arm_motion_profile),
+                        this->d_gauss_sigma,
+                        this->i_gauss_numsamples);
+                    if (this->isArmProfileSafe(
+                            this->vvd_smoothed_arm_motion_profile))
                     {
-                        for (uint i = 0;
-                             i < vvd_smoothed_arm_motion_profile[0].size();
-                             i++)
+                        this->vvd_arm_motion_profile.clear();
+                        std::vector<double> row;
+                        for (uint j = 0; j < vvd_smoothed_arm_motion_profile.size();
+                             j++)
                         {
-                            row.push_back(
-                                vvd_smoothed_arm_motion_profile[j][i]);
+                            for (uint i = 0;
+                                 i < vvd_smoothed_arm_motion_profile[0].size();
+                                 i++)
+                            {
+                                row.push_back(
+                                    vvd_smoothed_arm_motion_profile[j][i]);
+                            }
+                            this->vvd_arm_motion_profile.push_back(row);
+                            row.clear();
                         }
-                        this->vvd_arm_motion_profile.push_back(row);
-                        row.clear();
+                        this->vvd_arm_motion_profile
+                            = this->vvd_smoothed_arm_motion_profile;
                     }
-                    this->vvd_arm_motion_profile
-                        = this->vvd_smoothed_arm_motion_profile;
                 }
+                std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Motion Profile Computed and Smoothed" << std::endl;
+                return 0;
             }
-            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Motion Profile Computed and Smoothed" << std::endl;
-            return 0;
+            else
+            {
+                std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not safe, with "
+                          << this->vvd_arm_motion_profile.size() << " samples"
+                          << std::endl;
+                return 1;
+            }
         }
         else
         {
-            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not safe, with "
-                      << this->vvd_arm_motion_profile.size() << " samples"
-                      << std::endl;
-            return 1;
+            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy " << ui_deployment << " not valid" << std::endl;
+            if (ui_deployment >0)
+	    {
+                ui_deployment -= 1;
+            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying with deployment " << ui_deployment << std::endl;
+                this->setDeployment(ui_deployment);
+	    }
+	    else
+	    {
+	        return 2;
+	    }
         }
     }
-    else
-    {
-        return 2;
-    }
+
+    return 2;
+
 }
 
 unsigned int MotionPlan::computeArmDeployment(
