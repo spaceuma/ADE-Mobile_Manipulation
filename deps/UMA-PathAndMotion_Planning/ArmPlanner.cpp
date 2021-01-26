@@ -80,7 +80,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
     this->zResolution = _zResolution;
     this->DEM = _DEM;
 
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Computing the Arm Motion Profile"  << std::endl;
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Computing the Arm Motion Profile with a rover path of " << roverPath->size() << " waypoints"  << std::endl;
     // Rover z coordinate and heading computation
     (*roverPath)[roverPath->size() - 1].heading = atan2(
         samplePos.position[1] - (*roverPath)[roverPath->size() - 1].position[1],
@@ -336,7 +336,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> *roverPath,
         = new std::vector<int>(roverPath6->size());
     computeWaypointInterpolation(
         pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Joints Motion Smoothing done" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Joints Motion Smoothing done, interpolated Rover path has " << interpolatedRoverPath->size() << " waypoints"  << std::endl;
 
     // Computing inverse kinematics
     /*First, we compute the inverse kinematics of the wrist for all the path

@@ -326,7 +326,7 @@ bool MobileManipMap::checkObstacles(std::vector<base::Waypoint> &vw_rover_path_m
         vi_pos[1] = (int)(vw_rover_path_m[i].position[1] / this->d_res + 0.5);
     // TODO - take care of exceptions regarding unvalid indexes
     // TODO - There may be cases where previous path is just a very small distance under d_occupancy_dist... due to checking with a node... (maybe interpolate?)
-        if (this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] <= this->d_occupancy_dist)
+        if (this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] <= this->d_dilation*this->d_occupancy_dist)
         {
             std::cout << "Detected obstacle near waypoint " << i << ", which is ( " << vw_rover_path_m[i].position[0] << ", " << vw_rover_path_m[i].position[1] << " ), where proximity is " << this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] << std::endl;
             return true;
@@ -881,16 +881,13 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m, base::Wa
         return 2; // Error: sample out of the DEM
     }
 
-    // FACE distances
-    this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist;
-    this->d_outter_sampling_dist
-        = this->d_inner_sampling_dist
-          + 1.72 * this->d_res; // TODO - Maybe this should be 1.42? = sqrt(2)
-
     try
     {
         // Compute vvb_face_obstacle_map
-        this->calculateTraversabilityMap(w_rover_pos_m); //TODO: Include here the option to consider the initial position as well
+        if(!this->calculateTraversabilityMap(w_rover_pos_m))
+	{
+            return 4; // Goal is too close to the rover
+	}
         if (this->b_debug_mode)
         {
             std::cout << "Computed Traversability Map" << std::endl;
@@ -1072,6 +1069,51 @@ double MobileManipMap::getMinElevation()
 
 bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
 {
+
+    // Adjust the Avoidance distance according to Rover-Sample distance
+
+    double d_roverToSampleDist = sqrt(pow(w_sample_pos.position[0]
+                 - w_rover_pos_m.position[0],2) + pow(w_sample_pos.position[1]
+                 - w_rover_pos_m.position[1],2));
+
+    std::cout << "[MM] \033[35m[----------]"
+	    " [MobileManipMap::calculateTraversabilityMap()]\033[0m Rover-Sample Distance = " << d_roverToSampleDist << " meters" << std::endl; 
+
+    if (d_roverToSampleDist < this->d_maxreach_dist + 5*1.42*this->d_res)
+    {
+        std::cout << "[MM] \033[35m[----------]"
+	    " [MobileManipMap::calculateTraversabilityMap()]\033[0m Rover-Sample Distance is under " << this->d_maxreach_dist + 2.84*this->d_res << " meters" << std::endl; 
+        return false;
+    }
+
+    double d_minAvoidDist = (d_roverToSampleDist - this->d_maxreach_dist - 5*1.42*this->d_res);
+
+    std::cout << "[MM] \033[35m[----------]"
+	    " [MobileManipMap::calculateTraversabilityMap()]\033[0m The min Obstacle Avoidance Distance is " << d_minAvoidDist << std::endl; 
+
+    d_minAvoidDist = max(0.0, d_minAvoidDist);
+	    
+    if (this->d_avoid_dist > d_minAvoidDist)
+    {
+        std::cout << "[MM] \033[35m[----------]"
+	    " [MobileManipMap::calculateTraversabilityMap()]\033[0m The obstacle avoidance distance is updated from " << this->d_avoid_dist << " to " << d_minAvoidDist << std::endl; 
+        this->d_avoid_dist = d_minAvoidDist;
+    }
+ 
+    // FACE distances
+    this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist;
+    this->d_outter_sampling_dist
+        = this->d_inner_sampling_dist
+          + 1.42 * this->d_res; // TODO - Maybe this should be 1.42? = sqrt(2)
+
+
+
+    std::cout << "[MM] \033[35m[----------]"
+	    " [MobileManipMap::calculateTraversabilityMap()]\033[0m d_inner_sampling_dist = " << this->d_inner_sampling_dist << std::endl; 
+    
+    std::cout << "[MM] \033[35m[----------]"
+	    " [MobileManipMap::calculateTraversabilityMap()]\033[0m d_outter_sampling_dist = " << this->d_outter_sampling_dist << std::endl; 
+
 
     double d_proximity; 
     // Traversability and Obstacle maps are computed

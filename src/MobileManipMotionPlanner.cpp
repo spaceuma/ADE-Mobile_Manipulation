@@ -670,6 +670,10 @@ bool MobileManipMotionPlanner::generateMotionPlan(
 		//TODO: Indicate whether the goal is in dilated obstacle or not...
                 setError(OBS_GOAL_POS);
                 return false;
+	    case 4:
+	        std::cout << "[MM] \033[1;31m[----------] [generateMotionPlan()]\033[0m Goal is too close, cannot fetch" << std::endl;
+                setError(GOAL_TOO_CLOSE);
+		return false;
         }
 
         std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Cost Map edited using FACE method" << std::endl;

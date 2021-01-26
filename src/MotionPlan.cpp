@@ -263,10 +263,31 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     std::vector<base::Waypoint> *pvw_reference_path;
     std::vector<base::Waypoint> vw_reference_path;
 
-    pvw_reference_path = &(this->vw_rover_path);
+
     unsigned int ui_deployment = 2; //TODO: make this take the true current one
+    bool b_halfPath = false; //TODO: make this take the true current one
+    unsigned int ui_nWaypoints = (uint)(this->vw_rover_path.size()/2);
     while(ui_deployment >= 0)
     {
+        if (b_halfPath)
+	{
+            vw_reference_path.resize(ui_nWaypoints);
+	    for (uint i = 0; i < vw_reference_path.size(); i++)
+	    {
+                vw_reference_path[i] = this->vw_rover_path[i + this->vw_rover_path.size() - ui_nWaypoints]; 
+	    }
+
+	}
+	else
+	{
+	    vw_reference_path.resize(this->vw_rover_path.size());
+	    for (uint i = 0; i < vw_reference_path.size(); i++)
+	    {
+                vw_reference_path[i] = this->vw_rover_path[i]; 
+	    }
+	}
+        pvw_reference_path = &(vw_reference_path);
+	this->vvd_arm_motion_profile.clear();
         if (this->p_arm_planner->planArmMotion(pvw_reference_path,
                                                &elevationMap,
                                                this->pmm_map->getResolution(),
@@ -279,6 +300,30 @@ unsigned int MotionPlan::computeArmProfilePlanning()
             // Initialization
             if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
             {
+		if (b_halfPath)
+		{
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Rover Reference Path waypoints = " << vw_reference_path.size() << std::endl;
+                    this->vw_rover_path.resize(ui_nWaypoints);
+                    this->vw_rover_path.insert(this->vw_rover_path.end(),
+				    vw_reference_path.begin(), vw_reference_path.end());
+		    for (uint i = 0; i < ui_nWaypoints; i++)
+		    {
+                        this->vvd_arm_motion_profile.insert(this->vvd_arm_motion_profile.begin(), this->vvd_arm_motion_profile[0]);
+		    }    
+		}
+		else
+		{
+
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Rover Reference Path waypoints = " << vw_reference_path.size() << std::endl;
+                    this->vw_rover_path.resize(vw_reference_path.size());
+		    for (uint i = 0; i < vw_reference_path.size(); i++)
+		    {
+                        this->vw_rover_path[i] = vw_reference_path[i];
+		    }
+
+		}
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m ui_nWaypoints" << ui_nWaypoints << std::endl;
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Rover Path waypoints = " << this->vw_rover_path.size() << std::endl;
                 std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is safe, with "
                           << this->vvd_arm_motion_profile.size() << " samples"
                           << std::endl;
@@ -316,7 +361,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                 return 0;
             }
             else
-            {
+            { //TODO: make this repeat again for using different tries
                 std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not safe, with "
                           << this->vvd_arm_motion_profile.size() << " samples"
                           << std::endl;
@@ -325,16 +370,27 @@ unsigned int MotionPlan::computeArmProfilePlanning()
         }
         else
         {
-            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy " << ui_deployment << " not valid" << std::endl;
-            if (ui_deployment >0)
+            if (b_halfPath)
 	    {
-                ui_deployment -= 1;
-            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying with deployment " << ui_deployment << std::endl;
-                this->setDeployment(ui_deployment);
+	        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy " << ui_deployment << " not valid" << std::endl;
+                if (ui_deployment >0)
+	        {
+                    ui_deployment -= 1;
+                std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying with deployment " << ui_deployment << std::endl;
+                    this->setDeployment(ui_deployment);
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying again witht Tunnel from the beginning" << std::endl;
+		    b_halfPath = false;
+	        }
+	        else
+	        {
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Profile could be not computed using any of the deployment approaches" << std::endl;
+	            return 2;
+	        }
 	    }
 	    else
 	    {
-	        return 2;
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Now trying with Tunnel starting from half the path" << std::endl;
+                b_halfPath = true;
 	    }
         }
     }
