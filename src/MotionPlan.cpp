@@ -173,7 +173,7 @@ bool MotionPlan::shortenPathForFetching()
     // TODO- Make this cut a shorter distance, taking into account tol_position
     // from Waypoint Navigation
     int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
-        &(this->vw_rover_path));
+        &(this->vw_rover_path), this->pmm_map->getMinReach(), this->pmm_map->getMaxReach());
     if (endWaypoint == 0)
     {
         std::cout << "[MM] \033[35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Cannot Shorten the path" << std::endl;

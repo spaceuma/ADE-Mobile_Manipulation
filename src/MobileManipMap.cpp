@@ -1067,6 +1067,19 @@ double MobileManipMap::getMinElevation()
     return this->d_elevation_min;
 }
 
+
+double MobileManipMap::getMinReach()
+{
+    return this->d_minreach_dist;
+}
+
+double MobileManipMap::getMaxReach()
+{
+    return this->d_maxreach_dist;
+}
+
+
+
 bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
 {
 
@@ -1155,7 +1168,7 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
                          + pow((double)j * this->d_res
                                    - this->w_sample_pos.position[1],
                                2))
-                    > this->d_maxreach_dist)
+                    > this->d_minreach_dist)
                 {
                     this->vvi_face_obstacle_map[j][i] = 0;
                     this->vvi_traversability_map[j][i] = 2;
@@ -1174,7 +1187,7 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
                          + pow((double)j * this->d_res
                                    - this->w_sample_pos.position[1],
                                2))
-                    > this->d_maxreach_dist)
+                    > this->d_minreach_dist)
                 {
                     this->vvi_face_obstacle_map[j][i] = 1;
                     this->vvi_traversability_map[j][i] = 3;

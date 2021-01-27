@@ -32,7 +32,9 @@ public:
     double minFetchingDistance = 0.7;
 
     // -- FUNCTIONS --
-    int getFetchWaypointIndex(const std::vector<base::Waypoint> *roverPath);
+    int getFetchWaypointIndex(const std::vector<base::Waypoint> *roverPath,
+    double d_minFetchingDistance,
+    double d_maxFetchingDistance);
 
     double getReachabilityCost(double distance);
 

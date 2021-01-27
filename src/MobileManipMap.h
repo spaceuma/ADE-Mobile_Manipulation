@@ -171,6 +171,8 @@ public:
     double getMinElevation();
     std::vector<double> getOffset();
     std::vector<double> *getPointer2Offset();
+    double getMinReach();
+    double getMaxReach();
     void printDEMinfo();
 
     /**

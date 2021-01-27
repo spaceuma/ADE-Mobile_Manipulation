@@ -13,9 +13,9 @@ Avoidance Distance:
 Occupancy Radius:
 1.6
 Min Reach Distance:
-1.0
-Max Reach Distance:
 1.3
+Max Reach Distance:
+1.4
 Dilation Ratio:
 1.0
 Traversable Underneath:
