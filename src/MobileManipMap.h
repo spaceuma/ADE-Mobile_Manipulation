@@ -146,7 +146,6 @@ public:
      * RG DEMs Introduction
      */
     unsigned int loadDEM(const RoverGuidance_Dem &rg_dem_m, bool b_update = false);
-    unsigned int loadLocDEM(const RoverGuidance_Dem &rg_dem_m);
 
     /**
      * Function to introduce the Sample into the costmap using FACE

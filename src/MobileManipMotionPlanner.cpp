@@ -773,9 +773,8 @@ bool MobileManipMotionPlanner::generateMotionPlan(
             std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Arm Retrieval Profile is successfully computed with " << this->p_motionplan->getNumberRetrievalSamples() << " samples" << std::endl;
 	}
 	// this->p_motionplan->computeArmDeployment(0,);
-	// Adds a dummy waypoint at the end to smoothly turn the rover at the end
-	
-	this->p_motionplan->addTurningWaypoint(0.0);
+	// Adds a dummy waypoint at the end to smoothly turn the rover at the end	
+	this->p_motionplan->addSampleWaypointToPath();
         
 	std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Added final Turning Waypoint, now path has " << this->p_motionplan->getNumberWaypoints() << " waypoints" << std::endl;
         this->p_mmexecutor->updateMotionPlan();
@@ -1156,7 +1155,6 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             break;
         case EXECUTING_ARM_OPERATION:
             //std::cout << "Status is Executing Arm Operation" << std::endl;
-            //rover_command = this->p_mmexecutor->getPointTurnRoverCommand(-0.01);
             rover_command = this->p_mmexecutor->getZeroRoverCommand();
             ui_error_code = this->p_mmexecutor->getAtomicCommand(arm_joints,
                                                                  arm_command, 2); // 2 -> Coverage
@@ -1462,7 +1460,7 @@ std::vector<std::vector<double>> *MobileManipMotionPlanner::getWristPath()
     if ((this->status == IDLE)||(this->status == ERROR)||(this->status == REPLANNING))
     {
         std::cout << "[MM] \033[1;32m[----------] [get3DCostMap()]\033[0m Empty Wrist Path" << std::endl;
-        return &(this->p_motionplan->vvd_dummy_wristpath);
+        return &(this->p_motionplan->vvd_wristpath);
     }
     else
     {
@@ -1524,7 +1522,7 @@ bool MobileManipMotionPlanner::getNavigationMaps(
 std::vector<std::vector<double>>
     *MobileManipMotionPlanner::getArmMotionProfile()
 {
-    return this->p_motionplan->getArmMotionProfile();
+    return this->p_motionplan->getCoupledArmMotionProfile();
 }
 
 std::vector<std::vector<std::vector<double>>>
@@ -1535,7 +1533,7 @@ std::vector<std::vector<std::vector<double>>>
     if ((this->status == IDLE)||(this->status == ERROR)||(this->status == REPLANNING))
     {
         std::cout << "[MM] \033[1;32m[----------] [get3DCostMap()]\033[0m Empty 3d Cost Map" << std::endl;
-        return &(this->p_motionplan->vvvd_dummy_3d_costmap);
+        return &(this->p_motionplan->vvvd_3d_costmap);
     }
     else
     {

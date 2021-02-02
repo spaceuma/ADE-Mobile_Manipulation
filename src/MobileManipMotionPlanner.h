@@ -49,6 +49,7 @@ private:
     std::string s_configfile_path; // Path to Configuration File
     bool b_is_atomic_deployed; // Flag for Atomic Operation
     bool b_clear_underneath = false; // Sets the underneath as traversable or not
+
 public:
 
     /**
@@ -130,12 +131,15 @@ public:
     bool getNavigationMaps(
         std::vector<std::vector<int>> &vvi_traversability_map_m,
         std::vector<std::vector<double>> &vvd_cost_map_m);
-   /**
+
+    /**
      * A pointer to the arm motion profile is returned
      */
     std::vector<std::vector<double>> *getArmMotionProfile();
+
     /**
      * A pointer to the 3d cost map is returned
      */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
+
 };

@@ -11,7 +11,6 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
     this->vd_arm_previous_command.resize(6);
     this->vd_arm_present_command.resize(6);
     this->vd_arm_present_readings.resize(6);
-    this->vd_arm_abs_speed.resize(6);
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
     this->armstate = INITIALIZING;
@@ -121,7 +120,7 @@ void MobileManipExecutor::updateMotionPlan()
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
     // Extract and store the joints profile
-    this->pvvd_arm_motion_profile = this->p_motion_plan->getArmMotionProfile();
+    this->pvvd_arm_motion_profile = this->p_motion_plan->getCoupledArmMotionProfile();
     this->i_initial_segment = 0;
     this->b_is_last_segment = false;
     this->d_operational_time = 0.0;
@@ -235,7 +234,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 
     if (this->isArmColliding())
     {
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        for (uint i = 0; i < this->ui_num_joints; i++)
         {
             j_next_arm_command_m.m_jointStates[i].m_position
                 = j_arm_present_readings_m.m_jointStates[i].m_position;
@@ -280,7 +279,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     this->armstate = COUPLED_MOVING;
 		    return 1;
 	        }
-	    //this->armstate = READY;
 	    }
 	    else if (ui_status > 1)
 	    {
@@ -312,7 +310,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 {
                     i_actual_segment = max(0, i_actual_segment - 6);
                 }
-                this->updateArmCommandVectors();
+                this->updateArmCommandVectors(); //TODO: could be changed to unify the updateArm... function?
                 if (i_current_segment < i_actual_segment)
                 {
                     i_current_segment = min(i_actual_segment, i_current_segment + 1);// + (i_actual_segment - i_current_segment)/30);
@@ -343,7 +341,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             if ((!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))&&
 		(!isArmMoving(j_arm_present_readings_m)))
             {
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+                for (uint i = 0; i < this->ui_num_joints; i++)
                 {
                     j_next_arm_command_m.m_jointStates[i].m_position
                         = j_arm_present_readings_m.m_jointStates[i].m_position;
@@ -415,7 +413,7 @@ bool MobileManipExecutor::assignPresentCommand(proxy_library::Joints &j_command)
         return false;
     }
     for (uint i = 0; i < this->ui_num_joints;
-         i++) // TODO: adhoc number of joints = 6
+         i++)
     {
         j_command.m_jointStates[i].m_position = vd_arm_present_command[i];
     }
@@ -441,7 +439,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
     if (this->isArmColliding())
     {
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        for (uint i = 0; i < this->ui_num_joints; i++)
         {
             j_next_arm_command.m_jointStates[i].m_position
                 = j_present_joints_m.m_jointStates[i].m_position;
@@ -623,7 +621,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 	std::vector<double> vd_present_joints;
 	vd_present_joints.resize(6);
 
-	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+	for (uint i = 0; i < this->ui_num_joints; i++) // TODO: adhoc number of joints = 6
         {
            vd_present_joints[i] 
                 = j_present_joints_m.m_jointStates[i].m_position;
@@ -775,7 +773,7 @@ proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
 bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_library::MotionCommand &mc)
 {
     // Returns whether the rover is in last section or not
-    double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
+    double dx,dy,dist,dyaw,dtargetheading, x0,y0,dTransformAngle;
     dyaw = rover_pose.getYaw();
     dx = (*this->vpw_path.back()).position[0] - rover_pose.position[0];  
     dy = (*this->vpw_path.back()).position[1] - rover_pose.position[1];  
@@ -870,16 +868,6 @@ bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_li
     }
 }
 
-proxy_library::MotionCommand MobileManipExecutor::getPointTurnRoverCommand(double d_turnSpeed_rads)
-{
-    proxy_library::MotionCommand mc_pt;
-    mc_pt.m_manoeuvreType = 1;    // 0: Ackermann, 1: PointTurn
-    mc_pt.m_curvature_radm = 0.0; // in radians/meter
-    mc_pt.m_speed_ms = 0.0;       // in meters/seconds
-    mc_pt.m_turnRate_rads = d_turnSpeed_rads;  // in radians/seconds
-    return mc_pt;
-}
-
 bool MobileManipExecutor::updateArmPresentReadings(
     const proxy_library::Joints &j_present_joints_m)
 {
@@ -898,7 +886,7 @@ bool MobileManipExecutor::updateArmPresentReadings(
 
 bool MobileManipExecutor::updateArmCommandVectors()
 {
-    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+    for (uint i = 0; i < this->ui_num_joints; i++)
     {
         this->vd_arm_previous_command[i] = this->vd_arm_present_command[i];
     }
@@ -907,7 +895,7 @@ bool MobileManipExecutor::updateArmCommandVectors()
 bool MobileManipExecutor::updateArmCommandVectors(
     const std::vector<double> &vd_present_command_m)
 {
-    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+    for (uint i = 0; i < this->ui_num_joints; i++)
     {
         this->vd_arm_previous_command[i] = this->vd_arm_present_command[i];
         this->vd_arm_present_command[i] = vd_present_command_m[i];

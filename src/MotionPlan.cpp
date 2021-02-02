@@ -4,6 +4,7 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
                        std::string s_urdf_path_m,
 		       unsigned int ui_deployment)
 {
+
     this->pmm_map = pmmmap_m;
     this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m; 
     std::cout << "[MM] \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
@@ -12,18 +13,11 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
-
-    double deg2rad = 3.14159/180.0;
-    this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 155.0*deg2rad;//1.571;
-    this->vd_retrieval_position[1] = -90.0*deg2rad;//-1.83;
-    this->vd_retrieval_position[2] = 140.0*deg2rad;//2.79;
-    this->vd_retrieval_position[3] = 0.0*deg2rad;//0.0;
-    this->vd_retrieval_position[4] = -65.0*deg2rad;//-0.5;
-    this->vd_retrieval_position[5] = 134.9*deg2rad;//2.354;
     
     std::cout << "[MM] \033[1;35m[----------] [MotionPlan::MotionPlan()]\033[0m Motion Plan successfully constructed" << std::endl;
+
 }
+
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
                        std::string s_urdf_path_m,
@@ -81,7 +75,6 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Getting Cost Map from MMMap" << std::endl;
     this->pmm_map->getCostMap(costMap);
     std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Got the Cost Map" << std::endl;
-    this->w_rover_pos = rover_position;
     std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Starting Path Planning with biFM" << std::endl;
     
     if (this->bifm_planner.planPath(&costMap, //this->pmm_map->getCostMap(),
@@ -216,36 +209,18 @@ bool MotionPlan::shortenPathForFetching()
     return true;
 }
 
-void MotionPlan::addTurningWaypoint(double d_dev)
+void MotionPlan::addSampleWaypointToPath()
 {
-    if (this->vw_rover_path.size() <=2)
-    {
-        d_dev /= 2.0;
-    }
 
-    base::Waypoint w_end, w_sample, w_turn;
-    w_end = this->vw_rover_path.back();
-    w_sample = this->pmm_map->getSample();
-    //std::cout << "WAYPOINT END DATA: " <<  w_end.position[0] << " m, " << w_end.position[1] << " m, " << w_end.heading * 180.0/3.1416 << " deg" << std::endl;
-    //std::cout << "WAYPOINT SAMPLE DATA: " <<  w_sample.position[0] << " m, " << w_sample.position[1] << " m, " << w_sample.heading * 180.0/3.1416 << " deg" << std::endl;
-    double dx,dy,dnx,dny;
-    dx = w_sample.position[1] - w_end.position[1];
-    dy = w_end.position[0] - w_sample.position[0];
-    dnx = dx / sqrt(pow(dx,2) + pow(dy,2));
-    dny = dy / sqrt(pow(dx,2) + pow(dy,2));
-    w_turn.position[0] = w_sample.position[0] + dx*d_dev;
-    w_turn.position[1] = w_sample.position[1] + dy*d_dev;
-    //w_turn.heading = atan2(w_turn.position[1] - w_end.position[1], w_turn.position[0] - w_end.position[0]);
-    w_turn.heading = w_end.heading;
-    //std::cout << "WAYPOINT TURN DATA: " <<  w_turn.position[0] << " m, " << w_turn.position[1] << " m, " << w_turn.heading * 180.0/3.1416 << " deg" << std::endl;
-    this->vw_rover_path.push_back(w_turn);
+    base::Waypoint w_sample = this->pmm_map->getSample();
+    this->vw_rover_path.push_back(w_sample);
+
 }
 
 
 unsigned int MotionPlan::computeArmProfilePlanning()
 {
-    // TODO - Create here several profiles: init, coupled, sweeping and
-    // retrieval
+    
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
     if (!this->pmm_map->isSampleLoaded())
@@ -442,7 +417,7 @@ unsigned int MotionPlan::computeArmDeployment(
         {
 		//std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;  
 	    this->b_is_initialization_computed = true;
-            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             return 0;
         }
         else
@@ -486,7 +461,7 @@ unsigned int MotionPlan::computeArmDeployment(
     { 
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
-            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             this->b_is_initialization_computed = true;
             return 0;
         }
@@ -546,7 +521,7 @@ unsigned int MotionPlan::computeArmDeployment(
     {
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
-            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             this->b_is_initialization_computed = true;
             return 0;
         }
@@ -594,7 +569,7 @@ unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init,
 	}
 	if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
         {
-            std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmRetrieval()]\033[0m The arm retrieval is calculated with a profile size of " << this->vvd_retrieval_arm_profile.size() << " samples" << std::endl;
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmRetrieval()]\033[0m The arm retrieval is calculated with a profile size of " << this->vvd_retrieval_arm_profile.size() << " samples" << std::endl;
             this->b_is_retrieval_computed = true;
             return 0;
         }
@@ -640,7 +615,7 @@ unsigned int MotionPlan::computeAtomicOperation()
             initialArmConfiguration,
             goalArmConfiguration,
             &(this->vvd_arm_motion_profile),
-            &(this->vd_time_profile)))
+            &(this->vd_atomic_time_profile)))
     {
         if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
         {
@@ -660,7 +635,7 @@ unsigned int MotionPlan::computeAtomicOperation()
 bool MotionPlan::isArmProfileSafe(
     const std::vector<std::vector<double>> &vvd_profile_m)
 {
-    for (int i = 0; i < vvd_profile_m.size(); i++)
+    for (unsigned int i = 0; i < vvd_profile_m.size(); i++)
     {
         /*std::cout << " Joints = " << vvd_profile_m[i][0];
             std::cout << " " << vvd_profile_m[i][1];
@@ -708,7 +683,7 @@ std::vector<std::vector<double>> *MotionPlan::getWristPath()
     return this->p_arm_planner->getWristPath();
 }
 
-std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
+std::vector<std::vector<double>> *MotionPlan::getCoupledArmMotionProfile()
 {
     return &(this->vvd_arm_motion_profile);
 }
@@ -750,9 +725,9 @@ std::vector<double> *MotionPlan::getRetrievalArmTimeProfile()
     return &(this->vd_retrieval_time_profile);
 }
 
-std::vector<double> *MotionPlan::getTimeProfile()
+std::vector<double> *MotionPlan::getAtomicTimeProfile()
 {
-    return &(this->vd_time_profile);
+    return &(this->vd_atomic_time_profile);
 }
 
 std::vector<std::vector<std::vector<double>>> *MotionPlan::get3DCostMap()
@@ -760,24 +735,3 @@ std::vector<std::vector<std::vector<double>>> *MotionPlan::get3DCostMap()
     return this->p_arm_planner->getVolumeCostMap();
 }
 
-void MotionPlan::setArmGaussFilter(double sigma, int numsamples)
-{
-    if (sigma > 0.0)
-    {
-        this->d_gauss_sigma = sigma;
-    }
-    if (numsamples > 0) // TODO - Check if odd number
-    {
-        this->i_gauss_numsamples = numsamples;
-    }
-}
-
-bool MotionPlan::isRetrievalComputed()
-{
-    return b_is_retrieval_computed;
-}
-
-bool MotionPlan::isInitializationComputed()
-{
-    return b_is_initialization_computed;
-}
