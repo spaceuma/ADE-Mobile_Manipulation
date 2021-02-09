@@ -43,7 +43,7 @@ TEST(MMExecutorTest, nominal_working_test)
     readPath("test/unit/data/input/MMExecutorTest/path.txt", vw_path);
     readMatrixFile("test/unit/data/input/MMExecutorTest/armMotionProfile.txt",
                    vvd_arm_motion_profile);
-    MotionPlan * dummyPlan = new MotionPlan(&mmmap, zRes, s_urdf_path, vw_path, vvd_arm_motion_profile);
+    MotionPlan * dummyPlan = new MotionPlan(&mmmap, s_urdf_path, vw_path, vvd_arm_motion_profile);
 
     Pose robotPose, pose_robot_sim;
 
@@ -54,11 +54,11 @@ TEST(MMExecutorTest, nominal_working_test)
         Eigen::AngleAxisd(10.0 / 180.0 * M_PI, Eigen::Vector3d::UnitZ()));
 
 
-    MotionCommand mc;
+    proxy_library::MotionCommand mc;
     double dt = 0.5, yaw, d_pos_error_x = 0, d_pos_error_y = 0;
     unsigned int ui_error_code;
 
-    std::vector<JointState> vj_current_jointstates;
+    std::vector<proxy_library::JointState> vj_current_jointstates;
     vj_current_jointstates.resize(6);
     for (uint i = 0; i < 6; i++)
     {
@@ -79,10 +79,10 @@ TEST(MMExecutorTest, nominal_working_test)
     robotPoseFile.open("test/unit/data/results/MMExecutorTest/roverRealPos.txt");
     robotSimPoseFile.open("test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt");
 
-    MobileManipExecutor dummyExecutor(dummyPlan, j_current_joints, s_urdf_path);
+    MobileManipExecutor dummyExecutor(dummyPlan, s_urdf_path);
 
     std::cout << " The loop starts " << std::endl; 
-    while (!dummyExecutor.isRoverFinished())
+    while (ui_error_code != 2)
     {
 //	ASSERT_TRUE(dummyExecutor.isArmMoving(j_current_joints));
         d_pos_error_x = (double)(rand() % 500 - 250) * 0.0001;

@@ -20,27 +20,38 @@ bool FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                             base::Waypoint finalPos,
                             std::vector<base::Waypoint> *path)
 {
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Input Map Res = " << mapResolution << std::endl;
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Input Map Cols = " << (*costMap)[0].size() << ", Rows = " << (*costMap).size() << std::endl;
+   
+    // Defining Starting and Goal Nodes 
     std::vector<int> goal(2, 0);
     std::vector<int> start(2, 0);
-
     goal[0] = (int)(finalPos.position[0] / mapResolution + 0.5);
     goal[1] = (int)(finalPos.position[1] / mapResolution + 0.5);
-
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
+
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Goal node = ( " << goal[0] << ", " << goal[1] << " )" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Start node = ( " << start[0] << ", " << start[1] << " )" << std::endl;
+
 
     std::vector<std::vector<double>> *TMap
         = new std::vector<std::vector<double>>;
 
     if(!computeTMap(costMap, goal, start, TMap))
     {
+        std::cout << "[MM] \033[35m[--WARNING-] [FastMarching::planPath()]\033[0m Could not compute Total Cost Map properly" << std::endl;
         return false;
     }
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Total Cost Map is computed" << std::endl;
+    
     std::vector<std::vector<double>> *pathPos
         = new std::vector<std::vector<double>>;
 
+    //TODO: This process should return a boolean value...
     computePathGDM(TMap, start, goal, waypointDistance, pathPos);
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Path is extracted" << std::endl;
 
     path->resize(pathPos->size());
     (*path)[0].position[0] = mapResolution * (*pathPos)[0][0];
@@ -60,6 +71,9 @@ bool FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].position[1]
         = mapResolution * (*pathPos)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
+
+
+    std::cout << "[MM] \033[1;35m[----------] [FastMarching::planPath()]\033[0m Path is successfully calculated" << std::endl;
     return true;
 }
 

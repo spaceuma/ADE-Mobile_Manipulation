@@ -10,7 +10,7 @@ using namespace cv;
 
 TEST(MMMapTest, set_config_test)
 {
-    MobileManipMap mmmap(false);
+    MobileManipMap mmmap;
     mmmap.setThresholdValues( 0.0,-1.0,-1.0,-1.0);
     // Do the same with config values
 }
@@ -51,15 +51,18 @@ TEST(MMMapTest, nominal_working_test_spacehall)
         }
     }
 
-    base::Waypoint samplePos;
-    samplePos.position[0] = 3.0;
-    samplePos.position[1] = 14.0;
+    base::Waypoint samplePos, roverPos;
+    samplePos.position[0] = 10.0;
+    samplePos.position[1] = 16.0;
+    roverPos.position[0] = 3.9;
+    roverPos.position[1] = 9.0;
 
-    MobileManipMap dummyMap(true);
-    dummyMap.setThresholdValues( -1.0,-1.0,0.01,-1.0);
+    MobileManipMap dummyMap;
+    dummyMap.setThresholdValues( 80.0, 80.0,0.01,-1.0);
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 0.5, 1.0, 1.3),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, roverPos),3);
+    //ASSERT_EQ(dummyMap.modifyUnderneath(roverPos),true);
     
     std::vector<std::vector<double>> costMap, elevationMap, slopeMap, sdMap;
     std::vector<std::vector<int>> traversabilityMap;
@@ -119,14 +122,14 @@ TEST(MMMapTest, nominal_working_test_galopprennbahnwest)
         }
     }
 
-    MobileManipMap dummyMap(false);
+    MobileManipMap dummyMap;
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
 
-    base::Waypoint samplePos;
+    base::Waypoint samplePos, roverPos;
     samplePos.position[0] = 17.885;
     samplePos.position[1] = 12.405;
 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, roverPos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
 
@@ -207,11 +210,11 @@ TEST(MMMapTest, nominal_working_test_exrColmenar)
         }
     }
 
-    base::Waypoint samplePos;
+    base::Waypoint samplePos, roverPos;
     samplePos.position[0] = 3.0;
     samplePos.position[1] = 3.0;
 
-    MobileManipMap dummyMap(false);
+    MobileManipMap dummyMap;
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
     std::ofstream validityMapFile, costMapFile, slopeMapFile, sdMapFile, traversabilityMapFile;
@@ -227,7 +230,7 @@ TEST(MMMapTest, nominal_working_test_exrColmenar)
     writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_slopeMap.txt", slopeMap);    
     writeMatrixFile("test/unit/data/results/MMMapTest/exrcolmenar_sdMap.txt", sdMap);    
 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, roverPos),0);
     std::cout << "Cost map is computed" << std::endl; 
 
     costMap.resize(prgd_dummy_dem->rows);
@@ -300,15 +303,15 @@ TEST(MMMapTest, nominal_working_test)
     std::cout << "Rover Guidance DEM is successfully created" << std::endl; 
     std::cout << vvd_elevation_data[0][0] << std::endl; 
 
-    base::Waypoint samplePos;
+    base::Waypoint samplePos, roverPos;
     samplePos.position[0] = 17.885;//5.6;
     samplePos.position[1] = 12.405;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
-    MobileManipMap dummyMap(false);
+    MobileManipMap dummyMap;
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, roverPos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -469,15 +472,15 @@ TEST(MMMapTest, nominal_working_test_MagLocCam)
     globaldemFile.close(); 
     validFile.close(); 
 
-    base::Waypoint samplePos;
+    base::Waypoint samplePos, roverPos;
     samplePos.position[0] = 7.5;//5.6;
     samplePos.position[1] = 10.0;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
-    MobileManipMap dummyMap(false);
+    MobileManipMap dummyMap;
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, roverPos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -621,15 +624,15 @@ TEST(MMMapTest, nominal_working_test_MagDEMs)
     demFile.close(); 
     validFile.close(); 
 
-    base::Waypoint samplePos;
+    base::Waypoint samplePos, roverPos;
     samplePos.position[0] = 14.0;//5.6;
     samplePos.position[1] = 6.5;
     //ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) << "Input Waypoint file is missing";
 
-    MobileManipMap dummyMap(true);
+    MobileManipMap dummyMap;
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)),0);
     std::cout << "DEM is loaded" << std::endl; 
-    ASSERT_EQ(dummyMap.computeFACE(samplePos, 1.0, 1.344, 1.584),0);
+    ASSERT_EQ(dummyMap.computeFACE(samplePos, roverPos),0);
     std::cout << "Cost map is computed" << std::endl; 
     double d_elevation_min = dummyMap.getMinElevation();
     //ASSERT_LT(d_elevation_min, 1008.55);
@@ -860,7 +863,7 @@ TEST(MMMapTest, sample_pos_error_test)
         }
     }
 
-    base::Waypoint w_sample_one, w_sample_two, w_sample_three, w_sample_four;
+    base::Waypoint w_sample_one, w_sample_two, w_sample_three, w_sample_four, roverPos;
     w_sample_one.position[0] = -1.0;
     w_sample_one.position[1] = 5.6;
     w_sample_two.position[0] = 100;
@@ -877,22 +880,22 @@ TEST(MMMapTest, sample_pos_error_test)
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - First Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_one, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_one, roverPos),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Second Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_two, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_two, roverPos),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Third Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_three, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_three, roverPos),
                  2);
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing error with waypoint "
                  "out of range - Fourth Sample"
               << std::endl;
-    ASSERT_EQ(dummyMap.computeFACE(w_sample_four, 1.0, 0.94, 1.54),
+    ASSERT_EQ(dummyMap.computeFACE(w_sample_four, roverPos),
                  2);
      
 }

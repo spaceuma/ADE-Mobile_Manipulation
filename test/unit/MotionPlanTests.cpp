@@ -46,8 +46,8 @@ TEST(MMMotionPlanTest, nominal_working_test01)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path,0);
 
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path);
 
     // 1st Case with Shadowing 
     clock_t ini2D = clock();
@@ -60,7 +60,7 @@ TEST(MMMotionPlanTest, nominal_working_test01)
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_01.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
-    saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
     EXPECT_EQ(ui_error_code, 0);
 
@@ -205,7 +205,7 @@ TEST(MMMotionPlanTest, nominal_working_test03)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path);
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path);
     // 2nd Case with Shadowing
     clock_t ini2D = clock();
     ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
@@ -216,7 +216,7 @@ TEST(MMMotionPlanTest, nominal_working_test03)
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     EXPECT_EQ(ui_error_code, 0);
-    saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
     saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
     saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt");
@@ -376,7 +376,7 @@ TEST(MMMotionPlanTest, colliding_profile_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan(&mmmap, zRes, s_urdf_path);
+    MotionPlan mplan(&mmmap, s_urdf_path);
 
 
     // 1st Case: Without Shadowing
@@ -418,7 +418,7 @@ TEST(MMMotionPlanTest, nonsmooth_path_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     } 
-    MotionPlan mplan(&mmmap, zRes, s_urdf_path);
+    MotionPlan mplan(&mmmap, s_urdf_path);
 
 
     // 1st Case: Without Shadowing
@@ -462,7 +462,7 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     } 
-    MotionPlan mplan(&mmmap,zRes, s_urdf_path);
+    MotionPlan mplan(&mmmap, s_urdf_path);
 
 
     // 1st Case: Without Shadowing

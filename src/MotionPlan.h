@@ -24,172 +24,113 @@ class MotionPlan
 {
 
 private:
+
     /**
-     * The path that must be followed by the rover, made up by 2d waypoints
-     */
-    std::vector<Waypoint> vw_rover_path;
-    /**
-     * Path Planning class that uses bi-Fast Marching
-     */
-    //BiFastMarching bi_fast_marching;
+    * Dependency classes
+    */
+    MobileManipMap *pmm_map;
     BiFastMarching bifm_planner;
     FastMarching fm_planner;
-    /**
-     * Class to estimate the best waypoint to fetch in an existing path
-     */
     FetchingPoseEstimator fetching_pose_estimator;
-    /**
-     * Motion Planner for the arm
-     */
     ArmPlanner *p_arm_planner;
     CollisionDetector *p_collision_detector;
+   
+    /**
+     * Configurable Parameters
+     */
     std::string s_urdf_path;
-    std::vector<double> vd_retrieval_position;
+    double d_zres = 0.08;
+    double d_gauss_sigma = 5.0;
+    unsigned int ui_gauss_numsamples = 9;
+    std::vector<double> vd_retrieval_position 
+                              = {2.705, -1.571, 2.443, 0.0, -1.134, 2.354};
+
     /**
-     * Profile of position values per joint and sample
+     * Flags
      */
+    bool b_is_retrieval_computed = false;
+    bool b_is_initialization_computed = false;
+
+    /**
+     * Motion Plan results
+     */
+    std::vector<Waypoint> vw_rover_path;
     std::vector<std::vector<double>> vvd_arm_motion_profile;
-    /**
-     * Profile of position values per joint and sample
-     */
     std::vector<std::vector<double>> vvd_smoothed_arm_motion_profile;
-    /**
-     * Profile of times related with the initialization operation
-     */
-    std::vector<double> vd_init_time_profile;
-    /**
-     * Profile of times related with the retrieval operation
-     */
-    std::vector<double> vd_retrieval_time_profile;
-    /**
-     * Profile of times related with an atomic operation
-     */
-    std::vector<double> vd_time_profile;
-    /**
-     * Profile of position values per joint and sample
-     */
     std::vector<std::vector<double>> vvd_init_arm_profile;
-    /**
-     * Profile of position values per joint and sample
-     */
     std::vector<std::vector<double>> vvd_retrieval_arm_profile;
+    std::vector<double> vd_init_time_profile;
+    std::vector<double> vd_retrieval_time_profile;
+    std::vector<double> vd_atomic_time_profile;
+
     /**
-     * Pointer to the map class
-     */
-    MobileManipMap *pmm_map;
-    /**
-     * Value of Z resolution
-     */
-    double d_zres;
-    /**
-     * Checks if the current path is smooth
+     * Supporting Functions
      */
     bool isSmoothPath();
     bool isArmProfileSafe(
         const std::vector<std::vector<double>> &vvd_profile_m);
-    base::Waypoint w_rover_pos;
-    double d_gauss_sigma = 5.0;
-    int i_gauss_numsamples = 9;
-
-    bool b_is_retrieval_computed;
-    bool b_is_initialization_computed;
 
 public:
+
     /**
      * Class Constructor.
      */
     MotionPlan(MobileManipMap *pmmmap_m,
-               double d_zres_m,
                std::string s_urdf_path_m,
 	       unsigned int ui_deployment = 2); //BEGINNING deployment type by default 
-    /**
-     * An existing path and profile are introduced into the motion plan
-     */
     MotionPlan(MobileManipMap *pmmmap_m,
-               double d_zres_m,
                std::string s_urdf_path_m,
                std::vector<Waypoint> &vw_rover_path_m,
                std::vector<std::vector<double>> &vj_joints_profile_m);
+
     /**
-     * A pointer to the current end effector path is returned
+     * Planning Functions
      */
-    std::vector<std::vector<double>> *getWristPath();
+    void setDeployment(unsigned int ui_deployment);
+    unsigned int computeRoverBasePathPlanning(base::Waypoint w_rover_pos_m);
+    bool shortenPathForFetching();
+    void addSampleWaypointToPath();
+    unsigned int computeArmProfilePlanning();
+    unsigned int computeArmDeployment(
+                                 int i_segment_m,
+                                 const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(
+                                 const base::Waypoint &w_goal,
+                                 const std::vector<double> &vd_orientation_goal,
+                                 const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmDeployment(
+                                 const std::vector<double> &vd_arm_goal,
+                                 const std::vector<double> &vd_arm_readings);
+    unsigned int computeArmRetrieval(const std::vector<double> &vd_init, 
+		                 int mode = 0);
+    unsigned int computeAtomicOperation();
+       
     /**
-     * A pointer to the current rover path is returned
+     * Get Data
      */
     std::vector<base::Waypoint> *getRoverPath();
-    /**
-     * A pointer to the current rover path is returned
-     */
+    std::vector<std::vector<double>> *getWristPath();
+    std::vector<std::vector<double>> *getCoupledArmMotionProfile();
+    std::vector<std::vector<double>> *getInitArmMotionProfile();
+    std::vector<std::vector<double>> *getRetrievalArmMotionProfile();
+    std::vector<double> *getBackInitArmMotionProfile();
+    std::vector<double> *getBackArmMotionProfile();
+    std::vector<double> *getAtomicTimeProfile();
+    std::vector<double> *getInitArmTimeProfile();
+    std::vector<double> *getRetrievalArmTimeProfile();
     unsigned int getNumberWaypoints();
     unsigned int getNumberDeploymentSamples();
     unsigned int getNumberRetrievalSamples();
-    /**
-     * A pointer to the arm motion profile is returned
-     */
-    std::vector<std::vector<double>> *getArmMotionProfile();
-    /**
-     * A pointer to the initial arm motion profile is returned
-     */
-    std::vector<std::vector<double>> *getInitArmMotionProfile();
-    std::vector<double> *getBackArmMotionProfile();
-    std::vector<double> *getBackInitArmMotionProfile();
-    /**
-     * A pointer to the initial arm motion profile is returned
-     */
-    std::vector<double> *getInitArmTimeProfile();
-    /**
-     * A pointer to the retrieval arm motion profile is returned
-     */
-    std::vector<std::vector<double>> *getRetrievalArmMotionProfile();
-    /**
-     * A pointer to the retrieval arm motion profile is returned
-     */
-    std::vector<double> *getRetrievalArmTimeProfile();
-    /**
-     * A pointer to the time profile is returned
-     */
-    std::vector<double> *getTimeProfile();
-    /**
-     * A pointer to the 3d cost map is returned
-     */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
-    /**
-     * The path for the rover base, vw_rover_path, is calculated
-     */
-    unsigned int computeRoverBasePathPlanning(base::Waypoint w_rover_pos_m);
-    /**
-     * The path is shortened, ending in the best waypoint to fetch the sample
-     */
-    bool shortenPathForFetching();
 
-    bool isRetrievalComputed();
-    bool isInitializationComputed();
-    /**
-     * Calculates the profile of positions for the arm
+    /*
+     * Checking Functions
      */
-    unsigned int computeArmProfilePlanning();
-
-    /**
-     * Calculates the profile of positions for the arm
-     */
-    unsigned int computeArmDeployment(
-        int i_segment_m,
-        const std::vector<double> &vd_arm_readings);
-    unsigned int computeArmDeployment(
-        const base::Waypoint &w_goal,
-        const std::vector<double> &vd_orientation_goal,
-        const std::vector<double> &vd_arm_readings);
-    unsigned int computeArmDeployment(
-        const std::vector<double> &vd_arm_goal,
-        const std::vector<double> &vd_arm_readings);
-
     bool isInitArmMotionProfileEmpty();
-    unsigned int computeArmRetrieval(const std::vector<double> &vd_init, int mode = 0);
-    unsigned int computeAtomicOperation();
-    void setArmGaussFilter(double sigma = 5.0, int numsamples = 9);
-    void addTurningWaypoint(double d_dev);
-    void setDeployment(unsigned int ui_deployment);
+    bool isPathColliding(); // Used in replanning 
+    
+    std::vector<std::vector<std::vector<double>>> vvvd_3d_costmap; //TODO: make alternative solution
+    std::vector<std::vector<double>> vvd_wristpath;
 };
 
 #endif

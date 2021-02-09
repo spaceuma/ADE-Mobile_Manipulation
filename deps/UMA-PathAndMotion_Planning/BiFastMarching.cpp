@@ -19,15 +19,20 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                               base::Waypoint iniPos,
                               base::Waypoint finalPos,
                               std::vector<base::Waypoint> *path)
-{
+{    
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Input Map Res = " << mapResolution << std::endl;
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Input Map Cols = " << (*costMap)[0].size() << ", Rows = " << (*costMap).size() << std::endl;
+   
+    // Defining Starting and Goal Nodes
     std::vector<int> goal(2, 0);
     std::vector<int> start(2, 0);
-
     goal[0] = (int)(finalPos.position[0] / mapResolution + 0.5);
     goal[1] = (int)(finalPos.position[1] / mapResolution + 0.5);
-
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
+
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Goal node = ( " << goal[0] << ", " << goal[1] << " )" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Start node = ( " << start[0] << ", " << start[1] << " )" << std::endl;
 
     std::vector<std::vector<double>> *TMapGoal
         = new std::vector<std::vector<double>>;
@@ -36,28 +41,24 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
 
     std::vector<int> *nodeJoin = new std::vector<int>;
 
-    //std::cout << "Resolution is " << mapResolution << std::endl;
-    //std::cout << "Costmap cols,rows: " << (*costMap)[0].size() << "," << (*costMap).size() << std::endl;
-
     if (!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
     {
-
-        std::cout << " \033[35m[--WARNING-] [BiFastMarching::planPath()]\033[0m Could not compute T Map properly" << std::endl;
-        std::cout << " \033[35m[--DEBUG---] [BiFastMarching::planPath()]\033[0m   Goal = ( " << goal[0] <<", " << goal[1] << " )" << std::endl;
-        std::cout << " \033[35m[--DEBUG---] [BiFastMarching::planPath()]\033[0m   Start = ( " << start[0] <<", " << start[1] << " )" << std::endl;
-    
+        std::cout << "[MM] \033[35m[--WARNING-] [BiFastMarching::planPath()]\033[0m Could not compute both Total Cost Maps properly" << std::endl;
         return false;
     }
 
-    //std::cout << "Tmap computed" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Total Cost Maps are computed" << std::endl;
 
     std::vector<std::vector<double>> *pathGoal
         = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *pathStart
         = new std::vector<std::vector<double>>;
 
+    //TODO: These processes should return a boolean value...
     computePathGDM(TMapGoal, (*nodeJoin), goal, waypointDistance, pathGoal);
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m 1st half path is extracted" << std::endl;
     computePathGDM(TMapStart, (*nodeJoin), start, waypointDistance, pathStart);
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m 2nd half path is extracted" << std::endl;
 
     pathGoal->insert(
         pathGoal->begin(), pathStart->rbegin(), pathStart->rend() - 1);
@@ -81,6 +82,8 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].position[1]
         = mapResolution * (*pathGoal)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
+
+    std::cout << "[MM] \033[1;35m[----------] [BiFastMarching::planPath()]\033[0m Path is calculated" << std::endl;
     return true;
 }
 

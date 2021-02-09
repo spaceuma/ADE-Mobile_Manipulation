@@ -11,7 +11,6 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
     this->vd_arm_previous_command.resize(6);
     this->vd_arm_present_command.resize(6);
     this->vd_arm_present_readings.resize(6);
-    this->vd_arm_abs_speed.resize(6);
     this->p_motion_plan = presentMotionPlan;
     this->updateMotionPlan();
     this->armstate = INITIALIZING;
@@ -103,38 +102,31 @@ void MobileManipExecutor::initializeArmVariables(
 void MobileManipExecutor::updateMotionPlan()
 {
     // Extract the rover path
-    std::cout << "Getting the path" << std::endl;
     std::vector<base::Waypoint> *rover_path
         = this->p_motion_plan->getRoverPath();
 
     // Set the path into the Waypoint Navigation class
-    std::cout << "Preparing the path" << std::endl;
     this->vpw_path.resize(rover_path->size());
     for (size_t i = 0; i < rover_path->size(); i++)
     {
         rover_path->at(i).tol_position = 0.1;
         this->vpw_path.at(i) = (&rover_path->at(i));
     }
-    std::cout << "Configuring Tolerance" << std::endl;
     this->waypoint_navigation.configureTol(
         0.1, 5.0 / 180.0 * 3.1416); // tolpos,tolheading
-    std::cout << "Setting Trajectory with " << this->vpw_path.size() << " waypoints"  << std::endl;
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
     // Extract and store the joints profile
-    std::cout << "Getting Arm Motion Profile" << std::endl;
-    this->pvvd_arm_motion_profile = this->p_motion_plan->getArmMotionProfile();
+    this->pvvd_arm_motion_profile = this->p_motion_plan->getCoupledArmMotionProfile();
     this->i_initial_segment = 0;
     this->b_is_last_segment = false;
     this->d_operational_time = 0.0;
-    std::cout << "Updating Deployment" << std::endl;
     this->updateDeployment();
     this->ui_current_timestamp = 0;
     this->ui_past_timestamp = 0;
-    std::cout << "Updating Retrieval" << std::endl;
     this->updateRetrieval();
 }
 
@@ -167,35 +159,22 @@ double MobileManipExecutor::computeBilinearInterpolation(double x, double y,
 
 bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 {
-    double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
-    dyaw = rover_pose.getYaw();
+    double dx,dy,dist;
     dx = rover_pose.position[0] - (*this->vpw_path.back()).position[0];  
     dy = rover_pose.position[1] - (*this->vpw_path.back()).position[1];  
-    dTransformAngle = dyaw - 0.5*3.1416;
-    x0 = cos(dTransformAngle)*dx - sin(dTransformAngle)*dy;
-    y0 = sin(dTransformAngle)*dx + cos(dTransformAngle)*dy;
-
     dist = sqrt(pow(dx,2)+pow(dy,2));
-    dtargetheading =  (*this->vpw_path.back()).heading;
-
-    unsigned int ui_counter, ui_x0_min, ui_x0_max, ui_y0_min, ui_y0_max;
-    double R, d_x, d_y, d_x1, d_x2, d_y1, d_y2, d_R11, d_R12, d_R21, d_R22;
-    //Finding x0 indexes
- 
-    dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
-    //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
-    //if ((dist < 0.2))//&&(dacos < 0.1))
 
     if ((dist < 2.3)&&(this->d_dist_to_sample >= 2.3)) //This would be d_inner_sampling_dist from the map class
     {
-        std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Entering the last section, distance to sample is " << dist << " meters"  << std::endl;
        
     }
     if ((dist < 1.4)&&(this->d_dist_to_sample >= 1.4)) //This would be d_inner_sampling_dist from the map class
     {
-        std::cout << " \033[33m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
+        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
        
-    }this->d_dist_to_sample = dist;
+    }
+    this->d_dist_to_sample = dist;
     if ((dist < 1.1))//&&(dacos < 0.1))
     {
         return true; 
@@ -242,7 +221,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 
     if (this->isArmColliding())
     {
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        for (uint i = 0; i < this->ui_num_joints; i++)
         {
             j_next_arm_command_m.m_jointStates[i].m_position
                 = j_arm_present_readings_m.m_jointStates[i].m_position;
@@ -287,7 +266,6 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     this->armstate = COUPLED_MOVING;
 		    return 1;
 	        }
-	    //this->armstate = READY;
 	    }
 	    else if (ui_status > 1)
 	    {
@@ -319,14 +297,14 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 {
                     i_actual_segment = max(0, i_actual_segment - 6);
                 }
-                this->updateArmCommandVectors();
+                this->updateArmCommandVectors(); //TODO: could be changed to unify the updateArm... function?
                 if (i_current_segment < i_actual_segment)
                 {
                     i_current_segment = min(i_actual_segment, i_current_segment + 1);// + (i_actual_segment - i_current_segment)/30);
                     //i_current_segment++; // = i_actual_segment;
                 }
             }
-	    std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+	    //std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
             double d_angle, d_na;
             for (unsigned int i = 0; i < this->vd_arm_present_command.size(); i++)
             {
@@ -350,7 +328,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             if ((!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m))&&
 		(!isArmMoving(j_arm_present_readings_m)))
             {
-                for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+                for (uint i = 0; i < this->ui_num_joints; i++)
                 {
                     j_next_arm_command_m.m_jointStates[i].m_position
                         = j_arm_present_readings_m.m_jointStates[i].m_position;
@@ -384,7 +362,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 	    else if((b_is_last_segment) && 
 			   (isAligned(rover_pose)) )
 	    {
-                std::cout << "For some reason the arm is not yet ready" << std::endl;
+                //std::cout << "For some reason the arm is not yet ready" << std::endl;
 	    }
             return 1;
         case SAMPLING_POS:
@@ -422,7 +400,7 @@ bool MobileManipExecutor::assignPresentCommand(proxy_library::Joints &j_command)
         return false;
     }
     for (uint i = 0; i < this->ui_num_joints;
-         i++) // TODO: adhoc number of joints = 6
+         i++)
     {
         j_command.m_jointStates[i].m_position = vd_arm_present_command[i];
     }
@@ -448,7 +426,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
     if (this->isArmColliding())
     {
-        for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+        for (uint i = 0; i < this->ui_num_joints; i++)
         {
             j_next_arm_command.m_jointStates[i].m_position
                 = j_present_joints_m.m_jointStates[i].m_position;
@@ -517,19 +495,19 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                     d_ratio_aft = (double)(this->i_current_init_index + 1) / (double)((*this->pvvd_init_arm_profile).size() - 1);
                     if ((d_ratio_bef < 0.25)&&(d_ratio_aft >= 0.25)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 25 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.5)&&(d_ratio_aft >= 0.5)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 50 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.75)&&(d_ratio_aft >= 0.75)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 75 percent" << std::endl;
 		    }
                     if ((d_ratio_bef < 0.9)&&(d_ratio_aft >= 0.9)) 
                     {
-                        std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
+                        std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment: 90 percent" << std::endl;
 		    }
 		    this->i_current_init_index++;
 		    this->updateArmCommandVectors(
@@ -551,7 +529,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
                 {
                     b_is_finished = true;
-                    std::cout << " \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
+                    std::cout << "[MM] \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Deployment is finished" << std::endl;
                 }
 	    }
 	    break;
@@ -597,9 +575,9 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 if ( d_current_timelimit <= d_elapsed_time) // TODO - ADHOC value to make this slower
                 {
                     this->i_current_coverage_index++;
-                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
-//                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Elapsed time: " << d_elapsed_time << "sec" << std::endl;
-//                    std::cout << " \033[33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Time limit: " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] *1.5 + 5.0 << " sec" << std::endl;
+                    std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Going to Coverage Point " << this->i_current_coverage_index << "/" << ((*this->pvvd_arm_sweeping_profile).size() - 1) << std::endl;
+//                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Elapsed time: " << d_elapsed_time << "sec" << std::endl;
+//                    std::cout << " \033[35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Time limit: " << (*this->pvd_arm_sweeping_times)[this->i_current_coverage_index] *1.5 + 5.0 << " sec" << std::endl;
                     this->updateArmCommandVectors((*this->pvvd_arm_sweeping_profile)
                                               [this->i_current_coverage_index]);
                 }
@@ -611,7 +589,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 
             {
                 b_is_finished = true;
-                std::cout << " \033[1;33m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
+                std::cout << "[MM] \033[1;35m[----------] [MobileManipExecutor::getAtomicCommand()]\033[0m Coverage is finished" << std::endl;
             }
 	    else
 	    {
@@ -630,7 +608,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
 	std::vector<double> vd_present_joints;
 	vd_present_joints.resize(6);
 
-	for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+	for (uint i = 0; i < this->ui_num_joints; i++) // TODO: adhoc number of joints = 6
         {
            vd_present_joints[i] 
                 = j_present_joints_m.m_jointStates[i].m_position;
@@ -735,6 +713,11 @@ bool MobileManipExecutor::isArmMoving(
     return isMoving;
 }
 
+bool MobileManipExecutor::isCoupledMoving()
+{
+    return this->armstate == COUPLED_MOVING;
+}
+
 bool MobileManipExecutor::isArmFollowing(
     const proxy_library::Joints &j_next_command,
     const proxy_library::Joints &j_present_joints)
@@ -777,7 +760,7 @@ proxy_library::MotionCommand MobileManipExecutor::getZeroRoverCommand()
 bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_library::MotionCommand &mc)
 {
     // Returns whether the rover is in last section or not
-    double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
+    double dx,dy,dist,dyaw,dtargetheading, x0,y0,dTransformAngle;
     dyaw = rover_pose.getYaw();
     dx = (*this->vpw_path.back()).position[0] - rover_pose.position[0];  
     dy = (*this->vpw_path.back()).position[1] - rover_pose.position[1];  
@@ -872,16 +855,6 @@ bool MobileManipExecutor::getLastSectionCommand(base::Pose &rover_pose, proxy_li
     }
 }
 
-proxy_library::MotionCommand MobileManipExecutor::getPointTurnRoverCommand(double d_turnSpeed_rads)
-{
-    proxy_library::MotionCommand mc_pt;
-    mc_pt.m_manoeuvreType = 1;    // 0: Ackermann, 1: PointTurn
-    mc_pt.m_curvature_radm = 0.0; // in radians/meter
-    mc_pt.m_speed_ms = 0.0;       // in meters/seconds
-    mc_pt.m_turnRate_rads = d_turnSpeed_rads;  // in radians/seconds
-    return mc_pt;
-}
-
 bool MobileManipExecutor::updateArmPresentReadings(
     const proxy_library::Joints &j_present_joints_m)
 {
@@ -900,7 +873,7 @@ bool MobileManipExecutor::updateArmPresentReadings(
 
 bool MobileManipExecutor::updateArmCommandVectors()
 {
-    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+    for (uint i = 0; i < this->ui_num_joints; i++)
     {
         this->vd_arm_previous_command[i] = this->vd_arm_present_command[i];
     }
@@ -909,7 +882,7 @@ bool MobileManipExecutor::updateArmCommandVectors()
 bool MobileManipExecutor::updateArmCommandVectors(
     const std::vector<double> &vd_present_command_m)
 {
-    for (uint i = 0; i < 6; i++) // TODO: adhoc number of joints = 6
+    for (uint i = 0; i < this->ui_num_joints; i++)
     {
         this->vd_arm_previous_command[i] = this->vd_arm_present_command[i];
         this->vd_arm_present_command[i] = vd_present_command_m[i];

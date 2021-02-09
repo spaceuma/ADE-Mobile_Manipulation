@@ -37,17 +37,13 @@ private:
      * * index = row * cols + col
      */
     RoverGuidance_Dem rg_dem;
+    RoverGuidance_Dem rg_nav_dem;
     
     /**
      * Map Data Status
      */
     MMMapState mapstate;
-    
-    /**
-     * Debugging messages activation
-     */ 
-    bool b_debug_mode = false;
-    
+       
     /**
      * DEM structure data
      */
@@ -66,10 +62,13 @@ private:
     std::vector<std::vector<double>> vvd_ny_map; // Y-component of normal vector field
     std::vector<std::vector<double>> vvd_nz_map; // Z-component of normal vector field 
     std::vector<std::vector<double>> vvd_slope_map; // Slope steepness (in degrees) 
+    std::vector<std::vector<double>> vvd_local_slope_map; // Slope steepness (in degrees) 
     std::vector<std::vector<double>> vvd_aspect_map; // Slope Aspect direction (in radians)
+    std::vector<std::vector<double>> vvd_local_aspect_map; // Slope Aspect direction (in radians)
     std::vector<std::vector<int8_t>> vvi_validity_map; // Valid(1)-Nonvalid(0) pixels 
-    std::vector<std::vector<double>> vvd_loc_elevation_map; // Elevation (meters)
     std::vector<std::vector<int8_t>> vvi_loc_validity_map; // Valid(1)-Nonvalid(0) pixels 
+    std::vector<std::vector<int8_t>> vvi_nav_validity_map; // Valid(1)-Nonvalid(0) pixels 
+    std::vector<std::vector<double>> vvd_loc_elevation_map; // Elevation (meters)
     double d_elevation_min; // Existing minimal value of elevation (in meters)
     
     /**
@@ -84,19 +83,24 @@ private:
      * CONFIG VALUES 
      */
     int i_validity_morph_iterations = 2; //Iterations for the morphological CLOSE operation on validity map
-    double d_avoid_dist = 1.5; //Avoidance distance for risk area
+    double d_avoid_dist = 1.0; //Avoidance distance for risk area
     double d_occupancy_dist = 1.6; // Occupancy radius
     double d_minreach_dist = 1.0;//1.344; // Min reachability distance
-    double d_maxreach_dist = 1.5;//1.584; // Max reachability distance
+    double d_maxreach_dist = 1.3;//1.584; // Max reachability distance
+    double d_dilation = 1.0; // Ratio of allowed dilation
+    bool b_clear_underneath = false; // Underneath is ad-hoc traversable or not
 
     /**
      * DEM Navigation Data 
      */
-    std::vector<std::vector<int>> vvi_obstacle_map; // Obstacle(0)-Safe(1)
-    std::vector<std::vector<int>> vvi_loc_obstacle_map; // Obstacle(0)-Safe(1)
-    std::vector<std::vector<double>> vvd_proximity_map; // Distance to closest obstacle (meters)
+    std::vector<std::vector<int>> vvi_face_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_face_proximity_map; // Distance to closest obstacle (meters)
     std::vector<std::vector<int>> vvi_traversability_map; // Obstacle(0)-FirstDilatation(1)-SecondDilatation(2)-RoverTraversableArea(3)-SamplingArea(4)
     std::vector<std::vector<double>> vvd_cost_map; // Cost Map (obstacles are INFINITY)
+    std::vector<std::vector<int>> vvi_loc_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_loc_proximity_map; // Distance to closest obstacle in LocCam (meters)
+    std::vector<std::vector<int>> vvi_nav_obstacle_map; // Obstacle(0)-Safe(1)
+    std::vector<std::vector<double>> vvd_nav_proximity_map; // Distance to closest obstacle in LocCam (meters)
 
     /**
      * FACE (Frontal Approach Cost Edition)
@@ -110,26 +114,22 @@ private:
     /**
      * Internal Functions
      */
-    void checkValidityMap(double &d_valid_ratio, double &d_contour_ratio);
+    void processValidityMap(double &d_valid_ratio, double &d_contour_ratio, bool b_isLoc);
+    bool processElevationMap(bool b_isLoc);
+    void calculateObstacleProximityMap(bool b_isUpdate);
     bool loadGlobalSample(const base::Waypoint &w_sample_pos_m);
-    bool calculateElevationMap();
-    bool calculateTraversabilityMap();
-    bool calculateProximityToObstaclesMap();
-    void calculateCostValues();
-    bool addSampleFacingObstacles();
+    bool calculateTraversabilityMap(base::Waypoint w_rover_pos_m);
+    bool rectifyElevationUnderneath(base::Waypoint w_rover_pos_m);
+    bool calculateCostMap(base::Waypoint w_rover_pos_m);
 
 public:
-    MobileManipMap(bool b_debug_mode_m = false);
+
     /**
-     * Constructor that receives the map, process it and generates the cost and
-     * obstacles maps
+     * Constructors
      */
+    MobileManipMap();
     MobileManipMap(const RoverGuidance_Dem &rg_dem_m,
-                   unsigned int &ui_isDEM_loaded,
-                   bool b_debug_mode_m = false);
-    /**
-     * Constructor that introduces pre-computed elevation and cost maps
-     */
+                   unsigned int &ui_isDEM_loaded);
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
                    std::vector<std::vector<double>> &vvd_cost_map_m,
                    double d_res_m,
@@ -137,88 +137,48 @@ public:
                    double d_avoid_dist_m,
                    double d_maxreach_dist_m);
     /**
-     * RG DEM is checked and loaded into MobileManipMap
+     * RG DEMs Introduction
      */
-    unsigned int loadDEM(const RoverGuidance_Dem &rg_dem_m);
-    /**
-     * RG DEM from LocCam is checked and loaded into MobileManipMap
-     */
-    unsigned int loadLocDEM(const RoverGuidance_Dem &rg_dem_m);
- 
-    /**
-     * RG DEM from LocCam is checked and loaded into MobileManipMap
-     */
-    bool checkObstacles(std::vector<base::Waypoint> &vw_rover_path_m);
+    unsigned int loadDEM(const RoverGuidance_Dem &rg_dem_m, bool b_update = false);
 
     /**
      * Function to introduce the Sample into the costmap using FACE
      */
-    unsigned int computeFACE(base::Waypoint w_sample_pos_m,
-                             double d_avoid_dist_m,
-                             double d_minreach_dist_m,
-                             double d_maxreach_dist_m);
+    unsigned int computeFACE(base::Waypoint w_sample_pos_m, base::Waypoint w_rover_pos_m);
+    
     /**
-     * Function to get the current sample in local coordinates
+     * Output Variables Functions
      */
-    base::Waypoint getSample();
-    /**
-     * Function to get the current traversability map
-     */
+    base::Waypoint getSample(); // Sample Pos in local coordinates
     void getTraversabilityMap(
         std::vector<std::vector<int>> &vvi_traversability_map_m);
-    /**
-     * Function to get the current validity map
-     */
     void getValidityMap(std::vector<std::vector<int8_t>> &vvi_validity_map_m);
-    /**
-     * Function to get the current cost map
-     */
     std::vector<std::vector<double>> *getCostMap();
     void getCostMap(std::vector<std::vector<double>> &vvd_cost_map_m);
-    /**
-     * Function to get the current slope map
-     */
     void getSlopeMap(std::vector<std::vector<double>> &vvd_slope_map_m);
-    /**
-     * Function to get the current spherical deviation map
-     */
     void getSDMap(std::vector<std::vector<double>> &vvd_sd_map_m);
-    /**
-     * Function to get the current elevation map
-     */
     bool getElevationMap(std::vector<std::vector<double>> &vvd_elevation_map_m);
-    /**
-     * Function to get the current elevation map with its minimum starting at
-     * zero
-     */
     bool getElevationMapToZero(
         std::vector<std::vector<double>> &vvd_elevation_map_m);
-    /**
-     * Returns the map resolution --> d_res
-     */
     double getResolution();
-    /**
-     * Returns the minimum value of elevation --> d_elevation_min
-     */
     double getMinElevation();
-    /**
-     * Checks if the waypoint position is inside the map
-     */
-    bool isOutside(const base::Waypoint &w_sample_pos_m);
-    /**
-     * Checks if the waypoint position is within obstacle area
-     */
-    bool isObstacle(const base::Waypoint w_pos_m);
-    /**
-     * Checks if the sample is loaded and FACE is computed
-     */
-    bool isSampleLoaded();
-
     std::vector<double> getOffset();
+    std::vector<double> *getPointer2Offset();
+    double getMinReach();
+    double getMaxReach();
     void printDEMinfo();
 
     /**
-     * Function to set new config values
+     * Check Functions.
+     */
+    bool isOutside(const base::Waypoint &w_sample_pos_m); // Waypoint inside the map
+    bool isObstacle(const base::Waypoint w_pos_m); // Waypoint within obstacle area
+    bool checkObstacles(std::vector<base::Waypoint> &vw_rover_path_m); // Path contacting obstacle area
+    bool isSampleLoaded(); // Is sample loaded and FACE computed
+
+
+    /**
+     * Set configurable values
      */
     void setThresholdValues(double d_temptative_slope_threshold, 
                             double d_temptative_sd_threshold, 
@@ -228,7 +188,9 @@ public:
 		         double d_avoid_dist, 
                          double d_occ_radius, 
                          double d_min_reach,
-                         double d_max_reach);
+                         double d_max_reach,
+			 double d_dilation,
+			 bool b_clear_underneath);
 
 };
 

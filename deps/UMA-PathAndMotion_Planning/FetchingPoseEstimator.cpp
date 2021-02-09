@@ -8,10 +8,19 @@
 using namespace FetchingPoseEstimator_lib;
 
 int FetchingPoseEstimator::getFetchWaypointIndex(
-    const std::vector<base::Waypoint> *roverPath)
+    const std::vector<base::Waypoint> *roverPath,
+    double d_minFetchingDistance,
+    double d_maxFetchingDistance)
 {
     int fetchWaypointIndex = -1;
     double cost, minCost = 10;
+
+    if (d_minFetchingDistance >= d_maxFetchingDistance)
+    {
+        //TODO: Print message
+        d_minFetchingDistance = minFetchingDistance;
+	d_maxFetchingDistance = maxFetchingDistance;
+    }
 
     base::Waypoint samplePos = (*roverPath)[roverPath->size() - 1];
     for (int i = 0; i < roverPath->size(); i++)
@@ -19,7 +28,7 @@ int FetchingPoseEstimator::getFetchWaypointIndex(
         double distance = sqrt(
             pow((*roverPath)[i].position[0] - samplePos.position[0], 2)
             + pow((*roverPath)[i].position[1] - samplePos.position[1], 2));
-        if (distance < maxFetchingDistance && distance > minFetchingDistance)
+        if (distance < d_maxFetchingDistance && distance > d_minFetchingDistance)
         {
             cost = 0;
             cost += getReachabilityCost(distance);
