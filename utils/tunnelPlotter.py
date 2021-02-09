@@ -6,33 +6,24 @@ import math
 from numpy import dot
 import moviepy.editor as mpy
 
-if len(sys.argv) != 2:
-  print('ERROR: the script needs one additional input:')
-  print('0 for END deployment')
-  print('1 for PROGRESSIVE deployment')
-  print('2 for BEGINNING deployment')
-  sys.exit()
-
-representationNumber = str(int(sys.argv[1])+1)
-
-cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), skiprows=1)
+cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt",'r'), skiprows=1)
 cMap2d[np.where(cMap2d == 0)] = 0.0001
 cMap2d[np.isinf(cMap2d)] = 0
 
-sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
+sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt",'r'), skiprows=0)
 
-xsize = int(sizes[0])
-ysize = int(sizes[1])
+xsize = int(sizes[1])
+ysize = int(sizes[0])
 zsize = int(sizes[2])
 
 res = resolutions[0]
 resz = resolutions[1]
 
-costMap3D = np.zeros([ysize, xsize, zsize])
+costMap3D = np.zeros([xsize, ysize, zsize])
 c = 0
 k = 0
 
@@ -46,13 +37,13 @@ for i in range(2, xsize):
             c = 0
             k += 1
 
-"""box = np.zeros([ysize, xsize, zsize])
+box = np.zeros([xsize, ysize, zsize])
 box[0,:,:] = np.max(costMap3D)
 box[-1,:,:] = np.max(costMap3D)
 box[:,0,:] = np.max(costMap3D)
 box[:,-1,:] = np.max(costMap3D)
 box[:,:,0] = np.max(costMap3D)
-box[:,:,-1] = np.max(costMap3D)"""
+box[:,:,-1] = np.max(costMap3D)
 
 d = 0
 for i in range(1,len(path)):
@@ -60,40 +51,39 @@ for i in range(1,len(path)):
 
 print('Distance covered in the path: '+str(d))
 
-stopx = xsize*res
-stopy = ysize*res
-stopz = zsize*resz
+fig1 = mlab.figure()
+mlab.plot3d(path[:,0]/res, path[:,1]/res, path[:,2]/resz, color=(1,1,1), tube_radius = 1)
+mlab.contour3d(box, contours = 5, opacity = 0.05, transparent = True)
+mlab.contour3d(costMap3D, contours = 10, opacity = 0.7, transparent = True)
+mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True)
+mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 20)
 
-complexSizex = complex(0,xsize)
-complexSizey = complex(0,ysize)
-complexSizez = complex(0,zsize)
-"""x = np.linspace(0,stopx,xsize)
-y = np.linspace(0,stopy,ysize)
-z = np.linspace(0,stopz,zsize)"""
+fig2 = mlab.figure()
+mlab.contour3d(box, contours = 5, opacity = 0.05, transparent = True)
+mlab.plot3d(path[:,0]/res, path[:,1]/res, (1+0.625)/resz*np.ones(len(path)), color=(1,1,1), tube_radius = 1)
+mlab.plot3d(path3D[:,0]/res, path3D[:,1]/res, path3D[:,2]/resz, color=(0.3,0.3,0.5), tube_radius = 1)
+mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 20)
+plt_vs = mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True,slice_index=80)     
 
-X, Y, Z = np.mgrid[0:stopx:complexSizex,0:stopy:complexSizey,0:stopz:complexSizez]
-
-DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_Nominal_10cmDEM.csv",'r'), skiprows=0)
-
-minz = np.min(DEM[:,:])
-DEM0 = DEM[:,:] - minz
-
-xMap= np.linspace(0,res*xsize,xsize)
-yMap= np.linspace(0,res*ysize,ysize)
-x,y = np.meshgrid(xMap,yMap)
+f = mlab.gcf();
+f.scene._lift();
+duration = 10
 
 
-fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255)) #np.flipud(np.fliplr(DEM0)))
-mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.05)
-mlab.contour3d(X,Y,Z,costMap3D/np.max(costMap3D), contours = 10, opacity = 0.04, transparent = True, color = (105/255,176/255,250/255), vmax = 0.99, vmin = 0.001)
-#mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True)
-mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
-mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
-mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
-mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[round(path3D[-1][0]/res),round(path3D[-1][1]/res)], scale_factor = 0.2, color=(192/255,192/255,192/255))
-#mlab.quiver3d(path3D[-1][0], path3D[-1][1], path3D[-1][2],1,0,0, scale_factor = 0.2, color=(1,0,0))
-#mlab.quiver3d(path3D[-1][0], path3D[-1][1], path3D[-1][2],0,1,0, scale_factor = 0.2, color=(0,1,0))
-#mlab.quiver3d(path3D[-1][0], path3D[-1][1], path3D[-1][2],0,0,1, scale_factor = 0.2, color=(0,0,1))
+def make_frame(t):
+    mlab.clf()
+    #vs.remove()
+    mlab.contour3d(box, contours = 5, opacity = 0.05, transparent = True)
+    mlab.plot3d(path[:,0]/res, path[:,1]/res, (1+0.625)/resz*np.ones(len(path)), color=(1,1,1), tube_radius = 1)
+    mlab.plot3d(path3D[:,0]/res, path3D[:,1]/res, path3D[:,2]/resz, color=(0.3,0.3,0.5), tube_radius = 1)
+    mlab.quiver3d(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), scale_factor = 20)
+    mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True,slice_index=10*t)     
+    #mlab.view(azimuth = -110, elevation = 50, distance = 20)
+    #plt_vs.slice_index=((int)(t/duration))*100
+    return mlab.screenshot(antialiased=True)
+
+
+#animation = mpy.VideoClip(make_frame, duration=duration)
+#animation.write_gif("tunnelcost.gif", fps=12, program='imageio',opt = 'nq')
 
 mlab.show()
