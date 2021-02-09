@@ -43,12 +43,7 @@ private:
      * Map Data Status
      */
     MMMapState mapstate;
-    
-    /**
-     * Debugging messages activation
-     */ 
-    bool b_debug_mode = false;
-    
+       
     /**
      * DEM structure data
      */
@@ -132,10 +127,9 @@ public:
     /**
      * Constructors
      */
-    MobileManipMap(bool b_debug_mode_m = false);
+    MobileManipMap();
     MobileManipMap(const RoverGuidance_Dem &rg_dem_m,
-                   unsigned int &ui_isDEM_loaded,
-                   bool b_debug_mode_m = false);
+                   unsigned int &ui_isDEM_loaded);
     MobileManipMap(std::vector<std::vector<double>> &vvd_elevation_map_m,
                    std::vector<std::vector<double>> &vvd_cost_map_m,
                    double d_res_m,

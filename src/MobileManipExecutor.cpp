@@ -159,24 +159,10 @@ double MobileManipExecutor::computeBilinearInterpolation(double x, double y,
 
 bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 {
-    double dx,dy,dist,dyaw,dtargetheading, dacos,x0,y0,dTransformAngle;
-    dyaw = rover_pose.getYaw();
+    double dx,dy,dist;
     dx = rover_pose.position[0] - (*this->vpw_path.back()).position[0];  
     dy = rover_pose.position[1] - (*this->vpw_path.back()).position[1];  
-    dTransformAngle = dyaw - 0.5*3.1416;
-    x0 = cos(dTransformAngle)*dx - sin(dTransformAngle)*dy;
-    y0 = sin(dTransformAngle)*dx + cos(dTransformAngle)*dy;
-
     dist = sqrt(pow(dx,2)+pow(dy,2));
-    dtargetheading =  (*this->vpw_path.back()).heading;
-
-    unsigned int ui_counter, ui_x0_min, ui_x0_max, ui_y0_min, ui_y0_max;
-    double R, d_x, d_y, d_x1, d_x2, d_y1, d_y2, d_R11, d_R12, d_R21, d_R22;
-    //Finding x0 indexes
- 
-    dacos = acos(cos(dyaw)*cos(dtargetheading) + sin(dyaw)*sin(dtargetheading));
-    //std::cout << "    diff = " << dacos*180.0/3.1416 << std::endl; 
-    //if ((dist < 0.2))//&&(dacos < 0.1))
 
     if ((dist < 2.3)&&(this->d_dist_to_sample >= 2.3)) //This would be d_inner_sampling_dist from the map class
     {
@@ -187,7 +173,8 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
     {
         std::cout << "[MM] \033[35m[----------] [MobileManipExecutor::isAligned()]\033[0m Arrived, distance is " << dist << " meters"  << std::endl;
        
-    }this->d_dist_to_sample = dist;
+    }
+    this->d_dist_to_sample = dist;
     if ((dist < 1.1))//&&(dacos < 0.1))
     {
         return true; 

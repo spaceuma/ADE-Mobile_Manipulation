@@ -41,7 +41,7 @@ private:
     std::string s_urdf_path;
     double d_zres = 0.08;
     double d_gauss_sigma = 5.0;
-    int i_gauss_numsamples = 9;
+    unsigned int ui_gauss_numsamples = 9;
     std::vector<double> vd_retrieval_position 
                               = {2.705, -1.571, 2.443, 0.0, -1.134, 2.354};
 

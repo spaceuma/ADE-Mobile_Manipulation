@@ -135,7 +135,7 @@ bool MotionPlan::isSmoothPath()
     }
     double d_segmentX1, d_segmentY1, d_segmentX2, d_segmentY2, d_norm1, d_norm2,
         d_diffheading;
-    for (int i = 2; i < vw_rover_path.size() - 1;
+    for (unsigned int i = 2; i < vw_rover_path.size() - 1;
          i++) // Final Waypoint is sometimes tricky due to FM computation, so it
               // is left anyways
     {
@@ -165,7 +165,7 @@ bool MotionPlan::shortenPathForFetching()
 {
     // TODO- Make this cut a shorter distance, taking into account tol_position
     // from Waypoint Navigation
-    int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
+    unsigned int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
         &(this->vw_rover_path), this->pmm_map->getMinReach(), this->pmm_map->getMaxReach());
     if (endWaypoint == 0)
     {
@@ -174,7 +174,7 @@ bool MotionPlan::shortenPathForFetching()
     }
     else
     {
-        int i_eraseIndex = endWaypoint + 1;
+        unsigned int i_eraseIndex = endWaypoint + 1;
         std::cout << "[MM] \033[35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Shortening the path to waypoint " << endWaypoint << std::endl;
         if (endWaypoint < this->vw_rover_path.size() - 3)
         {
@@ -263,7 +263,8 @@ unsigned int MotionPlan::computeArmProfilePlanning()
 	}
         pvw_reference_path = &(vw_reference_path);
 	this->vvd_arm_motion_profile.clear();
-        if (this->p_arm_planner->planArmMotion(pvw_reference_path,
+
+	if (this->p_arm_planner->planArmMotion(pvw_reference_path,
                                                &elevationMap,
                                                this->pmm_map->getResolution(),
                                                this->d_zres,
@@ -303,13 +304,13 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                           << this->vvd_arm_motion_profile.size() << " samples"
                           << std::endl;
                 if (this->vvd_arm_motion_profile.size()
-                    > this->i_gauss_numsamples * 2)
+                    > this->ui_gauss_numsamples * 2)
                 {
                     this->p_arm_planner->computeArmProfileGaussSmoothening(
                         &(this->vvd_arm_motion_profile),
                         &(this->vvd_smoothed_arm_motion_profile),
                         this->d_gauss_sigma,
-                        this->i_gauss_numsamples);
+                        this->ui_gauss_numsamples);
                     if (this->isArmProfileSafe(
                             this->vvd_smoothed_arm_motion_profile))
                     {
@@ -336,11 +337,32 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                 return 0;
             }
             else
-            { //TODO: make this repeat again for using different tries
+            {
                 std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not safe, with "
                           << this->vvd_arm_motion_profile.size() << " samples"
                           << std::endl;
-                return 1;
+                if (b_halfPath)
+	        {
+	            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy " << ui_deployment << " not valid" << std::endl;
+                    if (ui_deployment >0)
+	            {
+                        ui_deployment -= 1;
+                        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying with deployment " << ui_deployment << std::endl;
+                        this->setDeployment(ui_deployment);
+                        std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying again witht Tunnel from the beginning" << std::endl;
+		        b_halfPath = false;
+	            }
+	            else
+	            {
+                        std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Profile could be not computed using any of the deployment approaches" << std::endl;
+	                return 1;
+	            }
+	        }
+	        else
+	        {
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Now trying with Tunnel starting from half the path" << std::endl;
+                    b_halfPath = true;
+	        }
             }
         }
         else

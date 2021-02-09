@@ -10,14 +10,11 @@ using namespace cv;
  *
  */
 
-MobileManipMap::MobileManipMap(bool b_debug_mode_m)
+MobileManipMap::MobileManipMap()
 {
 
     // Set internal state to NO_DEM
     this->mapstate = NO_DEM;
-
-    // To show DEBUG messages
-    this->b_debug_mode = b_debug_mode_m;
 
 }
 
@@ -28,8 +25,7 @@ MobileManipMap::MobileManipMap(bool b_debug_mode_m)
  */
 
 MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
-                               unsigned int &ui_isDEM_loaded,
-                               bool b_debug_mode_m)
+                               unsigned int &ui_isDEM_loaded)
 {
 
     // Set internal state to NO_DEM
@@ -41,9 +37,6 @@ MobileManipMap::MobileManipMap(const RoverGuidance_Dem &dem,
     {
         mapstate = DEM_LOADED;
     }
-
-    // To show DEBUG messages
-    this->b_debug_mode = b_debug_mode_m;
 
 }
 
@@ -377,7 +370,7 @@ void MobileManipMap::processValidityMap(double &d_valid_ratio,
     findContours(
         mat_valid_map, vvp_contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
-    for (int k = 0; k < vvp_contours.size(); k++)
+    for (unsigned int k = 0; k < vvp_contours.size(); k++)
     {
         ui_point_counter += vvp_contours[k].size();
     }
@@ -392,9 +385,9 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
     std::vector<double> row;
     d_elevation_min = INFINITY;
 
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
             if (this->vvi_validity_map[j][i] == 1)
 	    {
@@ -412,18 +405,16 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
         }
     }
 
-    if (this->b_debug_mode)
-    {
-        std::cout << "Elevation Map is saved as vector<vector<double>>"
-                  << std::endl;
-    }
+    std::cout << "[MM] \033[35m[----------]"
+         " [MobileManipMap::processElevationMap()]\033[0m New Elevation Matrix"
+         " is saved, the min value of elevation is " << this->d_elevation_min << " meters" << std::endl; 
 
-    int i_occupancy_kernel = (int)(0.6 / this->d_res);
+    int i_occupancy_kernel = (int)(0.6 / this->d_res); // TODO: adhoc value of 0.6
     int i_nodes;
     double d_elevation;
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
             if (this->vvi_validity_map[j][i] == 1)
             {
@@ -459,15 +450,14 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
         }
     }
 
-    if (this->b_debug_mode)
-    {
-        std::cout << "Smoothed elevation map is computed" << std::endl;
-    }
+    std::cout << "[MM] \033[35m[----------]"
+         " [MobileManipMap::processElevationMap()]\033[0m Smoothed Elevation "
+	 "Matrix is created with kernel radius = " << i_occupancy_kernel << std::endl;
 
     double dx, dy;
-    for (int j = 1; j < this->ui_num_rows - 1; j++)
+    for (unsigned int j = 1; j < this->ui_num_rows - 1; j++)
     {
-        for (int i = 1; i < this->ui_num_cols - 1; i++)
+        for (unsigned int i = 1; i < this->ui_num_cols - 1; i++)
         {
             if (this->vvi_validity_map[j][i] == 1)
             {
@@ -541,9 +531,9 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
         }
     }
 
-    for (int j = 1; j < this->ui_num_rows - 1; j++)
+    for (unsigned int j = 1; j < this->ui_num_rows - 1; j++)
     {
-        for (int i = 1; i < this->ui_num_cols - 1; i++)
+        for (unsigned int i = 1; i < this->ui_num_cols - 1; i++)
         {
             if (this->vvi_validity_map[j][i] == 1)
             {
@@ -622,9 +612,9 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
     }
 
     double d_sumnx, d_sumny, d_sumnz, d_R, d_Rratio;
-    for (int j = 1; j < this->ui_num_rows - 1; j++)
+    for (unsigned int j = 1; j < this->ui_num_rows - 1; j++)
     {
-        for (int i = 1; i < this->ui_num_cols - 1; i++)
+        for (unsigned int i = 1; i < this->ui_num_cols - 1; i++)
         {
             if (this->vvi_validity_map[j][i] == 1)
             {
@@ -691,13 +681,9 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
         }
     }
 
-    if (this->b_debug_mode)
-    {
-        std::cout
-            << "Slope, Aspect and Normal Vector Components Maps are computed"
-            << std::endl;
-        std::cout << "i_occupancy_kernel = " << i_occupancy_kernel << std::endl;
-    }
+    std::cout << "[MM] \033[35m[----------]"
+         " [MobileManipMap::processElevationMap()]\033[0m Slope, Aspect and"
+	 " Normal Vector Components Maps are computed" << std::endl;
 
     return true;
 }
@@ -720,9 +706,9 @@ void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
 
     if (b_isUpdate) // TODO: Optimize this by only executing when an obstacle is found
     {
-        for (int j = 0; j < this->ui_num_rows; j++)
+        for (unsigned int j = 0; j < this->ui_num_rows; j++)
         {
-            for (int i = 0; i < this->ui_num_cols; i++)
+            for (unsigned int i = 0; i < this->ui_num_cols; i++)
             {
                 if ((this->vvi_loc_obstacle_map[j][i] == 1)&&(this->vvi_loc_validity_map[j][i] == 1))
                 {
@@ -738,9 +724,9 @@ void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
     }
     else
     {
-        for (int j = 0; j < this->ui_num_rows; j++)
+        for (unsigned int j = 0; j < this->ui_num_rows; j++)
         {
-            for (int i = 0; i < this->ui_num_cols; i++)
+            for (unsigned int i = 0; i < this->ui_num_cols; i++)
             {
                 if (this->vvi_nav_obstacle_map[j][i] == 1)
                 {
@@ -776,10 +762,10 @@ void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
     if (b_isUpdate)
     {
 
-        for (int j = 0; j < this->ui_num_rows; j++)
+        for (unsigned int j = 0; j < this->ui_num_rows; j++)
         {
 
-            for (int i = 0; i < this->ui_num_cols; i++)
+            for (unsigned int i = 0; i < this->ui_num_cols; i++)
             {
 
                 this->vvd_loc_proximity_map[j][i] = mat_proximity_map.at<float>(j, i);
@@ -792,10 +778,10 @@ void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
     else
     {
 
-        for (int j = 0; j < this->ui_num_rows; j++)
+        for (unsigned int j = 0; j < this->ui_num_rows; j++)
         {
 
-            for (int i = 0; i < this->ui_num_cols; i++)
+            for (unsigned int i = 0; i < this->ui_num_cols; i++)
             {
             
                 this->vvd_nav_proximity_map[j][i] = mat_proximity_map.at<float>(j, i);
@@ -888,17 +874,16 @@ unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m, base::Wa
 	{
             return 4; // Goal is too close to the rover
 	}
-        if (this->b_debug_mode)
-        {
-            std::cout << "Computed Traversability Map" << std::endl;
-        }
-        // Compute vvd_face_proximity_map and vvd_cost_map
+        std::cout << "[MM] \033[35m[----------]"
+             " [MobileManipMap::computeFACE()]\033[0m Traversability Map is "
+	     "computed" << std::endl;
+
+	// Compute vvd_face_proximity_map and vvd_cost_map
         this->calculateCostMap(w_rover_pos_m);
-        if (this->b_debug_mode)
-        {
-            std::cout << "Computed FACE" << std::endl;
-        }
-        // this->addValidityCost();
+        std::cout << "[MM] \033[35m[----------]"
+             " [MobileManipMap::computeFACE()]\033[0m Cost Map is "
+	     "computed" << std::endl;
+
         if (isObstacle(this->w_sample_pos))
         {
             return 3;
@@ -1130,9 +1115,9 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
 
     double d_proximity; 
     // Traversability and Obstacle maps are computed
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
 
             d_proximity = min(this->vvd_nav_proximity_map[j][i],
@@ -1206,17 +1191,13 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
                                               this->d_inner_sampling_dist,
                                               this->d_outter_sampling_dist,
                                               this->w_sample_pos);
-    if (b_debug_mode)
-    {
-        std::cout << "Shadowing Proccess is computed" << std::endl;
-    }
+    std::cout << "[MM] \033[35m[----------]"
+             " [MobileManipMap::calculateTraversabilityMap()]\033[0m Shadowing is "
+	     "computed" << std::endl;
+    std::cout << "[MM] \033[35m[----------]"
+             " [MobileManipMap::calculateTraversabilityMap()]\033[0m Obstacle and Traversability Maps are "
+	     "computed" << std::endl;
 
-
-    if (b_debug_mode)
-    {
-        std::cout << "Obstacle and Traversability Maps are computed"
-                  << std::endl;
-    }
     return true;
 }
 
@@ -1225,9 +1206,9 @@ bool MobileManipMap::rectifyElevationUnderneath(base::Waypoint w_rover_pos_m)
 {
     double d_sum_elevation = 0.0, d_num_valid = 0.0, d_average_elevation;
     std::cout << "[MM] \033[35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m Getting average elevation value underneath" << std::endl; 
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
             if ((this->vvi_validity_map[j][i] == 1)&&(sqrt(pow((double)i * this->d_res
                  - w_rover_pos_m.position[0],2) + pow((double)j * this->d_res
@@ -1250,9 +1231,9 @@ bool MobileManipMap::rectifyElevationUnderneath(base::Waypoint w_rover_pos_m)
     d_average_elevation = d_sum_elevation / d_num_valid;
     
     std::cout << "[MM] \033[35m[----------] [MobileManipMap::rectifyElevationUnderneath()]\033[0m Average elevation underneath is " << d_average_elevation << " m"  << std::endl; 
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
             if ((this->vvi_validity_map[j][i] == 0)&&(sqrt(pow((double)i * this->d_res
                  - w_rover_pos_m.position[0],2) + pow((double)j * this->d_res
@@ -1273,9 +1254,9 @@ bool MobileManipMap::calculateCostMap(base::Waypoint w_rover_pos_m)
     Mat mat_proximity_map;
     Mat mat_obstacle_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
             if (vvi_face_obstacle_map[j][i] == 0)
             {
@@ -1290,9 +1271,9 @@ bool MobileManipMap::calculateCostMap(base::Waypoint w_rover_pos_m)
     mat_obstacle_map.convertTo(mat_obstacle_map, CV_8UC1);
     distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
     mat_proximity_map = mat_proximity_map * this->d_res;
-    for (int j = 0; j < this->ui_num_rows; j++)
+    for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
-        for (int i = 0; i < this->ui_num_cols; i++)
+        for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
             this->vvd_face_proximity_map[j][i] = mat_proximity_map.at<float>(j, i);
         }
