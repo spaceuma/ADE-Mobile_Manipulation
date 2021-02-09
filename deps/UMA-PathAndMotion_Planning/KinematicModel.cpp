@@ -273,7 +273,7 @@ Manipulator::Manipulator(std::string _s_data_path_m)
     minValues = new std::vector<double>;
     maxValues = new std::vector<double>;
 
-    readReachabilityMap(s_data_path_m + "/reachabilityMapAccess.txt",
+    readReachabilityMap(s_data_path_m + "/reachabilityMap_Coupled.txt",
                         reachabilityMap_Coupled,
                         resolutions,
                         minValues);
@@ -281,7 +281,7 @@ Manipulator::Manipulator(std::string _s_data_path_m)
                         reachabilityMap_Atomic,
                         resolutions,
                         minValues);
-    readReachabilityMap(s_data_path_m + "/reachabilityDistancesAccess.txt",
+    readReachabilityMap(s_data_path_m + "/reachabilityDistances_Coupled.txt",
                         reachabilityDistances_Coupled,
                         resolutions,
                         minValues);

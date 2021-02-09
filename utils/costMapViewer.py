@@ -3,16 +3,11 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-costMap = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_01.txt"), skiprows=0)
+costMap = np.loadtxt(open("../test/unit/data/results/costMap.txt"), skiprows=0)
 costMap[np.where(costMap==np.inf)] = np.nan
 
-x = np.linspace(0,8,80)
-y = np.linspace(0,8,80)
-
-[X, Y] = np.meshgrid(x,y)
-
 fig1, ax1 = plt.subplots()
-plot1 = ax1.contourf(X,Y,costMap, 40, cmap = 'Reds')
+plot1 = ax1.contourf(costMap, 40, cmap = 'Reds')
 ax1.set_aspect('equal')
 ax1.set_xlabel('X-axis')
 ax1.set_ylabel('Y-axis')

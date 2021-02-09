@@ -303,21 +303,15 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
 
     return theta1, theta2, theta3, theta4, theta5, theta6
 
-if len(sys.argv) != 2:
-  print('ERROR: the script needs one additional input:')
-  print('0 for END deployment')
-  print('1 for PROGRESSIVE deployment')
-  print('2 for BEGINNING deployment')
-  sys.exit()
+#path = np.loadtxt(open("../test/unit/data/results/roverPath.txt",'r'), skiprows=0)
+path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt",'r'), skiprows=0)
+#path3D = np.loadtxt(open("../test/unit/data/results/EEPath.txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt",'r'), skiprows=0)
 
-representationNumber = str(int(sys.argv[1])+1)
+#armJoints = np.loadtxt(open("../test/unit/data/results/armJoints.txt",'r'), skiprows=0)
+armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt",'r'), skiprows=0)
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
-
-armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_0"+representationNumber+".txt",'r'), skiprows=0)
-
-sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
+sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_no_shadowing_3dmap_01.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
 xsize = int(sizes[1])
@@ -360,8 +354,8 @@ for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255)) #np.flipud(np.fliplr(DEM0)))
+#mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
+mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)
@@ -371,13 +365,8 @@ mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
 plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
 plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
-plt_ee_x = mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
-plt_ee_y = mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
-plt_ee_z = mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 0.3, color=(0,0,1))
-
-plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
-plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
-plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+plt_ee = mlab.quiver3d(np.array([px[-1], px[-1], px[-1]]), np.array([py[-1], py[-1], py[-1]]), np.array([pz[-1], pz[-1], pz[-1]]), np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), np.array([Tx[2,3], Ty[2,3], Tz[2,3]]), scale_factor = 0.3, color = (0,0,1))
+plt_base = mlab.quiver3d(np.array([px[0], px[0], px[0]]), np.array([py[0], py[0], py[0]]), np.array([pz[0], pz[0], pz[0]]), np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]), scale_factor = 0.3, color = (1,0,0))
 
 #The code with f must be maintained, otherwise a ValueError is arised
 f = mlab.gcf();
@@ -406,14 +395,8 @@ def make_frame(t):
 
         plt_arm.mlab_source.set(x=px,y=py,z=pz)
         plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
-
-        plt_ee_x.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tx[0,3], v = Tx[1,3], w = Tx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_ee_y.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Ty[0,3], v = Ty[1,3], w = Ty[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_ee_z.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tz[0,3], v = Tz[1,3], w = Tz[2,3], scale_factor = 0.3, color=(0,0,1))
-
-        plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+        plt_ee.mlab_source.set(x = np.array([px[-1], px[-1], px[-1]]), y = np.array([py[-1], py[-1], py[-1]]), z = np.array([pz[-1], pz[-1], pz[-1]]), u = np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), v = np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), w = np.array([Tx[2,3], Ty[2,3], Tz[2,3]]))
+        plt_base.mlab_source.set(x = np.array([px[0], px[0], px[0]]), y = np.array([py[0], py[0], py[0]]), z = np.array([pz[0], pz[0], pz[0]]), u = np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), v = np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), w = np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]))
         mlab.view(azimuth = 45, elevation = 80, distance = 11, focalpoint = np.array([4,4,1]))
         #mlab.view(azimuth = 0, elevation = 20, distance = 16, focalpoint = np.array([4,4,0]))
         return mlab.screenshot(antialiased=True)
@@ -422,7 +405,7 @@ def make_frame(t):
 #animation.write_gif("sampling.gif", fps=12, program='imageio',opt = 'nq')
 
 
-@mlab.animate(delay = 10000, ui = True)
+@mlab.animate(delay = 100, ui = True)
 def anim():
     mlab.gcf()
     for i in range(0,len(armJoints)):
@@ -447,13 +430,8 @@ def anim():
 
         plt_arm.mlab_source.set(x=px,y=py,z=pz)
         plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
-        plt_ee_x.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tx[0,3], v = Tx[1,3], w = Tx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_ee_y.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Ty[0,3], v = Ty[1,3], w = Ty[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_ee_z.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tz[0,3], v = Tz[1,3], w = Tz[2,3], scale_factor = 0.3, color=(0,0,1))
-
-        plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
-        plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
-        plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+        plt_ee.mlab_source.set(x = np.array([px[-1], px[-1], px[-1]]), y = np.array([py[-1], py[-1], py[-1]]), z = np.array([pz[-1], pz[-1], pz[-1]]), u = np.array([Tx[0,3], Ty[0,3], Tz[0,3]]), v = np.array([Tx[1,3], Ty[1,3], Tz[1,3]]), w = np.array([Tx[2,3], Ty[2,3], Tz[2,3]]))
+        plt_base.mlab_source.set(x = np.array([px[0], px[0], px[0]]), y = np.array([py[0], py[0], py[0]]), z = np.array([pz[0], pz[0], pz[0]]), u = np.array([Tbx[0,3], Tby[0,3], Tbz[0,3]]), v = np.array([Tbx[1,3], Tby[1,3], Tbz[1,3]]), w = np.array([Tbx[2,3], Tby[2,3], Tbz[2,3]]))
 #        mlab.view(azimuth = -110+i/2.0, elevation = 50)
         yield
 
@@ -461,7 +439,7 @@ anim()
 
 mlab.show()
 
-"""fig, ax = plt.subplots()
+fig, ax = plt.subplots()
 plt.scatter(d, armJoints[:, 0], label = 'First joint', s = 17)
 plt.scatter(d, armJoints[:, 1], label = 'Second joint', s = 17)
 plt.scatter(d, armJoints[:, 2], label = 'Third joint', s = 17)
@@ -472,6 +450,6 @@ plt.title("Arm profile evolution along the trajectory", fontsize = 20)
 plt.xlabel("Length of the trajectory covered (m)", fontsize = 20)
 plt.ylabel("Joint position (rad)", fontsize = 20)
 plt.legend()
-plt.show()"""
+plt.show()
 
 
