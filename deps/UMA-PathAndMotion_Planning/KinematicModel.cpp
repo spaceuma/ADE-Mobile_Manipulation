@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "KinematicModel.h"
 #include <iostream>
 #include <math.h>
@@ -265,28 +295,38 @@ double KinematicModel_lib::getNorm(std::vector<double> a)
 Manipulator::Manipulator(std::string _s_data_path_m)
 {
     s_data_path_m = _s_data_path_m;
-    reachabilityMap = new std::vector<std::vector<std::vector<double>>>;
-    reachabilityDistances = new std::vector<std::vector<std::vector<double>>>;
+    reachabilityMap_Atomic = new std::vector<std::vector<std::vector<double>>>;
+    reachabilityMap_Coupled = new std::vector<std::vector<std::vector<double>>>;
+    reachabilityDistances_Atomic = new std::vector<std::vector<std::vector<double>>>;
+    reachabilityDistances_Coupled = new std::vector<std::vector<std::vector<double>>>;
     resolutions = new std::vector<double>;
     minValues = new std::vector<double>;
     maxValues = new std::vector<double>;
 
-    readReachabilityMap(s_data_path_m + "/reachabilityMap.txt",
-                        reachabilityMap,
+    readReachabilityMap(s_data_path_m + "/reachabilityMap_Coupled.txt",
+                        reachabilityMap_Coupled,
                         resolutions,
                         minValues);
-    readReachabilityMap(s_data_path_m + "/reachabilityDistances.txt",
-                        reachabilityDistances,
+    readReachabilityMap(s_data_path_m + "/reachabilityMap_Atomic.txt",
+                        reachabilityMap_Atomic,
+                        resolutions,
+                        minValues);
+    readReachabilityMap(s_data_path_m + "/reachabilityDistances_Coupled.txt",
+                        reachabilityDistances_Coupled,
+                        resolutions,
+                        minValues);
+    readReachabilityMap(s_data_path_m + "/reachabilityDistances_Atomic.txt",
+                        reachabilityDistances_Atomic,
                         resolutions,
                         minValues);
 
     maxValues->resize(3);
     (*maxValues)[0]
-        = (*minValues)[0] + reachabilityMap->size() * (*resolutions)[0];
+        = (*minValues)[0] + reachabilityMap_Atomic->size() * (*resolutions)[0];
     (*maxValues)[1]
-        = (*minValues)[1] + (*reachabilityMap)[0].size() * (*resolutions)[1];
+        = (*minValues)[1] + (*reachabilityMap_Atomic)[0].size() * (*resolutions)[1];
     (*maxValues)[2]
-        = (*minValues)[2] + (*reachabilityMap)[0][0].size() * (*resolutions)[2];
+        = (*minValues)[2] + (*reachabilityMap_Atomic)[0][0].size() * (*resolutions)[2];
 }
 
 Manipulator::~Manipulator()
@@ -519,7 +559,8 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
 
 std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
                                                    int shoulder = 1,
-                                                   int elbow = 1)
+                                                   int elbow = 1,
+						   double d_error_margin)
 {
     // This function uses a geometric Inverse Kinematics Model to obtain the
     // needed configuration of the arm to reach a certain cartesian position and
@@ -558,19 +599,29 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
     double l1 = sqrt(pow(c2, 2) + pow(a2, 2));
     double l2 = sqrt(pow(a3, 2) + pow(d4, 2));
 
-    if (d > l1 + l2)
+    // d_error_margin is introduced because although two near nodes can be valid, a
+    // convex curved path passing through them may touch the forbidden volume and produce later
+    // an exception
+
+    if (d + d_error_margin > l1 + l2)
     {
         /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
-                     "and orientation\033[0m\n";*/
+                     "and orientation\033[0m\n";
+	std::cout << "d = " << d << std::endl;
+	std::cout << "l1 = " << l1 << std::endl;
+	std::cout << "l2 = " << l2 << std::endl;*/
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
-    else if (d < l1 - l2)
+    else if (d - d_error_margin < l1 - l2)
     {
         /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too close, unreachable position "
-                     "and orientation\033[0m\n";*/
+                     "and orientation\033[0m\n";
+       	std::cout << "d = " << d << std::endl;
+	std::cout << "l1 = " << l1 << std::endl;
+	std::cout << "l2 = " << l2 << std::endl;*/
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
@@ -918,6 +969,103 @@ std::vector<std::vector<double>> Manipulator::getJacobianMatrix(
     return J;
 }
 
+bool Manipulator::isFarFromMast(double joint0, double joint1, double d_z)
+{
+    joint0 = abs(joint0);
+
+   /* if ((joint0 < 0.2)||(joint0 > 3.0))
+    {
+        return false;
+    }
+    if ((joint1 < -0.7)||(joint1 > -0.3))
+    {
+        return false;
+    }
+    if ((joint2 < -1.9)||(joint2 > 0.0))
+    {
+        return false;
+    }
+    return true;*/
+
+/*
+    if (d_z < 0.5)
+    {
+       return false;
+    }
+*/
+    if (joint0 < 0.0)
+    {
+        return false;
+    }
+
+    if ((joint0 > 1.75)&&(d_z < 0.65))
+    {
+        return false;
+    }
+
+/*
+    if ((joint0 > 0.7)&&(d_z < 0.5))
+    {
+        return false;
+    }
+*/
+
+    if (joint0 > 1.51)
+    {
+/*
+        if (d_z < 0.5)
+        {
+            return false;
+        }
+*/
+        return true;
+    }
+    else
+    {
+        if(joint0 < 1.0)
+	{
+            if ((joint1 > -0.8))
+	    {
+                return true;
+	    }
+	    else
+	    {
+                return false;
+	    }
+	}
+	else
+	{
+/*
+            if (d_z < 0.5)
+            {
+                return false;
+            }
+*/
+            if ((joint1 > -joint0))
+	    {
+                return true;
+	    } 
+            else
+	    {
+                return false;
+	    }
+	}	
+    }
+}
+
+bool Manipulator::isFarFromLeg(double joint0, double d_z)
+{
+   if ((joint0 > 0.6)&&(joint0 < 3.14)&&(d_z < 0.5))
+   {
+        return false;
+   }
+   else
+   {
+
+        return true;
+   } 
+}
+
 void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
 {
     double res4 = 30 * M_PI / 180;
@@ -933,13 +1081,17 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
     std::vector<double> resolutions = {resXY, resXY, resZ};
     std::vector<double> minValues = {minXY, minXY, minZ};
 
+    double resXYZ = sqrt(2*pow(resXY,2)+pow(resZ,2));
+
     int sizeXY = (int)((maxXY - minXY) / resXY);
     int sizeZ = (int)((maxZ - minZ) / resZ);
 
+
     std::cout << "Size xy: " << sizeXY << ", size z: " << sizeZ << std::endl;
-    std::cout << "Res xy: " << resXY << ", res z: " << resZ << std::endl;
+    std::cout << "Res xy: " << resXY << ", res z: " << resZ << ", res xyz: " << resXYZ << std::endl;
     std::cout << "Min xy: " << minXY << ", min z: " << minZ << std::endl;
     std::cout << "Max xy: " << maxXY << ", max z: " << maxZ << std::endl;
+
 
     std::vector<std::vector<std::vector<double>>> reachabilityMap(
         sizeXY,
@@ -962,12 +1114,16 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                 try
                 {
                     std::vector<double> config
-                        = getPositionJoints(position, 1, 1);
+                        = getPositionJoints(position, 1, 1, resXYZ*0.2);
                     config.resize(6);
 
-                    if (!p_collision_detector->isWristColliding(config))
+		    config[3] = 0.0; 
+		    config[4] = std::max(-1.51,-config[2]); 
+		    config[5] = -2.7; 
+
+                    if ((!p_collision_detector->isWristColliding(config))&&(config[0]<3.0)&&(config[0]>-3.0)&&(config[1]>-2)&&(isFarFromMast(config[0],config[1], position[2]))) //TODO - This is a workaround to avoid passing through pi/-pi
                     {
-                        for (int l = 0; l < 6; l++)
+                        /*for (int l = 0; l < 6; l++)
                         {
                             config[3] = l * res4;
                             for (int m = 0; m < 12; m++)
@@ -992,7 +1148,7 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                                 if (reachabilityMap[i][j][k] == 1) break;
                             }
                             if (reachabilityMap[i][j][k] == 1) break;
-                        }
+                        }*/
                     }
                     else
                     {
@@ -1012,34 +1168,109 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                s_data_path_m + "/reachabilityMap.txt");
 }
 
-int Manipulator::isReachable(std::vector<double> position)
+int Manipulator::isReachable(std::vector<double> position, int mode)
 {
     int ix = (int)((position[0] - (*minValues)[0]) / (*resolutions)[0] + 0.5);
     int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
     int iz = (int)((position[2] - (*minValues)[2]) / (*resolutions)[2] + 0.5);
 
-    if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityMap->size() - 1
-        && iy < (*reachabilityMap)[0].size() - 1
-        && iz < (*reachabilityMap)[0][0].size() - 1)
-        return (*reachabilityMap)[ix][iy][iz];
+    /*
+    std::cout << "ix = " << ix << std::endl; 
+    std::cout << "iy = " << iy << std::endl; 
+    std::cout << "iz = " << iz << std::endl; 
+    std::cout << "Reachability Map size = " << reachabilityMap->size() << ", " << (*reachabilityMap)[0].size() << ", " << (*reachabilityMap)[0][0].size() << std::endl; 
+*/
+
+    if (mode == 0)
+    {
+        if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityMap_Atomic->size() - 1
+        && iy < (*reachabilityMap_Atomic)[0].size() - 1
+        && iz < (*reachabilityMap_Atomic)[0][0].size() - 1)
+        {
+            //std::cout << "isReachable? -> " << (*reachabilityMap)[ix][iy][iz] << std::endl;
+            return (*reachabilityMap_Atomic)[ix][iy][iz];
+        }
+        else
+        {
+            return 0;
+        }
+    }
     else
     {
-        return 0;
+        if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityMap_Coupled->size() - 1
+        && iy < (*reachabilityMap_Coupled)[0].size() - 1
+        && iz < (*reachabilityMap_Coupled)[0][0].size() - 1)
+        {
+            //std::cout << "isReachable? -> " << (*reachabilityMap)[ix][iy][iz] << std::endl;
+            return (*reachabilityMap_Coupled)[ix][iy][iz];
+        }
+        else
+        {
+            return 0;
+        }
+
+    }
+}
+std::vector<double> Manipulator::getRelativePosition(std::vector<double> position)
+{
+    double posx = position[0] - (*minValues)[0];
+    double posy = position[1] - (*minValues)[1];
+    double posz = position[2] - (*minValues)[2];
+
+    std::vector<double> pos = {posx, posy, posz};
+
+    return pos;
+}
+
+std::vector<double> Manipulator::getAbsolutePosition(std::vector<double> position)
+{
+    double posx = position[0] + (*minValues)[0];
+    double posy = position[1] + (*minValues)[1];
+    double posz = position[2] + (*minValues)[2];
+
+    std::vector<double> pos = {posx, posy, posz};
+
+    return pos;
+}
+
+double Manipulator::getDistanceToCollision(std::vector<double> position, int mode)
+{
+    // mode: 0 (atomic), 1 (coupled)
+    int ix = (int)((position[0] - (*minValues)[0]) / (*resolutions)[0] + 0.5);
+    int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
+    int iz = (int)((position[2] - (*minValues)[2]) / (*resolutions)[2] + 0.5);
+
+    if (mode == 0)
+    {
+	if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityDistances_Atomic->size() - 1
+        && iy < (*reachabilityDistances_Atomic)[0].size() - 1
+        && iz < (*reachabilityDistances_Atomic)[0][0].size() - 1)
+	{
+	    return (*reachabilityDistances_Atomic)[ix][iy][iz];
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+	if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityDistances_Coupled->size() - 1
+        && iy < (*reachabilityDistances_Coupled)[0].size() - 1
+        && iz < (*reachabilityDistances_Coupled)[0][0].size() - 1)
+	{
+	    return (*reachabilityDistances_Coupled)[ix][iy][iz];
+        }
+        else
+        {
+            return 0;
+        }
+
     }
 }
 
-double Manipulator::getDistanceToCollision(std::vector<double> position)
+std::vector<double> Manipulator::getReachabilityMapSize()
 {
-    int ix = (int)((position[0] - (*minValues)[0]) / (*resolutions)[0] + 0.5);
-    int iy = (int)((position[1] - (*minValues)[1]) / (*resolutions)[1] + 0.5);
-    int iz = (int)((position[2] - (*minValues)[2]) / (*resolutions)[2] + 0.5);
-
-    if (ix > 0 && iy > 0 && iz > 0 && ix < reachabilityDistances->size() - 1
-        && iy < (*reachabilityDistances)[0].size() - 1
-        && iz < (*reachabilityDistances)[0][0].size() - 1)
-        return (*reachabilityDistances)[ix][iy][iz];
-    else
-    {
-        return 0;
-    }
+    std::vector<double> sizes = {(*maxValues)[0]-(*minValues)[0], (*maxValues)[1]-(*minValues)[1], (*maxValues)[2]-(*minValues)[2]};
+    return sizes;
 }

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 
 # Locate GTest
-find_package(GTest)
-include_directories(${GTEST_INCLUDE_DIRS})
+#find_package(GTest)
+#include_directories(${GTEST_INCLUDE_DIRS})
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package( OpenCV REQUIRED )
 find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
@@ -53,8 +53,6 @@ file(GLOB WP_SRC
 file(GLOB UMA_DEPS_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/UMA-PathAndMotion_Planning/*.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/UMA-PathAndMotion_Planning/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/UMA-Coupled_Control/src/coupledControl.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/UMA-Coupled_Control/src/coupledControl.cpp"
 )
 
 
@@ -84,9 +82,8 @@ set(MM_INCLUDEPATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mmFileManagerLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/planner
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/UMA-PathAndMotion_Planning
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/UMA-Coupled_Control/src
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/ESA-Trajectory_Control
 )
 target_include_directories(mobilemanipulation PRIVATE ${MM_INCLUDEPATHS})
-target_link_libraries (mobilemanipulation ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread Eigen3::Eigen dart dart-utils-urdf dart-gui)
+target_link_libraries (mobilemanipulation ${OpenCV_LIBS} pthread Eigen3::Eigen dart dart-utils-urdf dart-gui)
 

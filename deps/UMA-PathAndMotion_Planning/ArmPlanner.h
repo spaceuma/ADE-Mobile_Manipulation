@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #ifndef __ARM_PLANNER__
 #define __ARM_PLANNER__
 
@@ -35,7 +65,7 @@ public:
     // Geometric parameters (BCS = Body Coordinate System, EE = end effector)
     double heightGround2BCS = 0.645;
     double optimalLeftDeviation = 0.4;
-    double fetchingZDistance = 0.5;
+    double fetchingZDistance = 0.6;
     std::vector<double> finalEEorientation = {pi, 0, 0};
 
     // -- VARIABLES --
@@ -59,7 +89,7 @@ public:
 
     void setApproach(bool _approach);
 
-    void setDeployment(int _deployment);
+    bool setDeployment(unsigned int _deployment);
 
     std::vector<base::Waypoint> *getInterpolatedRoverPath();
 
@@ -72,21 +102,19 @@ public:
                        double _mapResolution,
                        double _zResolution,
                        base::Waypoint samplePos,
-                       std::vector<std::vector<double>> *armJoints);
+                       std::vector<std::vector<double>> *armJoints,
+		       CollisionDetector *p_collision_detector);
 
-    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
-                             double _mapResolution,
+    bool planAtomicOperation(double _mapResolution,
                              double _zResolution,
-                             base::Waypoint roverWaypoint,
                              std::vector<double> initialArmConfiguration,
                              std::vector<double> goalArmConfiguration,
                              std::vector<std::vector<double>> *armJoints,
-                             std::vector<double> *timeProfile);
+                             std::vector<double> *timeProfile,
+			     int mode = 0);
 
-    bool planAtomicOperation(const std::vector<std::vector<double>> *_DEM,
-                             double _mapResolution,
+    bool planAtomicOperation(double _mapResolution,
                              double _zResolution,
-                             base::Waypoint roverWaypoint,
                              std::vector<double> initialArmConfiguration,
                              base::Waypoint goalEEPosition,
                              std::vector<double> goalEEOrientation,
@@ -103,7 +131,7 @@ public:
                              std::vector<std::vector<double>> *armJoints,
                              std::vector<double> *timeProfile);
 
-    void generateTunnel(
+    unsigned int generateTunnel(
         base::Waypoint iniPos,
         base::Waypoint samplePos,
         std::vector<std::vector<std::vector<double>>> *costMap3D);
@@ -113,16 +141,23 @@ public:
         base::Waypoint goalPos,
         std::vector<double> roverPose6,
         bool isTunnelPermisive,
-        std::vector<std::vector<std::vector<double>>> *costMap3D);
+        std::vector<std::vector<std::vector<double>>> *costMap3D,
+	int mode = 0);
 
-    void computeWaypointAssignment(std::vector<int> *pathsAssignment);
+    bool computeWaypointAssignment(std::vector<int> *pathsAssignment, CollisionDetector *p_collision_detector);
 
     void computeWaypointInterpolation(const std::vector<int> *pathsAssignment,
                                       std::vector<base::Waypoint> *newRoverPath,
                                       std::vector<int> *newAssignment);
 
+    void smoothRoverPathHeading(double headingThreshold);
+
     std::vector<base::Waypoint> getLinearInterpolation(base::Waypoint waypoint0,
                                                        base::Waypoint waypoint1,
+                                                       int numberIntWaypoints);
+
+    std::vector<std::vector<double>> getLinearInterpolation(std::vector<double> waypoint0,
+                                                       std::vector<double> waypoint1,
                                                        int numberIntWaypoints);
 
     std::vector<base::Waypoint> getCubicInterpolation(base::Waypoint waypoint0,

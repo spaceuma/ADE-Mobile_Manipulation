@@ -351,7 +351,7 @@ pz = np.array(pz)
 
 d = np.zeros(len(path))
 for i in range(1,len(path)):
-    d[i] = d[i-1] + np.linalg.norm(path[i]-path[i-1])
+    d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
 #mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))

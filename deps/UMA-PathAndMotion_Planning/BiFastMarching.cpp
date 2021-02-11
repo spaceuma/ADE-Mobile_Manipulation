@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "FastMarching.h"
 #include <iostream>
 #include <math.h>
@@ -19,15 +49,20 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                               base::Waypoint iniPos,
                               base::Waypoint finalPos,
                               std::vector<base::Waypoint> *path)
-{
+{    
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Input Map Res = " << mapResolution << std::endl;
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Input Map Cols = " << (*costMap)[0].size() << ", Rows = " << (*costMap).size() << std::endl;
+   
+    // Defining Starting and Goal Nodes
     std::vector<int> goal(2, 0);
     std::vector<int> start(2, 0);
-
     goal[0] = (int)(finalPos.position[0] / mapResolution + 0.5);
     goal[1] = (int)(finalPos.position[1] / mapResolution + 0.5);
-
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
+
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Goal node = ( " << goal[0] << ", " << goal[1] << " )" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Start node = ( " << start[0] << ", " << start[1] << " )" << std::endl;
 
     std::vector<std::vector<double>> *TMapGoal
         = new std::vector<std::vector<double>>;
@@ -38,16 +73,22 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
 
     if (!computeTMap(costMap, goal, start, TMapGoal, TMapStart, nodeJoin))
     {
+        std::cout << "[MM] \033[35m[--WARNING-] [BiFastMarching::planPath()]\033[0m Could not compute both Total Cost Maps properly" << std::endl;
         return false;
     }
+
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m Total Cost Maps are computed" << std::endl;
 
     std::vector<std::vector<double>> *pathGoal
         = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *pathStart
         = new std::vector<std::vector<double>>;
 
+    //TODO: These processes should return a boolean value...
     computePathGDM(TMapGoal, (*nodeJoin), goal, waypointDistance, pathGoal);
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m 1st half path is extracted" << std::endl;
     computePathGDM(TMapStart, (*nodeJoin), start, waypointDistance, pathStart);
+    std::cout << "[MM] \033[35m[----------] [BiFastMarching::planPath()]\033[0m 2nd half path is extracted" << std::endl;
 
     pathGoal->insert(
         pathGoal->begin(), pathStart->rbegin(), pathStart->rend() - 1);
@@ -71,6 +112,8 @@ bool BiFastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].position[1]
         = mapResolution * (*pathGoal)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
+
+    std::cout << "[MM] \033[1;35m[----------] [BiFastMarching::planPath()]\033[0m Path is calculated" << std::endl;
     return true;
 }
 
@@ -82,8 +125,12 @@ bool BiFastMarching::computeTMap(
     std::vector<std::vector<double>> *TMapStart,
     std::vector<int> *nodeJoin)
 {
-    int n = costMap->size();
-    int m = costMap[0].size();
+    int n = (*costMap).size();
+
+    //std::cout << "N = " << n << std::endl;
+
+    int m = (*costMap)[0].size();
+    //std::cout << "M = " << m << std::endl;
 
     std::vector<int> nodeTargetGoal = goal;
     std::vector<int> nodeTargetStart = start;
@@ -142,6 +189,8 @@ bool BiFastMarching::computeTMap(
 
     while ((nbTGoal->size() > 0) || (nbTStart->size() > 0))
     {
+        //std::cout << "NodeTargetGoal: " << nodeTargetGoal[0] << ", " << nodeTargetGoal[1] << std::endl;
+        //std::cout << "NodeTargetStart: " << nodeTargetStart[0] << ", " << nodeTargetStart[1] << std::endl;
         if (nbTGoal->size() > 0)
         {
             nodeTargetGoal = (*nbNodesGoal)[0];
@@ -174,7 +223,7 @@ bool BiFastMarching::computeTMap(
             computeGradient(TMapStart, nodeTargetGoal, &GStartx, &GStarty);
             computeGradient(TMapGoal, nodeTargetGoal, &GGoalx, &GGoaly);
 
-            if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
+	    if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetGoal;
                 return true;
@@ -186,7 +235,7 @@ bool BiFastMarching::computeTMap(
             computeGradient(TMapStart, nodeTargetStart, &GStartx, &GStarty);
             computeGradient(TMapGoal, nodeTargetStart, &GGoalx, &GGoaly);
 
-            if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
+	    if ((abs(GGoalx + GStartx) < 0.1) && (abs(GGoaly + GStarty) < 0.1))
             {
                 (*nodeJoin) = nodeTargetStart;
                 return true;

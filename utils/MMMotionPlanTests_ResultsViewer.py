@@ -5,13 +5,15 @@ from matplotlib import cm
 
 res = 0.1
 
-elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv"), skiprows=0)
-traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
+elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
+#traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 
-costMap_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap.txt"), skiprows=0)
+costMap_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
 costMap_no_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap_noShadowing.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
 costMap_no_shadowing[np.where(costMap_no_shadowing==np.inf)] = np.nan
+
+traversabilityMap = costMap_shadowing
 
 xMap, yMap = \
           np.meshgrid(np.linspace(0,elevation_map.shape[1]-1,elevation_map.shape[1]), \
@@ -21,7 +23,7 @@ xMap = xMap*res
 yMap = yMap*res
 
 path_shadowing_01 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt"), skiprows=0)
-path_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt"), skiprows=0)
+#path_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt"), skiprows=0)
 
 sample = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/sample_pos.txt"), skiprows = 0)
 rover = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"), skiprows = 0)

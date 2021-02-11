@@ -1,199 +1,192 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "Joints.h"
 
 #include "CollisionDetector.h"
 #include "MotionCommand.h"
 #include "MotionPlan.h"
 #include "WaypointNavigation.hpp"
-#include "coupledControl.hpp"
 
 // using namespace proxy_library;
 using namespace waypoint_navigation_lib;
-using namespace coupled_control;
 
 enum ArmExecutionState
 {
     INITIALIZING = 0, // 0
-    READY,            // 2
     COUPLED_MOVING,   // 3
-    SAMPLING_POS,     // 4
-    RETRIEVING        // 5
+    SAMPLING_POS      // 4
 };
 
 class MobileManipExecutor
 {
 
 private:
+
     /**
-     * Pointer to the present Motion Plan
+     * Component execution status
+     */
+    ArmExecutionState armstate; // Executor
+    NavigationState navstate; // Waypoint Navigation
+
+    /**
+     * Dependency classes
      */
     MotionPlan *p_motion_plan;
+    WaypointNavigation waypoint_navigation;
+    CollisionDetector *p_collision_detector;
+
     /**
-     * Width of the path corridor
+     * Configurable parameters
      */
     double d_corridor_width;
-    /**
-     * Indicates if the arm is initialized or not
-     */
-    bool b_ArmReady;
-    /**
-     * Waypoint Navigation class
-     */
-    WaypointNavigation waypoint_navigation;
-    /**
-     * Index to current segment
-     */
-    int i_current_segment;
-    /**
-     * Index to initial segment
-     */
-    int i_initial_segment;
+    double d_dist_to_sample; //Rover-sample distance
     unsigned int ui_num_joints = 6;
+    std::vector<double> vd_arm_posmargin = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2};
+
+    /**
+     * Flags and indexes
+     */
+    bool b_ArmReady; //Arm is initialized or not
     bool b_is_last_segment;
-    /**
-     * Vector of pointers to each waypoint of the present path
-     */
-    std::vector<base::Waypoint *> vpw_path;
-    /**
-     * Motion Command class
-     */
-    proxy_library::MotionCommand motion_command;
-    /**
-     * Coupled Control class
-     */
-    coupledControl coupled_control;
-    /**
-     * Collision Detector class
-     */
-    CollisionDetector *p_collision_detector;
-    /**
-     * The arm motion profile
-     */
-    std::vector<std::vector<double>> *pvvd_arm_motion_profile;
-    /**
-     * The sweeping arm motion profile
-     */
-    std::vector<std::vector<double>> *pvvd_arm_sweeping_profile;
-    /**
-     * The initial arm motion times
-     */
-    std::vector<double> *pvd_arm_sweeping_times;
-    /**
-     * The initial arm motion profile
-     */
-    std::vector<std::vector<double>> *pvvd_init_arm_profile;
-    /**
-     * The initial arm motion times
-     */
-    std::vector<double> *pvd_init_time_profile;
-    /**
-     * The retrieval arm motion profile
-     */
-    std::vector<std::vector<double>> *pvvd_retrieval_arm_profile;
-    /**
-     * The retrieval arm motion times
-     */
-    std::vector<double> *pvd_retrieval_time_profile;
-    /**
-     * The next configuration to be reached by the arm
-     */
-    std::vector<double> vd_arm_present_readings;
-    std::vector<double> vd_arm_present_command;
-    std::vector<double> vd_arm_abs_speed;
-    /**
-     * The previous arm state
-     */
-    std::vector<double> vd_arm_previous_command;
-    /**
-     * The present state of the Executor Class
-     */
-    ArmExecutionState armstate;
-    /**
-     * The present state of the Waypoint Navigation
-     */
-    NavigationState navstate;
-    // Temporal fix for motion command bug
-    void fixMotionCommand(MotionCommand &mc_m);
-
-    bool updateArmPresentReadings(const Joints &j_present_joints_m);
-    bool prepareNextArmCommand(Joints &j_next_arm_command);
-    bool updateArmCommandVectors();
-    bool updateArmCommandVectors(
-        const std::vector<double> &vd_present_command_m);
-
-    bool assignPresentCommand(Joints &j_command);
-    std::vector<double> vd_arm_posmargin
-        = {0.2,
-           0.2,
-           0.2,
-           0.2,
-           0.2,
-           0.2}; // TODO - Adhoc margin for arm positions
-    int i_iteration_counter;
-    int i_lookahead_iterator;
+    int i_current_segment;
+    int i_initial_segment;
     int i_current_coverage_index;
     int i_current_init_index;
     int i_current_retrieval_index;
-    double d_call_period;
+
+    /**
+     * Motion profiles and path/time references
+     */
+    std::vector<std::vector<double>> *pvvd_arm_motion_profile;
+    std::vector<std::vector<double>> *pvvd_arm_sweeping_profile;
+    std::vector<std::vector<double>> *pvvd_init_arm_profile;
+    std::vector<std::vector<double>> *pvvd_retrieval_arm_profile;
+    std::vector<base::Waypoint *> vpw_path; //Pointers to rover path
+    std::vector<double> *pvd_arm_sweeping_times;
+    std::vector<double> *pvd_init_time_profile;
+    std::vector<double> *pvd_retrieval_time_profile;
+
+    /**
+     * Last Section Control parameters
+     */
+    std::vector<std::vector<double>> *pvvd_turning_curvature_matrix;
+    std::vector<std::vector<double>> *pvvd_turning_angle_matrix;
+    std::vector<double> *pvd_lsc_x0;
+    std::vector<double> *pvd_lsc_y0;
+
+    /**
+     * Control Variables
+     */
+    std::vector<double> vd_arm_previous_command;
+    std::vector<double> vd_arm_present_command;
+    std::vector<double> vd_arm_present_readings;
     double d_operational_time;
     unsigned int ui_current_timestamp;
     unsigned int ui_past_timestamp;
+
+    /*
+     * Update Functions
+     */
+    bool updateArmPresentReadings(
+		             const proxy_library::Joints &j_present_joints_m);
+    bool updateArmCommandVectors();
+    bool updateArmCommandVectors(
+                             const std::vector<double> &vd_present_command_m);
+    bool assignPresentCommand(proxy_library::Joints &j_command);
+
+    /*
+     * Supporting Functions
+     */
+    void fixMotionCommand(proxy_library::MotionCommand &mc_m);
+    double computeBilinearInterpolation(double x, double y, 
+		double x1, double x2, double y1, double y2, double Q11, 
+		double Q12, double Q21, double Q22);
+
 public:
+
     /**
      * Class Constructor using the present motion plan
      */
     MobileManipExecutor(MotionPlan *presentMotionPlan,
-                        std::string s_urdf_path_m);
+                        std::string s_urdf_path_m,
+			unsigned int ui_operation_mode = 3);
+ 
+    /**
+     * Initialization 
+     */
+    void setOperationMode(unsigned int ui_operation_mode, std::string s_urdf_path_m);
+    void initializeArmVariables(const proxy_library::Joints &j_present_readings);
+    void resetOperationTime();
+
     /**
      * Update the data extracted from the motion plan
      */
     void updateMotionPlan();
     void updateRetrieval();
     void updateDeployment();
+
     /**
      * Indicates whether the rover is within the corridor or not
      */
     bool isRoverWithinCorridor(base::Pose pose_rover);
+    bool isArmReady(proxy_library::Joints &j_next_command,
+                    const proxy_library::Joints &j_present_joints);
+    bool isArmColliding();
+    bool isArmFollowing(const proxy_library::Joints &j_next_command,
+                        const proxy_library::Joints &j_present_joints);
+    bool isArmMoving(const proxy_library::Joints &j_present_joints);
+    bool isCoupledMoving();
+    bool isAligned(base::Pose &rover_pose);
 
     /**
-     * Indicates whether the execution of the present operation is completed
-     * or not
-     */
-    bool isRoverFinished();
-    /**
-     * Provides the next arm command according to the present situation
+     * Provides the next commands according to the present situation
      */
     unsigned int getCoupledCommand(
-        base::Pose &rover_pose,
-        const proxy_library::Joints &j_arm_present_readings_m,
-        proxy_library::MotionCommand &mc_m,
-        proxy_library::Joints &j_next_arm_command_m);
-    /**
-     * Checks if the arm is at Ready position
-     */
-    bool isArmReady(const proxy_library::Joints &j_next_command,
-                    const proxy_library::Joints &j_present_joints);
-    /**
-     * Checks if the arm is currently colliding
-     */
-    bool isArmColliding();
-    /**
-     * Checks if the arm is still following the arm commands
-     */
-    bool isArmFollowing(const Joints &j_next_command,
-                        const Joints &j_present_joints);
-    /**
-     * Returns a (0,0,0) rover command
-     */
+                    base::Pose &rover_pose,
+                    const proxy_library::Joints &j_arm_present_readings_m,
+                    proxy_library::MotionCommand &mc_m,
+                    proxy_library::Joints &j_next_arm_command_m);
+    unsigned int getAtomicCommand(
+		    const proxy_library::Joints &j_arm_present_readings_m,
+                    proxy_library::Joints &j_next_arm_command_m,
+                    unsigned int ui_mode);
     proxy_library::MotionCommand getZeroRoverCommand();
-    /**
-     * Arm Variables Initialization
+    bool getLastSectionCommand(base::Pose &rover_pose, proxy_library::MotionCommand &mc);
+
+    /*
+     * Get Data
      */
-    void initializeArmVariables(const Joints &j_present_readings);
-    void resetIterator();
-    unsigned int getAtomicCommand(const Joints &j_arm_present_readings_m,
-                                      Joints &j_next_arm_command_m,
-				      unsigned int ui_mode);
     std::vector<double> *getArmCurrentReadings();
     std::vector<double> *getFirstCoverageProfile();
     std::vector<double> *getLastCoverageProfile();
+    void printExecutionStatus();
+
 };

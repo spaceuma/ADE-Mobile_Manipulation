@@ -1,34 +1,62 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "MotionPlan.h"
 
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
-                       double d_zres_m,
-                       std::string s_urdf_path_m)
+                       std::string s_urdf_path_m,
+		       unsigned int ui_deployment)
 {
+
     this->pmm_map = pmmmap_m;
-    this->d_zres = d_zres_m;
+    this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m; 
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
     this->s_urdf_path = s_urdf_path_m;
-    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, false, 1);
+    this->p_arm_planner = new ArmPlanner(s_urdf_path_m, true, ui_deployment);
     this->p_collision_detector = new CollisionDetector(s_urdf_path_m);
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
+    
+    std::cout << "[MM] \033[1;35m[----------] [MotionPlan::MotionPlan()]\033[0m Motion Plan successfully constructed" << std::endl;
 
-    this->vd_retrieval_position.resize(6);
-    this->vd_retrieval_position[0] = 0.45;
-    this->vd_retrieval_position[1] = -1.83;
-    this->vd_retrieval_position[2] = 2.79;
-    this->vd_retrieval_position[3] = 0.0;
-    this->vd_retrieval_position[4] = -0.5;
-    this->vd_retrieval_position[5] = 2.3562;
 }
 
+
 MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
-                       double d_zres_m,
                        std::string s_urdf_path_m,
                        std::vector<Waypoint> &vw_rover_path_m,
                        std::vector<std::vector<double>> &m_arm_motion_profile)
 {
     this->pmm_map = pmmmap_m;
-    this->d_zres = d_zres_m;
+    this->d_zres = 0.8*this->pmm_map->getResolution(); //d_zres_m;
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::MotionPlan()]\033[0m Z-Resolution is " << this->d_zres << " meters" << std::endl;
     this->s_urdf_path = s_urdf_path_m;
     this->vw_rover_path.clear();
     this->p_arm_planner = new ArmPlanner(s_urdf_path_m, false, 1);
@@ -49,6 +77,12 @@ MotionPlan::MotionPlan(MobileManipMap *pmmmap_m,
         this->vvd_arm_motion_profile.push_back(row);
         row.clear();
     }
+    std::cout << "[MM] \033[1;35m[----------] [MotionPlan::MotionPlan()]\033[0m Motion Plan successfully constructed" << std::endl;
+}
+
+void MotionPlan::setDeployment(unsigned int ui_deployment)
+{
+    this->p_arm_planner->setDeployment(ui_deployment);
 }
 
 unsigned int MotionPlan::computeRoverBasePathPlanning(
@@ -67,29 +101,60 @@ unsigned int MotionPlan::computeRoverBasePathPlanning(
     {
         return 3;
     }
+    
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Getting Cost Map from MMMap" << std::endl;
     this->pmm_map->getCostMap(costMap);
-    //    std::cout << "Rover pos is " << rover_position.position[0] << ", " <<
-    //    rover_position.position[1] << std::endl;
-    this->w_rover_pos = rover_position;
-    if (this->bi_fast_marching.planPath(&costMap,
-                                        this->pmm_map->getResolution(),
-                                        rover_position,
-                                        this->pmm_map->getSample(),
-                                        &(this->vw_rover_path)))
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Got the Cost Map" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Starting Path Planning with biFM" << std::endl;
+    
+    if (this->bifm_planner.planPath(&costMap, //this->pmm_map->getCostMap(),
+                                    this->pmm_map->getResolution(),
+                                    rover_position,
+                                    this->pmm_map->getSample(),
+                                    &(this->vw_rover_path)))
     {
         if (isSmoothPath())
         {
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with biFM" << std::endl;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Path is degenerated, input cost map not smooth enough" << std::endl;
             return 5;
         }
     }
     else
     {
-        return 4;
+        std::cout << "[MM] \033[35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Changing to (uni)FM" << std::endl;
+        if (this->fm_planner.planPath(&costMap, //this->pmm_map->getCostMap(), 
+                                      this->pmm_map->getResolution(),
+                                      rover_position,
+                                      this->pmm_map->getSample(),
+                                      &(this->vw_rover_path)))
+        {
+            if (isSmoothPath())
+            {
+                std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Computed path with (uni)FM" << std::endl;
+                return 0;
+            }
+            else
+            {
+                std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m Path is degenerated, input cost map not smooth enough" << std::endl;
+                return 5;
+            }           
+	}
+	else
+	{
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeRoverBasePathPlanning()]\033[0m There is no feasible path to obtain" << std::endl;
+            return 4;
+	}
     }
+}
+
+bool MotionPlan::isPathColliding()
+{
+    return this->pmm_map->checkObstacles(this->vw_rover_path);
 }
 
 bool MotionPlan::isSmoothPath()
@@ -100,7 +165,7 @@ bool MotionPlan::isSmoothPath()
     }
     double d_segmentX1, d_segmentY1, d_segmentX2, d_segmentY2, d_norm1, d_norm2,
         d_diffheading;
-    for (int i = 2; i < vw_rover_path.size() - 1;
+    for (unsigned int i = 2; i < vw_rover_path.size() - 1;
          i++) // Final Waypoint is sometimes tricky due to FM computation, so it
               // is left anyways
     {
@@ -130,27 +195,17 @@ bool MotionPlan::shortenPathForFetching()
 {
     // TODO- Make this cut a shorter distance, taking into account tol_position
     // from Waypoint Navigation
-    int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
-        &(this->vw_rover_path));
+    unsigned int endWaypoint = this->fetching_pose_estimator.getFetchWaypointIndex(
+        &(this->vw_rover_path), this->pmm_map->getMinReach(), this->pmm_map->getMaxReach());
     if (endWaypoint == 0)
     {
-        if (this->vw_rover_path.size() > 2)
-        {
-            this->vw_rover_path.erase(this->vw_rover_path.begin() + 1,
-                                      this->vw_rover_path.end());
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        std::cout << "[MM] \033[35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Cannot Shorten the path" << std::endl;
+        return false;
     }
     else
     {
-        int i_eraseIndex = endWaypoint + 1;
-        // std::cout << "The path size is " << this->vw_rover_path.size() <<
-        // std::endl; std::cout << "The endWaypoint is " << endWaypoint <<
-        // std::endl;
+        unsigned int i_eraseIndex = endWaypoint + 1;
+        std::cout << "[MM] \033[35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Shortening the path to waypoint " << endWaypoint << std::endl;
         if (endWaypoint < this->vw_rover_path.size() - 3)
         {
             double d_segmentX = this->vw_rover_path[i_eraseIndex].position[0]
@@ -169,7 +224,6 @@ bool MotionPlan::shortenPathForFetching()
                              - this->vw_rover_path[endWaypoint].position[1];
                 d_norm = sqrt(pow(d_segmentX, 2) + pow(d_segmentY, 2));
             }
-            std::cout << "The erase index is " << i_eraseIndex << std::endl;
             this->vw_rover_path.erase(this->vw_rover_path.begin()
                                           + i_eraseIndex,
                                       this->vw_rover_path.end());
@@ -180,100 +234,196 @@ bool MotionPlan::shortenPathForFetching()
                                           + 1,
                                       this->vw_rover_path.end());
         }
-        // Here we shorten the path as well at the beginning
-        /*int i_path_index = 0;
-        if (this->vw_rover_path.size()>3)
-        {
-            double d_segmentX = this->vw_rover_path[i_path_index].position[0] -
-        this->vw_rover_path[0].position[0]; double d_segmentY =
-        this->vw_rover_path[i_path_index].position[1] -
-        this->vw_rover_path[0].position[1]; double d_norm =
-        sqrt(pow(d_segmentX,2)+pow(d_segmentY,2)); while ((i_path_index <
-        this->vw_rover_path.size() - 2)&&(d_norm < 0.5))//TODO-Introduce here
-        configurable position tolerance
-            {
-                    i_path_index += 1;
-                    d_segmentX = this->vw_rover_path[i_path_index].position[0] -
-        this->vw_rover_path[0].position[0]; d_segmentY =
-        this->vw_rover_path[i_path_index].position[1] -
-        this->vw_rover_path[0].position[1]; d_norm =
-        sqrt(pow(d_segmentX,2)+pow(d_segmentY,2));
-            }
-            std::cout << "The initial erase index is " << i_path_index <<
-        std::endl; this->vw_rover_path.erase(this->vw_rover_path.begin(),
-                                  this->vw_rover_path.begin() + i_path_index);
-
-        }*/
     }
+    std::cout << "[MM] \033[1;35m[----------] [MotionPlan::shortenPathForFetching()]\033[0m Path is shortened" << std::endl;
     return true;
 }
 
+void MotionPlan::addSampleWaypointToPath()
+{
+
+    base::Waypoint w_sample = this->pmm_map->getSample();
+    this->vw_rover_path.push_back(w_sample);
+
+}
+
+
 unsigned int MotionPlan::computeArmProfilePlanning()
 {
-    // TODO - Create here several profiles: init, coupled, sweeping and
-    // retrieval
+    
     this->b_is_retrieval_computed = false;
     this->b_is_initialization_computed = false;
     if (!this->pmm_map->isSampleLoaded())
     {
+        std::cout << "[MM] \033[1;33m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Sample was not loaded " << std::endl;
         return 3;
     }
+
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Getting Elevation Map from MMMap class" << std::endl;
     std::vector<std::vector<double>> elevationMap;
+    // TODO: Check this! Using a pointer would be much better
     this->pmm_map->getElevationMapToZero(elevationMap);
-    if (this->p_arm_planner->planArmMotion(&(this->vw_rover_path),
-                                           &elevationMap,
-                                           this->pmm_map->getResolution(),
-                                           this->d_zres,
-                                           this->pmm_map->getSample(),
-                                           &(this->vvd_arm_motion_profile)))
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Got Elevation Map from MMMap class" << std::endl;
+
+    std::vector<base::Waypoint> *pvw_reference_path;
+    std::vector<base::Waypoint> vw_reference_path;
+
+
+    unsigned int ui_deployment = 2; //TODO: make this take the true current one
+    bool b_halfPath = false; //TODO: make this take the true current one
+    unsigned int ui_nWaypoints = (uint)(this->vw_rover_path.size()/2);
+    while(ui_deployment >= 0)
     {
-        // Initialization
-        if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
+        if (b_halfPath)
+	{
+            vw_reference_path.resize(ui_nWaypoints);
+	    for (uint i = 0; i < vw_reference_path.size(); i++)
+	    {
+                vw_reference_path[i] = this->vw_rover_path[i + this->vw_rover_path.size() - ui_nWaypoints]; 
+	    }
+
+	}
+	else
+	{
+	    vw_reference_path.resize(this->vw_rover_path.size());
+	    for (uint i = 0; i < vw_reference_path.size(); i++)
+	    {
+                vw_reference_path[i] = this->vw_rover_path[i]; 
+	    }
+	}
+        pvw_reference_path = &(vw_reference_path);
+	this->vvd_arm_motion_profile.clear();
+
+	if (this->p_arm_planner->planArmMotion(pvw_reference_path,
+                                               &elevationMap,
+                                               this->pmm_map->getResolution(),
+                                               this->d_zres,
+                                               this->pmm_map->getSample(),
+                                               &(this->vvd_arm_motion_profile),
+            				   this->p_collision_detector))
         {
-            std::cout << "Raw Profile is safe, with "
-                      << this->vvd_arm_motion_profile.size() << " samples"
-                      << std::endl;
-            if (this->vvd_arm_motion_profile.size()
-                > this->i_gauss_numsamples * 2)
+            //std::cout << " Done " << std::endl;
+            // Initialization
+            if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
             {
-                this->p_arm_planner->computeArmProfileGaussSmoothening(
-                    &(this->vvd_arm_motion_profile),
-                    &(this->vvd_smoothed_arm_motion_profile),
-                    this->d_gauss_sigma,
-                    this->i_gauss_numsamples);
-                if (this->isArmProfileSafe(
-                        this->vvd_smoothed_arm_motion_profile))
+		if (b_halfPath)
+		{
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Rover Reference Path waypoints = " << vw_reference_path.size() << std::endl;
+                    this->vw_rover_path.resize(ui_nWaypoints);
+                    this->vw_rover_path.insert(this->vw_rover_path.end(),
+				    vw_reference_path.begin(), vw_reference_path.end());
+		    for (uint i = 0; i < ui_nWaypoints; i++)
+		    {
+                        this->vvd_arm_motion_profile.insert(this->vvd_arm_motion_profile.begin(), this->vvd_arm_motion_profile[0]);
+		    }    
+		}
+		else
+		{
+
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Rover Reference Path waypoints = " << vw_reference_path.size() << std::endl;
+                    this->vw_rover_path.resize(vw_reference_path.size());
+		    for (uint i = 0; i < vw_reference_path.size(); i++)
+		    {
+                        this->vw_rover_path[i] = vw_reference_path[i];
+		    }
+
+		}
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m ui_nWaypoints" << ui_nWaypoints << std::endl;
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Rover Path waypoints = " << this->vw_rover_path.size() << std::endl;
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is safe, with "
+                          << this->vvd_arm_motion_profile.size() << " samples"
+                          << std::endl;
+                if (this->vvd_arm_motion_profile.size()
+                    > this->ui_gauss_numsamples * 2)
                 {
-                    this->vvd_arm_motion_profile.clear();
-                    std::vector<double> row;
-                    for (uint j = 0; j < vvd_smoothed_arm_motion_profile.size();
-                         j++)
+                    this->p_arm_planner->computeArmProfileGaussSmoothening(
+                        &(this->vvd_arm_motion_profile),
+                        &(this->vvd_smoothed_arm_motion_profile),
+                        this->d_gauss_sigma,
+                        this->ui_gauss_numsamples);
+                    if (this->isArmProfileSafe(
+                            this->vvd_smoothed_arm_motion_profile))
                     {
-                        for (uint i = 0;
-                             i < vvd_smoothed_arm_motion_profile[0].size();
-                             i++)
+                        this->vvd_arm_motion_profile.clear();
+                        std::vector<double> row;
+                        for (uint j = 0; j < vvd_smoothed_arm_motion_profile.size();
+                             j++)
                         {
-                            row.push_back(
-                                vvd_smoothed_arm_motion_profile[j][i]);
+                            for (uint i = 0;
+                                 i < vvd_smoothed_arm_motion_profile[0].size();
+                                 i++)
+                            {
+                                row.push_back(
+                                    vvd_smoothed_arm_motion_profile[j][i]);
+                            }
+                            this->vvd_arm_motion_profile.push_back(row);
+                            row.clear();
                         }
-                        this->vvd_arm_motion_profile.push_back(row);
-                        row.clear();
+                        this->vvd_arm_motion_profile
+                            = this->vvd_smoothed_arm_motion_profile;
                     }
-                    this->vvd_arm_motion_profile
-                        = this->vvd_smoothed_arm_motion_profile;
                 }
+                std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Motion Profile Computed and Smoothed" << std::endl;
+                return 0;
             }
-            return 0;
+            else
+            {
+                std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not safe, with "
+                          << this->vvd_arm_motion_profile.size() << " samples"
+                          << std::endl;
+                if (b_halfPath)
+	        {
+	            std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy " << ui_deployment << " not valid" << std::endl;
+                    if (ui_deployment >0)
+	            {
+                        ui_deployment -= 1;
+                        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying with deployment " << ui_deployment << std::endl;
+                        this->setDeployment(ui_deployment);
+                        std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying again witht Tunnel from the beginning" << std::endl;
+		        b_halfPath = false;
+	            }
+	            else
+	            {
+                        std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Profile could be not computed using any of the deployment approaches" << std::endl;
+	                return 1;
+	            }
+	        }
+	        else
+	        {
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Now trying with Tunnel starting from half the path" << std::endl;
+                    b_halfPath = true;
+	        }
+            }
         }
         else
         {
-            return 1;
+            if (b_halfPath)
+	    {
+	        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy " << ui_deployment << " not valid" << std::endl;
+                if (ui_deployment >0)
+	        {
+                    ui_deployment -= 1;
+                std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying with deployment " << ui_deployment << std::endl;
+                    this->setDeployment(ui_deployment);
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Trying again witht Tunnel from the beginning" << std::endl;
+		    b_halfPath = false;
+	        }
+	        else
+	        {
+                    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Arm Profile could be not computed using any of the deployment approaches" << std::endl;
+	            return 2;
+	        }
+	    }
+	    else
+	    {
+                std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m Now trying with Tunnel starting from half the path" << std::endl;
+                b_halfPath = true;
+	    }
         }
     }
-    else
-    {
-        return 2;
-    }
+
+    return 2;
+
 }
 
 unsigned int MotionPlan::computeArmDeployment(
@@ -284,53 +434,53 @@ unsigned int MotionPlan::computeArmDeployment(
     this->vvd_init_arm_profile.clear();
     this->vd_init_time_profile.clear();
     this->b_is_initialization_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
-    {
-        return 3;
-    }
 
     double dxyres = this->pmm_map->getResolution();
     if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
     {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Z res = " << this->d_zres << std::endl;
         return 3;
     }
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = dxyres * (double)elevationMap[0].size() / 2.0; // TODO - Fix This
-    current_waypoint.position[1] = dxyres * (double)elevationMap.size() / 2.0;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
 
+    if (((w_goal.position[1] >= 0.0)&&(vd_arm_readings[0] <= 0.0))||((w_goal.position[1] <= 0.0)&&(vd_arm_readings[0] >= 0.0)))
+    {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Goal position hemisphere is not the same as arm's " << std::endl;
+        return 4; 
+    }
+
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m Starting to plan the arm deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            current_waypoint, // TODO - this should be avoided
             vd_arm_readings,
             w_goal,
             vd_orientation_goal,
             &(this->vvd_init_arm_profile),
             &(this->vd_init_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
-        if (this->isArmProfileSafe(this->vvd_init_arm_profile))
+    { 
+        if(this->vvd_init_arm_profile.empty())
+	{
+            this->vvd_init_arm_profile.push_back(vd_arm_readings);    
+	    this->vd_init_time_profile.push_back(0.0);
+	}
+	if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
-            this->b_is_initialization_computed = true;
+		//std::cout << "The size of the deployment profile is "  << this->vvd_init_arm_profile.size() << std::endl;  
+	    this->b_is_initialization_computed = true;
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Calculated profile for arm deployment is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Arm deployment computation not feasible" << std::endl;
         return 2;
     }
 }
@@ -341,71 +491,59 @@ unsigned int MotionPlan::computeArmDeployment(
 {
     this->vvd_init_arm_profile.clear();
     this->vd_init_time_profile.clear();
-    this->b_is_initialization_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
+    double dxyres = this->pmm_map->getResolution();
+
+    if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
     {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Z res = " << this->d_zres << std::endl;
         return 3;
     }
-    // TODO: check if elevationMap is properly formatted
-    // TODO: check if i_segment_m is valid!!
-    double dxyres = this->pmm_map->getResolution();
-    std::cout << " Resolution is " << dxyres << std::endl;
-    std::cout << " Z-res is " << this->d_zres << std::endl;
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = 3; // TODO - Fix This
-    current_waypoint.position[1] = 3;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
 
+
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmDeployment()]\033[0m Starting to plan the arm deployment" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            current_waypoint, // TODO - this should be avoided
             vd_arm_readings,
             vd_arm_goal,
             &(this->vvd_init_arm_profile),
             &(this->vd_init_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
+    { 
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             this->b_is_initialization_computed = true;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Calculated profile for arm deployment is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Arm deployment computation not feasible" << std::endl;
         return 2;
     }
 }
 
 unsigned int MotionPlan::computeArmDeployment(
-    int i_segment_m,
+    int i_segment_m,//TODO - Remove this...
     const std::vector<double> &vd_arm_readings)
 {
     this->vvd_init_arm_profile.clear();
     this->b_is_initialization_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
-    {
-        return 3;
-    }
+    // Here we deploy not to 0, but to a more advanced segment
+    i_segment_m = min(0, (int)(this->vvd_arm_motion_profile.size()-1));
+    //i_segment_m = min(40, (int)(this->vvd_arm_motion_profile.size()-1));
+
     // TODO: check if elevationMap is properly formatted
     // TODO: check if i_segment_m is valid!!
-    std::cout << "The segment is " << i_segment_m << std::endl;
-    for (uint i = 0; i < 6; i++)
+    //std::cout << "The segment is " << i_segment_m << std::endl;
+    /*for (uint i = 0; i < 6; i++)
     {
         std::cout << " Actual Joint " << i << " is " << vd_arm_readings[i]
                   << std::endl;
@@ -414,89 +552,88 @@ unsigned int MotionPlan::computeArmDeployment(
     {
         std::cout << " Goal Joint " << i << " is "
                   << this->vvd_arm_motion_profile[i_segment_m][i] << std::endl;
-    }
+    }*/
 
     double dxyres = this->pmm_map->getResolution();
-    std::cout << " Resolution is " << dxyres << std::endl;
-    std::cout << " Z-res is " << this->d_zres << std::endl;
+    if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
+    {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmDeployment()]\033[0m Z res = " << this->d_zres << std::endl;
+        return 3;
+    }
 
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            this->vw_rover_path[i_segment_m],
             vd_arm_readings,
             this->vvd_arm_motion_profile[i_segment_m],
             &(this->vvd_init_arm_profile),
             &(this->vd_init_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
+    {
         if (this->isArmProfileSafe(this->vvd_init_arm_profile))
         {
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmDeployment()]\033[0m The arm deployment is calculated with a profile size of " << this->vvd_init_arm_profile.size() << " samples" << std::endl;
             this->b_is_initialization_computed = true;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Calculated profile for arm deployment is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmDeployment()]\033[0m Arm deployment computation not feasible" << std::endl;
         return 2;
     }
 }
 
-unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init)
+unsigned int MotionPlan::computeArmRetrieval(const std::vector<double> &vd_init, int mode)
 {
+	//mode: 0 = atomic, 1 = coupled
     this->vvd_retrieval_arm_profile.clear();
     this->b_is_retrieval_computed = false;
-    std::vector<std::vector<double>> elevationMap;
-    if (!this->pmm_map->getElevationMapToZero(elevationMap))
-    {
-        return 3;
-    }
     double dxyres = this->pmm_map->getResolution();
-        if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
+    if ((dxyres <= 0.0)||(this->d_zres <= 0.0))
     {
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmRetrieval()]\033[0m Resolution values are not valid" << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmRetrieval()]\033[0m XY res = " << dxyres << std::endl;
+        std::cout << "[MM] \033[1;31m[----------] [MotionPlan::computeArmRetrieval()]\033[0m Z res = " << this->d_zres << std::endl;
         return 3;
     }
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = dxyres * (double)elevationMap[0].size() / 2.0; // TODO - Fix This
-    current_waypoint.position[1] = dxyres * (double)elevationMap.size() / 2.0;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
 
+    std::cout << "[MM] \033[35m[----------] [MotionPlan::computeArmRetrieval()]\033[0m Starting to plan the arm retrieval" << std::endl;
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             dxyres,
             this->d_zres,
-            // this->vw_rover_path[this->vw_rover_path.size()-1],
-            current_waypoint,
             vd_init,
             this->vd_retrieval_position,
             &(this->vvd_retrieval_arm_profile),
-            &(this->vd_retrieval_time_profile)))
-    { // TODO - This may return a segmentation fault, maybe because of a non
-      // initialized elevation map...
-        if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
+            &(this->vd_retrieval_time_profile),
+	    mode))
+    { 
+        if(this->vvd_retrieval_arm_profile.empty())
+	{
+            this->vvd_retrieval_arm_profile.push_back(vd_init);    
+	    this->vd_retrieval_time_profile.push_back(0.0);
+	}
+	if (this->isArmProfileSafe(this->vvd_retrieval_arm_profile))
         {
+            std::cout << "[MM] \033[1;35m[----------] [MotionPlan::computeArmRetrieval()]\033[0m The arm retrieval is calculated with a profile size of " << this->vvd_retrieval_arm_profile.size() << " samples" << std::endl;
             this->b_is_retrieval_computed = true;
             return 0;
         }
         else
         {
+            std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmRetrieval()]\033[0m Calculated profile for arm retrieval is not safe" << std::endl;
             return 1;
         }
     }
     else
     {
+        std::cout << "[MM] \033[1;31m[--ERROR---] [MotionPlan::computeArmRetrieval()]\033[0m Arm retrieval computation not feasible" << std::endl;
         return 2;
     }
 }
@@ -517,29 +654,20 @@ unsigned int MotionPlan::computeAtomicOperation()
     std::vector<double> initialArmConfiguration
         = {0.367174, -0.206004, 1.13099, 0, 0.645814, 0.367174};
 
-    base::Waypoint current_waypoint;
-    current_waypoint.position[0] = 3;
-    current_waypoint.position[1] = 3;
-    current_waypoint.position[2]
-        = elevationMap[(int)(current_waypoint.position[1]
-                                 / this->pmm_map->getResolution()
-                             + 0.5)][(int)(current_waypoint.position[0]
-                                               / this->pmm_map->getResolution()
-                                           + 0.5)]
-          + p_arm_planner->heightGround2BCS;
-    current_waypoint.heading = 0;
+    base::Waypoint goal_waypoint;
+    goal_waypoint.position[0] = 1;
+    goal_waypoint.position[1] = 1;
+    goal_waypoint.position[2] = 1;
 
-    vw_rover_path.push_back(current_waypoint);
+    std::vector<double> goal_orientation = {0, 0, 0};
 
     if (this->p_arm_planner->planAtomicOperation(
-            &elevationMap,
             this->pmm_map->getResolution(),
             this->d_zres,
-            vw_rover_path[0],
             initialArmConfiguration,
             goalArmConfiguration,
             &(this->vvd_arm_motion_profile),
-            &(this->vd_time_profile)))
+            &(this->vd_atomic_time_profile)))
     {
         if (this->isArmProfileSafe(this->vvd_arm_motion_profile))
         {
@@ -559,17 +687,23 @@ unsigned int MotionPlan::computeAtomicOperation()
 bool MotionPlan::isArmProfileSafe(
     const std::vector<std::vector<double>> &vvd_profile_m)
 {
-    for (int i = 0; i < vvd_profile_m.size(); i++)
+    for (unsigned int i = 0; i < vvd_profile_m.size(); i++)
     {
+        /*std::cout << " Joints = " << vvd_profile_m[i][0];
+            std::cout << " " << vvd_profile_m[i][1];
+            std::cout << " " << vvd_profile_m[i][2];
+            std::cout << " " << vvd_profile_m[i][3];
+            std::cout << " " << vvd_profile_m[i][4];
+            std::cout << " " << vvd_profile_m[i][5];*/
         if (this->p_collision_detector->isColliding(vvd_profile_m[i]))
         {
             std::cout << "ERROR at sample " << i << std::endl;
-            std::cout << " Joint 1 = " << vvd_profile_m[i][0];
-            std::cout << " Joint 2 = " << vvd_profile_m[i][1];
-            std::cout << " Joint 3 = " << vvd_profile_m[i][2];
-            std::cout << " Joint 4 = " << vvd_profile_m[i][3];
-            std::cout << " Joint 5 = " << vvd_profile_m[i][4];
-            std::cout << " Joint 6 = " << vvd_profile_m[i][5];
+            std::cout << " Joints = " << vvd_profile_m[i][0];
+            std::cout << " " << vvd_profile_m[i][1];
+            std::cout << " " << vvd_profile_m[i][2];
+            std::cout << " " << vvd_profile_m[i][3];
+            std::cout << " " << vvd_profile_m[i][4];
+            std::cout << " " << vvd_profile_m[i][5];
             return false;
         }
     }
@@ -586,12 +720,22 @@ unsigned int MotionPlan::getNumberWaypoints()
     return this->vw_rover_path.size();
 }
 
+unsigned int MotionPlan::getNumberDeploymentSamples()
+{
+    return this->vvd_init_arm_profile.size();
+}
+
+unsigned int MotionPlan::getNumberRetrievalSamples()
+{
+    return this->vvd_retrieval_arm_profile.size();
+}
+
 std::vector<std::vector<double>> *MotionPlan::getWristPath()
 {
     return this->p_arm_planner->getWristPath();
 }
 
-std::vector<std::vector<double>> *MotionPlan::getArmMotionProfile()
+std::vector<std::vector<double>> *MotionPlan::getCoupledArmMotionProfile()
 {
     return &(this->vvd_arm_motion_profile);
 }
@@ -600,6 +744,7 @@ std::vector<double> *MotionPlan::getBackArmMotionProfile()
 {
     return &(this->vvd_arm_motion_profile.back());
 }
+
 
 std::vector<std::vector<double>> *MotionPlan::getInitArmMotionProfile()
 {
@@ -610,6 +755,12 @@ std::vector<double> *MotionPlan::getBackInitArmMotionProfile()
 {
     return &(this->vvd_init_arm_profile.back());
 }
+
+bool MotionPlan::isInitArmMotionProfileEmpty()
+{
+    return this->vvd_init_arm_profile.empty();
+}
+
 
 std::vector<double> *MotionPlan::getInitArmTimeProfile()
 {
@@ -626,9 +777,9 @@ std::vector<double> *MotionPlan::getRetrievalArmTimeProfile()
     return &(this->vd_retrieval_time_profile);
 }
 
-std::vector<double> *MotionPlan::getTimeProfile()
+std::vector<double> *MotionPlan::getAtomicTimeProfile()
 {
-    return &(this->vd_time_profile);
+    return &(this->vd_atomic_time_profile);
 }
 
 std::vector<std::vector<std::vector<double>>> *MotionPlan::get3DCostMap()
@@ -636,24 +787,3 @@ std::vector<std::vector<std::vector<double>>> *MotionPlan::get3DCostMap()
     return this->p_arm_planner->getVolumeCostMap();
 }
 
-void MotionPlan::setArmGaussFilter(double sigma, int numsamples)
-{
-    if (sigma > 0.0)
-    {
-        this->d_gauss_sigma = sigma;
-    }
-    if (numsamples > 0) // TODO - Check if odd number
-    {
-        this->i_gauss_numsamples = numsamples;
-    }
-}
-
-bool MotionPlan::isRetrievalComputed()
-{
-    return b_is_retrieval_computed;
-}
-
-bool MotionPlan::isInitializationComputed()
-{
-    return b_is_initialization_computed;
-}

@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "FastMarching.h"
 #include <iostream>
 #include <math.h>
@@ -14,30 +44,44 @@ FastMarching::~FastMarching()
     ;
 }
 
-void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
+bool FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
                             double mapResolution,
                             base::Waypoint iniPos,
                             base::Waypoint finalPos,
                             std::vector<base::Waypoint> *path)
 {
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Input Map Res = " << mapResolution << std::endl;
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Input Map Cols = " << (*costMap)[0].size() << ", Rows = " << (*costMap).size() << std::endl;
+   
+    // Defining Starting and Goal Nodes 
     std::vector<int> goal(2, 0);
     std::vector<int> start(2, 0);
-
     goal[0] = (int)(finalPos.position[0] / mapResolution + 0.5);
     goal[1] = (int)(finalPos.position[1] / mapResolution + 0.5);
-
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
+
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Goal node = ( " << goal[0] << ", " << goal[1] << " )" << std::endl;
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Start node = ( " << start[0] << ", " << start[1] << " )" << std::endl;
+
 
     std::vector<std::vector<double>> *TMap
         = new std::vector<std::vector<double>>;
 
-    computeTMap(costMap, goal, start, TMap);
+    if(!computeTMap(costMap, goal, start, TMap))
+    {
+        std::cout << "[MM] \033[35m[--WARNING-] [FastMarching::planPath()]\033[0m Could not compute Total Cost Map properly" << std::endl;
+        return false;
+    }
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Total Cost Map is computed" << std::endl;
+    
     std::vector<std::vector<double>> *pathPos
         = new std::vector<std::vector<double>>;
 
+    //TODO: This process should return a boolean value...
     computePathGDM(TMap, start, goal, waypointDistance, pathPos);
+    std::cout << "[MM] \033[35m[----------] [FastMarching::planPath()]\033[0m Path is extracted" << std::endl;
 
     path->resize(pathPos->size());
     (*path)[0].position[0] = mapResolution * (*pathPos)[0][0];
@@ -57,6 +101,10 @@ void FastMarching::planPath(const std::vector<std::vector<double>> *costMap,
     (*path)[path->size() - 1].position[1]
         = mapResolution * (*pathPos)[path->size() - 1][1];
     (*path)[path->size() - 1].heading = (*path)[path->size() - 2].heading;
+
+
+    std::cout << "[MM] \033[1;35m[----------] [FastMarching::planPath()]\033[0m Path is successfully calculated" << std::endl;
+    return true;
 }
 
 void FastMarching::getShadowedCostMap(
@@ -70,17 +118,32 @@ void FastMarching::getShadowedCostMap(
     vi_goal[0] = (int)(finalPos.position[0] / d_map_resolution + 0.5);
     vi_goal[1] = (int)(finalPos.position[1] / d_map_resolution + 0.5);
 
+    //std::cout << "VI_GOAL is " << vi_goal[0] << ", " << vi_goal[1] << std::endl;
+
     std::vector<std::vector<double>> vvd_clear_costmap;
     std::vector<std::vector<double>> vvd_obstacle_costmap;
+    std::vector<std::vector<double>> *pvvd_closedmap
+        = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *pvvd_clear_totalcostmap
         = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *pvvd_obstacle_totalcostmap
         = new std::vector<std::vector<double>>;
 
     vvd_clear_costmap.clear();
+    vvd_clear_costmap.resize(vvi_obstacle_map.size(), std::vector<double>(vvi_obstacle_map[0].size()));
     vvd_obstacle_costmap.clear();
+    vvd_obstacle_costmap.resize(vvi_obstacle_map.size(), std::vector<double>(vvi_obstacle_map[0].size()));
 
-    std::vector<double> clear_row, obstacle_row;
+    
+    pvvd_closedmap->resize(vvi_obstacle_map.size(), std::vector<double>(vvi_obstacle_map[0].size()));
+    pvvd_clear_totalcostmap->resize(vvi_obstacle_map.size(), std::vector<double>(vvi_obstacle_map[0].size()));
+    
+    
+    pvvd_obstacle_totalcostmap->resize(vvi_obstacle_map.size(), std::vector<double>(vvi_obstacle_map[0].size()));
+    //std::cout << "TMap is resized" << std::endl;
+    //std::cout << "Size of obstacle map is " << vvi_obstacle_map[0].size() << ", " <<vvi_obstacle_map.size()<<std::endl;
+
+    //std::vector<double> clear_row(vvi_obstacle_map[0].size()), obstacle_row(vvi_obstacle_map[0].size());
     double value;
     for (int j = 0; j < vvi_obstacle_map.size(); j++)
     {
@@ -92,32 +155,45 @@ void FastMarching::getShadowedCostMap(
                          + pow(((float)j - vi_goal[1]), 2))
                     > d_max_distance / d_map_resolution))
             { // Nodes further from a certain distance to goal are omitted
-                clear_row.push_back(INFINITY);
-                obstacle_row.push_back(INFINITY);
+                //clear_row[i] = INFINITY;
+                //obstacle_row[i] = INFINITY;
+		vvd_clear_costmap[j][i] = INFINITY;
+		vvd_obstacle_costmap[j][i] = INFINITY;
             }
             else
             {
-                clear_row.push_back(1.0);
+		vvd_clear_costmap[j][i] = 1.0;
+                //clear_row[i] = 1.0;
                 if (vvi_obstacle_map[j][i] == 0)
                 { // Obstacle inside sampling area
-                    obstacle_row.push_back(sqrt(2));
+		    vvd_obstacle_costmap[j][i] = sqrt(2);
+                    //obstacle_row[i] = sqrt(2);
                 }
                 else
                 { // Sampling Area
+                    //obstacle_row[i] = 1.0;
+		    vvd_obstacle_costmap[j][i] = 1.0;
                     vvi_obstacle_map[j][i] = 1;
-                    obstacle_row.push_back(1.0);
                 }
             }
         }
-        vvd_clear_costmap.push_back(clear_row);
-        vvd_obstacle_costmap.push_back(obstacle_row);
-        clear_row.clear();
-        obstacle_row.clear();
+        //vvd_clear_costmap.push_back(clear_row);
+        //vvd_obstacle_costmap.push_back(obstacle_row);
     }
 
-    computeEntireTMap(&vvd_clear_costmap, vi_goal, pvvd_clear_totalcostmap);
+    //std::cout << "Both costmaps are created" << std::endl;
+
+    //std::cout << "-Clear-Cost at start is " << vvd_clear_costmap[vi_goal[1]][vi_goal[0]] << std::endl;
+    //std::cout << "-Obstacle-Cost at start is " << vvd_obstacle_costmap[vi_goal[1]][vi_goal[0]] << std::endl;
+
+    //std::cout << "Size of clear cost map is " << vvd_clear_costmap[0].size() << ", " <<vvd_clear_costmap.size()<<std::endl;
+    //std::cout << "Size of obstacle cost map is " << vvd_obstacle_costmap[0].size() << ", " <<vvd_obstacle_costmap.size()<<std::endl;
+    computeEntireTMap(&vvd_clear_costmap, vi_goal, pvvd_closedmap, pvvd_clear_totalcostmap);
+    //std::cout << "First TMap is computed" << std::endl;
+
     computeEntireTMap(
-        &vvd_obstacle_costmap, vi_goal, pvvd_obstacle_totalcostmap);
+        &vvd_obstacle_costmap, vi_goal, pvvd_closedmap, pvvd_obstacle_totalcostmap);
+    //std::cout << "Second TMap is computed" << std::endl;
 
     for (int j = 0; j < vvi_obstacle_map.size(); j++)
     {
@@ -144,19 +220,23 @@ void FastMarching::getShadowedCostMap(
 void FastMarching::computeEntireTMap(
     const std::vector<std::vector<double>> *costMap,
     std::vector<int> goal,
+    std::vector<std::vector<double>> *closedMap,
     std::vector<std::vector<double>> *TMap)
 {
-    int n = costMap->size();
-    int m = costMap[0].size();
+    int n = (*costMap).size();
+    int m = (*costMap)[0].size();
 
+    //std::cout << "N = " << n << std::endl;
+    //std::cout << "M = " << m << std::endl;
     std::vector<int> nodeTarget = goal;
 
-    std::vector<std::vector<double>> *closedMap
-        = new std::vector<std::vector<double>>;
+    //std::vector<std::vector<double>> *closedMap
+      //  = new std::vector<std::vector<double>>;
 
     closedMap->resize(n, std::vector<double>(m));
 
-    TMap->resize(n, std::vector<double>(m));
+    //TMap->resize(n, std::vector<double>(m));
+
 
     for (int i = 0; i < n; i++)
     {
@@ -193,13 +273,13 @@ void FastMarching::computeEntireTMap(
     }
 }
 
-void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
+bool FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
                                std::vector<int> goal,
                                std::vector<int> start,
                                std::vector<std::vector<double>> *TMap)
 {
-    int n = costMap->size();
-    int m = costMap[0].size();
+    int n = (*costMap).size();
+    int m = (*costMap)[0].size();
 
     std::vector<int> nodeTarget = goal;
 
@@ -245,9 +325,10 @@ void FastMarching::computeTMap(const std::vector<std::vector<double>> *costMap,
 
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1]))
         {
-            break;
+            return true;
         }
     }
+    return false;
 }
 
 void FastMarching::updateNode(std::vector<int> nodeTarget,

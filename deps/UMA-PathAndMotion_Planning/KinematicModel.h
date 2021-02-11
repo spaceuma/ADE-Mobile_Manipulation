@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #ifndef __KINEMATIC_MODEL__
 #define __KINEMATIC_MODEL__
 
@@ -87,13 +117,18 @@ public:
         = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
     std::vector<double> initialConfiguration
-        = {0.785398, -1.52075, 2.2, 0, 0, 0};
+        //= {0.8, -0.7, 1.0, 1.0, -1.1, 2.4};
+        //= {1.51, -0.9, 1.48, 0.0, -1.48, -2.7};
+        //= {1.4, -0.8, 1.1, 0.0, -1.48, -2.7};
+          = {1.4, -0.679, 1.119, 0.0, -1.48, -2.7};
 
-    std::vector<double> iniEEorientation = {pi, -pi / 2, 0};
+    std::vector<double> iniEEorientation = {0, pi/2, 0};
 
     // -- VARIABLES --
-    std::vector<std::vector<std::vector<double>>> *reachabilityMap;
-    std::vector<std::vector<std::vector<double>>> *reachabilityDistances;
+    std::vector<std::vector<std::vector<double>>> *reachabilityMap_Atomic;
+    std::vector<std::vector<std::vector<double>>> *reachabilityMap_Coupled;
+    std::vector<std::vector<std::vector<double>>> *reachabilityDistances_Atomic;
+    std::vector<std::vector<std::vector<double>>> *reachabilityDistances_Coupled;
     std::vector<double> *resolutions;
     std::vector<double> *minValues;
     std::vector<double> *maxValues;
@@ -117,7 +152,8 @@ public:
 
     std::vector<double> getPositionJoints(std::vector<double> position,
                                           int shoulder,
-                                          int elbow);
+                                          int elbow,
+					  double d_error_margin = 0.0);
 
     std::vector<double> getWristJoints(std::vector<double> positionJoints,
                                        std::vector<double> orientation);
@@ -131,9 +167,17 @@ public:
 
     void computeReachabilityMap(const double resXY, const double resZ);
 
-    int isReachable(std::vector<double> position);
+    int isReachable(std::vector<double> position, int mode);
 
-    double getDistanceToCollision(std::vector<double> position);
+    std::vector<double> getRelativePosition(std::vector<double> position);
+
+    std::vector<double> getAbsolutePosition(std::vector<double> position);
+
+    double getDistanceToCollision(std::vector<double> position, int mode);
+
+    std::vector<double> getReachabilityMapSize();
+    bool isFarFromLeg(double joint0, double d_z);
+    bool isFarFromMast(double joint0, double joint1, double joint2);
 };
 } // namespace KinematicModel_lib
 #endif

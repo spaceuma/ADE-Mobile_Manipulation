@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "FastMarching.h"
 #include <iostream>
 #include <math.h>
@@ -14,13 +44,14 @@ FastMarching3D::~FastMarching3D()
     ;
 }
 
-void FastMarching3D::planPath(
+bool FastMarching3D::planPath(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     double mapResolution,
     double zResolution,
     base::Waypoint iniPos,
     base::Waypoint finalPos,
-    std::vector<base::Waypoint> *path3D)
+    std::vector<base::Waypoint> *path3D,
+    unsigned int ui_max_iter)
 {
     std::vector<int> goal(3, 0);
     std::vector<int> start(3, 0);
@@ -29,20 +60,38 @@ void FastMarching3D::planPath(
     goal[1] = (int)(finalPos.position[1] / mapResolution + 0.5);
     goal[2] = (int)(finalPos.position[2] / zResolution + 0.5);
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::planPath()] \033[0m 3D Goal is ( " << goal[0] << ", " << goal[1] << ", " << goal[2] << ") " << std::endl;
+
     start[0] = (int)(iniPos.position[0] / mapResolution + 0.5);
     start[1] = (int)(iniPos.position[1] / mapResolution + 0.5);
     start[2] = (int)(iniPos.position[2] / zResolution + 0.5);
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::planPath()] \033[0m 3D Start is ( " << start[0] << ", " << start[1] << ", " << start[2] << ") " << std::endl;
+    
     std::vector<std::vector<std::vector<double>>> *TMap
         = new std::vector<std::vector<std::vector<double>>>;
 
-    computeTMap(costMap3D, goal, start, TMap);
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::planPath()] \033[0m About to compute the 3D Total Cost Map" << std::endl;
+    
+    if(!computeTMap(costMap3D, goal, start, TMap, ui_max_iter))
+    {
+        std::cout << "[MM] \033[35m[--WARNING-] [FastMarching3D::planPath()] \033[0m 3D Total Cost Map computation failed" << std::endl;
+        return false; //UNREACHABLE
+    }
+
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::planPath()] \033[0m 3D Total Cost Map is computed" << std::endl;
     std::vector<std::vector<double>> *path
         = new std::vector<std::vector<double>>;
 
-    computePathGDM(TMap, start, goal, waypointDistance, path);
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::planPath()] \033[0m Obtaining the 3D path" << std::endl;
+    if(!computePathGDM(TMap, start, goal, waypointDistance, path, ui_max_iter))
+    { 
+        std::cout << "[MM] \033[35m[--WARNING-] [FastMarching3D::planPath()] \033[0m 3D Path computation from Total Cost Map failed" << std::endl;
+	return false;
+    }
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::planPath()] \033[0m 3D Path obtained" << std::endl;
     path3D->resize(path->size());
 
     for (int i = 0; i < path->size(); i++)
@@ -51,13 +100,17 @@ void FastMarching3D::planPath(
         (*path3D)[i].position[1] = mapResolution * (*path)[i][1];
         (*path3D)[i].position[2] = zResolution * (*path)[i][2];
     }
+
+    std::cout << "[MM] \033[1;35m[----------] [FastMarching3D::planPath()] \033[0m 3D Path is successfully computed" << std::endl;
+    return true;
 }
 
-void FastMarching3D::computeTMap(
+bool FastMarching3D::computeTMap(
     const std::vector<std::vector<std::vector<double>>> *costMap3D,
     std::vector<int> goal,
     std::vector<int> start,
-    std::vector<std::vector<std::vector<double>>> *TMap)
+    std::vector<std::vector<std::vector<double>>> *TMap,
+    unsigned int ui_max_iter)
 {
     int n = costMap3D->size();
     int m = (*costMap3D)[0].size();
@@ -93,6 +146,12 @@ void FastMarching3D::computeTMap(
         }
     }
 
+    if((*closedMap)[start[1]][start[0]][start[2]] == 1)
+    {
+        std::cout << " \033[35m[----------]\033[0m [FastMarching3D::computeTMap()] ERROR: start is already closed" << std::endl;
+        std::cout << " \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m INFO The Total Cost Propagation cannot reach the start node " << start[0] << ", " << start[1] << ", " << start[2] << " from goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << std::endl;
+    } 
+
     (*closedMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 1;
 
     (*TMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 0;
@@ -100,11 +159,27 @@ void FastMarching3D::computeTMap(
     std::vector<double> *nbT = new std::vector<double>;
     std::vector<std::vector<int>> *nbNodes = new std::vector<std::vector<int>>;
 
+    //std::cout << "Updating the Goal" << std::endl;
     updateNode(nodeTarget, costMap3D, TMap, nbT, nbNodes, closedMap);
 
+    uint ui_iter = 1;
     while (nbT->size() > 0)
     {
-        nodeTarget = (*nbNodes)[0];
+        //std::cout << "\r 3D TMap computation - Iteration: " << ui_iter;
+        ui_iter++;
+	if (ui_iter > ui_max_iter*2)
+	{
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m ERROR: number of iterations has surpassed the limit ( " << ui_max_iter << " nodes )" << std::endl;
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m Debug info:" << std::endl;
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m  - Cost Value at start " << start[0] << ", " << start[1] << ", " << start[2] << ", " << " is " << (*costMap3D)[start[1]][start[0]][start[2]] << std::endl; 
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m  - Cost Value at goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << ", " << " is " << (*costMap3D)[goal[1]][goal[0]][goal[2]] << std::endl; 
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m  - Cost Value of last node visited " << nodeTarget[0] << ", " << nodeTarget[1] << ", " << nodeTarget[2] << ", " << " is " << (*costMap3D)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] << std::endl; 
+	    nodeTarget = (*nbNodes)[0];
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m  - Cost Value of next node to visit " << nodeTarget[0] << ", " << nodeTarget[1] << ", " << nodeTarget[2] << ", " << " is " << (*costMap3D)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] << std::endl; 
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m  - Narrow Band Size is: " << nbT->size() << " (nbT), " << nbNodes->size() << " (nbNodes)"  << std::endl;  
+	    return false;
+	}
+	nodeTarget = (*nbNodes)[0];
         nbNodes->erase(nbNodes->begin());
         nbT->erase(nbT->begin());
         (*closedMap)[nodeTarget[1]][nodeTarget[0]][nodeTarget[2]] = 1;
@@ -113,9 +188,15 @@ void FastMarching3D::computeTMap(
         if ((nodeTarget[0] == start[0]) && (nodeTarget[1] == start[1])
             && (nodeTarget[2] == start[2]))
         {
-            break;
+            std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m Done with " << ui_iter << " iterations" << std::endl;
+            //std::cout << "Done" << std::flush << std::endl;
+            return true; //The propagation wave reaches the start
         }
     }
+    //std::cout << "Done" << std::flush << std::endl;
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m INFO The Total Cost Propagation has not reached the start node " << start[0] << ", " << start[1] << ", " << start[2] << " from goal " << goal[0] << ", " << goal[1] << ", " << goal[2] << std::endl;
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::computeTMap()]\033[0m INFO Iterations: " << ui_iter << std::endl;
+    return false; //The propagation does not reach the start
 }
 
 void FastMarching3D::updateNode(
@@ -285,12 +366,13 @@ int FastMarching3D::getInsertIndex(std::vector<double> *nbT, double T)
     return i;
 }
 
-void FastMarching3D::computePathGDM(
+bool FastMarching3D::computePathGDM(
     const std::vector<std::vector<std::vector<double>>> *TMap,
     std::vector<int> initNode,
     std::vector<int> endNode,
     double tau,
-    std::vector<std::vector<double>> *path)
+    std::vector<std::vector<double>> *path,
+    unsigned int ui_max_iter)
 {
     std::vector<double> auxVector;
     auxVector.push_back((double)initNode[0]);
@@ -321,8 +403,10 @@ void FastMarching3D::computePathGDM(
         std::vector<std::vector<double>>(
             (*TMap)[0].size(), std::vector<double>((*TMap)[0][0].size())));
 
-    for (int k = 0; k < (int)15000 / tau; k++)
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::computePathGDM()]\033[0m Computing Gradient Descent Method" << std::endl;
+    for (int k = 0; k < ui_max_iter; k++)
     {
+        //std::cout << "\rk = " << k;
         computeGradient(TMap, path->at(path->size() - 1), G1, G2, G3);
         double dx = getInterpolatedPoint(path->at(path->size() - 1), G1);
         double dy = getInterpolatedPoint(path->at(path->size() - 1), G2);
@@ -462,10 +546,18 @@ void FastMarching3D::computePathGDM(
             break;
     }
 
+    std::cout << "[MM] \033[35m[----------] [FastMarching3D::computePathGDM()]\033[0m 3D extracted with Gradient Descent Method" << std::endl;
+    //std::cout << "...done!" << std::flush << std::endl;
+    if (path->size() >= ui_max_iter)
+    {
+        return false;
+    }
     auxVector[0] = (double)endNode[0];
     auxVector[1] = (double)endNode[1];
     auxVector[2] = (double)endNode[2];
     path->push_back(auxVector);
+    std::cout << "[MM] \033[1;35m[----------] [FastMarching3D::computePathGDM()]\033[0m Path successfully retrieved" << std::endl;
+    return true;
 }
 
 void FastMarching3D::computeGradient(
@@ -500,40 +592,41 @@ void FastMarching3D::computeGradient(
         imin = std::max(0, (int)(point[0] - 2.5));
         kmin = std::max(0, (int)(point[2] - 2.5));
     }
-
+/*
     std::vector<std::vector<std::vector<double>>> Gx, Gy, Gz;
 
     Gx.resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
     Gy.resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
     Gz.resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
-
+*/
+    double d_Gx, d_Gy, d_Gz;
     for (int i = imin; i < imax; i++)
         for (int j = jmin; j < jmax; j++)
             for (int k = kmin; k < kmax; k++)
             {
                 if (j == 0)
-                    Gy[0][i][k] = (*TMap)[1][i][k] - (*TMap)[0][i][k];
+                    d_Gy = (*TMap)[1][i][k] - (*TMap)[0][i][k];
                 else
                 {
                     if (j == n - 1)
-                        Gy[j][i][k] = (*TMap)[j][i][k] - (*TMap)[j - 1][i][k];
+                        d_Gy = (*TMap)[j][i][k] - (*TMap)[j - 1][i][k];
                     else
                     {
                         if (isinf((*TMap)[j + 1][i][k]))
                         {
                             if (isinf((*TMap)[j - 1][i][k]))
-                                Gy[j][i][k] = 0;
+                                d_Gy = 0;
                             else
-                                Gy[j][i][k]
+                                d_Gy
                                     = (*TMap)[j][i][k] - (*TMap)[j - 1][i][k];
                         }
                         else
                         {
                             if (isinf((*TMap)[j - 1][i][k]))
-                                Gy[j][i][k]
+                                d_Gy
                                     = (*TMap)[j + 1][i][k] - (*TMap)[j][i][k];
                             else
-                                Gy[j][i][k] = ((*TMap)[j + 1][i][k]
+                                d_Gy = ((*TMap)[j + 1][i][k]
                                                - (*TMap)[j - 1][i][k])
                                               / 2;
                         }
@@ -541,28 +634,28 @@ void FastMarching3D::computeGradient(
                 }
 
                 if (i == 0)
-                    Gx[j][0][k] = (*TMap)[j][1][k] - (*TMap)[j][0][k];
+                    d_Gx = (*TMap)[j][1][k] - (*TMap)[j][0][k];
                 else
                 {
                     if (i == m - 1)
-                        Gx[j][i][k] = (*TMap)[j][i][k] - (*TMap)[j][i - 1][k];
+                        d_Gx = (*TMap)[j][i][k] - (*TMap)[j][i - 1][k];
                     else
                     {
                         if (isinf((*TMap)[j][i + 1][k]))
                         {
                             if (isinf((*TMap)[j][i - 1][k]))
-                                Gx[j][i][k] = 0;
+                                d_Gx = 0;
                             else
-                                Gx[j][i][k]
+                                d_Gx
                                     = (*TMap)[j][i][k] - (*TMap)[j][i - 1][k];
                         }
                         else
                         {
                             if (isinf((*TMap)[j][i - 1][k]))
-                                Gx[j][i][k]
+                                d_Gx
                                     = (*TMap)[j][i + 1][k] - (*TMap)[j][i][k];
                             else
-                                Gx[j][i][k] = ((*TMap)[j][i + 1][k]
+                                d_Gx = ((*TMap)[j][i + 1][k]
                                                - (*TMap)[j][i - 1][k])
                                               / 2;
                         }
@@ -570,28 +663,28 @@ void FastMarching3D::computeGradient(
                 }
 
                 if (k == 0)
-                    Gz[j][i][0] = (*TMap)[j][i][1] - (*TMap)[j][i][0];
+                    d_Gz = (*TMap)[j][i][1] - (*TMap)[j][i][0];
                 else
                 {
                     if (k == l - 1)
-                        Gz[j][i][k] = (*TMap)[j][i][k] - (*TMap)[j][i][k - 1];
+                        d_Gz = (*TMap)[j][i][k] - (*TMap)[j][i][k - 1];
                     else
                     {
                         if (isinf((*TMap)[j][i][k + 1]))
                         {
                             if (isinf((*TMap)[j][i][k - 1]))
-                                Gz[j][i][k] = 0;
+                                d_Gz = 0;
                             else
-                                Gz[j][i][k]
+                                d_Gz
                                     = (*TMap)[j][i][k] - (*TMap)[j][i][k - 1];
                         }
                         else
                         {
                             if (isinf((*TMap)[j][i][k - 1]))
-                                Gz[j][i][k]
+                                d_Gz
                                     = (*TMap)[j][i][k + 1] - (*TMap)[j][i][k];
                             else
-                                Gz[j][i][k] = ((*TMap)[j][i][k + 1]
+                                d_Gz = ((*TMap)[j][i][k + 1]
                                                - (*TMap)[j][i][k - 1])
                                               / 2;
                         }
@@ -599,17 +692,17 @@ void FastMarching3D::computeGradient(
                 }
 
                 (*Gnx)[j][i][k]
-                    = Gx[j][i][k]
-                      / sqrt(pow(Gx[j][i][k], 2) + pow(Gy[j][i][k], 2)
-                             + pow(Gz[j][i][k], 2));
+                    = d_Gx
+                      / sqrt(pow(d_Gx, 2) + pow(d_Gy, 2)
+                             + pow(d_Gz, 2));
                 (*Gny)[j][i][k]
-                    = Gy[j][i][k]
-                      / sqrt(pow(Gx[j][i][k], 2) + pow(Gy[j][i][k], 2)
-                             + pow(Gz[j][i][k], 2));
+                    = d_Gy
+                      / sqrt(pow(d_Gx, 2) + pow(d_Gy, 2)
+                             + pow(d_Gz, 2));
                 (*Gnz)[j][i][k]
-                    = Gz[j][i][k]
-                      / sqrt(pow(Gx[j][i][k], 2) + pow(Gy[j][i][k], 2)
-                             + pow(Gz[j][i][k], 2));
+                    = d_Gz
+                      / sqrt(pow(d_Gx, 2) + pow(d_Gy, 2)
+                             + pow(d_Gz, 2));
             }
 }
 

@@ -1,3 +1,33 @@
+// MIT License
+// -----------
+// 
+// Copyright (c) 2021 University of Malaga
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Affiliation: Department of Systems Engineering and Automation
+// Space Robotics Lab (www.uma.es/space-robotics)
+
+
 #include "MMError.h"
 #include "MMStatus.h"
 #include "MobileManipExecutor.h"
@@ -16,244 +46,130 @@ class MobileManipMotionPlanner
 {
 
 private:
+
     /**
-     * Rover surronding map that would be used to generate the rover-manipulator
-     * trajectories.
+     * Pointers to sub-components
      */
-    MobileManipMap *p_mmmap;
+    MobileManipMap *p_mmmap; // Navigation Maps
+    MotionPlan *p_motionplan; // Motion Plan
+    MobileManipExecutor *p_mmexecutor; // Execution Handler
+
     /**
-     * The motion plan that is currently available.
+     * Software Execution Codes
      */
-    MotionPlan *p_motionplan;
+    MMStatus status; // Status
+    MMStatus priorStatus; //Previous Status
+    MMError error; // Error Type
+
     /**
-     * Object that run the execution of the planned trajectory.
+     * Read external config and threshold values
      */
-    MobileManipExecutor *p_mmexecutor;
+    bool readConfigFile();
+    
     /**
-     * Status of the motion planner:
-     * IDLE
-     * EXECUTING_ATOMIC_OPERATION
-     * GENERATING_MOTION_PLAN
-     * READY_TO_MOVE
-     * EXECUTING_MOTION_PLAN
-     * EXECUTING_ARM_OPERATION
-     * RETRIEVING_ARM
-     * FINISHED
-     * ERROR
-     * REPLANNING
-     * PAUSE
-     */
-    MMStatus status;
-    /**
-     * Attribute to indicate the error code
-     */
-    MMError error;
-    /**
-     * The status prior to entering to the current one. This is useful for
-     * entering and exiting PAUSE status.
-     */
-    MMStatus priorStatus;
-    /**
-     * The current position of the arm joints.
-     */
-    /**
-     * Set the current status
+     * Set Code
      */
     void setStatus(MMStatus status_m);
-    /**
-     * Set an error code
-     */
     void setError(MMError error_m);
 
-    base::Waypoint w_current_rover_position;
     /**
-     * Configurable parameter: Z resolution (in meters)
+     * Variables
      */
-    double d_zres = 0.08;
-    /**
-     * Configurable parameter: Avoidance Distance (in meters)
-     */
-    double d_avoid_dist = 1.0;
-    /**
-     * Configurable parameter: rover kinematic configuration (in meters)
-     * (d0, a1, a2, c2, a3, d4, d6) TODO - Maybe these values could be taken
-     * from urdf model?
-     */
-    std::vector<double> vd_kin_conf
-        = {0.5, 0.225, 0.735, 0.03, 0.03, 0.695, 0.3};
-
-    /**
-     * Z-distance from base reference frame to ground
-     */
-    double d_base_height = 0.645;
-
-    /**
-     * Z-distance margin from final end effector position and ground
-     */
-    double d_finalEE_height = 0.4;
-
-    /**
-     * Configurable parameter: Max arm fetching distance (in meters)
-     */
-    double d_maxfetching_dist
-        = vd_kin_conf[1]
-          + sqrt(pow(vd_kin_conf[2] + vd_kin_conf[5], 2)
-                 - pow(d_base_height + vd_kin_conf[0] - vd_kin_conf[6]
-                           - d_finalEE_height,
-                       2));
-    double d_minfetching_dist
-        = (d_maxfetching_dist < 0.24) ? 0.0 : (d_maxfetching_dist - 0.24);
-    bool b_is_atomic_deployed;
+    base::Waypoint w_current_rover_position;  // Rover Current Position (Local)
+    std::string s_configfile_path; // Path to Configuration File
+    bool b_is_atomic_deployed; // Flag for Atomic Operation
+    bool b_clear_underneath = false; // Sets the underneath as traversable or not
 
 public:
+
     /**
      * Constructor, it receives a DEM and generates the Map object.
      */
     MobileManipMotionPlanner(const RoverGuidance_Dem &navCamDEM,
-                             std::string s_urdf_path_m);
+                             std::string s_urdf_path_m,
+			     unsigned int ui_operation = 2);
 
     /**
-     * It generates a motion plan based on the Map, the rover pose and the
-     * sample position.
+     * IDLE Preparation Functions
+     */    
+    bool setArmTargetOperation(unsigned int ui_operation);
+    bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM); 
+
+    /**
+     * Coupled/Atomic Motion Plan Generation.
      */
     bool generateMotionPlan(proxy_library::Pose plpose_m,
                             const proxy_library::Joints &j_present_readings,
                             double d_sample_pos_x,
                             double d_sample_pos_y);
+    bool initAtomicOperation(const proxy_library::Joints &j_present_readings,
+		             const base::Waypoint &w_goal,
+			     double d_roll = 0.0,
+			     double d_pitch = 3.1416,
+			     double d_yaw = 0.0);
+    bool initArmReset(const proxy_library::Joints &j_present_readings);
 
     /**
-     * Serves to actively start moving the rover and arm once a motion plan is
-     * available.
+     * Harness Execution Control Functions.
      */
-    bool start();
-
-    /**
-     * It makes the software finish immediately.
-     */
-    bool abort();
-
-    /**
-     * It makes the software enter into the PAUSE state, first creating commands
-     * to stop the rover base.
-     */
-    bool pause(proxy_library::MotionCommand &rover_command);
-
-    /**
-     * It returns to the state indicated by priorStatus. Useful to exit the
-     * PAUSE state.
-     */
-    bool resumeOperation();
-    unsigned int updateAtomicOperation(Joints &arm_command, Joints arm_joints,
-		                       bool b_display_status = false);
-
-    /**
-     * It provides commands depending on the current position of the rover and
-     * the arm joints
-     */
+    bool start(); // Actively starts rover motion execution
+    bool abort(); // Execution finishes immediately
+    bool pause(proxy_library::MotionCommand &rover_command); // Goes to PAUSE
+    bool resumeOperation(); // Returns from PAUSE
+    void resumeError(); // Handles ERROR state
+    bool ack(); // Acknowledges the operation is finished
     bool updateRoverArmPos(proxy_library::Joints &arm_command,
                            proxy_library::MotionCommand &rover_command,
                            proxy_library::Pose rover_position,
                            proxy_library::Joints arm_joints);
+    unsigned int updateAtomicOperation(proxy_library::Joints &arm_command, proxy_library::Joints arm_joints,
+		                       bool b_display_status = false);
 
     /**
-     * Goal is updated during the execution of the motion plan. It requires to
-     * recalculate the motion plan taking into consideration the previously
-     * received DEM.
+     * Replanning Functions.
      */
     void updateSamplePos(proxy_library::Pose sample);
-
+    bool updateLocCamDEM(RoverGuidance_Dem locCamDEM,
+                         proxy_library::Joints &arm_command,
+                         proxy_library::MotionCommand &rover_command,
+                         proxy_library::Joints arm_joints);
+ 
     /**
-     * It serves to acknowledge by the user that the operation is completely
-     * finished.
+     * Software Execution User Information.
      */
-    bool ack();
-
-    /**
-     * It handles the error and behaves according to its type.
-     */
-    void resumeError();
-
-    /**
-     * Returns the indication of which error affects the software.
-     */
-    MMError getErrorCode();
-
-    /**
-     * It returns the status in which the software is.
-     */
-    MMStatus getStatus();
-
-    /**
-     * Sets the value of Z-resolution in meters.
-     */
-    bool setZres(double d_zres_m);
-
-    /**
-     * Sets the value of avoidance distance in meters.
-     */
-    bool setAvoidanceDistance(double d_avoid_dist_m);
-
-    /**
-     * Prints information regarding the resulting path.
-     */
+    MMError getErrorCode(); // Gets Error Code
+    MMStatus getStatus(); // Gets the Status
     void printRoverPathInfo();
-
-    /**
-     * Indicates the current status
-     */
+    void printExecutionInfo();
     void printStatus();
-
-    /**
-     * Returns the indication of which error affects the software.
-     */
     void printErrorCode();
-
-    /**
-     * Shows current values of different config variables
-     */
-    void printConfig();
-
-    /**
-     * Returns if the class is in status ERROR.
-     */
     bool isStatusError();
+
     /**
-     * Returns the current value of the rover yaw.
+     * Variables Information.
      */
-    double getCurrentRoverYaw();
-    /**
-     * A pointer to the current end effector path is returned
-     */
-    std::vector<std::vector<double>> *getWristPath();
-    /**
-     * A pointer to the current rover path is returned
-     */
-    std::vector<base::Waypoint> *getRoverPath();
-    std::vector<std::vector<double>> *getCostMap();
+    double getCurrentRoverYaw(); // Rover Heading Angle
+    std::vector<std::vector<double>> *getWristPath(); // Pointer to 3d Wrist Path
+    std::vector<base::Waypoint> *getRoverPath(); // Pointer to Rover Path
+    std::vector<double> *getOffset(); // Pointer to Offset
+    std::vector<std::vector<double>> *getCostMap(); //Pointer to Current CostMap
+    bool getMorphMaps(
+        std::vector<std::vector<double>> &vvd_elevation_map_m,
+        std::vector<std::vector<double>> &vvd_slope_map_m,
+        std::vector<std::vector<double>> &vvd_sd_map_m,
+        std::vector<std::vector<int8_t>> &vvi_validity_map_m);
+    bool getNavigationMaps(
+        std::vector<std::vector<int>> &vvi_traversability_map_m,
+        std::vector<std::vector<double>> &vvd_cost_map_m);
+
     /**
      * A pointer to the arm motion profile is returned
      */
     std::vector<std::vector<double>> *getArmMotionProfile();
+
     /**
      * A pointer to the 3d cost map is returned
      */
     std::vector<std::vector<std::vector<double>>> *get3DCostMap();
 
-    bool updateNavCamDEM(const RoverGuidance_Dem &navCamDEM);
-
-    /**
-     * It procceses the input LocCamDEM and triggers a replanning if necessary.
-     */
-    void updateLocCamDEM(RoverGuidance_Dem locCamDEM,
-                         proxy_library::Pose rover_position,
-                         Joints arm_joints);
-
-    /**
-     * It serves to perform an operation with only the arm.
-     */
-    bool initAtomicOperation(const Joints &j_present_readings,
-		             const base::Waypoint &w_goal,
-			     double d_roll = 0.0,
-			     double d_pitch = 3.1416,
-			     double d_yaw = 0.0);
 };

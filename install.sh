@@ -26,7 +26,7 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
 make
 
-cd data/planner
+cd $cur/data/planner
 rm urdfmodel_path.txt
 echo "$cur/data/planner" >> urdfmodel_path.txt
 mkdir results

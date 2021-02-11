@@ -5,10 +5,14 @@ import matplotlib.pyplot as plt
 #import scipy.ndimage
 from mayavi import mlab
 
-sizes = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), skiprows = 1, max_rows=1)
-minValues = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), skiprows = 2, max_rows=1)
-reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMap.txt",'r'), skiprows=3)
+#sizes = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), max_rows=1)
+sizes = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), max_rows=1)
+#resolutions = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows = 1, max_rows=1)
+resolutions = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows = 1, max_rows=1)
+#minValues = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows = 2, max_rows=1)
+minValues = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows = 2, max_rows=1)
+#reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows=3)
+reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows=3)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
