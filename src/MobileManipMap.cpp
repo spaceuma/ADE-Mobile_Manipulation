@@ -169,6 +169,7 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem,
             std::cout << "[MM] \033[35m[----------]"
 		    " [MobileManipMap::loadDEM()]\033[0m Allocating new maps"
 		    << std::endl;
+            
             // Common - Used for computation only
             this->vvd_elevation_map.clear();
             this->vvd_smoothed_elevation_map.clear();
@@ -182,22 +183,19 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem,
             this->vvd_ny_map.clear();
             this->vvd_nz_map.clear();
             this->vvi_face_obstacle_map.clear();
-            this->vvi_loc_obstacle_map.clear();
-            this->vvi_nav_obstacle_map.clear();
             this->vvi_traversability_map.clear();
             this->vvd_cost_map.clear();
             this->vvd_face_proximity_map.clear();
 	
 	    // Nav
-	    //this->vvd_nav_elevation_map.clear();	
-            //this->vvi_nav_validity_map.clear();
-            //this->vvi_nav_obstacle_map.clear();
+            this->vvi_nav_obstacle_map.clear();
             this->vvd_nav_proximity_map.clear();
 
             // Loc
             this->vvd_loc_elevation_map.clear();	
             this->vvi_loc_validity_map.clear();
             this->vvd_loc_proximity_map.clear();
+            this->vvi_loc_obstacle_map.clear();
 
 	    // Matrices initialization
             std::cout << "[MM] \033[35m[----------]"
@@ -306,65 +304,104 @@ unsigned int MobileManipMap::loadDEM(const RoverGuidance_Dem &dem,
 
     // Everything went fine
     return 0;
+
 }
 
 
+/*
+ * checkObstacles()
+ *  - Detect any obstacle the path may collide with
+ */
 
-bool MobileManipMap::checkObstacles(std::vector<base::Waypoint> &vw_rover_path_m) // Introduce here the path
+bool MobileManipMap::checkObstacles(
+		std::vector<base::Waypoint> &vw_rover_path_m)
 {
+
     std::vector<int> vi_pos(2, 0);
-    for (uint i = 0; i < vw_rover_path_m.size() - 1; i++) // Last waypoint is the sample
+   
+    // Last waypoint of the path is the sample
+    for (uint i = 0; i < vw_rover_path_m.size() - 1; i++)
     {
+
         vi_pos[0] = (int)(vw_rover_path_m[i].position[0] / this->d_res + 0.5);
         vi_pos[1] = (int)(vw_rover_path_m[i].position[1] / this->d_res + 0.5);
-    // TODO - take care of exceptions regarding unvalid indexes
-    // TODO - There may be cases where previous path is just a very small distance under d_occupancy_dist... due to checking with a node... (maybe interpolate?)
-        if (this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] <= this->d_dilation*this->d_occupancy_dist)
+        // TODO - take care of exceptions regarding unvalid indexes
+        
+        if (this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] <= 
+            this->d_dilation*this->d_occupancy_dist)
         {
-            std::cout << "Detected obstacle near waypoint " << i << ", which is ( " << vw_rover_path_m[i].position[0] << ", " << vw_rover_path_m[i].position[1] << " ), where proximity is " << this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] << std::endl;
+        
+            std::cout << "Detected obstacle near waypoint " << i << 
+               ", which is ( " << vw_rover_path_m[i].position[0] << ", " << 
+	       vw_rover_path_m[i].position[1] << " ), where proximity is " << 
+               this->vvd_loc_proximity_map[vi_pos[1]][vi_pos[0]] << std::endl;
             return true;
+            
         }
+    
     }
+    
     return false;
+
 }
 
 
+/*
+ * processValidityMap()
+ *  - Validity data is analyzed
+ *  - Valid ratio = valid / total pixels
+ *  - Contour ratio = contour / valid pixels
+ */
 
-// Valid ratio is the ratio between the number of valid pixels and the total
-// Contour ratio is the ratio between the number of corner pixels and valid
-// pixels
 void MobileManipMap::processValidityMap(double &d_valid_ratio,
                                         double &d_contour_ratio,
 				        bool b_isLoc)
 {
+
     Mat mat_valid_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
 
     unsigned int ui_point_counter = 0, ui_valid_pixels = 0,
                  ui_total_pixels = ui_num_cols * ui_num_rows;
+
+    // Storing the validity data
     for (int j = 0; j < mat_valid_map.rows; j++)
     {
+
         for (int i = 0; i < mat_valid_map.cols; i++)
         {
+
             this->vvi_validity_map[j][i]
                 = this->rg_dem.p_pointValidityFlag[i + j * this->ui_num_cols];
-	    if (b_isLoc)
+        
+            if (b_isLoc)
 	    {
+
                 this->vvi_loc_validity_map[j][i] = this->vvi_validity_map[j][i];
+
 	    }
 	    else
 	    {
+
                 this->vvi_nav_validity_map[j][i] = this->vvi_validity_map[j][i];
-	    }
+
+            }
+
             mat_valid_map.at<float>(j, i) = (float)this->vvi_validity_map[j][i];
+
             if (this->vvi_validity_map[j][i] == 1)
             {
+
                 ui_valid_pixels++;
+
             }
+
         }
+
     }
 
     mat_valid_map.convertTo(mat_valid_map, CV_8UC1);
+
     std::vector<std::vector<Point>> vvp_contours;
 
     findContours(
@@ -372,19 +409,29 @@ void MobileManipMap::processValidityMap(double &d_valid_ratio,
 
     for (unsigned int k = 0; k < vvp_contours.size(); k++)
     {
+
         ui_point_counter += vvp_contours[k].size();
+    
     }
 
     d_valid_ratio = (double)ui_valid_pixels / (double)ui_total_pixels;
     d_contour_ratio = (double)ui_point_counter / (double)ui_valid_pixels;
+
 }
 
 
+/*
+ * processElevationMap()
+ *  - Computes slope and roughness
+ */
+
 bool MobileManipMap::processElevationMap(bool b_isLoc)
 {
-    std::vector<double> row;
-    d_elevation_min = INFINITY;
 
+    // Resetting the minimum value of elevation
+    this->d_elevation_min = INFINITY;
+
+    // Storing the input elevation data
     for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
         for (unsigned int i = 0; i < this->ui_num_cols; i++)
@@ -407,15 +454,24 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
 
     std::cout << "[MM] \033[35m[----------]"
          " [MobileManipMap::processElevationMap()]\033[0m New Elevation Matrix"
-         " is saved, the min value of elevation is " << this->d_elevation_min << " meters" << std::endl; 
+         " is saved, the min value of elevation is " << this->d_elevation_min <<
+	 " meters" << std::endl; 
 
-    int i_occupancy_kernel = (int)(0.6 / this->d_res); // TODO: adhoc value of 0.6
+    int i_occupancy_kernel = (int)(0.6 / this->d_res); // TODO: adhoc value 0.6
     int i_nodes;
     double d_elevation;
+
+
+    /*
+     * 1 --Smoothing elevation with average filter--
+     */
+
     for (unsigned int j = 0; j < this->ui_num_rows; j++)
     {
+
         for (unsigned int i = 0; i < this->ui_num_cols; i++)
         {
+
             if (this->vvi_validity_map[j][i] == 1)
             {
                 i_nodes = 0;
@@ -447,12 +503,20 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
                 this->vvd_smoothed_elevation_map[j][i]
                     = this->vvd_elevation_map[j][i];
             }
-        }
+
+	}
+
     }
 
     std::cout << "[MM] \033[35m[----------]"
          " [MobileManipMap::processElevationMap()]\033[0m Smoothed Elevation "
-	 "Matrix is created with kernel radius = " << i_occupancy_kernel << std::endl;
+         "Matrix is created with kernel radius = " << i_occupancy_kernel 
+         << std::endl;
+
+
+    /*
+     * 2 --Normal vector computation of non-smoothed elevation--
+     */
 
     double dx, dy;
     for (unsigned int j = 1; j < this->ui_num_rows - 1; j++)
@@ -530,6 +594,11 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
             }
         }
     }
+
+
+    /*
+     * 3 --Slope Computation using smoothed elevation--
+     */
 
     for (unsigned int j = 1; j < this->ui_num_rows - 1; j++)
     {
@@ -611,6 +680,11 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
         }
     }
 
+
+    /*
+     * 4 --Roughness (Spherical Deviation) computation using normal vectors--
+     */
+
     double d_sumnx, d_sumny, d_sumnz, d_R, d_Rratio;
     for (unsigned int j = 1; j < this->ui_num_rows - 1; j++)
     {
@@ -690,7 +764,8 @@ bool MobileManipMap::processElevationMap(bool b_isLoc)
 
 
 /*
- * Calculate the proximity to obstacles
+ * calculateObstacleProximityMap()
+ *  - The proximity to closest obstacle for each node is computed
  */
 
 void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
@@ -704,7 +779,7 @@ void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
     Mat mat_validity_map
         = Mat::zeros(cv::Size(ui_num_cols, ui_num_rows), CV_32FC1);
 
-    if (b_isUpdate) // TODO: Optimize this by only executing when an obstacle is found
+    if (b_isUpdate)
     {
         for (unsigned int j = 0; j < this->ui_num_rows; j++)
         {
@@ -756,6 +831,7 @@ void MobileManipMap::calculateObstacleProximityMap(bool b_isUpdate)
         bitwise_and(mat_obstacle_map, mat_validity_obstacle_map, mat_obstacle_map);
 
     }
+
     distanceTransform(mat_obstacle_map, mat_proximity_map, DIST_L2, 5);
     mat_proximity_map = mat_proximity_map * this->d_res;
 
@@ -815,7 +891,7 @@ MobileManipMap::MobileManipMap(
     this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist;
     this->d_outter_sampling_dist
         = this->d_inner_sampling_dist
-          + 1.72 * this->d_res; // TODO - Maybe this should be 1.42? = sqrt(2)
+          + 1.42 * this->d_res; 
     for (uint j = 0; j < vvd_elevation_map_m.size(); j++)
     {
         for (uint i = 0; i < vvd_elevation_map_m[0].size(); i++)
@@ -1102,7 +1178,7 @@ bool MobileManipMap::calculateTraversabilityMap(base::Waypoint w_rover_pos_m)
     this->d_inner_sampling_dist = this->d_avoid_dist + this->d_maxreach_dist;
     this->d_outter_sampling_dist
         = this->d_inner_sampling_dist
-          + 1.42 * this->d_res; // TODO - Maybe this should be 1.42? = sqrt(2)
+          + 1.42 * this->d_res; 
 
 
 

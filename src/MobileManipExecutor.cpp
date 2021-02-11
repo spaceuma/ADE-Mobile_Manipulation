@@ -186,22 +186,27 @@ bool MobileManipExecutor::isAligned(base::Pose &rover_pose)
 }
 
 
+/*
+ * getCoupledCommand()
+ *
+ */
+
 unsigned int MobileManipExecutor::getCoupledCommand(
     Pose &rover_pose,
     const proxy_library::Joints &j_arm_present_readings_m,
     proxy_library::MotionCommand &mc_m,
     proxy_library::Joints &j_next_arm_command_m)
 {
-    int i_actual_segment = this->waypoint_navigation.getCurrentSegment();
-    // Getting Rover Command
+
+
+    /*
+     * 1 --Initial Temptative Trajectory Tracking Command--
+     */
+
+    // Rover Command from C-Pursuit Waypoint Navigation
     waypoint_navigation.setPose(rover_pose);
     waypoint_navigation.update(mc_m);
-
-    getLastSectionCommand(rover_pose, mc_m); 
-
-    // Evaluating state of Rover Path Following
     this->navstate = waypoint_navigation.getNavigationState();
-
     if ((this->navstate != DRIVING) && (this->navstate != ALIGNING)
         && (this->navstate != TARGET_REACHED))
     {
@@ -217,41 +222,59 @@ unsigned int MobileManipExecutor::getCoupledCommand(
         }
     }
 
+    // mc_m is modified if rover is within Last Section
+    this->getLastSectionCommand(rover_pose, mc_m); 
+
+
+    /*
+     * 2 --Update and check Arm status--
+     */
+
+    // Current arm joints positions are stored
     this->updateArmPresentReadings(j_arm_present_readings_m);
 
+    // Check if there may be any (near)collision
     if (this->isArmColliding())
     {
+       
+        // Arm must stop 
         for (uint i = 0; i < this->ui_num_joints; i++)
         {
             j_next_arm_command_m.m_jointStates[i].m_position
                 = j_arm_present_readings_m.m_jointStates[i].m_position;
         }
-        mc_m = this->getZeroRoverCommand();
+        
+	// Rover must stop
+	mc_m = this->getZeroRoverCommand();
         return 6;
     }
 
 
-    double d_step_time;
     unsigned int ui_status = 0;
-    //std::cout << "The Rover Segment is " << this->waypoint_navigation.getCurrentSegment() << std::endl; 
-    //std::cout << "The Current Segment is " << this->i_current_segment << " and the path size is " << this->vpw_path.size() << std::endl;
-    //std::cout << "The arm coupled state is " << this->armstate << std::endl;
+    int i_actual_segment;
+    
     switch (this->armstate)
     {
+
         case INITIALIZING:
-            fixMotionCommand(
-                mc_m); // This sets the maneuver as Point Turn if needed
+            
+            // This sets the maneuver as Point Turn if needed
+            fixMotionCommand(mc_m); 
             if (mc_m.m_manoeuvreType != 1)
             {
                 mc_m = this->getZeroRoverCommand();
             }
-	    ui_status = this->getAtomicCommand(j_arm_present_readings_m, j_next_arm_command_m,0);
+        
+            ui_status = this->getAtomicCommand(j_arm_present_readings_m, 
+			                       j_next_arm_command_m,0);
+            
 	    if(ui_status == 1)
 	    {
+
                 this->i_initial_segment
                     = this->waypoint_navigation.getCurrentSegment();
-                //this->i_current_segment = min(40, (int)(*this->pvvd_arm_motion_profile).size() - 1);
-                this->i_current_segment = min(0, (int)(*this->pvvd_arm_motion_profile).size() - 1);
+                this->i_current_segment = min(0, 
+                    (int)(*this->pvvd_arm_motion_profile).size() - 1);
                 if (this->vpw_path.size() == 1)
 	        {
                     mc_m = this->getZeroRoverCommand();
@@ -266,9 +289,11 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     this->armstate = COUPLED_MOVING;
 		    return 1;
 	        }
-	    }
+
+            }
 	    else if (ui_status > 1)
 	    {
+                // Error state 
                 mc_m = this->getZeroRoverCommand();
                 if (ui_status == 4)
 		{
@@ -285,9 +310,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 }
 	    }
             return 0;
-        case COUPLED_MOVING:
+
+	case COUPLED_MOVING:
 	    //To avoid the dummy turn waypoint
-	    i_actual_segment = min(i_actual_segment, (int)(*this->pvvd_arm_motion_profile).size() - 1);
+	    i_actual_segment = min(this->waypoint_navigation.getCurrentSegment(), (int)(*this->pvvd_arm_motion_profile).size() - 1);
 	    //std::cout << "COUPLED_MOVING: initial segment is " << i_initial_segment << std::endl;
             if ((this->i_current_segment == this->i_initial_segment)
                 || (this->i_current_segment != i_actual_segment))
@@ -418,7 +444,8 @@ unsigned int MobileManipExecutor::getAtomicCommand(
     const proxy_library::Joints &j_present_joints_m,
     proxy_library::Joints &j_next_arm_command,
     unsigned int ui_mode)
-{   
+{  
+
     if (!this->updateArmPresentReadings(j_present_joints_m))
     {
         return 2; // j_present_joints_m has wrong size
@@ -433,7 +460,6 @@ unsigned int MobileManipExecutor::getAtomicCommand(
         }
         return 4;
     }
-
 
     switch (ui_mode)
     {
@@ -533,6 +559,7 @@ unsigned int MobileManipExecutor::getAtomicCommand(
                 }
 	    }
 	    break;
+
         case 1: // Retrieval
 	    if (this->i_current_retrieval_index < (*this->pvvd_retrieval_arm_profile).size() - 1)
             {
