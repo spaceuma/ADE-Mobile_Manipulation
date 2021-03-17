@@ -144,6 +144,11 @@ void MobileManipExecutor::updateMotionPlan()
     }
     this->waypoint_navigation.configureTol(
         0.1, 5.0 / 180.0 * 3.1416); // tolpos,tolheading
+    this->waypoint_navigation.configureAlignment(
+                    5.0 / 180.0 * M_PI, //deadband
+                    20.0 / 180.0 * M_PI, //saturation
+                    10.0 / 180.0 * M_PI); //rotationalVelocity 
+    
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;
@@ -282,6 +287,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 
     unsigned int ui_status = 0;
     int i_actual_segment;
+    double d_targetHeading, d_headingError;
     
     switch (this->armstate)
     {
@@ -294,6 +300,16 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             {
                 mc_m = this->getZeroRoverCommand();
             }
+	    else
+	    {
+                //It is a point turn
+		d_targetHeading = waypoint_navigation.getTargetHeading(); 
+		d_headingError = waypoint_navigation.getHeadingError();
+                std::cout << "[MM] \033[35m[----------]"
+                " [MobileManipExecutor::getCoupledCommand()]\033[0m Point Turn Data: Rover Heading = " << rover_pose.getYaw() << " rad, " <<
+                "Target Heading = " << d_targetHeading << " rad, Heading Error = " << d_headingError << " rad" << std::endl;
+               
+	    }
         
             ui_status = this->getAtomicCommand(j_arm_present_readings_m, 
 			                       j_next_arm_command_m,0);
