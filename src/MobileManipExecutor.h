@@ -68,6 +68,10 @@ private:
      */
     double d_corridor_width;
     double d_dist_to_sample; //Rover-sample distance
+    double d_deadband_rad = 5.0 / 180.0 * M_PI; //deadband
+    double d_saturation_rad = 20.0 / 180.0 * M_PI; //saturation
+    double d_rotvec_radpersec = 10.0 / 180.0 * M_PI; //rotationalVelocity 
+ 
     unsigned int ui_num_joints = 6;
     std::vector<double> vd_arm_posmargin = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2};
 

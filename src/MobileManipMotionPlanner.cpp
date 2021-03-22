@@ -667,6 +667,7 @@ bool MobileManipMotionPlanner::generateMotionPlan(
 
     std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Global Rover Position = ( "  << plpose_m.m_position.m_x << ", " << plpose_m.m_position.m_y << ") m" << std::endl;
     std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Local Rover Position = ( "  << this->w_current_rover_position.position[0] << ", " << this->w_current_rover_position.position[1] << ") m" << std::endl;
+    std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Rover Heading = ( "  << this->w_current_rover_position.heading << " rad" << std::endl;
     std::cout << "[MM] \033[32m[----------] [generateMotionPlan()]\033[0m Offset = ( "  << vd_offset[0] << ", " << vd_offset[1] << ") m" << std::endl;
 
     w_sample_globalposition.position[0] = d_sample_pos_x;
@@ -1095,9 +1096,22 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
     unsigned int ui_error_code = 0;
     switch (getStatus())
     {
+
         case EXECUTING_MOTION_PLAN:
         {
+
             std::vector<double> vd_offset = this->p_mmmap->getOffset();
+
+
+            std::cout << "[MM] \033[32m[----------] " << 
+                         "[updateRoverArmPos()]\033[0m Proxy Rover Position" <<
+			 " (in global coord.): ( "  << plpose_m.m_position.m_x << ", " << plpose_m.m_position.m_y << ", " << plpose_m.m_position.m_z << ") m" << std::endl;
+            std::cout << "[MM] \033[32m[----------] " << 
+                         "[updateRoverArmPos()]\033[0m Proxy Rover Orientation" <<
+			 ": quaternion = ( x: "  << plpose_m.m_orientation.m_x
+			 << ", y: " << plpose_m.m_orientation.m_y << ", z: " << plpose_m.m_orientation.m_z << ", w: " << plpose_m.m_orientation.m_z << ")" << std::endl;
+
+
             base::Pose basepose;
             // TODO - Path is in local coordinates, the rover position may be in
             // global!
@@ -1117,9 +1131,21 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                 = plpose_m.m_position.m_z;
             this->w_current_rover_position.heading = basepose.getYaw();
             // TODO: use w_current_rover_position instead of basepose
-            ui_error_code = this->p_mmexecutor->getCoupledCommand(
+
+
+            std::cout << "[MM] \033[32m[----------] " << 
+                         "[updateRoverArmPos()]\033[0m Input Rover Position to" <<
+			 " Executor (in local coord.): ( "  << basepose.position[0] << ", " << basepose.position[1] << ", " << basepose.position[2] << ") m" << std::endl;
+            std::cout << "[MM] \033[32m[----------] " << 
+                         "[updateRoverArmPos()]\033[0m Input Rover Orientation to" <<
+			 " Executor: quaternion = ( x: "  << basepose.orientation.x()
+			 << ", y: " << basepose.orientation.y() << ", z: " << basepose.orientation.z() << ", w: " << basepose.orientation.w() << "), heading = " << basepose.getYaw() << std::endl;
+
+	    ui_error_code = this->p_mmexecutor->getCoupledCommand(
                 basepose, arm_joints, rover_command, arm_command);
-            switch (ui_error_code)
+
+
+	    switch (ui_error_code)
             {
                 case 0: // Deploying arm to initial position
                     return true;
@@ -1154,6 +1180,8 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
                 case 8:// TODO - CHECK THIS
                     setError(UNFEASIBLE_INIT);
                     return false;
+		// TODO - There should be a case when a point turn takes too long or the rover does not move at all
+		//
             }
             return false;
             break;

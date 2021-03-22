@@ -87,6 +87,80 @@ MobileManipExecutor::MobileManipExecutor(MotionPlan *presentMotionPlan,
 
     this->i_current_init_index = 0;
     this->i_current_retrieval_index = 0;
+
+    try
+    {
+        
+	// Complete the path with the name of the configuration file
+	std::string s_config_path = s_urdf_path_m + 
+		                    "/executor_control_config.txt"; 
+        
+	// Creating an ifstream variable linked to the conf. path
+	std::ifstream e_file(s_config_path.c_str(), std::ios::in);
+        
+        // Check if the file exists	
+	if (e_file.is_open())
+        {
+            // The string to store the characters read 
+	    std::string cell;
+           
+	    // Reading the slope threshold 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_deadband_deg = stof(cell);
+	    
+	    // Reading the spherical deviation (roughness) threshold 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_saturation_deg = stof(cell);
+            
+	    // Reading the Valid/Total Pixels Ratio Threshold 
+	    std::getline(e_file, cell); std::getline(e_file, cell); 
+	    double d_rotvec_degpersec = stof(cell);
+	    
+	    
+
+	    if (d_deadband_deg > 0.0 && d_deadband_deg < 90.0)
+	    {
+                
+                this->d_deadband_rad = d_deadband_deg / 180.0 * M_PI;
+
+	        std::cout << "[MM] \033[32m[----------] [MobileManipExecutor()]\033[0m New deadband for aligning is " << this->d_deadband_rad << " rad" << std::endl;
+	    }
+
+	    if (d_saturation_deg > 0.0)
+	    {
+
+		this->d_saturation_rad = d_saturation_deg / 180.0 * M_PI;
+	        std::cout << "[MM] \033[32m[----------] [MobileManipExecutor()]\033[0m New saturation for aligning is " << this->d_saturation_rad << " rad" << std::endl;
+
+	    }
+
+	    if (d_rotvec_degpersec > 0.0)
+	    {
+
+		this->d_rotvec_radpersec = d_rotvec_degpersec / 180.0 * M_PI;
+	        std::cout << "[MM] \033[32m[----------] [MobileManipExecutor()]\033[0m New rotational velocity for aligning is " << this->d_rotvec_radpersec << " rad/s" << std::endl;
+
+	    }
+	    
+        }
+        else
+        {
+            
+	    // File is not accesible
+	    throw std::exception();
+
+        }   
+    }
+    catch (std::exception &e)
+    {
+        
+	std::cout << "[MM] \033[32m[----------] [MobileManipExecutor()]\033[0m Config file is not accesible, using default values" << std::endl;
+        // Something happened that prevented from successfully reading
+
+    }
+
+
+
 }
 
 
@@ -145,10 +219,10 @@ void MobileManipExecutor::updateMotionPlan()
     this->waypoint_navigation.configureTol(
         0.1, 5.0 / 180.0 * 3.1416); // tolpos,tolheading
     this->waypoint_navigation.configureAlignment(
-                    5.0 / 180.0 * M_PI, //deadband
-                    20.0 / 180.0 * M_PI, //saturation
-                    10.0 / 180.0 * M_PI); //rotationalVelocity 
-    
+		    this->d_deadband_rad,
+		    this->d_saturation_rad,
+		    this->d_rotvec_radpersec);
+   
     this->waypoint_navigation.setTrajectory(this->vpw_path);
     this->i_current_segment = 0;
     this->i_current_coverage_index = 0;

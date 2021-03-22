@@ -1,0 +1,7 @@
+Deadband_deg:
+5.0
+Saturation_deg:
+20.0
+RotVec_degpersec:
+10.0
+
