@@ -382,7 +382,12 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 std::cout << "[MM] \033[35m[----------]"
                 " [MobileManipExecutor::getCoupledCommand()]\033[0m Point Turn Data: Rover Heading = " << rover_pose.getYaw() << " rad, " <<
                 "Target Heading = " << d_targetHeading << " rad, Heading Error = " << d_headingError << " rad" << std::endl;
-               
+                std::cout << "[MM] \033[32m[----------] " << 
+                         "[MobileManipExecutor::getCoupledCommand()]\033[0m Rover Orientation during Point Turn " <<
+			 ": quaternion = ( x: "  << rover_pose.orientation.x()
+			 << ", y: " << rover_pose.orientation.y() << ", z: " << rover_pose.orientation.z() << ", w: " << rover_pose.orientation.w() << "), heading = " << rover_pose.getYaw() << std::endl;
+
+
 	    }
         
             ui_status = this->getAtomicCommand(j_arm_present_readings_m, 

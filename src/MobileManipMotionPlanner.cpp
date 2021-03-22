@@ -1109,7 +1109,7 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             std::cout << "[MM] \033[32m[----------] " << 
                          "[updateRoverArmPos()]\033[0m Proxy Rover Orientation" <<
 			 ": quaternion = ( x: "  << plpose_m.m_orientation.m_x
-			 << ", y: " << plpose_m.m_orientation.m_y << ", z: " << plpose_m.m_orientation.m_z << ", w: " << plpose_m.m_orientation.m_z << ")" << std::endl;
+			 << ", y: " << plpose_m.m_orientation.m_y << ", z: " << plpose_m.m_orientation.m_z << ", w: " << plpose_m.m_orientation.m_w << ")" << std::endl;
 
 
             base::Pose basepose;
@@ -1118,12 +1118,16 @@ bool MobileManipMotionPlanner::updateRoverArmPos(
             basepose.position[0] = plpose_m.m_position.m_x - vd_offset[0];
             basepose.position[1] = plpose_m.m_position.m_y - vd_offset[1];
             basepose.position[2] = plpose_m.m_position.m_z;
+
+
+
             basepose.orientation
                 = Eigen::Quaterniond(plpose_m.m_orientation.m_w,
                                      plpose_m.m_orientation.m_x,
                                      plpose_m.m_orientation.m_y,
                                      plpose_m.m_orientation.m_z);
-            this->w_current_rover_position.position[0]
+            
+	    this->w_current_rover_position.position[0]
                 = plpose_m.m_position.m_x;
             this->w_current_rover_position.position[1]
                 = plpose_m.m_position.m_y;
