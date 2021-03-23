@@ -1,3 +1,9 @@
+set -e
+if [[ $# -ne 1 ]]; then
+	echo "ERROR: The script requires the path to the log directory as the only argument"
+	exit 2
+fi
+
 logs=$PWD
 rm -rf $logs/extractedLog
 mkdir extractedLog
