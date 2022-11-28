@@ -23,7 +23,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
     ASSERT_NO_THROW(w_rover_pos_01 =
                         getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"))
         << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"))
+    ASSERT_NO_THROW(samplePos =
+                        getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"))
         << "Input Sample Waypoint file is missing";
 
     double res = 0.1;    // meters
@@ -80,7 +81,8 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     ASSERT_NO_THROW(w_rover_pos_02 =
                         getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt"))
         << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_02.txt"))
+    ASSERT_NO_THROW(samplePos =
+                        getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_02.txt"))
         << "Input Sample Waypoint file is missing";
     double res = 0.1;    // meters
     double zRes = 0.08;

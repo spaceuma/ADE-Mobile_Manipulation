@@ -289,9 +289,11 @@ TEST(MMMapTest, nominal_working_test_RH1)
     ASSERT_EQ(dummyMap.loadDEM((*prgd_dummy_dem)), 0);
 
     base::Waypoint samplePos, roverPos;
-    ASSERT_NO_THROW(roverPos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"))
+    ASSERT_NO_THROW(roverPos =
+                        getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"))
         << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"))
+    ASSERT_NO_THROW(samplePos =
+                        getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"))
         << "Input Sample Waypoint file is missing";
 
     std::vector<std::vector<double>> costMap, slopeMap, sdMap;
