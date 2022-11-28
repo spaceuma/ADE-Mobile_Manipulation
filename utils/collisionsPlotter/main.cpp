@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   window.setWorld(p_collision_detector->mWorld);
 
   glutInit(&argc, argv);
-  window.initWindow(640, 480, "Detect Collitions");
+  window.initWindow(640, 480, "Detect Collisions");
   glutMainLoop();
   return 0;
 }

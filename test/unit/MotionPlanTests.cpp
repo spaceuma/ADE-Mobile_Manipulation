@@ -11,28 +11,27 @@
 
 using namespace FastMarching_lib;
 
-TEST(MMMotionPlanTest, nominal_working_test)
+TEST(MMMotionPlanTest, nominal_working_test01)
 {
     // Reading the DEM
     std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_elevation_map;
     ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
                        vvd_elevation_map));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
                                    vvd_cost_map_shadowing));
-    base::Waypoint w_rover_pos_01, samplePos;
-    ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
+    base::Waypoint roverPos, samplePos;
+    ASSERT_NO_THROW(roverPos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
-    samplePos.position[0] = 9.8; 
-    samplePos.position[1] = 5.1; 
-    w_rover_pos_01.position[0] = 7.0;
-    w_rover_pos_01.position[1] = 1.5;
 
     double res = 0.1; // meters
     double zRes = 0.08;
     unsigned int ui_error_code = 0;
 
     MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
+    //mmmap_shadowing.computeFACE(samplePos,0.5,1.0,1.3);
+    std::string file = "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_01.txt";
+    writeMatrixFile(file, (*mmmap_shadowing.getCostMap()));
 
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
@@ -47,27 +46,136 @@ TEST(MMMotionPlanTest, nominal_working_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
+
     MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path);
+
+    // 1st Case with Shadowing 
+    clock_t ini2D = clock();
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
+        roverPos));
+    ASSERT_EQ(ui_error_code, 0);
+    mplan_shadowing.shortenPathForFetching();
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    ui_error_code = mplan_shadowing.computeArmProfilePlanning();
+    saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_01.txt");
+    savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
+    saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
+    EXPECT_EQ(ui_error_code, 0);
+
+}
+
+TEST(MMMotionPlanTest, nominal_working_test02)
+{
+    // Reading the DEM
+    std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_elevation_map;
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
+                       vvd_elevation_map));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
+                                   vvd_cost_map_shadowing));
+    base::Waypoint roverPos, samplePos;
+    ASSERT_NO_THROW(roverPos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
+
+    double res = 0.1; // meters
+    double zRes = 0.08;
+    unsigned int ui_error_code = 0;
+
+    MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
+    //mmmap_shadowing.computeFACE(samplePos,0.5,1.0,1.3);
+    std::string file = "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_01.txt";
+    writeMatrixFile(file, (*mmmap_shadowing.getCostMap()));
+
+    // Creating the Motion Plan
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path,1);
 
 
     // 1st Case with Shadowing 
     clock_t ini2D = clock();
     ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
-        w_rover_pos_01));
+        roverPos));
     ASSERT_EQ(ui_error_code, 0);
     mplan_shadowing.shortenPathForFetching();
-    savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
+    saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_02.txt");
+    savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
+    saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
+    saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
     EXPECT_EQ(ui_error_code, 0);
-    savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
-    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
-    saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
+
+}
+TEST(MMMotionPlanTest, nominal_working_test03)
+{
+    // Reading the DEM
+    std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_elevation_map;
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
+                       vvd_elevation_map));
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
+                                   vvd_cost_map_shadowing));
+    base::Waypoint roverPos, samplePos;
+    ASSERT_NO_THROW(roverPos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos.txt")) << "Input Rover Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
+
+    double res = 0.1; // meters
+    double zRes = 0.08;
+    unsigned int ui_error_code = 0;
+
+    MobileManipMap mmmap_shadowing(vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
+    //mmmap_shadowing.computeFACE(samplePos,0.5,1.0,1.3);
+    std::string file = "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_01.txt";
+    writeMatrixFile(file, (*mmmap_shadowing.getCostMap()));
+
+    // Creating the Motion Plan
+    std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
+    std::string s_urdf_path;
+    if (if_urdf_path.is_open())
+    {
+        std::getline(if_urdf_path, s_urdf_path);
+        std::cout << "urdf path is read from " << s_urdf_path << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
+	throw "Cannot open urdf model path "; 
+    }
+    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path,2);
+
+
+    // 1st Case with Shadowing 
+    clock_t ini2D = clock();
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(
+        roverPos));
+    ASSERT_EQ(ui_error_code, 0);
+    mplan_shadowing.shortenPathForFetching();
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    ui_error_code = mplan_shadowing.computeArmProfilePlanning();
+    saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_03.txt");
+    savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_03.txt");
+    saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_03.txt");
+    saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_03.txt");
+    EXPECT_EQ(ui_error_code, 0);
 
 }
 
-TEST(MMMotionPlanTest, rover_closeto_sample_test)
+/*TEST(MMMotionPlanTest, rover_closeto_sample_test)
 {
     // Reading the DEM
     std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_elevation_map;
@@ -112,7 +220,7 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
     saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
     saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt");
-}
+}*/
 
 // DEPRECATED
 /*
@@ -238,7 +346,7 @@ TEST(MMMotionPlanTest, colliding_profile_test)
         << "\033[31m[----------]\033[0m Expected Error Code 4";
 }*/
 
-TEST(MMMotionPlanTest, non_reachable_test)
+/*TEST(MMMotionPlanTest, non_reachable_test)
 {
     // Reading the DEM
     std::vector<std::vector<double>> vvd_cost_map, vvd_elevation_map;
@@ -368,6 +476,6 @@ TEST(MMMotionPlanTest, sample_farfromtunnel_test)
     savePath(mplan.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/sample_outoftunnel_path_01.txt");
     ASSERT_NO_THROW(ui_error_code = mplan.computeArmProfilePlanning());
     ASSERT_EQ(ui_error_code, 2);
-}
+}*/
 
 
