@@ -5,6 +5,7 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package( OpenCV REQUIRED )
+find_package(Threads REQUIRED)
 find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
