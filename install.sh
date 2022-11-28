@@ -1,4 +1,9 @@
-sudo apt-get -y install libopencv-dev cmake libboost-all-dev libdart6-all-dev
+sudo apt-get -y install libopencv-dev cmake libboost-all-dev
+
+# Install DART
+#sudo apt-add-repository ppa:dartsim/ppa
+#sudo apt-get update  # not necessary since Bionic
+sudo apt-get -y install libdart-all-dev
 
 export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$PWD/deps/sherpa_tt_api/cmake/
 install_folder=$PWD/install
