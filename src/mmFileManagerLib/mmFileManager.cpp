@@ -23,7 +23,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 // 
-// Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
+// Authors: J. Ricardo Sánchez Ibáñez, Gonzalo J. Paz Delgado, Carlos J. Pérez del Pulgar
 // Affiliation: Department of Systems Engineering and Automation
 // Space Robotics Lab (www.uma.es/space-robotics)
 
