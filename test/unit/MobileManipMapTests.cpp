@@ -864,64 +864,58 @@ TEST(MMMapTest, nominal_working_test_2)
     costMapFile.close();
 }
 
-// TODO - FIX this with new constructor
-/*TEST(MMMapTest, dem_format_error_test)
+TEST(MMMapTest, dem_format_error_test)
 {
     // Input Elevation Matrix is read
     std::vector<std::vector<double>> vvd_elevation_data;
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMapTest/ColmenarRocks_smaller_10cmDEM.csv",
-                   vvd_elevation_data));
-    double res = 0.1; // meters
+    ASSERT_NO_THROW(readMatrixFile(
+        "test/unit/data/input/MMMapTest/ColmenarRocks_smaller_10cmDEM.csv", vvd_elevation_data));
+    double res = 0.1;    // meters
 
     // A dummy Rover Guidance based DEM is created
-    RoverGuidance_Dem *prgd_dummy_dem = new RoverGuidance_Dem;
+    RoverGuidance_Dem * prgd_dummy_dem = new RoverGuidance_Dem;
     double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
     prgd_dummy_dem->p_heightData_m = dummyArray;
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     prgd_dummy_dem->rows = vvd_elevation_data.size();
     prgd_dummy_dem->nodeSize_m = res;
-    for (uint j = 0; j < vvd_elevation_data.size(); j++)
+    for(uint j = 0; j < vvd_elevation_data.size(); j++)
     {
-        for (uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        for(uint i = 0; i < vvd_elevation_data[0].size(); i++)
         {
-            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()]
-                = vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()] =
+                vvd_elevation_data[j][i];
         }
     }
 
     base::Waypoint samplePos;
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt")) <<
-"Input Waypoint file is missing";
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMapTest/sample_pos.txt"))
+        << "Input Waypoint file is missing";
 
     // Error with resolution
-    std::cout
-        << "\033[32m[----------]\033[0m [INFO] Testing exception with resolution value"
-        << std::endl;
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with resolution value"
+              << std::endl;
     prgd_dummy_dem->nodeSize_m = 0;
 
-    ASSERT_THROW(MobileManipMap dummyMap1((*prgd_dummy_dem)),
-                 std::exception);
+    MobileManipMap * dummyMap;
+    ASSERT_EQ(dummyMap->loadDEM((*prgd_dummy_dem), false), 1);
     prgd_dummy_dem->nodeSize_m = -0.1;
-    ASSERT_THROW(MobileManipMap dummyMap2((*prgd_dummy_dem)),
-                 std::exception);
+    ASSERT_EQ(dummyMap->loadDEM((*prgd_dummy_dem), false), 1);
     prgd_dummy_dem->nodeSize_m = res;
     // Error with number of cols
     std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with number of "
                  "columns"
               << std::endl;
     prgd_dummy_dem->cols = 0;
-    ASSERT_THROW(MobileManipMap dummyMap3((*prgd_dummy_dem)),
-                 std::exception);
+    ASSERT_EQ(dummyMap->loadDEM((*prgd_dummy_dem), false), 3);
     prgd_dummy_dem->cols = vvd_elevation_data[0].size();
     // Error with number of rows
-    std::cout
-        << "\033[32m[----------]\033[0m [INFO] Testing exception with number of rows"
-        << std::endl;
+    std::cout << "\033[32m[----------]\033[0m [INFO] Testing exception with number of rows"
+              << std::endl;
     prgd_dummy_dem->rows = 0;
-    ASSERT_THROW(MobileManipMap dummyMap4((*prgd_dummy_dem)),
-                 std::exception);
+    ASSERT_EQ(dummyMap->loadDEM((*prgd_dummy_dem), false), 2);
     prgd_dummy_dem->rows = vvd_elevation_data.size();
-}*/
+}
 
 TEST(MMMapTest, sample_pos_error_test)
 {
