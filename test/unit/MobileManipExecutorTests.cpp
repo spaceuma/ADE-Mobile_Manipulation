@@ -11,15 +11,15 @@ TEST(MMExecutorTest, nominal_working_test)
     std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_cost_map_no_shadowing,
         vvd_elevation_map;
     ASSERT_NO_THROW(
-        readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_Nominal_10cmDEM.csv",
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",
                        vvd_elevation_map));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt",
                                    vvd_cost_map_shadowing));
     base::Waypoint w_rover_pos, samplePos;
     ASSERT_NO_THROW(w_rover_pos =
-                        getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos.txt"))
+                        getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"))
         << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt"))
+    ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"))
         << "Input Sample Waypoint file is missing";
 
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
