@@ -47,6 +47,8 @@ TEST(MMExecutorTest, nominal_working_test)
                    vvd_arm_motion_profile);
     MotionPlan * dummyPlan = new MotionPlan(&mmmap, s_urdf_path, vw_path, vvd_arm_motion_profile);
 
+    dummyPlan->addSampleWaypointToPath();
+
     Pose robotPose, pose_robot_sim;
 
     robotPose.position = Eigen::Vector3d(vw_path[0].position[0], vw_path[0].position[1], 0);
