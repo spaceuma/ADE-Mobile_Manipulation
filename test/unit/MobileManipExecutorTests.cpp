@@ -15,8 +15,8 @@ TEST(MMExecutorTest, nominal_working_test)
                        vvd_elevation_map));
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap.txt",
                                    vvd_cost_map_shadowing));
-    base::Waypoint w_rover_pos_01, samplePos;
-    ASSERT_NO_THROW(w_rover_pos_01 = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt")) << "Input Rover Waypoint file is missing";
+    base::Waypoint w_rover_pos, samplePos;
+    ASSERT_NO_THROW(w_rover_pos = getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos.txt")) << "Input Rover Waypoint file is missing";
     ASSERT_NO_THROW(samplePos = getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos.txt")) << "Input Sample Waypoint file is missing";
 
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
@@ -65,12 +65,12 @@ TEST(MMExecutorTest, nominal_working_test)
         vj_current_jointstates[i].m_speed = 0.0;
     }
 
-    vj_current_jointstates[0].m_position = 0.39;
-    vj_current_jointstates[1].m_position = -1.83;
-    vj_current_jointstates[2].m_position = 2.79;
-    vj_current_jointstates[3].m_position = 0.0;
-    vj_current_jointstates[4].m_position = -0.5;
-    vj_current_jointstates[5].m_position = 2.3562;
+    vj_current_jointstates[0].m_position = 1.41;
+    vj_current_jointstates[1].m_position = -0.76;
+    vj_current_jointstates[2].m_position = 1.22;
+    vj_current_jointstates[3].m_position = -1.64;
+    vj_current_jointstates[4].m_position = 1.43;
+    vj_current_jointstates[5].m_position = 2.03;
 
     proxy_library::Joints j_current_joints(0, vj_current_jointstates);
     proxy_library::Joints j_next_joints(0, vj_current_jointstates);
@@ -92,10 +92,9 @@ TEST(MMExecutorTest, nominal_working_test)
 	pose_robot_sim.position.x() += d_pos_error_x;
 	pose_robot_sim.position.y() += d_pos_error_y;
         pose_robot_sim.orientation = robotPose.orientation;
-	std::cout << " Call to getCoupledCommand()" << std::endl;
         ui_error_code = dummyExecutor.getCoupledCommand(pose_robot_sim, j_current_joints, mc, j_next_joints);
 	ASSERT_LE(ui_error_code,2);
-        
+
 	Eigen::AngleAxisd toWCF, robotRot;
         toWCF = Eigen::AngleAxisd(robotPose.getYaw(), Eigen::Vector3d::UnitZ());
         if (fabs(mc.m_speed_ms) < 0.000001)
