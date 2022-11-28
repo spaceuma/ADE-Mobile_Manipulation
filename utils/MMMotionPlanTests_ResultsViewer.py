@@ -9,9 +9,7 @@ elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zo
 #traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 
 costMap_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
-costMap_no_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/costMap_noShadowing.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
-costMap_no_shadowing[np.where(costMap_no_shadowing==np.inf)] = np.nan
 
 traversabilityMap = costMap_shadowing
 
@@ -23,14 +21,12 @@ xMap = xMap*res
 yMap = yMap*res
 
 path_shadowing_01 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt"), skiprows=0)
-#path_shadowing_02 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt"), skiprows=0)
 
-sample = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/sample_pos.txt"), skiprows = 0)
+sample = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"), skiprows = 0)
 rover = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"), skiprows = 0)
-rover_02 = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/rover_pos_02.txt"), skiprows = 0)
 
 fig1, (ax2,ax1) = plt.subplots(figsize = (9,6),nrows = 1,ncols = 2,constrained_layout=True)
-fig1.suptitle('Unit Test 02 - MMMotionPlan Cost Maps', fontsize=16)
+fig1.suptitle('Unit Test - MMMotionPlan Cost Maps', fontsize=16)
 
 plot1 = ax1.contourf(xMap, yMap, costMap_shadowing, 40, cmap = 'Oranges')
 ax1.set_aspect('equal')
@@ -42,9 +38,9 @@ cb1 = fig1.colorbar(plot1, ax = ax1, orientation = 'horizontal')
 cb1.ax.set_title('Cost')
 p1 = ax1.plot(path_shadowing_01[:,0],path_shadowing_01[:,1],'c', linewidth = 2)
 s1 = ax1.plot(sample[0], sample[1], 'or')
-circ1 = ax1.add_artist(plt.Circle((sample[0],sample[1]),0.94, color='m', fill = False))
-circ2 = ax1.add_artist(plt.Circle((sample[0],sample[1]),1.94, color='y', fill = False))
-circ3 = ax1.add_artist(plt.Circle((sample[0],sample[1]),1.94+0.172, color='b', fill = False))
+circ1 = ax1.add_artist(plt.Circle((sample[0],sample[1]),1.4, color='m', fill = False))
+circ2 = ax1.add_artist(plt.Circle((sample[0],sample[1]),2.3, color='y', fill = False))
+circ3 = ax1.add_artist(plt.Circle((sample[0],sample[1]),2.3+0.142, color='b', fill = False))
 s12 = ax1.plot(rover[0], rover[1], 'oy')
 s14 = ax1.plot(path_shadowing_01[-1,0], path_shadowing_01[-1,1], 'oc')
 ax1.legend((p1[0],s1[0],s12[0],circ1,circ2,circ3),('Facing Sample Path', 'Sample Position', 'Initial Rover Position','Straight Area', 'Entry Area - Maneuvering', 'Entry Area - Access'), loc = 'lower right')
