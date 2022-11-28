@@ -101,7 +101,7 @@ TEST(MMMotionPlanTest, nominal_working_test02)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path,1);
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path,1);
 
 
     // 1st Case with Shadowing 
@@ -115,7 +115,7 @@ TEST(MMMotionPlanTest, nominal_working_test02)
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_02.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
-    saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
     saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
     EXPECT_EQ(ui_error_code, 0);
 
@@ -155,7 +155,7 @@ TEST(MMMotionPlanTest, nominal_working_test03)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
 	throw "Cannot open urdf model path "; 
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, zRes, s_urdf_path,2);
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path,2);
 
 
     // 1st Case with Shadowing 
@@ -169,7 +169,7 @@ TEST(MMMotionPlanTest, nominal_working_test03)
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     saveVolume(mplan_shadowing.get3DCostMap(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_03.txt");
     savePath(mplan_shadowing.getRoverPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_03.txt");
-    saveProfile(mplan_shadowing.getArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_03.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_03.txt");
     saveProfile(mplan_shadowing.getWristPath(), "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_03.txt");
     EXPECT_EQ(ui_error_code, 0);
 
