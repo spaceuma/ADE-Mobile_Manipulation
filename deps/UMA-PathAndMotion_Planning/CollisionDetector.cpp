@@ -1,6 +1,6 @@
 // MIT License
 // -----------
-// 
+//
 // Copyright (c) 2021 University of Malaga
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -10,10 +10,10 @@
 // copies of the Software, and to permit persons to whom the
 // Software is furnished to do so, subject to the following
 // conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 // OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -22,24 +22,21 @@
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
-// 
+//
 // Authors: J. Ricardo Sánchez Ibáñez, Carlos J. Pérez del Pulgar
 // Affiliation: Department of Systems Engineering and Automation
 // Space Robotics Lab (www.uma.es/space-robotics)
 
-
-
 #include "CollisionDetector.h"
 
-CollisionDetector::CollisionDetector(std::string s_urdf_path_m,
-                                     bool _includeWrist)
+CollisionDetector::CollisionDetector(std::string s_urdf_path_m, bool _includeWrist)
 {
     includeWrist = _includeWrist;
 
     mWorld = dart::simulation::World::create("Empty");
-    dl.addPackageDirectory("urdf", s_urdf_path_m); // TODO set this path
+    dl.addPackageDirectory("urdf", s_urdf_path_m);    // TODO set this path
     // Load urdf models
-    //sherpatt = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
+    // sherpatt = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
     sherpatt = dl.parseSkeleton("package://urdf/sherpa_tt.urdf");
     manipulator = dl.parseSkeleton("package://urdf/manipulator.urdf");
     sherpatt->setName("sherpatt");
@@ -47,7 +44,7 @@ CollisionDetector::CollisionDetector(std::string s_urdf_path_m,
     mWorld->addSkeleton(sherpatt);
     mWorld->addSkeleton(manipulator);
 
-    if (includeWrist)
+    if(includeWrist)
     {
         initializeWristModel();
     }
@@ -91,15 +88,13 @@ CollisionDetector::~CollisionDetector() {}
 
 void CollisionDetector::initializeWristModel()
 {
-    manipulator_wrist
-        = dl.parseSkeleton("package://urdf/manipulator_wrist.urdf");
+    manipulator_wrist = dl.parseSkeleton("package://urdf/manipulator_wrist.urdf");
     manipulator_wrist->setName("manipulator_wrist");
     mWorld->addSkeleton(manipulator_wrist);
 }
 
 bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
 {
-
     // Get sherpa into the desired configuration
     /* Pan of the whole leg */
     // sherpatt->getDof("alpha_front_left")->setPosition(0.0 * M_PI / 180.0);
@@ -114,15 +109,13 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
 
     // Look through the collisions manipulator-sherpaTT and manipulator with
     // itself
-    auto collisionEngine
-        = mWorld->getConstraintSolver()->getCollisionDetector();
+    auto collisionEngine = mWorld->getConstraintSolver()->getCollisionDetector();
     auto sherpaGroup = collisionEngine->createCollisionGroup(sherpatt.get());
     auto manipGroup = collisionEngine->createCollisionGroup(manipulator.get());
 
     dart::collision::CollisionOption option;
     dart::collision::CollisionResult result;
-    bool collisionBody
-        = sherpaGroup->collide(manipGroup.get(), option, &result);
+    bool collisionBody = sherpaGroup->collide(manipGroup.get(), option, &result);
     bool collisionManip = manipGroup->collide(option, &result);
 
     /*if(collisionBody)
@@ -143,7 +136,7 @@ bool CollisionDetector::isColliding(const std::vector<double> manip_joints)
 
 bool CollisionDetector::isWristColliding(const std::vector<double> manip_joints)
 {
-    if (!includeWrist) initializeWristModel();
+    if(!includeWrist) initializeWristModel();
 
     // Get sherpa into the desired configuration
     /* Pan of the whole leg */
@@ -157,16 +150,13 @@ bool CollisionDetector::isWristColliding(const std::vector<double> manip_joints)
 
     // Look through the collisions manipulator-sherpaTT and manipulator with
     // itself
-    auto collisionEngine
-        = mWorld->getConstraintSolver()->getCollisionDetector();
+    auto collisionEngine = mWorld->getConstraintSolver()->getCollisionDetector();
     auto sherpaGroup = collisionEngine->createCollisionGroup(sherpatt.get());
-    auto manipGroup
-        = collisionEngine->createCollisionGroup(manipulator_wrist.get());
+    auto manipGroup = collisionEngine->createCollisionGroup(manipulator_wrist.get());
 
     dart::collision::CollisionOption option;
     dart::collision::CollisionResult result;
-    bool collisionBody
-        = sherpaGroup->collide(manipGroup.get(), option, &result);
+    bool collisionBody = sherpaGroup->collide(manipGroup.get(), option, &result);
     bool collisionManip = manipGroup->collide(option, &result);
 
     /*if(collisionBody)
