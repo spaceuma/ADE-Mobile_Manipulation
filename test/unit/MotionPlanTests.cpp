@@ -47,9 +47,10 @@ TEST(MMMotionPlanTest, nominal_working_test)
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
         throw "Cannot open urdf model path ";
     }
-    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path);
 
-    // 1st Case with Shadowing
+    // 1st Case with Shadowing, End deployment
+    MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path, 0);
+
     clock_t ini2D = clock();
     ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(w_rover_pos_01));
     ASSERT_EQ(ui_error_code, 0);
@@ -68,6 +69,50 @@ TEST(MMMotionPlanTest, nominal_working_test)
                 "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
     saveVolume(mplan_shadowing.get3DCostMap(),
                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_01.txt");
+
+    // 2nd Case with Shadowing, Progressive deployment
+    mplan_shadowing = MotionPlan(&mmmap_shadowing, s_urdf_path, 1);
+
+    ini2D = clock();
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(w_rover_pos_01));
+    ASSERT_EQ(ui_error_code, 0);
+    mplan_shadowing.shortenPathForFetching();
+    savePath(mplan_shadowing.getRoverPath(),
+             "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    ui_error_code = mplan_shadowing.computeArmProfilePlanning();
+    EXPECT_EQ(ui_error_code, 0);
+    savePath(mplan_shadowing.getRoverPath(),
+             "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
+                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
+    saveProfile(mplan_shadowing.getWristPath(),
+                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
+    saveVolume(mplan_shadowing.get3DCostMap(),
+               "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_02.txt");
+
+    // 3rd Case with Shadowing, Beginning deployment
+    mplan_shadowing = MotionPlan(&mmmap_shadowing, s_urdf_path, 2);
+
+    ini2D = clock();
+    ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(w_rover_pos_01));
+    ASSERT_EQ(ui_error_code, 0);
+    mplan_shadowing.shortenPathForFetching();
+    savePath(mplan_shadowing.getRoverPath(),
+             "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_03.txt");
+    std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
+              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+    ui_error_code = mplan_shadowing.computeArmProfilePlanning();
+    EXPECT_EQ(ui_error_code, 0);
+    savePath(mplan_shadowing.getRoverPath(),
+             "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_03.txt");
+    saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
+                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_03.txt");
+    saveProfile(mplan_shadowing.getWristPath(),
+                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_03.txt");
+    saveVolume(mplan_shadowing.get3DCostMap(),
+               "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_03.txt");
 }
 
 TEST(MMMotionPlanTest, rover_closeto_sample_test)
