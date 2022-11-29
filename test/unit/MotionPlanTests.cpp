@@ -66,6 +66,8 @@ TEST(MMMotionPlanTest, nominal_working_test)
                 "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     saveProfile(mplan_shadowing.getWristPath(),
                 "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_01.txt");
+    saveVolume(mplan_shadowing.get3DCostMap(),
+               "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_01.txt");
 }
 
 TEST(MMMotionPlanTest, rover_closeto_sample_test)
@@ -114,11 +116,11 @@ TEST(MMMotionPlanTest, rover_closeto_sample_test)
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     EXPECT_EQ(ui_error_code, 0);
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
-                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_02.txt");
+                "test/unit/data/results/MMMotionPlanTest/close_to_goal_profile.txt");
     savePath(mplan_shadowing.getRoverPath(),
-             "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
+             "test/unit/data/results/MMMotionPlanTest/close_to_goal_path.txt");
     saveProfile(mplan_shadowing.getWristPath(),
-                "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_02.txt");
+                "test/unit/data/results/MMMotionPlanTest/close_to_goal_eepath.txt");
     saveVolume(mplan_shadowing.get3DCostMap(),
                "test/unit/data/results/MMMotionPlanTest/close_to_goal_3dmap.txt");
 }
