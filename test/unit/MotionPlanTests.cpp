@@ -63,6 +63,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     EXPECT_EQ(ui_error_code, 0);
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt");
+    writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_01.txt", vvd_cost_map_shadowing);
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
                 "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt");
     saveProfile(mplan_shadowing.getWristPath(),
@@ -83,6 +84,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     EXPECT_EQ(ui_error_code, 0);
+    writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_02.txt", vvd_cost_map_shadowing);
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_02.txt");
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
@@ -105,6 +107,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
     EXPECT_EQ(ui_error_code, 0);
+    writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_03.txt", vvd_cost_map_shadowing);
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_03.txt");
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
