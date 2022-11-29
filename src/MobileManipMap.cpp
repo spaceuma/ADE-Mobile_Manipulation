@@ -836,8 +836,7 @@ MobileManipMap::MobileManipMap(std::vector<std::vector<double>> & vvd_elevation_
     }
     this->ui_num_cols = vvd_elevation_map_m[0].size();
     this->ui_num_rows = vvd_elevation_map_m.size();
-    this->loadGlobalSample(w_sample_pos_m);
-    this->mapstate = FACE_COMPUTED;
+    if(this->loadGlobalSample(w_sample_pos_m)) this->mapstate = FACE_COMPUTED;
 }
 
 unsigned int MobileManipMap::computeFACE(base::Waypoint w_sample_pos_m,
