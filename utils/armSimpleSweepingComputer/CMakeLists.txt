@@ -5,7 +5,7 @@ if(DART_IN_SOURCE_BUILD)
   return()
 endif()
 
-project(simpleSweepingComputing)
+project(armSimpleSweepingComputer)
 
 find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 
