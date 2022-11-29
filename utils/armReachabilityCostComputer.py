@@ -64,10 +64,11 @@ with open('../data/planner/reachabilityDistancesAccess.txt', 'w') as outfile:
             np.savetxt(outfile, costs[i][j][:], fmt='%-4f', newline=" ")
         outfile.write("\n")
 
-fig = mlab.figure()
-mlab.contour3d(costs, contours = 20, opacity = 1, transparent = False)
+### Deprecated representation, better use armReachabilityMapViewer.py
+'''fig = mlab.figure()
+mlab.contour3d(costs, contours = 20, opacity = 1, transparent = True)
 mlab.quiver3d(np.array([xsize/2]), np.array([ysize/2]), np.array([zsize/2]), np.array([20]), np.array([0]), np.array([0]), scale_factor = 0.3, color = (1,0,0))
 mlab.quiver3d(np.array([xsize/2]), np.array([ysize/2]), np.array([zsize/2]), np.array([0]), np.array([20]), np.array([0]), scale_factor = 0.3, color = (0,1,0))
 mlab.quiver3d(np.array([xsize/2]), np.array([ysize/2]), np.array([zsize/2]), np.array([0]), np.array([0]), np.array([20]), scale_factor = 0.3, color = (0,0,1))
 mlab.volume_slice(costs, plane_orientation='x_axes', opacity = 0, plane_opacity = 0, transparent = True)
-mlab.show()
+mlab.show()'''
