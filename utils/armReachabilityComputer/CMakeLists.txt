@@ -5,7 +5,7 @@ if(DART_IN_SOURCE_BUILD)
   return()
 endif()
 
-project(reachabilityComputing)
+project(armReachabilityComputer)
 
 find_package(DART 6.6.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 
