@@ -345,7 +345,7 @@ for i in range(2, xsize):
 
 armJoints = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_0"+representationNumber+".txt",'r'), skiprows=0)
 
-DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_Nominal_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
@@ -378,7 +378,7 @@ mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255))
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04)
-mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[round(path3D[-1][0]/res),round(path3D[-1][1]/res)], scale_factor = 0.2, color=(192/255,192/255,192/255))
+mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][0]/res+0.5),int(path3D[-1][1]/res+0.5)], scale_factor = 0.2, color=(192/255,192/255,192/255))
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))

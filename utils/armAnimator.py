@@ -327,7 +327,7 @@ zsize = int(sizes[2])
 res = resolutions[0]
 resz = resolutions[1]
 
-DEM = np.loadtxt(open("../test/unit/data/ColmenarRocks_Nominal_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
@@ -338,9 +338,9 @@ x,y = np.meshgrid(xMap,yMap)
 
 T = DKM(armJoints[0,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
 rotT = T
-rotT[0,3] = 0   
-rotT[1,3] = 0   
-rotT[2,3] = 0   
+rotT[0,3] = 0
+rotT[1,3] = 0
+rotT[2,3] = 0
 
 Tbx = dot(rotZ(path[0,3]), traslation([1,0,0]))
 Tby = dot(rotZ(path[0,3]), traslation([0,1,0]))
@@ -422,7 +422,7 @@ def make_frame(t):
 #animation.write_gif("sampling.gif", fps=12, program='imageio',opt = 'nq')
 
 
-@mlab.animate(delay = 10000, ui = True)
+@mlab.animate(delay = 10, ui = True)
 def anim():
     mlab.gcf()
     for i in range(0,len(armJoints)):
