@@ -174,8 +174,7 @@ samplePos, 1.0, 0.94);
 
 }*/
 
-// TODO - Fix this part with new constructors
-/*TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
+TEST(MMMotionPlanTest, rover_or_sample_poses_nonvalid_test)
 {
     // Reading the elevation and cost maps
     std::vector<std::vector<double>> vvd_costMap;
@@ -184,18 +183,17 @@ samplePos, 1.0, 0.94);
         readMatrixFile("test/unit/data/input/MMMotionPlanTest/ColmenarRocks_smaller_10cmDEM.csv",
                        vvd_elevationMap))
         << "\033[31m[----------]\033[0m Input CSV elevation map is missing";
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt",
-                                   vvd_costMap))
+    ASSERT_NO_THROW(
+        readMatrixFile("test/unit/data/input/MMMotionPlanTest/costMap_Shadowing.txt", vvd_costMap))
         << "\033[31m[----------]\033[0m "
            "test/unit/data/input/costMap_shadowing.txt is missing";
-    double res = 0.1; // meters
-    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res);
+    double res = 0.1;    // meters
 
     // Creating the Motion Plan
     double zRes = 0.08;
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
     std::string s_urdf_path;
-    if (if_urdf_path.is_open())
+    if(if_urdf_path.is_open())
     {
         std::getline(if_urdf_path, s_urdf_path);
         std::cout << "urdf path is read from " << s_urdf_path << std::endl;
@@ -203,9 +201,8 @@ samplePos, 1.0, 0.94);
     else
     {
         std::cout << "Cannot open urdfmodel_path.txt" << std::endl;
-    throw "Cannot open urdf model path ";
+        throw "Cannot open urdf model path ";
     }
-    MotionPlan mplan_dummy(&dummyMap, zRes, s_urdf_path);
 
     base::Waypoint roverPos, samplePos;
     unsigned int i_error_code = 0;
@@ -215,41 +212,49 @@ samplePos, 1.0, 0.94);
     roverPos.position[1] = 2.0;
     samplePos.position[0] = 5.3;
     samplePos.position[1] = 5.6;
-    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
-        roverPos, samplePos);
-    ASSERT_EQ(i_error_code, 1)
-        << "\033[31m[----------]\033[0m Expected Error Code 1";
+
+    MobileManipMap dummyMap(vvd_elevationMap, vvd_costMap, res, samplePos, 1.5, 1.4);
+
+    MotionPlan mplan_dummy(&dummyMap, s_urdf_path, 0);
+
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(roverPos);
+    ASSERT_EQ(i_error_code, 1) << "\033[31m[----------]\033[0m Expected Error Code 1";
 
     // Rover within obstacle area
     roverPos.position[0] = 6.0;
     roverPos.position[1] = 2.0;
     samplePos.position[0] = 5.3;
     samplePos.position[1] = 5.6;
-    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
-        roverPos, samplePos);
-    ASSERT_EQ(i_error_code, 2)
-        << "\033[31m[----------]\033[0m Expected Error Code 2";
+
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(roverPos);
+    ASSERT_EQ(i_error_code, 2) << "\033[31m[----------]\033[0m Expected Error Code 2";
 
     // Sample out of the map
     roverPos.position[0] = 3.0;
     roverPos.position[1] = 2.0;
     samplePos.position[0] = -5.3;
     samplePos.position[1] = 5.6;
-    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
-        roverPos, samplePos);
-    ASSERT_EQ(i_error_code, 3)
-        << "\033[31m[----------]\033[0m Expected Error Code 3";
+
+    dummyMap = MobileManipMap(vvd_elevationMap, vvd_costMap, res, samplePos, 1.5, 1.4);
+
+    mplan_dummy = MotionPlan(&dummyMap, s_urdf_path, 0);
+
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(roverPos);
+    ASSERT_EQ(i_error_code, 3) << "\033[31m[----------]\033[0m Expected Error Code 3";
 
     // Sample within obstacle area
     roverPos.position[0] = 3.0;
     roverPos.position[1] = 2.0;
     samplePos.position[0] = 6.0;
     samplePos.position[1] = 2.0;
-    i_error_code = mplan_dummy.computeRoverBasePathPlanning(
-        roverPos, samplePos);
-    ASSERT_EQ(i_error_code, 4)
-        << "\033[31m[----------]\033[0m Expected Error Code 4";
-}*/
+
+    dummyMap = MobileManipMap(vvd_elevationMap, vvd_costMap, res, samplePos, 1.5, 1.4);
+
+    mplan_dummy = MotionPlan(&dummyMap, s_urdf_path, 0);
+
+    i_error_code = mplan_dummy.computeRoverBasePathPlanning(roverPos);
+    ASSERT_EQ(i_error_code, 4) << "\033[31m[----------]\033[0m Expected Error Code 4";
+}
 
 TEST(MMMotionPlanTest, non_reachable_test)
 {
