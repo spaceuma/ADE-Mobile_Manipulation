@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot name="Sherpa_tt">
-    <material name="Yellow">
+    <material name="Black">
         <color rgba="1.0 1.0 0.0 1.0"/>
     </material>
-    <material name="Gray">
+    <material name="Black">
         <color rgba="0.85 0.85 0.85 1.0"/>
     </material>
     <material name="Brown">
@@ -22,7 +22,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/body.stl" scale="0.001 0.001 0.001"/>
@@ -66,14 +66,14 @@
 
     <link name="box">        
         <visual>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.52 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/box.stl" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.52 0 0" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.5 0.395 0.39"/>              
@@ -88,14 +88,14 @@
 
     <link name="mast">        
         <visual>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.435 0 0.755" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/mast.stl" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.435 0 0.755" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.160 0.045 1.118"/>              
@@ -110,14 +110,14 @@
 
     <link name="nav_cam">        
         <visual>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.45 0 1.2" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/navCam.stl" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.45 0 1.2" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.3 0.576 0.2"/>              
@@ -132,14 +132,14 @@
 
     <link name="loc_cam">        
         <visual>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.6 0 0.24" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/locCam.stl" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.6 0 0.24" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.095 0.576 0.1"/>              
@@ -154,14 +154,14 @@
 
     <link name="box_base">        
         <visual>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.52 0 -0.21" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/boxBase.stl" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
-            <material name="Gray"/>
+            <material name="Black"/>
             <origin xyz="0.52 0 -0.21" rpy="0 0 0"/>
             <geometry>
 				        <box size="0.355 0.600 0.042"/>              
@@ -198,7 +198,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -233,7 +233,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -298,7 +298,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -319,7 +319,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -449,7 +449,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -484,7 +484,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -564,7 +564,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -587,7 +587,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -719,7 +719,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -747,7 +747,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -812,7 +812,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -833,7 +833,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -963,7 +963,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -991,7 +991,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerStrut.stl" scale="0.001 0.001 0.001"/>
@@ -1056,7 +1056,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/innerLegInt.stl" scale="0.001 0.001 0.001"/>
@@ -1077,7 +1077,7 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
         </inertial>
         <visual>
-            <material name="Yellow"/>
+            <material name="Black"/>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="./meshes/outerLegInt.stl" scale="0.001 0.001 0.001"/>
