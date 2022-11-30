@@ -3,6 +3,10 @@ build
 install
 env.sh
 test/unit/data/results/*
+data/results/*
+utils/logsHandler/extractedLog/*
 *.swp
 *.swo
 data/planner/urdfmodel_path.txt
+data/planner/sweepingProfile.txt
+data/planner/sweepingTimes.txt
