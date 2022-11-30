@@ -22,6 +22,25 @@ chmod u+x install.sh
 sudo ./install.sh
 ```
 
+## Examples
+There are several unit tests that can be used as examples. To run them:
+
+```
+./runUnitTests
+```
+
+Then, the results can be viewed using the provided python3 utils. For example, to represent the evolution of the arm during the motion plan:
+```
+cd utils/unitTestsViewers/
+python3 armFullPlanViewer.py
+```
+
+To represent the base motion plan:
+
+```
+python3 baseMotionPlanViewer.py
+```
+
 ## External Packages
 
 ### Required (the indicated version is the one used)
@@ -45,9 +64,9 @@ sudo ./install.sh
 
 | Folder            |       Description                             |
 | ----------------- | ------------------------                      |
+| data/             | Data required as input by the planner         |
 | deps/             | External dependencies                         |
 | ├── ESA-Trajectory_Control/ | (Git submodule) Libraries for path tracking|
-| ├── UMA-Coupled_Control/ | (Git submodule) Libraries for arm-rover coordinated motion|
 | ├── UMA-PathAndMotion_Planning/ | Libraries for planning rover and arm paths|
 | doc/              | Documentation                                 |
 | spike/            | Individual portions of code to try new things |
@@ -66,4 +85,9 @@ sudo ./install.sh
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  ├──  proxy_library/ | Types using proxy_library namespace|
 | test/             | Test files                                    |
 | UML/              | UML Project files                             |
-
+| utils/            | Utilities                                     |
+| ├── armCollisionsViewer/ | Check and view if the arm collides for a given config |
+| ├── armReachabilityComputer/ | Compute and represent the arm reachability volume |
+| ├── armSingleSweepingComputer/ | Example computation of a simple sweeping movement for the end effector |
+| ├── logsHandler/ | Logs extraction and different pythonr utils for representation |
+| ├── unitTestsViewers/ | Python scripts to represent the results of the unit tests |
