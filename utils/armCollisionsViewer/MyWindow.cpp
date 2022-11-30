@@ -32,26 +32,24 @@
 
 #include "MyWindow.hpp"
 
-MyWindow::MyWindow()
-  : SimWindow() {
+MyWindow::MyWindow() : SimWindow() {}
+
+MyWindow::~MyWindow() {}
+
+void MyWindow::drawWorld() const
+{
+    glEnable(GL_LIGHTING);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    SimWindow::drawWorld();
 }
 
-MyWindow::~MyWindow() {
-}
-
-
-void MyWindow::drawWorld() const {
-  glEnable(GL_LIGHTING);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  SimWindow::drawWorld();
-}
-
-void MyWindow::keyboard(unsigned char _key, int _x, int _y) {
-  switch (_key) 
-  {
-    default:
-      Win3D::keyboard(_key, _x, _y);
-  }
-  glutPostRedisplay();
+void MyWindow::keyboard(unsigned char _key, int _x, int _y)
+{
+    switch(_key)
+    {
+        default:
+            Win3D::keyboard(_key, _x, _y);
+    }
+    glutPostRedisplay();
 }

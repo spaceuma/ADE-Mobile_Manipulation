@@ -477,7 +477,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             // std::cout << "\033[32m[----------]\033[0m [INFO] Final Rover Motion Command is
             // (translation speed = " << mc_m.m_speed_ms
             //<< " m/s, rotation speed = " << mc_m.m_turnRate_rads << " rad/s)" << "and the maneuvre
-            //type is "<< mc_m.m_manoeuvreType << std::endl;
+            // type is "<< mc_m.m_manoeuvreType << std::endl;
             // std::cout << "VAlue of b_isfinal is " << b_is_last_segment << std::endl;
             // if (this->navstate == TARGET_REACHED)
             // if (i_actual_segment == (int)this->vpw_path.size() - 2)

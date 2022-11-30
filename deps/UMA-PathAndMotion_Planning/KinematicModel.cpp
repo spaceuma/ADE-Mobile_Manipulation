@@ -1118,7 +1118,8 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
             }
 
     std::cout << "...done!" << std::flush << std::endl;
-    saveVolume(&reachabilityMap, &resolutions, &minValues, s_data_path_m + "/reachabilityMap_Coupled.txt");
+    saveVolume(
+        &reachabilityMap, &resolutions, &minValues, s_data_path_m + "/reachabilityMap_Coupled.txt");
 }
 
 int Manipulator::isReachable(std::vector<double> position, int mode)
