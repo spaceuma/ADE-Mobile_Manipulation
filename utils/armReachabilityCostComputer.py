@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 import scipy.ndimage
 from mayavi import mlab
 
-sizes = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), skiprows = 1, max_rows=1)
-minValues = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), skiprows = 2, max_rows=1)
-reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMapAccess.txt",'r'), skiprows=3)
+sizes = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), max_rows=1)
+resolutions = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows = 1, max_rows=1)
+minValues = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows = 2, max_rows=1)
+reachabilityMap2D = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt",'r'), skiprows=3)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -50,7 +50,7 @@ for i in range(0,np.size(reachabilityMap3D,0)):
   costs[i][:][:] = scipy.ndimage.morphology.distance_transform_edt(np.array(slice_), sampling = [resXY, resZ])
 
 # Write the array to disk
-with open('../data/planner/reachabilityDistancesAccess.txt', 'w') as outfile:
+with open('../data/planner/reachabilityDistances_Coupled.txt', 'w') as outfile:
     np.savetxt(outfile, sizes, fmt='%-1d', newline=" ")
     outfile.write("\n")
     np.savetxt(outfile, resolutions, fmt='%-4f', newline=" ")
