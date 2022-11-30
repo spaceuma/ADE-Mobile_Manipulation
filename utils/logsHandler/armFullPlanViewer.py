@@ -311,6 +311,11 @@ sizes = np.loadtxt(open("./extractedLog/3dcostMap.txt",'r'), max_rows=1)
 
 path = np.loadtxt(open("./extractedLog/roverPath.txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("./extractedLog/wristPath.txt",'r'), skiprows=0)
+offset = np.loadtxt(open("./extractedLog/offset.txt",'r'), skiprows=0)
+
+path3D[:,0] = path3D[:,0]-offset[0]
+path3D[:,1] = path3D[:,1]-offset[1]
+path3D[:,2] = path3D[:,2]-offset[2]
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
