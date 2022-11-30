@@ -4,18 +4,15 @@ import matplotlib.pyplot as plt
 
 from matplotlib import cm
 
-resultsFile = "../data/results/"
-dateFile = "2020-12-10_10-3-15"
-
-
 # Loading TXT files
-elevationMap = np.loadtxt(open(resultsFile + dateFile + "_spacehall_elevationMap.txt"), skiprows=0)
-validityMap = np.loadtxt(open(resultsFile + dateFile + "_spacehall_validityMap.txt"), skiprows=0)
-slopeMap = np.loadtxt(open(resultsFile + dateFile + "_spacehall_slopeMap.txt"), skiprows=0)
-sdMap = np.loadtxt(open(resultsFile + dateFile + "_spacehall_sdMap.txt"), skiprows=0)
-offset = np.loadtxt(open(resultsFile + dateFile + "_spacehall_offset.txt"), skiprows=0)
+elevationMap = np.loadtxt(open("./extractedLog/elevationMap.txt",'r'), skiprows=0)
+validityMap = np.loadtxt(open("./extractedLog/validityMap.txt",'r'), skiprows=0)
+slopeMap = np.loadtxt(open("./extractedLog/slopeMap.txt",'r'), skiprows=0)
+sdMap = np.loadtxt(open("./extractedLog/sdMap.txt",'r'), skiprows=0)
+offset = np.loadtxt(open("./extractedLog/offset.txt",'r'), skiprows=0)
 
 # Creating X and Y coordinates
+print("WARNING: using default resolution 0.1 m")
 res = 0.1 # This is a hardcoded resolution!
 xMap, yMap = np.meshgrid(np.linspace(0,elevationMap.shape[1]-1, elevationMap.shape[1]), np.linspace(0,elevationMap.shape[0]-1, elevationMap.shape[0]))
 xMap = xMap*res + offset[0]

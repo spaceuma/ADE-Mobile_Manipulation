@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import pandas as pd
 
+print("WARNING: using default resolution 0.1 m")
 res = 0.1
 elevation_map = np.loadtxt(open("./extractedLog/elevationMap.txt"), skiprows=0)
 cost_map = np.loadtxt(open("./extractedLog/costMap.txt"), skiprows=0)
@@ -21,7 +22,7 @@ yMap = yMap*res + 5880515.055 - 5880516.06
 rover_pos = path[:,0]
 
 fig, ax = plt.subplots(constrained_layout = True)
-fig.suptitle('Galopprennbahn Test', fontsize=16)
+fig.suptitle('Field Test', fontsize=16)
 plot3 = ax.contourf(xMap, yMap, elevation_map, 100, cmap = cm.gist_earth, extend='both')
 plot3k = ax.contour(xMap, yMap, elevation_map, 50, colors = 'k', alpha = .3)
 ax.set_aspect('equal')
@@ -39,7 +40,7 @@ ax.legend((c1, p1[0],p2[0]),('Corridor Area', 'Computed Path',\
         'Rover Positions'), loc = 'lower right')
 
 fig, ax = plt.subplots(constrained_layout = True)
-fig.suptitle('Galopprennbahn Test', fontsize=16)
+fig.suptitle('Field Test', fontsize=16)
 plot3 = ax.contourf(xMap, yMap, cost_map, 100, cmap = 'Oranges')
 #plot3k = ax.contour(xMap, yMap, cost_map, 50, colors = 'k', alpha = .3)
 ax.set_aspect('equal')

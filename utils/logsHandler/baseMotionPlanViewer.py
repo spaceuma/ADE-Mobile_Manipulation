@@ -8,6 +8,7 @@ from matplotlib import cm
 costMap = np.loadtxt(open("./extractedLog/costMap.txt"), skiprows=0)
 costMap[np.where(costMap==np.inf)] = np.nan
 
+print("WARNING: using default resolutions: 0.1 m")
 res = 0.1
 elevation_map = np.loadtxt(open("./extractedLog/elevationMap.txt"), skiprows=0)
 path = np.loadtxt(open("./extractedLog/roverPath.txt",'r'), skiprows=0)

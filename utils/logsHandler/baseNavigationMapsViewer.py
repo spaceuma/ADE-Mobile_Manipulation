@@ -4,16 +4,14 @@ import matplotlib.pyplot as plt
 
 from matplotlib import cm
 
-resultsFile = "../data/results/"
-dateFile = "2020-12-10_10-3-15"
-
 # Loading TXT files
-traversabilityMap = np.loadtxt(open(resultsFile + dateFile + "_spacehall_traversabilityMap.txt"), skiprows=0)
-costMap = np.loadtxt(open(resultsFile + dateFile + "_spacehall_costMap.txt"), skiprows=0)
-path = np.loadtxt(open(resultsFile + dateFile + "_spacehall_roverPath.txt"), skiprows=0)
-offset = np.loadtxt(open(resultsFile + dateFile + "_spacehall_offset.txt"), skiprows=0)
+traversabilityMap = np.loadtxt(open("./extractedLog/traversabilityMap.txt",'r'), skiprows=0)
+costMap = np.loadtxt(open("./extractedLog/costMap.txt"), skiprows=0)
+path = np.loadtxt(open("./extractedLog/roverPath.txt",'r'), skiprows=0)
+offset = np.loadtxt(open("./extractedLog/offset.txt",'r'), skiprows=0)
 
 # Creating X and Y coordinates
+print("WARNING: using default resolution 0.1 m")
 res = 0.1 # This is a hardcoded resolution!
 xMap, yMap = np.meshgrid(np.linspace(0,traversabilityMap.shape[1]-1, traversabilityMap.shape[1]), np.linspace(0,traversabilityMap.shape[0]-1, traversabilityMap.shape[0]))
 xMap = xMap*res + offset[0]
