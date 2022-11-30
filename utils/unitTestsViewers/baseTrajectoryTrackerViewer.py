@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 res = 0.1
-elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
-cost_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
+elevation_map = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
+cost_map = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
 
-path = np.loadtxt(open("../test/unit/data/input/MMExecutorTest/path.txt"), skiprows=0)
+path = np.loadtxt(open("../../test/unit/data/input/MMExecutorTest/path.txt"), skiprows=0)
 xMap, yMap = \
           np.meshgrid(np.linspace(0,elevation_map.shape[1]-1,elevation_map.shape[1]), \
                       np.linspace(0,elevation_map.shape[0]-1,elevation_map.shape[0]))
@@ -15,9 +15,9 @@ xMap, yMap = \
 xMap = xMap*res
 yMap = yMap*res
 
-sample = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"), skiprows = 0)
-rover_pos = np.loadtxt(open("../test/unit/data/results/MMExecutorTest/roverRealPos.txt"), skiprows=0)
-rover_loc_pos = np.loadtxt(open("../test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt"), skiprows=0)
+sample = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"), skiprows = 0)
+rover_pos = np.loadtxt(open("../../test/unit/data/results/MMExecutorTest/roverRealPos.txt"), skiprows=0)
+rover_loc_pos = np.loadtxt(open("../../test/unit/data/results/MMExecutorTest/roverEstimatedPos.txt"), skiprows=0)
 
 fig, ax = plt.subplots(constrained_layout = True)
 fig.suptitle('Unit Test - MMExecutor', fontsize=16)

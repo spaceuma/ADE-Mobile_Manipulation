@@ -15,15 +15,15 @@ if len(sys.argv) != 2:
 
 representationNumber = str(int(sys.argv[1])+1)
 
-cMap2d = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), skiprows=1)
+cMap2d = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), skiprows=1)
 cMap2d[np.where(cMap2d == 0)] = 0.0001
 cMap2d[np.isinf(cMap2d)] = 0
 
-sizes = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
+sizes = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
+resolutions = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
-path = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
+path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -73,7 +73,7 @@ z = np.linspace(0,stopz,zsize)"""
 
 X, Y, Z = np.mgrid[0:stopy:complexSizey,0:stopx:complexSizex,0:stopz:complexSizez]
 
-DEM = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz

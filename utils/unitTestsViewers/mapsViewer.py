@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 ### SPACE HALL ###
-exrSpaceHall_elevationMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_elevationMap.txt"), skiprows=0)
-exrSpaceHall_slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_slopeMap.txt"), skiprows=0)
-exrSpaceHall_sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_sdMap.txt"), skiprows=0)
-exrSpaceHall_validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_validityMap.txt"), skiprows=0)
-exrSpaceHall_costMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_costMap.txt"), skiprows=0)
-exrSpaceHall_traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/spacehall_traversabilityMap.txt"), skiprows=0)
+exrSpaceHall_elevationMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/spacehall_elevationMap.txt"), skiprows=0)
+exrSpaceHall_slopeMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/spacehall_slopeMap.txt"), skiprows=0)
+exrSpaceHall_sdMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/spacehall_sdMap.txt"), skiprows=0)
+exrSpaceHall_validityMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/spacehall_validityMap.txt"), skiprows=0)
+exrSpaceHall_costMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/spacehall_costMap.txt"), skiprows=0)
+exrSpaceHall_traversabilityMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/spacehall_traversabilityMap.txt"), skiprows=0)
 
 res = 0.1
 xMap, yMap = np.meshgrid(np.linspace(0,300,301), np.linspace(0,300,301))
@@ -103,10 +103,10 @@ ax2.set_ylim([yMap[0,0],yMap[-1,0]])
 #ax2.add_artist(plt.Circle((3.9,10.6),1.6, color = 'b'))
 
 ### EXR COLMENAR ###
-exrColmenar_elevationMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrColmenar.txt"), skiprows=0)
-exrColmenar_slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrcolmenar_slopeMap.txt"), skiprows=0)
-exrColmenar_sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrcolmenar_sdMap.txt"), skiprows=0)
-exrColmenar_costMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/exrcolmenar_costMap.txt"), skiprows=0)
+exrColmenar_elevationMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/exrColmenar.txt"), skiprows=0)
+exrColmenar_slopeMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/exrcolmenar_slopeMap.txt"), skiprows=0)
+exrColmenar_sdMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/exrcolmenar_sdMap.txt"), skiprows=0)
+exrColmenar_costMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/exrcolmenar_costMap.txt"), skiprows=0)
 res = 0.1
 xMap, yMap = np.meshgrid(np.linspace(0,300,301), np.linspace(0,300,301))
 
@@ -155,21 +155,21 @@ ax1.set_facecolor('k')
 
 
 
-costMap_shadowing = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
-costMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGcostMap.txt"), skiprows=0)
-costMap_Globalmag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGGlobalcostMap.txt"), skiprows=0)
+costMap_shadowing = np.loadtxt(open("../../test/unit/data/results/MMMapTest/costMap.txt"), skiprows=0)
+costMap_mag = np.loadtxt(open("../../test/unit/data/results/MMMapTest/MAGcostMap.txt"), skiprows=0)
+costMap_Globalmag = np.loadtxt(open("../../test/unit/data/results/MMMapTest/MAGGlobalcostMap.txt"), skiprows=0)
 #elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RG_Colmenar_10cmDEM.csv"), skiprows=0)
 #elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
-elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/GalopprennbahnWest_Zone01blurred_10cmDEM.csv"), skiprows=0)
+elevationMap = np.loadtxt(open("../../test/unit/data/input/MMMapTest/GalopprennbahnWest_Zone01blurred_10cmDEM.csv"), skiprows=0)
 #elevationMap = np.loadtxt(open("../test/unit/data/input/MMMapTest/ColmenarRocks_Nominal_10cmDEM.csv"), skiprows=0)
-slopeMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
-slopeMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGslopeMap.txt"), skiprows=0)
-validityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
-sdMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
-sdMap_mag = np.loadtxt(open("../test/unit/data/results/MMMapTest/MAGsdMap.txt"), skiprows=0)
-traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
-traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
-costMap_splitted = np.loadtxt(open("../test/unit/data/results/MMMapTest/costMap_splittedMap.txt"), skiprows=0)
+slopeMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/slopeMap.txt"), skiprows=0)
+slopeMap_mag = np.loadtxt(open("../../test/unit/data/results/MMMapTest/MAGslopeMap.txt"), skiprows=0)
+validityMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/validityMap.txt"), skiprows=0)
+sdMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/sdMap.txt"), skiprows=0)
+sdMap_mag = np.loadtxt(open("../../test/unit/data/results/MMMapTest/MAGsdMap.txt"), skiprows=0)
+traversabilityMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
+traversabilityMap = np.loadtxt(open("../../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
+costMap_splitted = np.loadtxt(open("../../test/unit/data/results/MMMapTest/costMap_splittedMap.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
 traversabilityMap[np.where(traversabilityMap==np.inf)] = np.nan
 costMap_splitted[np.where(costMap_splitted==np.inf)] = np.nan
@@ -183,7 +183,7 @@ xMap, yMap = \
 xMap = xMap*res
 yMap = yMap*res
 
-sample = np.loadtxt(open("../test/unit/data/input/MMMapTest/sample_pos.txt"), skiprows = 0)
+sample = np.loadtxt(open("../../test/unit/data/input/MMMapTest/sample_pos.txt"), skiprows = 0)
 
 fig1, (ax1,ax2) = plt.subplots(1,2,constrained_layout=True)
 fig1.suptitle('Unit Test 01 - MMMap Class', fontsize=16)

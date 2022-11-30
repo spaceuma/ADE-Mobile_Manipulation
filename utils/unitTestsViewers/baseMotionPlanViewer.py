@@ -5,10 +5,10 @@ from matplotlib import cm
 
 res = 0.1
 
-elevation_map = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
+elevation_map = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
 #traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 
-costMap_shadowing = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
+costMap_shadowing = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
 costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
 
 traversabilityMap = costMap_shadowing
@@ -20,10 +20,10 @@ xMap, yMap = \
 xMap = xMap*res
 yMap = yMap*res
 
-path_shadowing_01 = np.loadtxt(open("../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt"), skiprows=0)
+path_shadowing_01 = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt"), skiprows=0)
 
-sample = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"), skiprows = 0)
-rover = np.loadtxt(open("../test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"), skiprows = 0)
+sample = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"), skiprows = 0)
+rover = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"), skiprows = 0)
 
 fig1, (ax2,ax1) = plt.subplots(figsize = (9,6),nrows = 1,ncols = 2,constrained_layout=True)
 fig1.suptitle('Unit Test - MMMotionPlan Cost Maps', fontsize=16)
