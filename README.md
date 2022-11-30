@@ -19,6 +19,7 @@ Then, to install the component and the required packages:
 ```
 cd ~/ADE-Mobile_Manipulation
 chmod u+x install.sh
+sudo ./install.sh
 ```
 
 ## External Packages
