@@ -6,10 +6,30 @@ import matplotlib.pyplot as plt
 from mayavi import mlab
 import plotly.graph_objects as go
 
-sizes = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), max_rows=1)
-resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 1, max_rows=1)
-minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
-reachabilityMap2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
+if len(sys.argv) != 2:
+  print('ERROR: the script needs one additional input:')
+  print('0 for Coupled RV')
+  print('1 for Atomic RV')
+  sys.exit()
+
+representationNumber = int(sys.argv[1])
+
+if representationNumber == 0:
+    sizes = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), max_rows=1)
+    resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 1, max_rows=1)
+    minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
+    reachabilityMap2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
+elif representationNumber == 1:
+    sizes = np.loadtxt(open("../../data/planner/reachabilityDistances_Atomic.txt",'r'), max_rows=1)
+    resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Atomic.txt",'r'), skiprows = 1, max_rows=1)
+    minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Atomic.txt",'r'), skiprows = 2, max_rows=1)
+    reachabilityMap2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Atomic.txt",'r'), skiprows=3)
+else:
+  print('ERROR: Invalid input. Expected: ')
+  print('0 for Coupled RV')
+  print('1 for Atomic RV')
+  sys.exit()
+
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
