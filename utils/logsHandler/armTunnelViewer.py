@@ -18,6 +18,11 @@ sizes = np.loadtxt(open("./extractedLog/3dcostMap.txt",'r'), max_rows=1)
 
 path = np.loadtxt(open("./extractedLog/roverPath.txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("./extractedLog/wristPath.txt",'r'), skiprows=0)
+offset = np.loadtxt(open("./extractedLog/offset.txt",'r'), skiprows=0)
+
+path3D[:,0] = path3D[:,0]-offset[0]
+path3D[:,1] = path3D[:,1]-offset[1]
+path3D[:,2] = path3D[:,2]-offset[2]
 
 xsize = int(sizes[1])
 ysize = int(sizes[0])
@@ -68,12 +73,18 @@ complexSizez = complex(0,zsize)
 y = np.linspace(0,stopy,ysize)
 z = np.linspace(0,stopz,zsize)"""
 
-X, Y, Z = np.mgrid[0:stopy:complexSizey,0:stopx:complexSizex,0:stopz:complexSizez]
+X, Y, Z = np.mgrid[-offset[1]:stopy-offset[1]:complexSizey,-offset[0]:stopx-offset[0]:complexSizex,-offset[2]:stopz-offset[2]:complexSizez]
 
 DEM = np.loadtxt(open("./extractedLog/elevationMap.txt",'r'), skiprows=0)
+validity = np.loadtxt(open("./extractedLog/validityMap.txt",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
+DEM0[np.isinf(DEM0)] = -1
+DEM0[validity == 0] = -1
+
+xsize = np.size(DEM0, 0)
+ysize = np.size(DEM0, 1)
 
 xMap= np.linspace(0,res*xsize,xsize)
 yMap= np.linspace(0,res*ysize,ysize)
@@ -88,7 +99,7 @@ mlab.contour3d(X,Y,Z,costMap3D/np.max(costMap3D), contours = 10, opacity = 0.04,
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
-mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][0]/res+0.5),int(path3D[-1][1]/res+0.5)], scale_factor = 0.2, color=(192/255,192/255,192/255))
+#mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][0]/res+0.5),int(path3D[-1][1]/res+0.5)], scale_factor = 0.2, color=(192/255,192/255,192/255))
 #mlab.quiver3d(path3D[-1][0], path3D[-1][1], path3D[-1][2],1,0,0, scale_factor = 0.2, color=(1,0,0))
 #mlab.quiver3d(path3D[-1][0], path3D[-1][1], path3D[-1][2],0,1,0, scale_factor = 0.2, color=(0,1,0))
 #mlab.quiver3d(path3D[-1][0], path3D[-1][1], path3D[-1][2],0,0,1, scale_factor = 0.2, color=(0,0,1))

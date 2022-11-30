@@ -303,30 +303,28 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
     return theta1, theta2, theta3, theta4, theta5, theta6
 
 path = np.loadtxt(open("./extractedLog/roverPath.txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("./extractedLog/wristPath.txt",'r'), skiprows=0)
-offset = np.loadtxt(open("./extractedLog/offset.txt",'r'), skiprows=0)
+#path3D = np.loadtxt(open("./extractedLog/wristPath.txt",'r'), skiprows=0)
+#offset = np.loadtxt(open("./extractedLog/offset.txt",'r'), skiprows=0)
 
-path3D[:,0] = path3D[:,0]-offset[0]
-path3D[:,1] = path3D[:,1]-offset[1]
-path3D[:,2] = path3D[:,2]-offset[2]
+#path3D[:,0] = path3D[:,0]-offset[0]
+#path3D[:,1] = path3D[:,1]-offset[1]
+#path3D[:,2] = path3D[:,2]-offset[2]
 
 armJoints = np.loadtxt(open("./extractedLog/armMotionProfile.txt",'r'), skiprows=0)
 
-sizes = np.loadtxt(open("./extractedLog/3dcostMap.txt",'r'), max_rows=1)
-
-xsize = int(sizes[1])
-ysize = int(sizes[0])
-zsize = int(sizes[2])
-
-print("WARNING: using default resolutions: 0.1, 0.1, 0.08 m")
-res = 0.1 
-resz = 0.08
+print("WARNING: using default resolutions 0.1  m")
+res = 0.1
 
 DEM = np.loadtxt(open("./extractedLog/elevationMap.txt",'r'), skiprows=0)
+validity = np.loadtxt(open("./extractedLog/validityMap.txt",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
-DEM0[np.isinf(DEM0)] = np.nan
+DEM0[np.isinf(DEM0)] = -1
+DEM0[validity == 0] = -1
+
+xsize = np.size(DEM0, 0)
+ysize = np.size(DEM0, 1)
 
 xMap= np.linspace(0,res*xsize,xsize)
 yMap= np.linspace(0,res*ysize,ysize)
@@ -334,9 +332,9 @@ x,y = np.meshgrid(xMap,yMap)
 
 T = DKM(armJoints[0,:], path[0,np.array([0,1,2])], [0,0,path[0,3]])
 rotT = T
-rotT[0,3] = 0   
-rotT[1,3] = 0   
-rotT[2,3] = 0   
+rotT[0,3] = 0
+rotT[1,3] = 0
+rotT[2,3] = 0
 
 Tbx = dot(rotZ(path[0,3]), traslation([1,0,0]))
 Tby = dot(rotZ(path[0,3]), traslation([0,1,0]))
@@ -357,7 +355,7 @@ mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)
-mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
+#mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
