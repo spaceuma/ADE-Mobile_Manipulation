@@ -27,7 +27,7 @@ chmod u+x install.sh
 
 - OpenCV 3.2.0
 
-- DART 6.9.2
+- [DART 6.9.2](https://dartsim.github.io/install_dart_on_ubuntu.html)
 
 ### Optional (mainly for results visualization)
 
