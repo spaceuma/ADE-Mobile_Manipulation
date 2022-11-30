@@ -5,13 +5,13 @@ from pytransform3d.urdf import UrdfTransformManager
 from mpl_toolkits.mplot3d import Axes3D # <--- This is important for 3d plotting
 import math
 
-sizes = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt", 'r'), max_rows = 1)
+sizes = np.loadtxt(open("../../data/planner/reachabilityMap_Coupled.txt", 'r'), max_rows = 1)
 
-resolutions = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt", 'r'), skiprows = 1, max_rows = 1)
+resolutions = np.loadtxt(open("../../data/planner/reachabilityMap_Coupled.txt", 'r'), skiprows = 1, max_rows = 1)
 
-minValues = np.loadtxt(open("../data/planner/reachabilityMap_Coupled.txt", 'r'), skiprows = 2, max_rows = 1)
+minValues = np.loadtxt(open("../../data/planner/reachabilityMap_Coupled.txt", 'r'), skiprows = 2, max_rows = 1)
 
-reachabilityMap2D = np.loadtxt( open("../data/planner/reachabilityMap_Coupled.txt", 'r'), skiprows = 3)
+reachabilityMap2D = np.loadtxt( open("../../data/planner/reachabilityMap_Coupled.txt", 'r'), skiprows = 3)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -39,7 +39,7 @@ BASE_DIR = os.getcwd() + "/"
 if not os.path.exists(BASE_DIR):
   BASE_DIR = os.path.join("..", BASE_DIR)
 
-URDF_DIR = BASE_DIR + "../data/planner/"
+URDF_DIR = BASE_DIR + "../../data/planner/"
 
 tm = UrdfTransformManager()
 with open(URDF_DIR + "sherpa_plotting.urdf", "r") as f:
