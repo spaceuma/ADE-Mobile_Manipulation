@@ -55,19 +55,19 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder -DCMAKE_CXX_FLAGS=-std=c++11 ..
 make
 
-cd $cur/utils/collisionsPlotter
+cd $cur/utils/armCollisionsViewer
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
 make
 
-cd $cur/utils/reachabilityComputing
+cd $cur/utils/armReachabilityComputer
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
 make
 
-cd $cur/utils/simpleSweepingComputing
+cd $cur/utils/armSimpleSweepingComputer
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$install_folder ..
