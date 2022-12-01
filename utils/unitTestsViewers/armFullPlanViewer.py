@@ -304,13 +304,22 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
     return theta1, theta2, theta3, theta4, theta5, theta6
 
 if len(sys.argv) != 2:
-  print('ERROR: the script needs one additional input:')
+  print('ERROR. The script needs one additional input:')
   print('0 for END deployment')
   print('1 for PROGRESSIVE deployment')
   print('2 for BEGINNING deployment')
+  print('3 for DECOUPLED solution')
   sys.exit()
 
 representationNumber = str(int(sys.argv[1])+1)
+
+if (int(representationNumber) < 1) or (int(representationNumber) > 4):
+  print('ERROR. The provided input is not valid:')
+  print('0 for END deployment')
+  print('1 for PROGRESSIVE deployment')
+  print('2 for BEGINNING deployment')
+  print('3 for DECOUPLED solution')
+  sys.exit()
 
 cMap2d = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_3dmap_0"+representationNumber+".txt",'r'), skiprows=1)
 cMap2d[np.where(cMap2d == 0)] = 0.0001
