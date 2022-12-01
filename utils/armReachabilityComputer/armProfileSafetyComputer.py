@@ -358,7 +358,7 @@ resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.
 minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
 reachabilityDistance2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
 
-armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_01.txt",'r'), skiprows=0)
+armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_03.txt",'r'), skiprows=0)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -389,12 +389,12 @@ totalDistToCollisions = 0
 
 for i in range(0, pathSize):
     TW4= DKMwrist(armJoints[i], pos, heading)
-    indexRV = [int((TW4[0,3] - minValues[0])/resXY), int((TW4[1,3] - minValues[1])/resXY), int((TW4[2,3] - minValues[2])/resZ)]
+    indexRV = [int((TW4[0,3] - minValues[0])/resXY + 0.5), int((TW4[1,3] - minValues[1])/resXY + 0.5), int((TW4[2,3] - minValues[2])/resZ + 0.5)]
     distToCollision = reachabilityDistance3D[indexRV[0], indexRV[1], indexRV[2]]
     if distToCollision == 0:
         print("Collision detected!")
         print("In config: " + str(armJoints[i]))
-        print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[0,3]))
+        print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[2,3]))
     totalDistToCollisions = totalDistToCollisions + distToCollision
 
 avgDistToCollisions = totalDistToCollisions/pathSize
