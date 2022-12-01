@@ -60,6 +60,9 @@ ArmPlanner::ArmPlanner(std::string s_data_path_m, bool _approach, int _deploymen
             horizonDistance = MAX_HORIZON;
             varyingHorizon = false;
             break;
+        case 3:    // DECOUPLED
+            decoupledMotion = true;
+            break;
         default:
             break;
     }
@@ -92,6 +95,9 @@ bool ArmPlanner::setDeployment(unsigned int _deployment)
             horizonDistance = MAX_HORIZON;
             return true;
             break;
+        case 3:    // DECOUPLED
+            decoupledMotion = true;
+            break;
         default:
             return false;
             break;
@@ -106,6 +112,8 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
                                std::vector<std::vector<double>> * armJoints,
                                CollisionDetector * p_collision_detector)
 {
+    clock_t inip = clock();
+
     this->mapResolution = _mapResolution;
     this->zResolution = _zResolution;
     this->DEM = _DEM;
@@ -184,6 +192,14 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
         }
     }
 
+    // Smoothing heading of the rover path by inserting new waypoints
+    double headingThreshold = M_PI / 12;
+    smoothRoverPathHeading(headingThreshold);
+
+    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
+                 "Reference base path heading is smoothed"
+              << std::endl;
+
     // Initial arm pos computation
     std::vector<std::vector<double>> initialBCS2Wrist =
         sherpa_tt_arm->getWristTransform(sherpa_tt_arm->initialConfiguration);
@@ -237,7 +253,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
     // TODO fix this hardcode
     TBCS2Sample[0][3] = 1.4;    // 0.969;
     TBCS2Sample[1][3] = 0.7;    // 0.384;//optimalLeftDeviation;
-    TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6;
+    TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6 + 0.3;
 
     /*
         TBCS2Sample[0][3] = 0.8;
@@ -253,250 +269,172 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
     std::cout << "Relative position sample - last waypoint = " << TBCS2Sample[0][3] << ", "
               << TBCS2Sample[1][3] << ", " << TBCS2Sample[2][3] << std::endl;
 
-    TW2Sample = dot(TW2BCS, TBCS2Sample);
-
-    samplePos.position[0] = TW2Sample[0][3];
-    samplePos.position[1] = TW2Sample[1][3];
-    samplePos.position[2] = TW2Sample[2][3];
-
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m New "
-                 "Relative Elevation of sample is "
-              << samplePos.position[2] << std::endl;
-
-    // Cost map 3D computation
-    int n = DEM->size();
-    int m = (*DEM)[0].size();
-
-    double maxz = 0;
-    for(int i = 0; i < DEM->size(); i++)
+    if(!decoupledMotion)
     {
-        for(int j = 0; j < (*DEM)[0].size(); j++)
+        TW2Sample = dot(TW2BCS, TBCS2Sample);
+
+        samplePos.position[0] = TW2Sample[0][3];
+        samplePos.position[1] = TW2Sample[1][3];
+        samplePos.position[2] = TW2Sample[2][3];
+
+        std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m New "
+                     "Relative Elevation of sample is "
+                  << samplePos.position[2] << std::endl;
+
+        // Cost map 3D computation
+        int n = DEM->size();
+        int m = (*DEM)[0].size();
+
+        double maxz = 0;
+        for(int i = 0; i < DEM->size(); i++)
         {
-            if(((*DEM)[i][j] > maxz) && ((*DEM)[i][j] != INFINITY))
+            for(int j = 0; j < (*DEM)[0].size(); j++)
             {
-                maxz = (*DEM)[i][j];
+                if(((*DEM)[i][j] > maxz) && ((*DEM)[i][j] != INFINITY))
+                {
+                    maxz = (*DEM)[i][j];
+                }
             }
         }
-    }
 
-    int l = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution + 0.5);
+        int l = (int)((maxz + heightGround2BCS + sherpa_tt_arm->maxZArm) / zResolution + 0.5);
 
-    volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
-    volume_cost_map->resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
+        volume_cost_map = new std::vector<std::vector<std::vector<double>>>;
+        volume_cost_map->resize(n, std::vector<std::vector<double>>(m, std::vector<double>(l)));
 
-    for(int i = 0; i < n; i++)
-    {
-        for(int j = 0; j < m; j++)
+        for(int i = 0; i < n; i++)
         {
-            for(int k = 0; k < l; k++)
+            for(int j = 0; j < m; j++)
             {
-                (*volume_cost_map)[i][j][k] = INFINITY;
+                for(int k = 0; k < l; k++)
+                {
+                    (*volume_cost_map)[i][j][k] = INFINITY;
+                }
             }
         }
-    }
 
-    clock_t init = clock();
+        clock_t init = clock();
 
-    // Smoothing heading of the rover path by inserting new waypoints
-    double headingThreshold = M_PI / 12;
-    smoothRoverPathHeading(headingThreshold);
+        // Generating the reachability tunnel surrounding the rover path
+        unsigned int ui_noinf_nodes = generateTunnel(iniPos, samplePos, volume_cost_map);
+        clock_t endt = clock();
+        double t = double(endt - init) / CLOCKS_PER_SEC;
 
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
-                 "Reference base path heading is smoothed"
-              << std::endl;
-
-    // Generating the reachability tunnel surrounding the rover path
-    unsigned int ui_noinf_nodes = generateTunnel(iniPos, samplePos, volume_cost_map);
-    clock_t endt = clock();
-    double t = double(endt - init) / CLOCKS_PER_SEC;
-
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D "
-                 "Cost Tunnel is generated"
-              << std::endl;
-    std::cout << "[MM] \033[35m[----------] "
-                 "[ArmPlanner::planArmMotion()]\033[0m Tunnel uses "
-              << ui_noinf_nodes << " / " << n * m * l << " nodes ("
-              << ((double)ui_noinf_nodes / ((double)n * m * l)) << " % )" << std::endl;
-
-    // End effector path planning
-    FastMarching_lib::FastMarching3D pathPlanner3D;
-    std::vector<base::Waypoint> * wristPath = new std::vector<base::Waypoint>;
-
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
-                 "Starting 3D Wrist Path Planning"
-              << std::endl;
-    clock_t inip = clock();
-    if(!pathPlanner3D.planPath(volume_cost_map,
-                               mapResolution,
-                               zResolution,
-                               iniPos,
-                               samplePos,
-                               wristPath,
-                               ui_noinf_nodes))
-    {
-        std::cout << "[MM] \033[35m[--WARNING-] [ArmPlanner::planArmMotion()]\033[0m "
-                     "Something went wrong with 3D Wrist Path Planning, debug data:"
+        std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D "
+                     "Cost Tunnel is generated"
                   << std::endl;
         std::cout << "[MM] \033[35m[----------] "
-                     "[ArmPlanner::planArmMotion()]\033[0m  - IniPos = ("
-                  << iniPos.position[0] << ", " << iniPos.position[1] << ", " << iniPos.position[2]
-                  << ")" << std::endl;
-        std::cout << "[MM] \033[35m[----------] "
-                     "[ArmPlanner::planArmMotion()]\033[0m  - samplePos = ("
-                  << samplePos.position[0] << ", " << samplePos.position[1] << ", "
-                  << samplePos.position[2] << ")" << std::endl;
-        std::cout << "[MM] \033[35m[----------] "
-                     "[ArmPlanner::planArmMotion()]\033[0m  - mapResolution = "
-                  << mapResolution << std::endl;
-        std::cout << "[MM] \033[35m[----------] "
-                     "[ArmPlanner::planArmMotion()]\033[0m  - zResolution = "
-                  << zResolution << std::endl;
-        return false;
-    }
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D "
-                 "Wrist Path computed with "
-              << wristPath->size() << " waypoints" << std::endl;
+                     "[ArmPlanner::planArmMotion()]\033[0m Tunnel uses "
+                  << ui_noinf_nodes << " / " << n * m * l << " nodes ("
+                  << ((double)ui_noinf_nodes / ((double)n * m * l)) << " % )" << std::endl;
 
-    // Orientation (roll, pitch, yaw) of the end effector at each waypoint
-    wristPath6->resize(wristPath->size(), std::vector<double>(6));
-    for(int i = 0; i < wristPath->size(); i++)
-    {
-        (*wristPath6)[i][0] = (*wristPath)[i].position[0];
-        (*wristPath6)[i][1] = (*wristPath)[i].position[1];
-        (*wristPath6)[i][2] = (*wristPath)[i].position[2];
+        // End effector path planning
+        FastMarching_lib::FastMarching3D pathPlanner3D;
+        std::vector<base::Waypoint> * wristPath = new std::vector<base::Waypoint>;
 
-        (*wristPath6)[i][3] = sherpa_tt_arm->iniEEorientation[0] +
-                              i * (finalEEorientation[0] - sherpa_tt_arm->iniEEorientation[0]) /
-                                  (wristPath->size() - 1);
-        (*wristPath6)[i][4] = sherpa_tt_arm->iniEEorientation[1] +
-                              i * (finalEEorientation[1] - sherpa_tt_arm->iniEEorientation[1]) /
-                                  (wristPath->size() - 1);
-        (*wristPath6)[i][5] = sherpa_tt_arm->iniEEorientation[2] +
-                              i * (finalEEorientation[2] - sherpa_tt_arm->iniEEorientation[2]) /
-                                  (wristPath->size() - 1);
-    }
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m End effector "
-                 "orientation computed"
-              << std::endl;
-
-    // Paths inbetween assignment
-    std::vector<int> * pathsAssignment = new std::vector<int>;
-    if(!computeWaypointAssignment(pathsAssignment, p_collision_detector))
-    {
-        std::cout << "[MM] \033[35m[--ERROR!--][ArmPlanner::planArmMotion()]\033[0m ERROR Paths "
-                     "Assignment unfeasible"
+        std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
+                     "Starting 3D Wrist Path Planning"
                   << std::endl;
-        return false;
-    }
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Paths Assignment "
-                 "done with "
-              << pathsAssignment->size() << " assignments " << std::endl;
+        if(!pathPlanner3D.planPath(volume_cost_map,
+                                   mapResolution,
+                                   zResolution,
+                                   iniPos,
+                                   samplePos,
+                                   wristPath,
+                                   ui_noinf_nodes))
+        {
+            std::cout << "[MM] \033[35m[--WARNING-] [ArmPlanner::planArmMotion()]\033[0m "
+                         "Something went wrong with 3D Wrist Path Planning, debug data:"
+                      << std::endl;
+            std::cout << "[MM] \033[35m[----------] "
+                         "[ArmPlanner::planArmMotion()]\033[0m  - IniPos = ("
+                      << iniPos.position[0] << ", " << iniPos.position[1] << ", "
+                      << iniPos.position[2] << ")" << std::endl;
+            std::cout << "[MM] \033[35m[----------] "
+                         "[ArmPlanner::planArmMotion()]\033[0m  - samplePos = ("
+                      << samplePos.position[0] << ", " << samplePos.position[1] << ", "
+                      << samplePos.position[2] << ")" << std::endl;
+            std::cout << "[MM] \033[35m[----------] "
+                         "[ArmPlanner::planArmMotion()]\033[0m  - mapResolution = "
+                      << mapResolution << std::endl;
+            std::cout << "[MM] \033[35m[----------] "
+                         "[ArmPlanner::planArmMotion()]\033[0m  - zResolution = "
+                      << zResolution << std::endl;
+            return false;
+        }
+        std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m 3D "
+                     "Wrist Path computed with "
+                  << wristPath->size() << " waypoints" << std::endl;
 
-    // Waypoint interpolation to smooth the movements of the arm joints
-    interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
-    std::vector<int> * interpolatedAssignment = new std::vector<int>(roverPath6->size());
-    computeWaypointInterpolation(pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
+        // Orientation (roll, pitch, yaw) of the end effector at each waypoint
+        wristPath6->resize(wristPath->size(), std::vector<double>(6));
+        for(int i = 0; i < wristPath->size(); i++)
+        {
+            (*wristPath6)[i][0] = (*wristPath)[i].position[0];
+            (*wristPath6)[i][1] = (*wristPath)[i].position[1];
+            (*wristPath6)[i][2] = (*wristPath)[i].position[2];
 
-    std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Joints Motion "
-                 "Smoothing done, interpolated Rover path has "
-              << interpolatedRoverPath->size() << " waypoints" << std::endl;
+            (*wristPath6)[i][3] = sherpa_tt_arm->iniEEorientation[0] +
+                                  i * (finalEEorientation[0] - sherpa_tt_arm->iniEEorientation[0]) /
+                                      (wristPath->size() - 1);
+            (*wristPath6)[i][4] = sherpa_tt_arm->iniEEorientation[1] +
+                                  i * (finalEEorientation[1] - sherpa_tt_arm->iniEEorientation[1]) /
+                                      (wristPath->size() - 1);
+            (*wristPath6)[i][5] = sherpa_tt_arm->iniEEorientation[2] +
+                                  i * (finalEEorientation[2] - sherpa_tt_arm->iniEEorientation[2]) /
+                                      (wristPath->size() - 1);
+        }
+        std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m End effector "
+                     "orientation computed"
+                  << std::endl;
 
-    // Computing inverse kinematics
-    /*First, we compute the inverse kinematics of the wrist for all the path
-    Then, according to the orientation commanded, which is relative, we compute
-    the last three joints of the arm, using the transform of the wrist. */
+        // Paths inbetween assignment
+        std::vector<int> * pathsAssignment = new std::vector<int>;
+        if(!computeWaypointAssignment(pathsAssignment, p_collision_detector))
+        {
+            std::cout
+                << "[MM] \033[35m[--ERROR!--][ArmPlanner::planArmMotion()]\033[0m ERROR Paths "
+                   "Assignment unfeasible"
+                << std::endl;
+            return false;
+        }
+        std::cout
+            << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Paths Assignment "
+               "done with "
+            << pathsAssignment->size() << " assignments " << std::endl;
 
-    /*Obtaining the first config*/
-    int wristInd = (*interpolatedAssignment)[0];
-    std::vector<std::vector<double>> TW2Wrist(4, std::vector<double>(4));
-    std::vector<std::vector<double>> TBCS2Wrist(4, std::vector<double>(4));
+        // Waypoint interpolation to smooth the movements of the arm joints
+        interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
+        std::vector<int> * interpolatedAssignment = new std::vector<int>(roverPath6->size());
+        computeWaypointInterpolation(
+            pathsAssignment, interpolatedRoverPath, interpolatedAssignment);
 
-    double x = (*interpolatedRoverPath)[0].position[0];
-    double y = (*interpolatedRoverPath)[0].position[1];
-    double z = (*interpolatedRoverPath)[0].position[2];
+        std::cout
+            << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m Arm Joints Motion "
+               "Smoothing done, interpolated Rover path has "
+            << interpolatedRoverPath->size() << " waypoints" << std::endl;
 
-    std::vector<double> position{x, y, z};
-    roll = 0;
-    pitch = 0;
-    yaw = (*interpolatedRoverPath)[0].heading;
+        // Computing inverse kinematics
+        /*First, we compute the inverse kinematics of the wrist for all the path
+        Then, according to the orientation commanded, which is relative, we compute
+        the last three joints of the arm, using the transform of the wrist. */
 
-    TW2BCS = dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
-    position[0] = (*wristPath6)[wristInd][0];
-    position[1] = (*wristPath6)[wristInd][1];
-    position[2] = (*wristPath6)[wristInd][2];
+        /*Obtaining the first config*/
+        int wristInd = (*interpolatedAssignment)[0];
+        std::vector<std::vector<double>> TW2Wrist(4, std::vector<double>(4));
+        std::vector<std::vector<double>> TBCS2Wrist(4, std::vector<double>(4));
 
-    TW2Wrist = getTraslation(position);
+        double x = (*interpolatedRoverPath)[0].position[0];
+        double y = (*interpolatedRoverPath)[0].position[1];
+        double z = (*interpolatedRoverPath)[0].position[2];
 
-    TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
-
-    position[0] = TBCS2Wrist[0][3];
-    position[1] = TBCS2Wrist[1][3];
-    position[2] = TBCS2Wrist[2][3];
-
-    std::vector<double> firstConfig;
-    firstConfig = sherpa_tt_arm->getPositionJoints(position, 1, 1);
-
-    roll = (*wristPath6)[wristInd][3];
-    pitch = (*wristPath6)[wristInd][4];
-    yaw = (*wristPath6)[wristInd][5];
-
-    std::vector<double> wristJoints =
-        sherpa_tt_arm->getWristJoints(firstConfig, sherpa_tt_arm->iniEEorientation);
-
-    firstConfig.insert(firstConfig.end(), wristJoints.begin(), wristJoints.end());
-
-    /*Obtaining the last config*/
-    wristInd = (*interpolatedAssignment)[interpolatedRoverPath->size() - 1];
-
-    x = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].position[0];
-    y = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].position[1];
-    z = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].position[2];
-
-    position[0] = x;
-    position[1] = y;
-    position[2] = z;
-    roll = 0;
-    pitch = 0;
-    yaw = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].heading;
-
-    TW2BCS = dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
-    position[0] = (*wristPath6)[wristInd][0];
-    position[1] = (*wristPath6)[wristInd][1];
-    position[2] = (*wristPath6)[wristInd][2];
-
-    TW2Wrist = getTraslation(position);
-
-    TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
-
-    position[0] = TBCS2Wrist[0][3];
-    position[1] = TBCS2Wrist[1][3];
-    position[2] = TBCS2Wrist[2][3];
-
-    std::vector<double> lastConfig;
-    lastConfig = sherpa_tt_arm->getPositionJoints(position, 1, 1);
-
-    wristJoints = sherpa_tt_arm->getWristJoints(lastConfig, finalEEorientation);
-
-    lastConfig.insert(lastConfig.end(), wristJoints.begin(), wristJoints.end());
-
-    double d_previousconfig3;
-    for(int i = 0; i < interpolatedRoverPath->size(); i++)
-    {
-        wristInd = (*interpolatedAssignment)[i];
-
-        x = (*interpolatedRoverPath)[i].position[0];
-        y = (*interpolatedRoverPath)[i].position[1];
-        z = (*interpolatedRoverPath)[i].position[2];
-        position[0] = x;
-        position[1] = y;
-        position[2] = z;
+        std::vector<double> position{x, y, z};
         roll = 0;
         pitch = 0;
-        yaw = (*interpolatedRoverPath)[i].heading;
+        yaw = (*interpolatedRoverPath)[0].heading;
 
         TW2BCS =
             dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
-
         position[0] = (*wristPath6)[wristInd][0];
         position[1] = (*wristPath6)[wristInd][1];
         position[2] = (*wristPath6)[wristInd][2];
@@ -509,168 +447,285 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
         position[1] = TBCS2Wrist[1][3];
         position[2] = TBCS2Wrist[2][3];
 
-        std::vector<double> config;
+        std::vector<double> firstConfig;
+        firstConfig = sherpa_tt_arm->getPositionJoints(position, 1, 1);
 
-        try
-        {
-            config = sherpa_tt_arm->getPositionJoints(position, 1, 1, 0.0);
-        }
-        catch(std::exception & e)
-        {
-            std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m EXCEPTION "
-                         "inverse kinematic computation failed"
-                      << std::endl;
-            std::cout << "Arm Planner library: debug info" << std::endl;
-            std::cout << " - function: sherpa_tt_arm->getPositionJoints()" << std::endl;
-            std::cout << " - iteration index = " << i << std::endl;
-            std::cout << " - position = " << position[0] << ", " << position[1] << ", "
-                      << position[2] << std::endl;
-            return false;
-        }
-        // std::cout << "Position is computed" << std::endl;
-        std::vector<double> wristJoints;
-        double d_config4 = std::max(-config[2], -1.57);
+        roll = (*wristPath6)[wristInd][3];
+        pitch = (*wristPath6)[wristInd][4];
+        yaw = (*wristPath6)[wristInd][5];
 
-        /*        if (config[0] < 0.65)
+        std::vector<double> wristJoints =
+            sherpa_tt_arm->getWristJoints(firstConfig, sherpa_tt_arm->iniEEorientation);
+
+        firstConfig.insert(firstConfig.end(), wristJoints.begin(), wristJoints.end());
+
+        /*Obtaining the last config*/
+        wristInd = (*interpolatedAssignment)[interpolatedRoverPath->size() - 1];
+
+        x = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].position[0];
+        y = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].position[1];
+        z = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].position[2];
+
+        position[0] = x;
+        position[1] = y;
+        position[2] = z;
+        roll = 0;
+        pitch = 0;
+        yaw = (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1].heading;
+
+        TW2BCS =
+            dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+        position[0] = (*wristPath6)[wristInd][0];
+        position[1] = (*wristPath6)[wristInd][1];
+        position[2] = (*wristPath6)[wristInd][2];
+
+        TW2Wrist = getTraslation(position);
+
+        TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
+
+        position[0] = TBCS2Wrist[0][3];
+        position[1] = TBCS2Wrist[1][3];
+        position[2] = TBCS2Wrist[2][3];
+
+        std::vector<double> lastConfig;
+        lastConfig = sherpa_tt_arm->getPositionJoints(position, 1, 1);
+
+        wristJoints = sherpa_tt_arm->getWristJoints(lastConfig, finalEEorientation);
+
+        lastConfig.insert(lastConfig.end(), wristJoints.begin(), wristJoints.end());
+
+        double d_previousconfig3;
+        for(int i = 0; i < interpolatedRoverPath->size(); i++)
+        {
+            wristInd = (*interpolatedAssignment)[i];
+
+            x = (*interpolatedRoverPath)[i].position[0];
+            y = (*interpolatedRoverPath)[i].position[1];
+            z = (*interpolatedRoverPath)[i].position[2];
+            position[0] = x;
+            position[1] = y;
+            position[2] = z;
+            roll = 0;
+            pitch = 0;
+            yaw = (*interpolatedRoverPath)[i].heading;
+
+            TW2BCS =
+                dot(getTraslation(position), dot(getZrot(yaw), dot(getYrot(pitch), getXrot(roll))));
+
+            position[0] = (*wristPath6)[wristInd][0];
+            position[1] = (*wristPath6)[wristInd][1];
+            position[2] = (*wristPath6)[wristInd][2];
+
+            TW2Wrist = getTraslation(position);
+
+            TBCS2Wrist = dot(getInverse(&TW2BCS), TW2Wrist);
+
+            position[0] = TBCS2Wrist[0][3];
+            position[1] = TBCS2Wrist[1][3];
+            position[2] = TBCS2Wrist[2][3];
+
+            std::vector<double> config;
+
+            try
             {
-                    wristJoints
-                        = { std::max(3.1416,std::max(d_previousconfig3, 1.57
-           + 1.57 * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
+                config = sherpa_tt_arm->getPositionJoints(position, 1, 1, 0.0);
             }
-            else */
-        // TODO fix this hardcode
-        if(config[0] < 1.57)
-        {
-            wristJoints = {1.57, -1.4, -2.7};
-        }
-        else
-        {
-            wristJoints = {3.1416 - config[0], -1.4, -2.7};
-        }
-        d_previousconfig3 = config[3];
+            catch(std::exception & e)
+            {
+                std::cout
+                    << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m EXCEPTION "
+                       "inverse kinematic computation failed"
+                    << std::endl;
+                std::cout << "Arm Planner library: debug info" << std::endl;
+                std::cout << " - function: sherpa_tt_arm->getPositionJoints()" << std::endl;
+                std::cout << " - iteration index = " << i << std::endl;
+                std::cout << " - position = " << position[0] << ", " << position[1] << ", "
+                          << position[2] << std::endl;
+                return false;
+            }
+            // std::cout << "Position is computed" << std::endl;
+            std::vector<double> wristJoints;
+            double d_config4 = std::max(-config[2], -1.57);
 
-        /*
-            if (config[0]<0.4)
-                {
-                        config = sherpa_tt_arm->getPositionJoints(position,
-           1, 1, 0.0);
-                }
-                catch(std::exception &e)
-                {
-                        std::cout << " \033[35m[----------]
-                [ArmPlanner::planArmMotion()]\033[0m EXCEPTION inverse
-           kinematic computation failed" << std::endl; std::cout << "Arm
-           Planner library: debug info" << std::endl; std::cout << " -
-           function: sherpa_tt_arm->getPositionJoints()" << std::endl;
-           std::cout << " - iteration index = " << i << std::endl; std::cout
-           << " - position = " << position[0] << ", " << position[1] << ", "
-           << position[2] << std::endl; return false;
-                }
-                //std::cout << "Position is computed" << std::endl;
-                    std::vector<double> wristJoints;
-                //double d_config4 = std::max(-config[2],-1.57);
-
-                    if (config[0] < 0.65)
+            /*        if (config[0] < 0.65)
                 {
                         wristJoints
-                            = {
-           std::max(3.1416,std::max(d_previousconfig3, 1.57 + 1.57
-                * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
+                            = { std::max(3.1416,std::max(d_previousconfig3, 1.57
+               + 1.57 * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
                 }
-                else
-                if (config[0] < 1.57)
-                {
-                        wristJoints
-                            = { 1.57, -1.4, -2.7 };
-                }
-                else
-                {
-                        wristJoints
-                            = { 3.1416 - config[0], -1.4, -2.7 };
-                }
-                    d_previousconfig3 = config[3];
+                else */
+            // TODO fix this hardcode
+            if(config[0] < 1.57)
+            {
+                wristJoints = {1.57, -1.4, -2.7};
+            }
+            else
+            {
+                wristJoints = {3.1416 - config[0], -1.4, -2.7};
+            }
+            d_previousconfig3 = config[3];
 
-
+            /*
                 if (config[0]<0.4)
                     {
-                        //d_config4 = (0.7 - config[0]) * 5.0;
-                        wristJoints
-                            = { 0.0, 0.0, -2.7 };
+                            config = sherpa_tt_arm->getPositionJoints(position,
+               1, 1, 0.0);
                     }
-                else
-                {
-                        wristJoints
-                            = { 0.0, d_config4, -2.7 };
-                }
-
-                    config.insert(config.end(), wristJoints.begin(),
-                wristJoints.end());*/
-        try
-        {
-            config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
-
-            for(int j = 3; j < 6; j++)
-            {
-                double angleDiff = lastConfig[j] - firstConfig[j];
-                if(firstConfig[j] > lastConfig[j])
-                {
-                    if(abs(angleDiff) < 2 * M_PI - abs(angleDiff))
+                    catch(std::exception &e)
                     {
-                        config.push_back(firstConfig[j] -
-                                         i * abs(angleDiff) / (interpolatedRoverPath->size() - 1));
+                            std::cout << " \033[35m[----------]
+                    [ArmPlanner::planArmMotion()]\033[0m EXCEPTION inverse
+               kinematic computation failed" << std::endl; std::cout << "Arm
+               Planner library: debug info" << std::endl; std::cout << " -
+               function: sherpa_tt_arm->getPositionJoints()" << std::endl;
+               std::cout << " - iteration index = " << i << std::endl; std::cout
+               << " - position = " << position[0] << ", " << position[1] << ", "
+               << position[2] << std::endl; return false;
+                    }
+                    //std::cout << "Position is computed" << std::endl;
+                        std::vector<double> wristJoints;
+                    //double d_config4 = std::max(-config[2],-1.57);
+
+                        if (config[0] < 0.65)
+                    {
+                            wristJoints
+                                = {
+               std::max(3.1416,std::max(d_previousconfig3, 1.57 + 1.57
+                    * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
+                    }
+                    else
+                    if (config[0] < 1.57)
+                    {
+                            wristJoints
+                                = { 1.57, -1.4, -2.7 };
                     }
                     else
                     {
-                        config.push_back(firstConfig[j] + i * (2 * M_PI - abs(angleDiff)) /
-                                                              (interpolatedRoverPath->size() - 1));
+                            wristJoints
+                                = { 3.1416 - config[0], -1.4, -2.7 };
                     }
-                }
-                else
-                {
-                    if(abs(angleDiff) > 2 * M_PI - abs(angleDiff))
+                        d_previousconfig3 = config[3];
+
+
+                    if (config[0]<0.4)
+                        {
+                            //d_config4 = (0.7 - config[0]) * 5.0;
+                            wristJoints
+                                = { 0.0, 0.0, -2.7 };
+                        }
+                    else
                     {
-                        config.push_back(firstConfig[j] - i * (2 * M_PI - abs(angleDiff)) /
-                                                              (interpolatedRoverPath->size() - 1));
+                            wristJoints
+                                = { 0.0, d_config4, -2.7 };
+                    }
+
+                        config.insert(config.end(), wristJoints.begin(),
+                    wristJoints.end());*/
+            try
+            {
+                config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
+
+                for(int j = 3; j < 6; j++)
+                {
+                    double angleDiff = lastConfig[j] - firstConfig[j];
+                    if(firstConfig[j] > lastConfig[j])
+                    {
+                        if(abs(angleDiff) < 2 * M_PI - abs(angleDiff))
+                        {
+                            config.push_back(firstConfig[j] -
+                                             i * abs(angleDiff) /
+                                                 (interpolatedRoverPath->size() - 1));
+                        }
+                        else
+                        {
+                            config.push_back(firstConfig[j] +
+                                             i * (2 * M_PI - abs(angleDiff)) /
+                                                 (interpolatedRoverPath->size() - 1));
+                        }
                     }
                     else
                     {
-                        config.push_back(firstConfig[j] +
-                                         i * abs(angleDiff) / (interpolatedRoverPath->size() - 1));
+                        if(abs(angleDiff) > 2 * M_PI - abs(angleDiff))
+                        {
+                            config.push_back(firstConfig[j] -
+                                             i * (2 * M_PI - abs(angleDiff)) /
+                                                 (interpolatedRoverPath->size() - 1));
+                        }
+                        else
+                        {
+                            config.push_back(firstConfig[j] +
+                                             i * abs(angleDiff) /
+                                                 (interpolatedRoverPath->size() - 1));
+                        }
                     }
                 }
-            }
 
-            for(int j = 0; j < config.size(); j++)
-            {
-                while(config[j] > M_PI)
-                    config[j] -= 2 * M_PI;
-                while(config[j] < -M_PI)
-                    config[j] += 2 * M_PI;
+                for(int j = 0; j < config.size(); j++)
+                {
+                    while(config[j] > M_PI)
+                        config[j] -= 2 * M_PI;
+                    while(config[j] < -M_PI)
+                        config[j] += 2 * M_PI;
+                }
             }
+            catch(std::exception & e)
+            {
+                std::cout << "Inverse kinematics failed at waypoint " << i << "!" << std::endl;
+                return false;
+            }
+            // if(config == std::vector<double>(1,0))
+            // armJoints->push_back((*armJoints)[armJoints->size()-1]);
+            // else
+            if(p_collision_detector->isColliding(config))
+            {
+                std::cout << "[MM] \033[35m[--ERROR!--] "
+                             "[ArmPlanner::planArmMotion()]\033[0m ERROR at sample "
+                          << i << std::endl;
+                std::cout << " Joints = " << config[0];
+                std::cout << " " << config[1];
+                std::cout << " " << config[2];
+                std::cout << " " << config[3];
+                std::cout << " " << config[4];
+                std::cout << " " << config[5] << std::endl;
+                config = (*armJoints)[armJoints->size() - 1];
+                // return false;
+            }
+            armJoints->push_back(config);
         }
-        catch(std::exception & e)
+    }
+    else
+    {
+        samplePos.position[0] = TBCS2Sample[0][3];
+        samplePos.position[1] = TBCS2Sample[1][3];
+        samplePos.position[2] = TBCS2Sample[2][3];
+
+        std::vector<double> timeProfile;
+        if(!planAtomicOperation(this->mapResolution,
+                                this->zResolution,
+                                sherpa_tt_arm->initialConfiguration,
+                                samplePos,
+                                finalEEorientation,
+                                armJoints,
+                                &timeProfile))
         {
-            std::cout << "Inverse kinematics failed at waypoint " << i << "!" << std::endl;
+            std::cout << "[MM] \033[35m[--ERROR!--][ArmPlanner::planArmMotion()]\033[0m ERROR "
+                         "Could not generate the arm decoupled atomic operation to reach the goal"
+                      << std::endl;
             return false;
         }
-        // if(config == std::vector<double>(1,0))
-        // armJoints->push_back((*armJoints)[armJoints->size()-1]);
-        // else
-        if(p_collision_detector->isColliding(config))
-        {
-            std::cout << "[MM] \033[35m[--ERROR!--] "
-                         "[ArmPlanner::planArmMotion()]\033[0m ERROR at sample "
-                      << i << std::endl;
-            std::cout << " Joints = " << config[0];
-            std::cout << " " << config[1];
-            std::cout << " " << config[2];
-            std::cout << " " << config[3];
-            std::cout << " " << config[4];
-            std::cout << " " << config[5] << std::endl;
-            config = (*armJoints)[armJoints->size() - 1];
-            // return false;
-        }
-        armJoints->push_back(config);
+
+        interpolatedRoverPath = new std::vector<base::Waypoint>(roverPath6->size());
+        (*interpolatedRoverPath) = (*roverPath);
+
+        for(int i = 0; i < interpolatedRoverPath->size(); i++)
+            (*interpolatedRoverPath)[i].position[2] = (*roverPath6)[i][2];
+
+        for(int i = 0; i < armJoints->size(); i++)
+            interpolatedRoverPath->push_back(
+                (*interpolatedRoverPath)[interpolatedRoverPath->size() - 1]);
+
+        for(int i = 0; i < roverPath->size(); i++)
+            armJoints->insert(armJoints->begin(), sherpa_tt_arm->initialConfiguration);
     }
 
     std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
@@ -859,7 +914,8 @@ bool ArmPlanner::planAtomicOperation(double d_mapResolution_m,
                                      base::Waypoint goalEEPosition,
                                      std::vector<double> goalEEOrientation,
                                      std::vector<std::vector<double>> * armJoints,
-                                     std::vector<double> * timeProfile)
+                                     std::vector<double> * timeProfile,
+                                     int mode)
 {
     this->mapResolution = d_mapResolution_m;
     this->zResolution = _zResolution;
@@ -988,7 +1044,8 @@ bool ArmPlanner::planAtomicOperation(double d_mapResolution_m,
                 (*volume_cost_map)[i][j][k] = INFINITY;
 
     // Generating the reachability tunnel surrounding the rover path
-    generateReachabilityTunnel(iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map);
+    generateReachabilityTunnel(
+        iniPos, goalPos, roverPose6, isTunnelPermisive, volume_cost_map, mode);
 
     // End effector path planning
     FastMarching_lib::FastMarching3D * pathPlanner3D = new FastMarching_lib::FastMarching3D(0.25);

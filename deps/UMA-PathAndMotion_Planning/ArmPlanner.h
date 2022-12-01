@@ -81,6 +81,7 @@ public:
     // When the arm will be mainly deployed (end, progressively, begginning)
     int deployment;
     bool varyingHorizon = false;
+    bool decoupledMotion = false;
     double horizonDistance;
 
     // -- FUNCTIONS --
@@ -122,7 +123,8 @@ public:
                              base::Waypoint goalEEPosition,
                              std::vector<double> goalEEOrientation,
                              std::vector<std::vector<double>> * armJoints,
-                             std::vector<double> * timeProfile);
+                             std::vector<double> * timeProfile,
+                             int mode = 0);
 
     // Function deprecated
     bool planAtomicOperation(const std::vector<std::vector<double>> * _DEM,
