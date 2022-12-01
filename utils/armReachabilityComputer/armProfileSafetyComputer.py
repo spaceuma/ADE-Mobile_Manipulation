@@ -358,7 +358,7 @@ resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.
 minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
 reachabilityDistance2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
 
-armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_03.txt",'r'), skiprows=0)
+armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_profile_03.txt",'r'), skiprows=0)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])

@@ -312,12 +312,12 @@ if len(sys.argv) != 2:
 
 representationNumber = str(int(sys.argv[1])+1)
 
-path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_0"+representationNumber+".txt",'r'), skiprows=0)
-path3D = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
+path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt",'r'), skiprows=0)
+path3D = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
 
-armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_profile_0"+representationNumber+".txt",'r'), skiprows=0)
+armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_profile_0"+representationNumber+".txt",'r'), skiprows=0)
 
-sizes = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
+sizes = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
 xsize = int(sizes[1])

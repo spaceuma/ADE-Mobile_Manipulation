@@ -17,7 +17,7 @@ int main(int argc, char * argv[])
     // armSweepingProfile.resize(7,std::vector<double>(6,0));
 
     readMatrixFile(s_urdf_path + "/../../test/unit/data/results/MMMotionPlanTest/"
-                                 "nominal_working_shadowing_profile_01.txt",
+                                 "nominal_working_profile_01.txt",
                    armAuxProfile);
 
     std::vector<double> nextConfiguration,

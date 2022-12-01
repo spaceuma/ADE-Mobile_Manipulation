@@ -3,10 +3,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_costMap_01.txt"), skiprows=0)
+costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_01.txt"), skiprows=0)
 costMap[np.where(costMap==np.inf)] = np.nan
 
-path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_shadowing_path_01.txt"), skiprows=0)
+path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_01.txt"), skiprows=0)
 
 
 fig1, ax1 = plt.subplots(tight_layout=True)
