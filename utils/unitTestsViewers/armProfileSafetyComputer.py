@@ -352,13 +352,30 @@ def IKM(position, orientation, shoulder = 1, elbow = 1):
 
     return theta1, theta2, theta3, theta4, theta5, theta6
 
+if len(sys.argv) != 2:
+  print('ERROR. The script needs one additional input:')
+  print('0 for END deployment')
+  print('1 for PROGRESSIVE deployment')
+  print('2 for BEGINNING deployment')
+  print('3 for DECOUPLED solution')
+  sys.exit()
+
+representationNumber = str(int(sys.argv[1])+1)
+
+if (int(representationNumber) < 1) or (int(representationNumber) > 4):
+  print('ERROR. The provided input is not valid:')
+  print('0 for END deployment')
+  print('1 for PROGRESSIVE deployment')
+  print('2 for BEGINNING deployment')
+  print('3 for DECOUPLED solution')
+  sys.exit()
+
+armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_profile_0"+representationNumber+".txt",'r'), skiprows=0)
 
 sizes = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 1, max_rows=1)
 minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
 reachabilityDistance2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
-
-armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_profile_03.txt",'r'), skiprows=0)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
