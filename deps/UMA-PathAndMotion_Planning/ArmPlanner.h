@@ -75,8 +75,12 @@ public:
     double zResolution;
     const std::vector<std::vector<double>> * DEM;
 
-    bool approach, varyingHorizon = false;
+    // Cost inside the tunnel depending on distance to collisions, or not
+    bool approach;
+
+    // When the arm will be mainly deployed (end, progressively, begginning)
     int deployment;
+    bool varyingHorizon = false;
     double horizonDistance;
 
     // -- FUNCTIONS --

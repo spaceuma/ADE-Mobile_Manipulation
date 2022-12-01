@@ -41,7 +41,10 @@ ArmPlanner::ArmPlanner(std::string s_data_path_m, bool _approach, int _deploymen
 {
     sherpa_tt_arm = new Manipulator(s_data_path_m);
 
+    // Cost inside the tunnel depending on distance to collisions, or not
     approach = _approach;
+
+    // When the arm will be mainly deployed
     deployment = _deployment;
 
     switch(deployment)
@@ -53,7 +56,7 @@ ArmPlanner::ArmPlanner(std::string s_data_path_m, bool _approach, int _deploymen
         case 1:    // TRAJECTORY
             varyingHorizon = true;
             break;
-        case 2:    // BEGINNING:
+        case 2:    // BEGINNING
             horizonDistance = MAX_HORIZON;
             varyingHorizon = false;
             break;
