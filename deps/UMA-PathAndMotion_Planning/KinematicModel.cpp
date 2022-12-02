@@ -532,8 +532,7 @@ std::vector<double> Manipulator::getManipJoints(std::vector<double> position,
 
 std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
                                                    int shoulder = 1,
-                                                   int elbow = 1,
-                                                   double d_error_margin)
+                                                   int elbow = 1)
 {
     // This function uses a geometric Inverse Kinematics Model to obtain the
     // needed configuration of the arm to reach a certain cartesian position and
@@ -570,11 +569,7 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
     double l1 = sqrt(pow(c2, 2) + pow(a2, 2));
     double l2 = sqrt(pow(a3, 2) + pow(d4, 2));
 
-    // d_error_margin is introduced because although two near nodes can be
-    // valid, a convex curved path passing through them may touch the forbidden
-    // volume and produce later an exception
-
-    if(d + d_error_margin > l1 + l2)
+    if(d > l1 + l2)
     {
         /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too far, unreachable position "
@@ -585,7 +580,7 @@ std::vector<double> Manipulator::getPositionJoints(std::vector<double> position,
         throw std::exception();
         // return std::vector<double>(1, 0);
     }
-    else if(d - d_error_margin < l1 - l2)
+    else if(d < l1 - l2)
     {
         /*std::cout << "\033[1;31mERROR [Manipulator::getManipJoints]: Wrist "
                      "position is too close, unreachable position "
@@ -1065,27 +1060,22 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                 position = {minXY + i * resXY, minXY + j * resXY, minZ + k * resZ};
                 try
                 {
-                    std::vector<double> config = getPositionJoints(position, 1, 1, resXYZ * 0.2);
+                    std::vector<double> config = getPositionJoints(position, 1, 1);
                     config.resize(6);
-
-                    config[3] = 0.0;
-                    config[4] = std::max(-1.51, -config[2]);
-                    config[5] = -2.7;
+                    config[3] = 0;
+                    config[4] = 0;
+                    config[5] = 0;
 
                     if((!p_collision_detector->isWristColliding(config)) && (config[0] < 3.0) &&
-                       (config[0] > -3.0) && (config[1] > -2) &&
-                       (isFarFromMast(config[0],
-                                      config[1],
-                                      position[2])))    // TODO - This is a workaround to
-                                                        // avoid passing through pi/-pi
+                       (config[0] > -3.0) && (config[1] > -2))
                     {
-                        /*for (int l = 0; l < 6; l++)
+                        for(int l = 0; l < 6; l++)
                         {
                             config[3] = l * res4;
-                            for (int m = 0; m < 12; m++)
+                            for(int m = 0; m < 12; m++)
                             {
                                 config[4] = -110 * M_PI / 180 + m * res5;
-                                for (int n = 0; n < 3; n++)
+                                for(int n = 0; n < 3; n++)
                                 {
                                     config[5] = n * res6;
                                     // std::cout << ". Config: ["<<config[0]<<",
@@ -1094,22 +1084,19 @@ void Manipulator::computeReachabilityMap(const double resXY, const double resZ)
                                     // "<<config[5]<<"]";
                                     std::cout << std::flush;
 
-                                    if (p_collision_detector->isColliding(
-                                            config))
+                                    if(p_collision_detector->isColliding(config))
                                     {
                                         reachabilityMap[i][j][k] = 1;
                                         break;
                                     }
                                 }
-                                if (reachabilityMap[i][j][k] == 1) break;
+                                if(reachabilityMap[i][j][k] == 1) break;
                             }
-                            if (reachabilityMap[i][j][k] == 1) break;
-                        }*/
+                            if(reachabilityMap[i][j][k] == 1) break;
+                        }
                     }
                     else
-                    {
                         reachabilityMap[i][j][k] = 0;
-                    }
                 }
                 catch(std::exception & e)
                 {

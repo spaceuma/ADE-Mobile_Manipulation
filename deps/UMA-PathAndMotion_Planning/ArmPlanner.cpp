@@ -250,24 +250,14 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
 
     std::vector<std::vector<double>> TBCS2Sample = dot(getInverse(&TW2BCS), TW2Sample);
 
-    // TODO fix this hardcode
-    TBCS2Sample[0][3] = 1.4;    // 0.969;
-    TBCS2Sample[1][3] = 0.7;    // 0.384;//optimalLeftDeviation;
+    TBCS2Sample[0][3] = 1.4;
+    TBCS2Sample[1][3] = 0.7;
     TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6 + 0.3;
-
-    /*
-        TBCS2Sample[0][3] = 0.8;
-        TBCS2Sample[1][3] += 1.25;//optimalLeftDeviation;
-        TBCS2Sample[2][3] = 0.75;//optimalLeftDeviation;
-     */
 
     std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
                  "Relative last waypoint to sample position = "
               << TBCS2Sample[0][3] << ", " << TBCS2Sample[1][3] << ", " << TBCS2Sample[2][3]
               << std::endl;
-
-    std::cout << "Relative position sample - last waypoint = " << TBCS2Sample[0][3] << ", "
-              << TBCS2Sample[1][3] << ", " << TBCS2Sample[2][3] << std::endl;
 
     if(!decoupledMotion)
     {
@@ -278,7 +268,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
         samplePos.position[2] = TW2Sample[2][3];
 
         std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m New "
-                     "Relative Elevation of sample is "
+                     "Absolute Elevation of sample is "
                   << samplePos.position[2] << std::endl;
 
         // Cost map 3D computation
@@ -494,7 +484,6 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
 
         lastConfig.insert(lastConfig.end(), wristJoints.begin(), wristJoints.end());
 
-        double d_previousconfig3;
         for(int i = 0; i < interpolatedRoverPath->size(); i++)
         {
             wristInd = (*interpolatedAssignment)[i];
@@ -528,7 +517,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
 
             try
             {
-                config = sherpa_tt_arm->getPositionJoints(position, 1, 1, 0.0);
+                config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
             }
             catch(std::exception & e)
             {
@@ -545,82 +534,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
             }
             // std::cout << "Position is computed" << std::endl;
             std::vector<double> wristJoints;
-            double d_config4 = std::max(-config[2], -1.57);
 
-            /*        if (config[0] < 0.65)
-                {
-                        wristJoints
-                            = { std::max(3.1416,std::max(d_previousconfig3, 1.57
-               + 1.57 * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
-                }
-                else */
-            // TODO fix this hardcode
-            if(config[0] < 1.57)
-            {
-                wristJoints = {1.57, -1.4, -2.7};
-            }
-            else
-            {
-                wristJoints = {3.1416 - config[0], -1.4, -2.7};
-            }
-            d_previousconfig3 = config[3];
-
-            /*
-                if (config[0]<0.4)
-                    {
-                            config = sherpa_tt_arm->getPositionJoints(position,
-               1, 1, 0.0);
-                    }
-                    catch(std::exception &e)
-                    {
-                            std::cout << " \033[35m[----------]
-                    [ArmPlanner::planArmMotion()]\033[0m EXCEPTION inverse
-               kinematic computation failed" << std::endl; std::cout << "Arm
-               Planner library: debug info" << std::endl; std::cout << " -
-               function: sherpa_tt_arm->getPositionJoints()" << std::endl;
-               std::cout << " - iteration index = " << i << std::endl; std::cout
-               << " - position = " << position[0] << ", " << position[1] << ", "
-               << position[2] << std::endl; return false;
-                    }
-                    //std::cout << "Position is computed" << std::endl;
-                        std::vector<double> wristJoints;
-                    //double d_config4 = std::max(-config[2],-1.57);
-
-                        if (config[0] < 0.65)
-                    {
-                            wristJoints
-                                = {
-               std::max(3.1416,std::max(d_previousconfig3, 1.57 + 1.57
-                    * (0.65 - config[0])/(0.65 - 0.377))), -1.57, -2.7 };
-                    }
-                    else
-                    if (config[0] < 1.57)
-                    {
-                            wristJoints
-                                = { 1.57, -1.4, -2.7 };
-                    }
-                    else
-                    {
-                            wristJoints
-                                = { 3.1416 - config[0], -1.4, -2.7 };
-                    }
-                        d_previousconfig3 = config[3];
-
-
-                    if (config[0]<0.4)
-                        {
-                            //d_config4 = (0.7 - config[0]) * 5.0;
-                            wristJoints
-                                = { 0.0, 0.0, -2.7 };
-                        }
-                    else
-                    {
-                            wristJoints
-                                = { 0.0, d_config4, -2.7 };
-                    }
-
-                        config.insert(config.end(), wristJoints.begin(),
-                    wristJoints.end());*/
             try
             {
                 config = sherpa_tt_arm->getPositionJoints(position, 1, 1);
@@ -697,7 +611,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
     {
         samplePos.position[0] = TBCS2Sample[0][3];
         samplePos.position[1] = TBCS2Sample[1][3];
-        samplePos.position[2] = TBCS2Sample[2][3];
+        samplePos.position[2] = TBCS2Sample[2][3] - sherpa_tt_arm->d6;
 
         std::vector<double> timeProfile;
         if(!planAtomicOperation(this->mapResolution,
@@ -1350,7 +1264,7 @@ unsigned int ArmPlanner::generateTunnel(base::Waypoint iniPos,
     std::vector<double> * minValues = sherpa_tt_arm->minValues;
     std::vector<double> * maxValues = sherpa_tt_arm->maxValues;
 
-    double slope = 0.3 * approach;
+    double slope = 1 * approach;
 
     // Tunnel in the first waypoint
     if(varyingHorizon) horizonDistance = MIN_HORIZON;
@@ -1756,7 +1670,7 @@ void ArmPlanner::generateReachabilityTunnel(
     std::vector<double> * minValues = sherpa_tt_arm->minValues;
     std::vector<double> * maxValues = sherpa_tt_arm->maxValues;
 
-    double slope = 0.5;
+    double slope = 1;
 
     // Tunnel in the last waypoint
     int tunnelSizeX = (int)(abs((*maxValues)[0] - (*minValues)[0]) / mapResolution + 0.5);
@@ -1869,7 +1783,7 @@ bool ArmPlanner::computeWaypointAssignment(std::vector<int> * pathsAssignment,
             std::vector<double> config;
             try
             {
-                config = sherpa_tt_arm->getPositionJoints(pos, 1, 1, 0.0);
+                config = sherpa_tt_arm->getPositionJoints(pos, 1, 1);
                 std::vector<double> basePos = {0, 0, sherpa_tt_arm->d0};
                 double dist = getDist3(basePos, pos);
                 if(TBCS2Wrist[0][3] < horizonDistance &&
