@@ -402,7 +402,7 @@ for i in range(2, xsize):
             c = 0
             k += 1
 
-pathSize = np.size(armJoints, 0)
+pathSize = np.size(path, 0)
 numJoints = np.size(armJoints, 1)
 pos = [0,0,0]
 heading = [0,0,0]
