@@ -376,6 +376,7 @@ sizes = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'
 resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 1, max_rows=1)
 minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
 reachabilityDistance2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
+path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt"), skiprows=0)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -383,6 +384,9 @@ zsize = int(sizes[2])
 
 resXY = resolutions[0]
 resZ = resolutions[2]
+
+armJointsSpeed = np.array([3, 6, 6, 20, 20, 20])*np.pi/180
+roverSpeed = 0.1
 
 reachabilityDistance3D = np.zeros([xsize, ysize, zsize])
 c = 0
@@ -403,6 +407,9 @@ numJoints = np.size(armJoints, 1)
 pos = [0,0,0]
 heading = [0,0,0]
 totalDistToCollisions = 0
+totalRequiredTime = 0
+totalArmRequiredTime = 0
+totalBaseRequiredTime = 0
 
 for i in range(0, pathSize):
     TW4= DKMwrist(armJoints[i], pos, heading)
@@ -414,5 +421,35 @@ for i in range(0, pathSize):
         print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[2,3]))
     totalDistToCollisions = totalDistToCollisions + distToCollision
 
+    if i > 0:
+        waypDist = np.linalg.norm(path[i] - path[i-1])
+        #print("Wayp distance: " + str(waypDist))
+        baseMovementTime = waypDist / roverSpeed
+        armJointsDist = abs(armJoints[i] - armJoints[i-1])
+        for j in range(0,numJoints):
+            if armJointsDist[j] > np.pi:
+                armJointsDist[j] = abs(armJointsDist[j] - 2*np.pi)
+        #print("Arm joints dist: " + str(armJointsDist))
+        jointsMovementTime = np.abs(armJointsDist)/armJointsSpeed
+        #print("Joints movement time: " + str(jointsMovementTime))
+        armMovementTime = np.max(jointsMovementTime)
+
+        #print("Base movement time: " + str(baseMovementTime))
+        #print("Arm movement time: " + str(armMovementTime))
+
+        requiredTime = np.max(np.append(baseMovementTime, armMovementTime))
+        #print("Required time: " + str(requiredTime))
+        totalRequiredTime = totalRequiredTime + requiredTime
+        totalArmRequiredTime = totalArmRequiredTime + armMovementTime
+        totalBaseRequiredTime = totalBaseRequiredTime + baseMovementTime
+
+
 avgDistToCollisions = totalDistToCollisions/pathSize
 print("Average distance to self-collisions in profile: " + str(avgDistToCollisions))
+
+print("Total required time for arm movements: " + str(totalArmRequiredTime))
+print("Total required time for base movements: " + str(totalBaseRequiredTime))
+print("Total required time for motion plan: " + str(totalRequiredTime))
+
+
+
