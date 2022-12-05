@@ -6,11 +6,8 @@
 
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 from numpy import dot
-import scipy.ndimage
-from mayavi import mlab
 
 def traslation(p):
 
