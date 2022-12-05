@@ -445,7 +445,7 @@ for i in range(1, pathSize):
         print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[2,3]))
 
 
-    waypDist = np.linalg.norm(path[i] - path[i-1])
+    waypDist = np.linalg.norm(path[i, 0:2] - path[i-1, 0:2])
     #print("Wayp distance: " + str(waypDist))
     baseMovementTime = waypDist / roverSpeed
     armJointsDist = abs(armJoints[i] - armJoints[i-1])
