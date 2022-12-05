@@ -456,7 +456,8 @@ for i in range(1, pathSize):
     totalArmRequiredTime = totalArmRequiredTime + armMovementTime
     totalBaseRequiredTime = totalBaseRequiredTime + baseMovementTime
 
-    totalDistToCollisions = totalDistToCollisions + requiredTime*(prevDistToCollision + currDistToCollision)/2
+    if int(representationNumber) != 4 or np.max(armJointsDist) > 0:
+        totalDistToCollisions = totalDistToCollisions + requiredTime*(prevDistToCollision + currDistToCollision)/2
 
 
 
