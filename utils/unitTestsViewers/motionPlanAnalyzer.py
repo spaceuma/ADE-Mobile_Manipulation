@@ -416,7 +416,9 @@ heading = [0,0,0]
 totalDistToCollisions = 0
 totalRequiredTime = 0
 totalArmRequiredTime = 0
+totalArmMovingTime = 0
 totalBaseRequiredTime = 0
+totalBaseMovingTime = 0
 
 minDistToCollisions = 999
 maxDistToCollisions = 0
@@ -466,18 +468,19 @@ for i in range(1, pathSize):
     totalArmRequiredTime = totalArmRequiredTime + armMovementTime
     totalBaseRequiredTime = totalBaseRequiredTime + baseMovementTime
 
-    if int(representationNumber) != 4 or np.max(armJointsDist) > 0:
+    if np.max(armJointsDist) > 0:
+        totalArmMovingTime = totalArmMovingTime + requiredTime
         totalDistToCollisions = totalDistToCollisions + requiredTime*(prevDistToCollision + currDistToCollision)/2
         if currDistToCollision > maxDistToCollisions:
             maxDistToCollisions = currDistToCollision
         if currDistToCollision < minDistToCollisions:
             minDistToCollisions = currDistToCollision
 
+    if waypDist > 0:
+        totalBaseMovingTime = totalBaseMovingTime + requiredTime
 
-if int(representationNumber) != 4:
-    avgDistToCollisions = totalDistToCollisions/totalRequiredTime
-else:
-    avgDistToCollisions = totalDistToCollisions/totalArmRequiredTime
+
+avgDistToCollisions = totalDistToCollisions/totalArmMovingTime
 
 print("Motion plan computation time: " + str(execTime))
 
@@ -487,6 +490,10 @@ print("Average distance to self-collisions in profile: " + str(avgDistToCollisio
 
 print("Total required time for arm movements: " + str(totalArmRequiredTime))
 print("Total required time for base movements: " + str(totalBaseRequiredTime))
+
+print("Total time arm is moving: " + str(totalArmMovingTime))
+print("Total time base is moving: " + str(totalBaseMovingTime))
+
 print("Total required time for motion plan: " + str(totalRequiredTime))
 
 
