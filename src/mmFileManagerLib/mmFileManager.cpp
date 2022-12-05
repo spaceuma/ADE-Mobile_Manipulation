@@ -343,6 +343,14 @@ void savePath(std::vector<base::Waypoint> * roverPath, std::string s_path_file)
     pathFile.close();
 }
 
+void saveValue(double d_value, std::string s_path_file)
+{
+    std::ofstream f_value;
+    f_value.open(s_path_file);
+    f_value << d_value;
+    f_value.close();
+}
+
 void saveVector(std::vector<double> * pvd_vector, std::string s_path_file)
 {
     std::ofstream f_vector;
