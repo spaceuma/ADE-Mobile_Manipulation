@@ -1,9 +1,35 @@
-
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_01.txt"), skiprows=0)
+if len(sys.argv) != 2:
+  print('ERROR. The script needs one additional input:')
+  print('0 for END deployment')
+  print('1 for PROGRESSIVE deployment')
+  print('2 for BEGINNING deployment')
+  print('3 for DECOUPLED solution')
+  sys.exit()
+
+representationNumber = str(int(sys.argv[1])+1)
+
+if (int(representationNumber) < 1) or (int(representationNumber) > 4):
+  print('ERROR. The provided input is not valid:')
+  print('0 for END deployment')
+  print('1 for PROGRESSIVE deployment')
+  print('2 for BEGINNING deployment')
+  print('3 for DECOUPLED solution')
+  sys.exit()
+
+if int(representationNumber) == 1:
+  print('Case END deployment')
+elif int(representationNumber) == 2:
+  print('Case PROGRESSIVE deployment')
+elif int(representationNumber) == 3:
+  print('Case BEGINNING deployment')
+elif int(representationNumber) == 4:
+  print('Case DECOUPLED deployment')
+
+costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_0"+representationNumber+".txt",'r'), skiprows=0)
 costMap[np.where(costMap==np.inf)] = np.nan
 
 fig1, ax1 = plt.subplots()
