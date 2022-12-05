@@ -437,6 +437,7 @@ for i in range(1, pathSize):
     TW4= DKMwrist(armJoints[i], pos, heading)
     indexRV = [int((TW4[0,3] - minValues[0])/resXY + 0.5), int((TW4[1,3] - minValues[1])/resXY + 0.5), int((TW4[2,3] - minValues[2])/resZ + 0.5)]
     currDistToCollision = reachabilityDistance3D[indexRV[0], indexRV[1], indexRV[2]]
+    #print("Distance to collision: " + str(currDistToCollision))
     if currDistToCollision == 0:
         print("Collision detected!")
         print("In config: " + str(armJoints[i]))
@@ -472,7 +473,10 @@ for i in range(1, pathSize):
             minDistToCollisions = currDistToCollision
 
 
-avgDistToCollisions = totalDistToCollisions/totalRequiredTime
+if int(representationNumber) != 4:
+    avgDistToCollisions = totalDistToCollisions/totalRequiredTime
+else:
+    avgDistToCollisions = totalDistToCollisions/totalArmRequiredTime
 
 print("Min distance to self-collisions in profile: " + str(minDistToCollisions))
 print("Max distance to self-collisions in profile: " + str(maxDistToCollisions))
