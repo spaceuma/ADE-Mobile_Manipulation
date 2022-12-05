@@ -53,6 +53,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 1st Case with Shadowing, End deployment
     clock_t ini2D = clock();
+
     MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path, 0);
 
     ASSERT_NO_THROW(ui_error_code = mplan_shadowing.computeRoverBasePathPlanning(w_rover_pos_01));
@@ -63,10 +64,14 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
-    ini2D = clock();
+    clock_t ini3D = clock();
+
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
 
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
+              << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+
+    std::cout << "\033[32m[----------]\033[0m END Deployment Total motion planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
@@ -94,10 +99,15 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
-    ini2D = clock();
+    ini3D = clock();
+
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
 
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
+              << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+
+    std::cout << "\033[32m[----------]\033[0m PROGRESSIVE Deployment Total motion planning "
+                 "execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
@@ -125,11 +135,16 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
-    ini2D = clock();
+    ini3D = clock();
+
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
 
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
-              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+              << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+
+    std::cout
+        << "\033[32m[----------]\033[0m BEGINNING Deployment Total motion planning execution time: "
+        << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
 
@@ -156,11 +171,16 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m 2D path planning execution time: "
               << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
-    ini2D = clock();
+    ini3D = clock();
+
     ui_error_code = mplan_shadowing.computeArmProfilePlanning();
 
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
-              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+              << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+
+    std::cout
+        << "\033[32m[----------]\033[0m DECOUPLED Solution Total motion planning execution time: "
+        << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
 
