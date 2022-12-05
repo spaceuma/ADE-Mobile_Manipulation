@@ -321,6 +321,15 @@ if (int(representationNumber) < 1) or (int(representationNumber) > 4):
   print('3 for DECOUPLED solution')
   sys.exit()
 
+if int(representationNumber) == 1:
+  print('Case END deployment')
+elif int(representationNumber) == 2:
+  print('Case PROGRESSIVE deployment')
+elif int(representationNumber) == 3:
+  print('Case BEGINNING deployment')
+elif int(representationNumber) == 4:
+  print('Case DECOUPLED deployment')
+
 path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
 
