@@ -110,14 +110,14 @@ public:
     double optimalArmRadius = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
     std::vector<double> initialConfiguration =
-        {2.094395102, -1.570796327, 2.443460953, 0, -0.87266, 0};
+        {2.1377, -1.6331, 2.4466, -3.0820, 0.8144, 3.1007};
     //= {0.831571, -0.635383, 0.912176, -1.81496, 0.865747, 1.9378};
     //= {0.8, -0.7, 1.0, 1.0, -1.1, 2.4};
     //= {1.51, -0.9, 1.48, 0.0, -1.48, -2.7};
     //= {1.4, -0.8, 1.1, 0.0, -1.48, -2.7};
     //= {1.4, -0.679, 1.119, 0.0, -1.48, -2.7};
 
-    std::vector<double> iniEEorientation = {0, pi / 2, 0};
+    std::vector<double> iniEEorientation = {0, pi / 2, 2.094395102};
 
     // -- VARIABLES --
     std::vector<std::vector<std::vector<double>>> * reachabilityMap_Atomic;
