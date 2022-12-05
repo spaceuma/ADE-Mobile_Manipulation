@@ -71,11 +71,13 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
               << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
+    double totalTime = double(clock() - ini2D) / CLOCKS_PER_SEC;
     std::cout << "\033[32m[----------]\033[0m END Deployment Total motion planning execution time: "
-              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+              << totalTime << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
 
+    saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_01.txt");
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_path_01.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_01.txt",
@@ -106,12 +108,14 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
               << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
+    totalTime = double(clock() - ini2D) / CLOCKS_PER_SEC;
     std::cout << "\033[32m[----------]\033[0m PROGRESSIVE Deployment Total motion planning "
                  "execution time: "
-              << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+              << totalTime << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
 
+    saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_02.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_02.txt",
                     vvd_cost_map_shadowing);
     savePath(mplan_shadowing.getRoverPath(),
@@ -142,12 +146,14 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
               << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
+    totalTime = double(clock() - ini2D) / CLOCKS_PER_SEC;
     std::cout
         << "\033[32m[----------]\033[0m BEGINNING Deployment Total motion planning execution time: "
-        << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+        << totalTime << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
 
+    saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_03.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_03.txt",
                     vvd_cost_map_shadowing);
     savePath(mplan_shadowing.getRoverPath(),
@@ -178,12 +184,14 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::cout << "\033[32m[----------]\033[0m Arm motion planning execution time: "
               << double(clock() - ini3D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
 
+    totalTime = double(clock() - ini2D) / CLOCKS_PER_SEC;
     std::cout
         << "\033[32m[----------]\033[0m DECOUPLED Solution Total motion planning execution time: "
-        << double(clock() - ini2D) / CLOCKS_PER_SEC << " s\033[0m" << std::endl;
+        << totalTime << " s\033[0m" << std::endl;
 
     EXPECT_EQ(ui_error_code, 0);
 
+    saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_04.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_04.txt",
                     vvd_cost_map_shadowing);
     savePath(mplan_shadowing.getRoverPath(),

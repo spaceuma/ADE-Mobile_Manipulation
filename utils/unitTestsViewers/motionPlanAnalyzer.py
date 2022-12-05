@@ -383,6 +383,7 @@ resolutions = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.
 minValues = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows = 2, max_rows=1)
 reachabilityDistance2D = np.loadtxt(open("../../data/planner/reachabilityDistances_Coupled.txt",'r'), skiprows=3)
 path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt"), skiprows=0)
+execTime = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_0"+representationNumber+".txt"), skiprows=0)
 
 xsize = int(sizes[0])
 ysize = int(sizes[1])
@@ -477,6 +478,8 @@ if int(representationNumber) != 4:
     avgDistToCollisions = totalDistToCollisions/totalRequiredTime
 else:
     avgDistToCollisions = totalDistToCollisions/totalArmRequiredTime
+
+print("Motion plan computation time: " + str(execTime))
 
 print("Min distance to self-collisions in profile: " + str(minDistToCollisions))
 print("Max distance to self-collisions in profile: " + str(maxDistToCollisions))
