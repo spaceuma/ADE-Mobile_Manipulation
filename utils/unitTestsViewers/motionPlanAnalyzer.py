@@ -417,14 +417,22 @@ totalRequiredTime = 0
 totalArmRequiredTime = 0
 totalBaseRequiredTime = 0
 
+minDistToCollisions = 999
+maxDistToCollisions = 0
+
 for i in range(1, pathSize):
     TW4= DKMwrist(armJoints[i-1], pos, heading)
     indexRV = [int((TW4[0,3] - minValues[0])/resXY + 0.5), int((TW4[1,3] - minValues[1])/resXY + 0.5), int((TW4[2,3] - minValues[2])/resZ + 0.5)]
     prevDistToCollision = reachabilityDistance3D[indexRV[0], indexRV[1], indexRV[2]]
-    if i == 1 and prevDistToCollision == 0:
-        print("Collision detected!")
-        print("In config: " + str(armJoints[i-1]))
-        print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[2,3]))
+    if i == 1 and int(representationNumber) != 4:
+        if prevDistToCollision == 0:
+            print("Collision detected!")
+            print("In config: " + str(armJoints[i-1]))
+            print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[2,3]))
+        if prevDistToCollision > maxDistToCollisions:
+            maxDistToCollisions = prevDistToCollision
+        if prevDistToCollision < minDistToCollisions:
+            minDistToCollisions = prevDistToCollision
 
     TW4= DKMwrist(armJoints[i], pos, heading)
     indexRV = [int((TW4[0,3] - minValues[0])/resXY + 0.5), int((TW4[1,3] - minValues[1])/resXY + 0.5), int((TW4[2,3] - minValues[2])/resZ + 0.5)]
@@ -458,10 +466,16 @@ for i in range(1, pathSize):
 
     if int(representationNumber) != 4 or np.max(armJointsDist) > 0:
         totalDistToCollisions = totalDistToCollisions + requiredTime*(prevDistToCollision + currDistToCollision)/2
-
+        if currDistToCollision > maxDistToCollisions:
+            maxDistToCollisions = currDistToCollision
+        if currDistToCollision < minDistToCollisions:
+            minDistToCollisions = currDistToCollision
 
 
 avgDistToCollisions = totalDistToCollisions/totalRequiredTime
+
+print("Min distance to self-collisions in profile: " + str(minDistToCollisions))
+print("Max distance to self-collisions in profile: " + str(maxDistToCollisions))
 print("Average distance to self-collisions in profile: " + str(avgDistToCollisions))
 
 print("Total required time for arm movements: " + str(totalArmRequiredTime))
