@@ -498,7 +498,7 @@ print("Total time base is moving: " + str(totalBaseMovingTime))
 print("Total required time for motion plan: " + str(totalRequiredTime))
 
 # Open the file in read mode ('r')
-if not os.path.exists("motionPlanResultsLog.txt"):
+'''if not os.path.exists("motionPlanResultsLog.txt"):
     with open("motionPlanResultsLog.txt", "a+") as file_object:
         for i in range(0, 9*4):
             file_object.write("\n")
@@ -541,4 +541,4 @@ with open("motionPlanResultsLog.txt", "a+") as file_object:
 
     # Rewrite the file
     for line in file_text:
-        file_object.write(line)
+        file_object.write(line)'''
