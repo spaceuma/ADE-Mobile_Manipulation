@@ -32,8 +32,17 @@ elif int(representationNumber) == 4:
 costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_0"+representationNumber+".txt",'r'), skiprows=0)
 costMap[np.where(costMap==np.inf)] = np.nan
 
+xMap, yMap = \
+          np.meshgrid(np.linspace(0,costMap.shape[1]-1,costMap.shape[1]), \
+                      np.linspace(0,costMap.shape[0]-1,costMap.shape[0]))
+
+res = 0.1
+
+xMap = xMap*res
+yMap = yMap*res
+
 fig1, ax1 = plt.subplots()
-plot1 = ax1.contourf(costMap, 40, cmap = 'Reds')
+plot1 = ax1.contourf(xMap, yMap, costMap, 40, cmap = 'Reds')
 ax1.set_aspect('equal')
 ax1.set_xlabel('X-axis')
 ax1.set_ylabel('Y-axis')

@@ -35,9 +35,19 @@ costMap[np.where(costMap==np.inf)] = np.nan
 
 path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt",'r'), skiprows=0)
 
+xMap, yMap = \
+          np.meshgrid(np.linspace(0,costMap.shape[1]-1,costMap.shape[1]), \
+                      np.linspace(0,costMap.shape[0]-1,costMap.shape[0]))
+
+res = 0.1
+
+xMap = xMap*res
+yMap = yMap*res
+
+path = path*res
 
 fig1, ax1 = plt.subplots(tight_layout=True)
-plot1 = ax1.contourf(costMap, 40, cmap = 'Reds')
+plot1 = ax1.contourf(xMap, yMap, costMap, 40, cmap = 'Reds')
 ax1.set_aspect('equal')
 ax1.plot(10.0*path[:,0],10.0*path[:,1],'b')
 ax1.set_xlabel('X-axis')
