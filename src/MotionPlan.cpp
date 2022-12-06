@@ -291,7 +291,6 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                  "Elevation Map from MMMap class"
               << std::endl;
 
-    std::vector<base::Waypoint> * pvw_reference_path;
     std::vector<base::Waypoint> vw_reference_path;
 
     unsigned int ui_deployment = 2;    // TODO: make this take the true current one
@@ -316,10 +315,9 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                 vw_reference_path[i] = this->vw_rover_path[i];
             }
         }
-        pvw_reference_path = &(vw_reference_path);
         this->vvd_arm_motion_profile.clear();
 
-        if(this->p_arm_planner->planArmMotion(pvw_reference_path,
+        if(this->p_arm_planner->planArmMotion(&vw_reference_path,
                                               &elevationMap,
                                               this->pmm_map->getResolution(),
                                               this->d_zres,
