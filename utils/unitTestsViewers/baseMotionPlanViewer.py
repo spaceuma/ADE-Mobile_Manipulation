@@ -35,15 +35,15 @@ res = 0.1
 elevation_map = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
 #traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 
-costMap_shadowing = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt"), skiprows=0)
-costMap_shadowing[np.where(costMap_shadowing==np.inf)] = np.nan
+costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_0"+representationNumber+".txt",'r'), skiprows=0)
+costMap[np.where(costMap==np.inf)] = np.nan
 
 path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt",'r'), skiprows=0)
 
 sample = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"), skiprows = 0)
 rover = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"), skiprows = 0)
 
-traversabilityMap = costMap_shadowing
+traversabilityMap = costMap
 
 xMap, yMap = \
           np.meshgrid(np.linspace(0,elevation_map.shape[1]-1,elevation_map.shape[1]), \
@@ -56,7 +56,7 @@ yMap = yMap*res
 fig1, (ax2,ax1) = plt.subplots(figsize = (9,6),nrows = 1,ncols = 2,constrained_layout=True)
 fig1.suptitle('Unit Test - MMMotionPlan Cost Maps', fontsize=16)
 
-plot1 = ax1.contourf(xMap, yMap, costMap_shadowing, 40, cmap = 'Oranges')
+plot1 = ax1.contourf(xMap, yMap, costMap, 40, cmap = 'Oranges')
 ax1.set_aspect('equal')
 ax1.set_xlabel('X-axis')
 ax1.set_ylabel('Y-axis')
@@ -66,7 +66,7 @@ cb1 = fig1.colorbar(plot1, ax = ax1, orientation = 'horizontal')
 cb1.ax.set_title('Cost')
 p1 = ax1.plot(path[:,0],path[:,1],'c', linewidth = 2)
 s1 = ax1.plot(sample[0], sample[1], 'or')
-circ1 = ax1.add_artist(plt.Circle((sample[0],sample[1]),1.4, color='m', fill = False))
+circ1 = ax1.add_artist(plt.Circle((sample[0],sample[1]),1.0, color='m', fill = False))
 circ2 = ax1.add_artist(plt.Circle((sample[0],sample[1]),2.3, color='y', fill = False))
 circ3 = ax1.add_artist(plt.Circle((sample[0],sample[1]),2.3+0.142, color='b', fill = False))
 s12 = ax1.plot(rover[0], rover[1], 'oy')

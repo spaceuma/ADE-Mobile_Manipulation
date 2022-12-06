@@ -13,29 +13,54 @@ using namespace FastMarching_lib;
 
 TEST(MMMotionPlanTest, nominal_working_test)
 {
-    // Reading the DEM
-    std::vector<std::vector<double>> vvd_cost_map_shadowing, vvd_elevation_map;
+    // Input Elevation Matrix is read
+    std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
 
+    // A dummy Rover Guidance based DEM is created
     ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",
-                                   vvd_elevation_map));
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_costMap.txt",
-                                   vvd_cost_map_shadowing));
+                                   vvd_elevation_data));
+    double res = 0.1;    // meters
+    RoverGuidance_Dem * prgd_dummy_dem = new RoverGuidance_Dem;
+    double dummyArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    int8_t validityArray[vvd_elevation_data.size() * vvd_elevation_data[0].size()];
+    prgd_dummy_dem->p_heightData_m = dummyArray;
+    prgd_dummy_dem->p_pointValidityFlag = validityArray;
+    prgd_dummy_dem->cols = vvd_elevation_data[0].size();
+    prgd_dummy_dem->rows = vvd_elevation_data.size();
+    prgd_dummy_dem->nodeSize_m = res;
+    prgd_dummy_dem->mapOrigin_m_Mlg[0] = 0.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[1] = 0.0;
+    prgd_dummy_dem->mapOrigin_m_Mlg[2] = 0.0;
+    for(uint j = 0; j < vvd_elevation_data.size(); j++)
+    {
+        for(uint i = 0; i < vvd_elevation_data[0].size(); i++)
+        {
+            prgd_dummy_dem->p_heightData_m[i + j * vvd_elevation_data[0].size()] =
+                vvd_elevation_data[j][i];
+            prgd_dummy_dem->p_pointValidityFlag[i + j * vvd_elevation_data[0].size()] = 1;
+        }
+    }
 
-    base::Waypoint w_rover_pos_01, samplePos;
+    MobileManipMap mmmap_shadowing;
+    ASSERT_EQ(mmmap_shadowing.loadDEM((*prgd_dummy_dem)), 0);
 
+    base::Waypoint w_sample_pos_01, w_rover_pos_01;
     ASSERT_NO_THROW(w_rover_pos_01 =
                         getWaypoint("test/unit/data/input/MMMotionPlanTest/rover_pos_01.txt"))
         << "Input Rover Waypoint file is missing";
-    ASSERT_NO_THROW(samplePos =
+    ASSERT_NO_THROW(w_sample_pos_01 =
                         getWaypoint("test/unit/data/input/MMMotionPlanTest/sample_pos_01.txt"))
         << "Input Sample Waypoint file is missing";
 
-    double res = 0.1;    // meters
-    double zRes = 0.08;
-    unsigned int ui_error_code = 0;
+    ASSERT_EQ(mmmap_shadowing.computeFACE(w_sample_pos_01, w_rover_pos_01), 0);
 
-    MobileManipMap mmmap_shadowing(
-        vvd_elevation_map, vvd_cost_map_shadowing, res, samplePos, 1.0, 0.94);
+    std::vector<std::vector<double>> costMap;
+    costMap.resize(prgd_dummy_dem->rows);
+    for(uint i = 0; i < prgd_dummy_dem->rows; i++)
+    {
+        costMap[i].resize(prgd_dummy_dem->cols);
+    }
+    mmmap_shadowing.getCostMap(costMap);
 
     // Creating the Motion Plan
     std::ifstream if_urdf_path("data/planner/urdfmodel_path.txt", std::ios::in);
@@ -53,6 +78,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     // 1st Case with Shadowing, End deployment
     clock_t ini2D = clock();
+    unsigned int ui_error_code = 0;
 
     MotionPlan mplan_shadowing(&mmmap_shadowing, s_urdf_path, 0);
 
@@ -81,7 +107,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_path_01.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_01.txt",
-                    vvd_cost_map_shadowing);
+                    costMap);
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
                 "test/unit/data/results/MMMotionPlanTest/nominal_working_profile_01.txt");
     saveProfile(mplan_shadowing.getWristPath(),
@@ -117,7 +143,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_02.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_02.txt",
-                    vvd_cost_map_shadowing);
+                    costMap);
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_path_02.txt");
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
@@ -155,7 +181,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_03.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_03.txt",
-                    vvd_cost_map_shadowing);
+                    costMap);
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_path_03.txt");
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
@@ -193,7 +219,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
 
     saveValue(totalTime, "test/unit/data/results/MMMotionPlanTest/nominal_working_execTime_04.txt");
     writeMatrixFile("test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_04.txt",
-                    vvd_cost_map_shadowing);
+                    costMap);
     savePath(mplan_shadowing.getRoverPath(),
              "test/unit/data/results/MMMotionPlanTest/nominal_working_path_04.txt");
     saveProfile(mplan_shadowing.getCoupledArmMotionProfile(),
