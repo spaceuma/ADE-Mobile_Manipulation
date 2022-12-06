@@ -341,6 +341,13 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                                vw_reference_path.end());
                     for(uint i = 0; i < ui_nWaypoints; i++)
                     {
+                        this->vw_rover_path[i].position[2] =
+                            elevationMap[(int)(this->vw_rover_path[i].position[1] /
+                                                   this->pmm_map->getResolution() +
+                                               0.5)][(int)(this->vw_rover_path[i].position[0] /
+                                                               this->pmm_map->getResolution() +
+                                                           0.5)] +
+                            p_arm_planner->heightGround2BCS;
                         this->vvd_arm_motion_profile.insert(this->vvd_arm_motion_profile.begin(),
                                                             this->vvd_arm_motion_profile[0]);
                     }
