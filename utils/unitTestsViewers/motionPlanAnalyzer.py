@@ -8,6 +8,7 @@ import sys
 import numpy as np
 import math
 from numpy import dot
+import os
 
 def traslation(p):
 
@@ -496,5 +497,48 @@ print("Total time base is moving: " + str(totalBaseMovingTime))
 
 print("Total required time for motion plan: " + str(totalRequiredTime))
 
+# Open the file in read mode ('r')
+if not os.path.exists("motionPlanResultsLog.txt"):
+    with open("motionPlanResultsLog.txt", "a+") as file_object:
+        for i in range(0, 9*4):
+            file_object.write("\n")
 
+with open("motionPlanResultsLog.txt", "r") as file_object:
+    file_text = file_object.readlines()
 
+# Update the text
+file_text[(int(representationNumber)-1)*9] = file_text[(int(representationNumber)-1)*9][:-1]
+file_text[(int(representationNumber)-1)*9] += " " + str(execTime) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 1] = file_text[(int(representationNumber)-1)*9 + 1][:-1]
+file_text[(int(representationNumber)-1)*9 + 1] += " " + str(minDistToCollisions) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 2] = file_text[(int(representationNumber)-1)*9 + 2][:-1]
+file_text[(int(representationNumber)-1)*9 + 2] += " " + str(maxDistToCollisions) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 3] = file_text[(int(representationNumber)-1)*9 + 3][:-1]
+file_text[(int(representationNumber)-1)*9 + 3] += " " + str(avgDistToCollisions) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 4] = file_text[(int(representationNumber)-1)*9 + 4][:-1]
+file_text[(int(representationNumber)-1)*9 + 4] += " " + str(totalArmRequiredTime) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 5] = file_text[(int(representationNumber)-1)*9 + 5][:-1]
+file_text[(int(representationNumber)-1)*9 + 5] += " " + str(totalBaseRequiredTime) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 6] = file_text[(int(representationNumber)-1)*9 + 6][:-1]
+file_text[(int(representationNumber)-1)*9 + 6] += " " + str(totalArmMovingTime) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 7] = file_text[(int(representationNumber)-1)*9 + 7][:-1]
+file_text[(int(representationNumber)-1)*9 + 7] += " " + str(totalBaseMovingTime) + "\n"
+
+file_text[(int(representationNumber)-1)*9 + 8] = file_text[(int(representationNumber)-1)*9 + 8][:-1]
+file_text[(int(representationNumber)-1)*9 + 8] += " " + str(totalRequiredTime) + "\n"
+
+# Open the file in append & read mode ('a+')
+with open("motionPlanResultsLog.txt", "a+") as file_object:
+    # Remove data in file.
+    file_object.truncate(0)
+
+    # Rewrite the file
+    for line in file_text:
+        file_object.write(line)
