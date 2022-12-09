@@ -137,6 +137,41 @@ for approach in approaches:
     std_dev_base_moving_time[index] = sqrt(std_dev_base_moving_time[index]/num_data)
     std_dev_total_required_time[index] = sqrt(std_dev_total_required_time[index]/num_data)
 
+#proportional_arm_time = arm_moving_time
+#proportional_base_time = base_moving_time
+proportional_total_time = total_required_time
+
+#mean_proportional_arm_time = np.empty(np.size(approaches))
+#mean_proportional_base_time = np.empty(np.size(approaches))
+mean_proportional_total_time = np.empty(np.size(approaches))
+
+#std_dev_proportional_arm_time = np.zeros(np.size(approaches))
+#std_dev_proportional_base_time = np.zeros(np.size(approaches))
+std_dev_proportional_total_time = np.zeros(np.size(approaches))
+
+for approach in approaches:
+    index = getApproach(approach)
+    num_data = np.size(computation_time[index])
+
+    for i in range(0, num_data):
+        #proportional_arm_time[index][i] = arm_moving_time[index][i]/total_required_time[getApproach("DECOUPLED")][i]
+        #proportional_base_time[index][i] = base_moving_time[index][i]/total_required_time[getApproach("DECOUPLED")][i]
+        proportional_total_time[index][i] = total_required_time[index][i]/total_required_time[getApproach("DECOUPLED")][i]
+
+    #mean_proportional_arm_time[index] = np.cumsum(proportional_arm_time[index])[-1]/num_data
+    #mean_proportional_base_time[index] = np.cumsum(proportional_base_time[index])[-1]/num_data
+    mean_proportional_total_time[index] = np.cumsum(proportional_total_time[index])[-1]/num_data
+
+    for i in range(0, num_data):
+        #std_dev_proportional_arm_time[index] += pow(proportional_arm_time[index][i] - mean_proportional_arm_time[index], 2)
+        #std_dev_proportional_base_time[index] += pow(proportional_base_time[index][i] - mean_proportional_base_time[index], 2)
+        std_dev_proportional_total_time[index] += pow(proportional_total_time[index][i] - mean_proportional_total_time[index], 2)
+
+    #std_dev_proportional_arm_time[index] = sqrt(std_dev_proportional_arm_time[index]/num_data)
+    #std_dev_proportional_base_time[index] = sqrt(std_dev_proportional_base_time[index]/num_data)
+    std_dev_proportional_total_time[index] = sqrt(std_dev_proportional_total_time[index]/num_data)
+
+
 fig1, ax1 = plt.subplots()
 plot1 = ax1.errorbar(approaches, mean_computation_time, std_dev_computation_time, linestyle='None', marker='o', capsize = 5)
 ax1.set_ylabel('Computation time (s)')
@@ -151,10 +186,17 @@ ax2.set_ylim(bottom = 0)
 ax2.legend(["Minimum","Mean","Maximum"])
 
 fig3, ax3 = plt.subplots()
-plot5 = ax3.errorbar(approaches, mean_arm_moving_time, std_dev_arm_moving_time, linestyle='None', marker='o', capsize = 5)
-plot6 = ax3.errorbar(approaches, mean_base_moving_time, std_dev_base_moving_time, linestyle='None', marker='x', capsize = 5, horizontalalignment='right')
-plot7 = ax3.errorbar(approaches, mean_total_required_time, std_dev_total_required_time, linestyle='None', marker='^', capsize = 5)
-ax3.set_ylabel('Motion execution time (s)')
+#plot5 = ax3.errorbar(approaches, mean_proportional_arm_time, std_dev_proportional_arm_time, linestyle='None', marker='o', capsize = 5)
+#plot6 = ax3.errorbar(approaches, mean_proportional_base_time, std_dev_proportional_base_time, linestyle='None', marker='x', capsize = 5)
+plot7 = ax3.errorbar(approaches, mean_proportional_total_time, std_dev_proportional_total_time, linestyle='None', marker='^', capsize = 5)
+ax3.set_ylabel('Proportion of motion execution time w.r.t. DECOUPLED solution')
+ax3.set_ylim(bottom = 0)
+
+fig3, ax3 = plt.subplots()
+plot5 = ax3.errorbar(approaches, mean_arm_moving_time, linestyle='None', marker='o', capsize = 5)
+plot6 = ax3.errorbar(approaches, mean_base_moving_time, linestyle='None', marker='x', capsize = 5)
+plot7 = ax3.errorbar(approaches, mean_total_required_time, linestyle='None', marker='^', capsize = 5)
+ax3.set_ylabel('Avg. motion execution time (s)')
 ax3.set_ylim(bottom = 0)
 ax3.legend(["Arm","Base","Total"])
 
