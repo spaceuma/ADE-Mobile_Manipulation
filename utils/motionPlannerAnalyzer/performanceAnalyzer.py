@@ -176,6 +176,7 @@ fig1, ax1 = plt.subplots()
 plot1 = ax1.errorbar(approaches, mean_computation_time, std_dev_computation_time, linestyle='None', marker='o', capsize = 5)
 ax1.set_ylabel('Computation time (s)')
 ax1.set_ylim(bottom = 0)
+ax1.grid()
 
 fig2, ax2 = plt.subplots()
 plot2 = ax2.errorbar(approaches, mean_min_self_collision_distance, std_dev_min_self_collision_distance, linestyle='None', marker='o', capsize = 5)
@@ -183,6 +184,7 @@ plot3 = ax2.errorbar(approaches, mean_avg_self_collision_distance, std_dev_avg_s
 plot4 = ax2.errorbar(approaches, mean_max_self_collision_distance, std_dev_max_self_collision_distance, linestyle='None', marker='o', capsize = 5)
 ax2.set_ylabel('Distance to self collisions (m)')
 ax2.set_ylim(bottom = 0)
+ax2.grid()
 ax2.legend(["Minimum","Mean","Maximum"])
 
 fig3, ax3 = plt.subplots()
@@ -191,6 +193,7 @@ fig3, ax3 = plt.subplots()
 plot7 = ax3.errorbar(approaches, mean_proportional_total_time, std_dev_proportional_total_time, linestyle='None', marker='^', capsize = 5)
 ax3.set_ylabel('Proportion of motion execution time w.r.t. DECOUPLED solution')
 ax3.set_ylim(bottom = 0)
+ax3.grid()
 
 fig3, ax3 = plt.subplots()
 plot5 = ax3.errorbar(approaches, mean_arm_moving_time, linestyle='None', marker='o', capsize = 5)
@@ -198,6 +201,7 @@ plot6 = ax3.errorbar(approaches, mean_base_moving_time, linestyle='None', marker
 plot7 = ax3.errorbar(approaches, mean_total_required_time, linestyle='None', marker='^', capsize = 5)
 ax3.set_ylabel('Avg. motion execution time (s)')
 ax3.set_ylim(bottom = 0)
+ax3.grid()
 ax3.legend(["Arm","Base","Total"])
 
 plt.show()
