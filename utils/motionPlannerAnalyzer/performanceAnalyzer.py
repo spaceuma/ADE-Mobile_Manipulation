@@ -195,12 +195,19 @@ ax3.set_ylabel('Motion execution time w.r.t. DECOUPLED')
 ax3.set_ylim(bottom = 0)
 ax3.grid()
 
-plot6 = ax4.errorbar(approaches, mean_arm_moving_time, linestyle='None', marker='s', mec = 'black', ms=10, capsize = 8)
-plot7 = ax4.errorbar(approaches, mean_base_moving_time, linestyle='None', marker='o', mec = 'black', ms=10, capsize = 8)
-plot8 = ax4.errorbar(approaches, mean_total_required_time, linestyle='None', marker='x', mec = 'black', ms=11, capsize = 8)
+x = np.arange(len(approaches))
+width = 0.12
+
+plot8 = ax4.bar(x+width, mean_total_required_time, width, edgecolor='black', label='Total')
+plot7 = ax4.bar(x, mean_base_moving_time, width, edgecolor='black', label='Base')
+plot6 = ax4.bar(x-width, mean_arm_moving_time, width, edgecolor='black', label='Arm')
 ax4.set_ylabel('Avg. motion execution time (s)')
 ax4.set_ylim(bottom = 0)
 ax4.grid()
-ax4.legend(["Arm","Base","Total"])
+ax4.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+ax4.set_xticks(x, approaches)
+
+#ax4.bar_label(plot8, padding=3)
+#fig2.tight_layout()
 
 plt.show()
