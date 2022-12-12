@@ -206,6 +206,7 @@ ax4.set_ylim(bottom = 0)
 ax4.grid()
 ax4.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 ax4.set_xticks(x, approaches)
+ax4.set_axisbelow(True)
 
 #ax4.bar_label(plot8, padding=3)
 #fig2.tight_layout()
