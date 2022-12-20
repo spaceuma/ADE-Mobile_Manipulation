@@ -433,10 +433,6 @@ for i in range(1, pathSize):
             print("Collision detected!")
             print("In config: " + str(armJoints[i-1]))
             print("with wrist position: " + str(TW4[0,3]) + " " + str(TW4[1,3]) +" " + str(TW4[2,3]))
-        if prevDistToCollision > maxDistToCollisions:
-            maxDistToCollisions = prevDistToCollision
-        if prevDistToCollision < minDistToCollisions:
-            minDistToCollisions = prevDistToCollision
 
     TW4= DKMwrist(armJoints[i], pos, heading)
     indexRV = [int((TW4[0,3] - minValues[0])/resXY + 0.5), int((TW4[1,3] - minValues[1])/resXY + 0.5), int((TW4[2,3] - minValues[2])/resZ + 0.5)]
@@ -472,22 +468,25 @@ for i in range(1, pathSize):
     if np.max(armJointsDist) > 0:
         totalArmMovingTime = totalArmMovingTime + requiredTime
         totalDistToCollisions = totalDistToCollisions + requiredTime*(prevDistToCollision + currDistToCollision)/2
-        if currDistToCollision > maxDistToCollisions:
-            maxDistToCollisions = currDistToCollision
-        if currDistToCollision < minDistToCollisions:
-            minDistToCollisions = currDistToCollision
 
     if waypDist > 0:
         totalBaseMovingTime = totalBaseMovingTime + requiredTime
 
 
 avgDistToCollisions = totalDistToCollisions/totalArmMovingTime
+stdDevDistToCollisions = 0
+for i in range(0, pathSize):
+    TW4= DKMwrist(armJoints[i], pos, heading)
+    indexRV = [int((TW4[0,3] - minValues[0])/resXY + 0.5), int((TW4[1,3] - minValues[1])/resXY + 0.5), int((TW4[2,3] - minValues[2])/resZ + 0.5)]
+    distToCollision = reachabilityDistance3D[indexRV[0], indexRV[1], indexRV[2]]
+    stdDevDistToCollisions += pow(distToCollision-avgDistToCollisions,2)
+
+stdDevDistToCollisions = math.sqrt(stdDevDistToCollisions/pathSize)
 
 print("Motion plan computation time: " + str(execTime))
 
-print("Min distance to self-collisions in profile: " + str(minDistToCollisions))
-print("Max distance to self-collisions in profile: " + str(maxDistToCollisions))
 print("Average distance to self-collisions in profile: " + str(avgDistToCollisions))
+print("StdDev distance to self-collisions in profile: " + str(stdDevDistToCollisions))
 
 print("Total required time for arm movements: " + str(totalArmRequiredTime))
 print("Total required time for base movements: " + str(totalBaseRequiredTime))
@@ -497,42 +496,39 @@ print("Total time base is moving: " + str(totalBaseMovingTime))
 
 print("Total required time for motion plan: " + str(totalRequiredTime))
 
-# Open the file in read mode ('r')
-'''if not os.path.exists("motionPlanResultsLog.txt"):
+'''# Open the file in read mode ('r')
+if not os.path.exists("motionPlanResultsLog.txt"):
     with open("motionPlanResultsLog.txt", "a+") as file_object:
-        for i in range(0, 9*4):
+        for i in range(0, 8*4):
             file_object.write("\n")
 
 with open("motionPlanResultsLog.txt", "r") as file_object:
     file_text = file_object.readlines()
 
 # Update the text
-file_text[(int(representationNumber)-1)*9] = file_text[(int(representationNumber)-1)*9][:-1]
-file_text[(int(representationNumber)-1)*9] += " " + str(execTime) + "\n"
+file_text[(int(representationNumber)-1)*8] = file_text[(int(representationNumber)-1)*8][:-1]
+file_text[(int(representationNumber)-1)*8] += " " + str(execTime) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 1] = file_text[(int(representationNumber)-1)*9 + 1][:-1]
-file_text[(int(representationNumber)-1)*9 + 1] += " " + str(minDistToCollisions) + "\n"
+file_text[(int(representationNumber)-1)*8 + 1] = file_text[(int(representationNumber)-1)*8 + 1][:-1]
+file_text[(int(representationNumber)-1)*8 + 1] += " " + str(stdDevDistToCollisions) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 2] = file_text[(int(representationNumber)-1)*9 + 2][:-1]
-file_text[(int(representationNumber)-1)*9 + 2] += " " + str(maxDistToCollisions) + "\n"
+file_text[(int(representationNumber)-1)*8 + 2] = file_text[(int(representationNumber)-1)*8 + 2][:-1]
+file_text[(int(representationNumber)-1)*8 + 2] += " " + str(avgDistToCollisions) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 3] = file_text[(int(representationNumber)-1)*9 + 3][:-1]
-file_text[(int(representationNumber)-1)*9 + 3] += " " + str(avgDistToCollisions) + "\n"
+file_text[(int(representationNumber)-1)*8 + 3] = file_text[(int(representationNumber)-1)*8 + 3][:-1]
+file_text[(int(representationNumber)-1)*8 + 3] += " " + str(totalArmRequiredTime) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 4] = file_text[(int(representationNumber)-1)*9 + 4][:-1]
-file_text[(int(representationNumber)-1)*9 + 4] += " " + str(totalArmRequiredTime) + "\n"
+file_text[(int(representationNumber)-1)*8 + 4] = file_text[(int(representationNumber)-1)*8 + 4][:-1]
+file_text[(int(representationNumber)-1)*8 + 4] += " " + str(totalBaseRequiredTime) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 5] = file_text[(int(representationNumber)-1)*9 + 5][:-1]
-file_text[(int(representationNumber)-1)*9 + 5] += " " + str(totalBaseRequiredTime) + "\n"
+file_text[(int(representationNumber)-1)*8 + 5] = file_text[(int(representationNumber)-1)*8 + 5][:-1]
+file_text[(int(representationNumber)-1)*8 + 5] += " " + str(totalArmMovingTime) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 6] = file_text[(int(representationNumber)-1)*9 + 6][:-1]
-file_text[(int(representationNumber)-1)*9 + 6] += " " + str(totalArmMovingTime) + "\n"
+file_text[(int(representationNumber)-1)*8 + 6] = file_text[(int(representationNumber)-1)*8 + 6][:-1]
+file_text[(int(representationNumber)-1)*8 + 6] += " " + str(totalBaseMovingTime) + "\n"
 
-file_text[(int(representationNumber)-1)*9 + 7] = file_text[(int(representationNumber)-1)*9 + 7][:-1]
-file_text[(int(representationNumber)-1)*9 + 7] += " " + str(totalBaseMovingTime) + "\n"
-
-file_text[(int(representationNumber)-1)*9 + 8] = file_text[(int(representationNumber)-1)*9 + 8][:-1]
-file_text[(int(representationNumber)-1)*9 + 8] += " " + str(totalRequiredTime) + "\n"
+file_text[(int(representationNumber)-1)*8 + 7] = file_text[(int(representationNumber)-1)*8 + 7][:-1]
+file_text[(int(representationNumber)-1)*8 + 7] += " " + str(totalRequiredTime) + "\n"
 
 # Open the file in append & read mode ('a+')
 with open("motionPlanResultsLog.txt", "a+") as file_object:

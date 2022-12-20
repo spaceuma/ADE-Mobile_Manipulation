@@ -24,9 +24,8 @@ if not os.path.exists("motionPlanResultsLog.txt"):
 
 # Initialize variables
 computation_time = []
-min_self_collision_distance = []
-max_self_collision_distance = []
-avg_self_collision_distance = []
+std_devs_self_collision_distance = []
+means_self_collision_distance = []
 arm_required_time = []
 base_required_time = []
 arm_moving_time = []
@@ -50,31 +49,27 @@ with open("motionPlanResultsLog.txt", "r") as file_object:
         if i == 0:
             computation_time.append(filtered_line)
         elif i == 1:
-            min_self_collision_distance.append(filtered_line)
+            std_devs_self_collision_distance.append(filtered_line)
         elif i == 2:
-            max_self_collision_distance.append(filtered_line)
+            means_self_collision_distance.append(filtered_line)
         elif i == 3:
-            avg_self_collision_distance.append(filtered_line)
-        elif i == 4:
             arm_required_time.append(filtered_line)
-        elif i == 5:
+        elif i == 4:
             base_required_time.append(filtered_line)
-        elif i == 6:
+        elif i == 5:
             arm_moving_time.append(filtered_line)
-        elif i == 7:
+        elif i == 6:
             base_moving_time.append(filtered_line)
-        elif i == 8:
+        elif i == 7:
             total_required_time.append(filtered_line)
 
         i += 1
-        if i >= 9:
+        if i >= 8:
             i = 0
 
 
 mean_computation_time = np.empty(np.size(approaches))
-mean_min_self_collision_distance = np.empty(np.size(approaches))
-mean_max_self_collision_distance = np.empty(np.size(approaches))
-mean_avg_self_collision_distance = np.empty(np.size(approaches))
+mean_self_collision_distance = np.empty(np.size(approaches))
 mean_arm_required_time = np.empty(np.size(approaches))
 mean_base_required_time = np.empty(np.size(approaches))
 mean_arm_moving_time = np.empty(np.size(approaches))
@@ -82,9 +77,7 @@ mean_base_moving_time = np.empty(np.size(approaches))
 mean_total_required_time = np.empty(np.size(approaches))
 
 std_dev_computation_time = np.zeros(np.size(approaches))
-std_dev_min_self_collision_distance = np.zeros(np.size(approaches))
-std_dev_max_self_collision_distance = np.zeros(np.size(approaches))
-std_dev_avg_self_collision_distance = np.zeros(np.size(approaches))
+std_dev_self_collision_distance = np.zeros(np.size(approaches))
 std_dev_arm_required_time = np.zeros(np.size(approaches))
 std_dev_base_required_time = np.zeros(np.size(approaches))
 std_dev_arm_moving_time = np.zeros(np.size(approaches))
@@ -97,9 +90,8 @@ for approach in approaches:
     print("Approach "+approach)
 
     '''print("Num data: "+str(np.size(computation_time[index])))
-    print("Num data: "+str(np.size(min_self_collision_distance[index])))
-    print("Num data: "+str(np.size(max_self_collision_distance[index])))
-    print("Num data: "+str(np.size(avg_self_collision_distance[index])))
+    print("Num data: "+str(np.size(std_devs_self_collision_distance[index])))
+    print("Num data: "+str(np.size(means_self_collision_distance[index])))
     print("Num data: "+str(np.size(arm_required_time[index])))
     print("Num data: "+str(np.size(base_required_time[index])))
     print("Num data: "+str(np.size(arm_moving_time[index])))
@@ -107,9 +99,7 @@ for approach in approaches:
     print("Num data: "+str(np.size(total_required_time[index])))'''
 
     mean_computation_time[index] = np.cumsum(computation_time[index])[-1]/num_data
-    mean_min_self_collision_distance[index] = np.cumsum(min_self_collision_distance[index])[-1]/num_data
-    mean_max_self_collision_distance[index] = np.cumsum(max_self_collision_distance[index])[-1]/num_data
-    mean_avg_self_collision_distance[index] = np.cumsum(avg_self_collision_distance[index])[-1]/num_data
+    mean_self_collision_distance[index] = np.cumsum(means_self_collision_distance[index])[-1]/num_data
     mean_arm_required_time[index] = np.cumsum(arm_required_time[index])[-1]/num_data
     mean_base_required_time[index] = np.cumsum(base_required_time[index])[-1]/num_data
     mean_arm_moving_time[index] = np.cumsum(arm_moving_time[index])[-1]/num_data
@@ -118,9 +108,7 @@ for approach in approaches:
 
     for i in range(0, num_data):
         std_dev_computation_time[index] += pow(computation_time[index][i] - mean_computation_time[index], 2)
-        std_dev_min_self_collision_distance[index] += pow(min_self_collision_distance[index][i] - mean_min_self_collision_distance[index], 2)
-        std_dev_max_self_collision_distance[index] += pow(max_self_collision_distance[index][i] - mean_max_self_collision_distance[index], 2)
-        std_dev_avg_self_collision_distance[index] += pow(avg_self_collision_distance[index][i] - mean_avg_self_collision_distance[index], 2)
+        std_dev_self_collision_distance[index] += pow(std_devs_self_collision_distance[index][i], 2)
         std_dev_arm_required_time[index] += pow(arm_required_time[index][i] - mean_arm_required_time[index], 2)
         std_dev_base_required_time[index] += pow(base_required_time[index][i] - mean_base_required_time[index], 2)
         std_dev_arm_moving_time[index] += pow(arm_moving_time[index][i] - mean_arm_moving_time[index], 2)
@@ -128,9 +116,7 @@ for approach in approaches:
         std_dev_total_required_time[index] += pow(total_required_time[index][i] - mean_total_required_time[index], 2)
 
     std_dev_computation_time[index] = sqrt(std_dev_computation_time[index]/num_data)
-    std_dev_min_self_collision_distance[index] = sqrt(std_dev_min_self_collision_distance[index]/num_data)
-    std_dev_max_self_collision_distance[index] = sqrt(std_dev_max_self_collision_distance[index]/num_data)
-    std_dev_avg_self_collision_distance[index] = sqrt(std_dev_avg_self_collision_distance[index]/num_data)
+    std_dev_self_collision_distance[index] = sqrt(std_dev_self_collision_distance[index]/num_data)
     std_dev_arm_required_time[index] = sqrt(std_dev_arm_required_time[index]/num_data)
     std_dev_base_required_time[index] = sqrt(std_dev_base_required_time[index]/num_data)
     std_dev_arm_moving_time[index] = sqrt(std_dev_arm_moving_time[index]/num_data)
@@ -179,13 +165,11 @@ ax1.set_ylabel('Computation time (s)')
 ax1.set_ylim(bottom = 0)
 ax1.grid()
 
-plot2 = ax2.errorbar(approaches, mean_min_self_collision_distance, std_dev_min_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='b', mec = 'black', ms=8, capsize = 8)
-plot3 = ax2.errorbar(approaches, mean_avg_self_collision_distance, std_dev_avg_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
-plot4 = ax2.errorbar(approaches, mean_max_self_collision_distance, std_dev_max_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='r', mec = 'black', ms=8, capsize = 8)
+plot4 = ax2.errorbar(approaches, mean_self_collision_distance, std_dev_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
 ax2.set_ylabel('Distance to self collisions (m)')
 ax2.set_ylim(bottom = 0)
 ax2.grid()
-ax2.legend(["Min","Mean","Max"])
+#ax2.legend(["Min","Mean","Max"])
 
 fig2, (ax3, ax4) = plt.subplots(1, 2, sharey=False)
 #plot5 = ax3.errorbar(approaches, mean_proportional_arm_time, std_dev_proportional_arm_time, linestyle='None', marker='o', capsize = 5)
