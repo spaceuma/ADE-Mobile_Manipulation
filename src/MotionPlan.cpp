@@ -294,17 +294,32 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     std::vector<base::Waypoint> vw_reference_path;
 
     unsigned int ui_deployment = 2;    // TODO: make this take the true current one
-    bool b_halfPath = false;           // TODO: make this take the true current one
-    unsigned int ui_nWaypoints = (uint)(this->vw_rover_path.size() / 2);
+
+    bool minimize_arm_movement = true;    // TODO: make this take the true current one
+    double min_arm_moving_time = 35.21899630340112;
+    double rover_speed = 0.1;
+    double distance_start_movement = min_arm_moving_time * rover_speed;
+    double dist_to_goal = 0;
+    unsigned int first_arm_waypoint = 0;
+
+    for(uint i = this->vw_rover_path.size() - 1; i > 1; i--)
+    {
+        dist_to_goal += (vw_rover_path[i].position - vw_rover_path[i - 1].position).norm();
+        if(dist_to_goal > distance_start_movement)
+        {
+            first_arm_waypoint = i;
+            break;
+        }
+    }
+
     while(ui_deployment >= 0)
     {
-        if(b_halfPath)
+        if(minimize_arm_movement)
         {
-            vw_reference_path.resize(ui_nWaypoints);
+            vw_reference_path.resize(this->vw_rover_path.size() - first_arm_waypoint);
             for(uint i = 0; i < vw_reference_path.size(); i++)
             {
-                vw_reference_path[i] =
-                    this->vw_rover_path[i + this->vw_rover_path.size() - ui_nWaypoints];
+                vw_reference_path[i] = this->vw_rover_path[i + first_arm_waypoint];
             }
         }
         else
@@ -329,17 +344,17 @@ unsigned int MotionPlan::computeArmProfilePlanning()
             //  Initialization
             if(this->isArmProfileSafe(this->vvd_arm_motion_profile))
             {
-                if(b_halfPath)
+                if(minimize_arm_movement)
                 {
                     std::cout << "[MM] \033[35m[----------] "
                                  "[MotionPlan::computeArmProfilePlanning()]\033[0m Rover Reference "
                                  "Path waypoints = "
                               << vw_reference_path.size() << std::endl;
-                    this->vw_rover_path.resize(ui_nWaypoints);
+                    this->vw_rover_path.resize(first_arm_waypoint);
                     this->vw_rover_path.insert(this->vw_rover_path.end(),
                                                vw_reference_path.begin(),
                                                vw_reference_path.end());
-                    for(uint i = 0; i < ui_nWaypoints; i++)
+                    for(uint i = 0; i < first_arm_waypoint; i++)
                     {
                         this->vw_rover_path[i].position[2] =
                             elevationMap[(int)(this->vw_rover_path[i].position[1] /
@@ -365,8 +380,8 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                     }
                 }
                 std::cout << "[MM] \033[35m[----------] "
-                             "[MotionPlan::computeArmProfilePlanning()]\033[0m ui_nWaypoints"
-                          << ui_nWaypoints << std::endl;
+                             "[MotionPlan::computeArmProfilePlanning()]\033[0m first_arm_waypoint"
+                          << first_arm_waypoint << std::endl;
                 std::cout
                     << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m "
                        "Rover Path waypoints = "
@@ -410,7 +425,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                              "[MotionPlan::computeArmProfilePlanning()]\033[0m Raw Profile is not "
                              "safe, with "
                           << this->vvd_arm_motion_profile.size() << " samples" << std::endl;
-                if(b_halfPath)
+                if(minimize_arm_movement)
                 {
                     std::cout
                         << "[MM] \033[1;31m[----------] "
@@ -428,7 +443,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                      "[MotionPlan::computeArmProfilePlanning()]\033[0m Trying "
                                      "again witht Tunnel from the beginning"
                                   << std::endl;
-                        b_halfPath = false;
+                        minimize_arm_movement = false;
                     }
                     else
                     {
@@ -443,15 +458,15 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                 {
                     std::cout << "[MM] \033[35m[----------] "
                                  "[MotionPlan::computeArmProfilePlanning()]\033[0m Now trying with "
-                                 "Tunnel starting from half the path"
+                                 "minimization of arm movements"
                               << std::endl;
-                    b_halfPath = true;
+                    minimize_arm_movement = true;
                 }
             }
         }
         else
         {
-            if(b_halfPath)
+            if(minimize_arm_movement)
             {
                 std::cout << "[MM] \033[1;31m[----------] "
                              "[MotionPlan::computeArmProfilePlanning()]\033[0m Deployment policy "
@@ -468,7 +483,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                                  "[MotionPlan::computeArmProfilePlanning()]\033[0m Trying again "
                                  "witht Tunnel from the beginning"
                               << std::endl;
-                    b_halfPath = false;
+                    minimize_arm_movement = false;
                 }
                 else
                 {
@@ -483,9 +498,9 @@ unsigned int MotionPlan::computeArmProfilePlanning()
             {
                 std::cout
                     << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m "
-                       "Now trying with Tunnel starting from half the path"
+                       "Now trying with minimization of arm movements"
                     << std::endl;
-                b_halfPath = true;
+                minimize_arm_movement = true;
             }
         }
     }
