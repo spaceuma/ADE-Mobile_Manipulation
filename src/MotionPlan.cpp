@@ -390,7 +390,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                     << "[MM] \033[35m[----------] [MotionPlan::computeArmProfilePlanning()]\033[0m "
                        "Raw Profile is safe, with "
                     << this->vvd_arm_motion_profile.size() << " samples" << std::endl;
-                if(this->vvd_arm_motion_profile.size() > this->ui_gauss_numsamples * 2)
+                if(this->vvd_arm_motion_profile.size() > this->ui_gauss_numsamples * 2 && ui_deployment != 3)
                 {
                     this->p_arm_planner->computeArmProfileGaussSmoothening(
                         &(this->vvd_arm_motion_profile),
