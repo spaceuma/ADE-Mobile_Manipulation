@@ -104,6 +104,11 @@ bool ArmPlanner::setDeployment(unsigned int _deployment)
     }
 }
 
+unsigned int ArmPlanner::getDeployment()
+{
+    return deployment;
+}
+
 bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
                                const std::vector<std::vector<double>> * _DEM,
                                double _mapResolution,

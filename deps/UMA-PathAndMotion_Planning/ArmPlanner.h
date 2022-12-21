@@ -95,6 +95,8 @@ public:
 
     bool setDeployment(unsigned int _deployment);
 
+    unsigned int getDeployment();
+
     std::vector<base::Waypoint> * getInterpolatedRoverPath();
 
     std::vector<std::vector<double>> * getWristPath();

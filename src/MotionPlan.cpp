@@ -293,7 +293,7 @@ unsigned int MotionPlan::computeArmProfilePlanning()
 
     std::vector<base::Waypoint> vw_reference_path;
 
-    unsigned int ui_deployment = 2;    // TODO: make this take the true current one
+    unsigned int ui_deployment = this->p_arm_planner->getDeployment();
 
     bool minimize_arm_movement = true;    // TODO: make this take the true current one
     double min_arm_moving_time = 35.21899630340112;
