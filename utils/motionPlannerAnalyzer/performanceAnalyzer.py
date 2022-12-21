@@ -213,15 +213,22 @@ ax3.grid()
 x = np.arange(len(approaches))
 width = 0.12
 
-plot8 = ax4.bar(x+width, mean_total_required_time, width, edgecolor='black', label='Total')
-plot7 = ax4.bar(x, mean_base_moving_time, width, edgecolor='black', label='Base')
-plot6 = ax4.bar(x-width, mean_arm_moving_time, width, edgecolor='black', label='Arm')
+plt.rcParams["hatch.linewidth"] = 4
+
+#plot8 = ax4.bar(x+width, mean_total_required_time, width, edgecolor='black', label='Total')
+#plot7 = ax4.bar(x, mean_base_moving_time, width, edgecolor='black', label='Base')
+#plot6 = ax4.bar(x-width, mean_arm_moving_time, width, edgecolor='black', label='Arm')
+plot8 = ax4.bar(approaches[0], mean_total_required_time[0], width, edgecolor='yellow', label='Arm', facecolor='yellow')
+plot8 = ax4.bar(approaches[0], mean_base_moving_time[0], width, edgecolor='red', label='Base', facecolor='red')
+plot7 = ax4.bar(approaches[1:], mean_total_required_time[1:], width, facecolor='yellow', label='Coupled', edgecolor='red', hatch=r"\\" )
+plot6 = ax4.bar(approaches[1:], mean_base_moving_time[1:]-mean_arm_moving_time[1:], width, edgecolor='red', label='Base', facecolor='red')
 ax4.set_ylabel('Avg. motion execution time (s)')
 ax4.set_ylim(bottom = 0)
 ax4.grid()
-ax4.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
-ax4.set_xticks(x, approaches)
-ax4.set_axisbelow(True)
+ax4.legend(["Arm","Base"])
+#ax4.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+#ax4.set_xticks(x, approaches)
+#ax4.set_axisbelow(True)
 
 #ax4.bar_label(plot8, padding=3)
 #fig2.tight_layout()
