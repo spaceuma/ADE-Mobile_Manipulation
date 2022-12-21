@@ -2245,11 +2245,32 @@ std::vector<double> ArmPlanner::getTimeProfile(std::vector<std::vector<double>> 
 }
 
 void ArmPlanner::computeArmProfileGaussSmoothening(
+    std::vector<base::Waypoint> & roverPath,
     const std::vector<std::vector<double>> * armProfile,
     std::vector<std::vector<double>> * smoothedArmProfile,
     double sigma,
     int samples)
 {
+    (*smoothedArmProfile) = (*armProfile);
+
+    // std::cout<<"Size rover path: "<<roverPath.size()<<std::endl;
+    // std::cout<<"Size arm profile: "<<smoothedArmProfile->size()<<std::endl;
+
+    double minWaypSeparation = 1;
+    double pathLength = 0;
+    for(int i = 1; i < roverPath.size(); i++)
+    {
+        double separation = (roverPath[i].position - roverPath[i - 1].position).norm();
+        pathLength += separation;
+        if(separation < minWaypSeparation) minWaypSeparation = separation;
+    }
+
+    // std::cout<<"Min separation: "<<minWaypSeparation<<std::endl;
+    // std::cout<<"Path length: "<<pathLength<<std::endl;
+
+    int minSamples = (int)(pathLength / minWaypSeparation) / 10;
+    if(samples < minSamples) samples = minSamples;
+
     if(samples % 2 == 0)
     {
         samples++;
@@ -2258,28 +2279,56 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
                   << samples << std::endl;
     }
 
-    (*smoothedArmProfile) = (*armProfile);
+    // std::cout<<"Samples: "<<samples<<std::endl;
 
-    for(int i = 0; i < (*armProfile)[0].size(); i++)
+    for(int i = 1; i < roverPath.size(); i++)
+    {
+        double separation = (roverPath[i].position - roverPath[i - 1].position).norm();
+        if(separation > 2 * minWaypSeparation)
+        {
+            base::Waypoint direction = roverPath[i];
+            direction.position = (roverPath[i].position - roverPath[i - 1].position) / separation;
+
+            base::Waypoint newWayp = roverPath[i - 1];
+            newWayp.position += direction.position * minWaypSeparation;
+            std::vector<base::Waypoint> newWaypVector = {newWayp};
+            roverPath.insert(roverPath.begin() + i, newWaypVector.begin(), newWaypVector.end());
+
+            std::vector<double> newArmConfig = (*smoothedArmProfile)[i];
+            for(int j = 0; j < newArmConfig.size(); j++)
+                newArmConfig[j] =
+                    ((*smoothedArmProfile)[i][j] + (*smoothedArmProfile)[i - 1][j]) / 2;
+
+            std::vector<std::vector<double>> newArmConfigVector = {newArmConfig};
+            smoothedArmProfile->insert(smoothedArmProfile->begin() + i,
+                                       newArmConfigVector.begin(),
+                                       newArmConfigVector.end());
+        }
+    }
+
+    // std::cout<<"New size rover path: "<<roverPath.size()<<std::endl;
+    // std::cout<<"New size arm profile: "<<smoothedArmProfile->size()<<std::endl;
+
+    for(int i = 0; i < (*smoothedArmProfile)[0].size(); i++)
     {
         std::vector<double> jointProfile;
-        for(int j = 0; j < armProfile->size(); j++)
+        for(int j = 0; j < smoothedArmProfile->size(); j++)
         {
-            jointProfile.push_back((*armProfile)[j][i]);
+            jointProfile.push_back((*smoothedArmProfile)[j][i]);
         }
 
-        for(int j = 1; j < armProfile->size(); j++)
+        for(int j = 1; j < smoothedArmProfile->size(); j++)
         {
             if(jointProfile[j] - jointProfile[j - 1] > M_PI)
             {
-                for(int k = j; k < armProfile->size(); k++)
+                for(int k = j; k < smoothedArmProfile->size(); k++)
                 {
                     jointProfile[k] -= 2 * M_PI;
                 }
             }
             else if(jointProfile[j] - jointProfile[j - 1] < -M_PI)
             {
-                for(int k = j; k < armProfile->size(); k++)
+                for(int k = j; k < smoothedArmProfile->size(); k++)
                 {
                     jointProfile[k] += 2 * M_PI;
                 }

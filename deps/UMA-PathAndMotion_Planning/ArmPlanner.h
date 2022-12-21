@@ -192,7 +192,8 @@ public:
 
     std::vector<double> getTimeProfile(std::vector<std::vector<double>> * armProfile);
 
-    void computeArmProfileGaussSmoothening(const std::vector<std::vector<double>> * armProfile,
+    void computeArmProfileGaussSmoothening(std::vector<base::Waypoint> & roverPath,
+                                           const std::vector<std::vector<double>> * armProfile,
                                            std::vector<std::vector<double>> * smoothedArmProfile,
                                            double sigma = 5,
                                            int samples = 5);
