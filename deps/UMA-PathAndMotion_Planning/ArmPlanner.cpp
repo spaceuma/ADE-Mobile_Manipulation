@@ -2122,29 +2122,25 @@ std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values,
                                                  double sigma,
                                                  int samples)
 {
-    std::vector<double> out;
+    std::vector<double> out = values;
     auto kernel = getGaussKernel(samples, sigma);
-    double kernelSum = 0;
-    for(int i = 0; i < kernel.size(); i++)
-        kernelSum += kernel[i];
     int sampleSide = samples / 2;
     int valueIdx = samples / 2 + 1;
-    unsigned long ubound = values.size();
-    for(unsigned long i = 0; i < ubound; i++)
+    int ubound = values.size();
+    for(int i = 0; i < ubound; i++)
     {
         double sample = 0;
-        int sampleCtr = 0;
-        for(long j = i - sampleSide; j <= i + sampleSide; j++)
+        double kernelSum = 0;
+        for(int j = i - sampleSide; j <= i + sampleSide; j++)
         {
             if(j > 0 && j < ubound)
             {
                 int sampleWeightIndex = sampleSide + (j - i);
                 sample += kernel[sampleWeightIndex] * values[j];
-                sampleCtr++;
+                kernelSum += kernel[sampleWeightIndex];
             }
         }
-        double smoothed = sample / ((double)sampleCtr * kernelSum);
-        out.push_back(smoothed * samples);
+        out[i] = sample / kernelSum;
     }
     return out;
 }
@@ -2292,17 +2288,13 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
 
         std::vector<double> smoothedJointProfile = getGaussSmoothen(jointProfile, sigma, samples);
 
-        for(int j = 0; j < smoothedJointProfile.size(); j++)
+        for(int j = 0; j < smoothedJointProfile.size() - 1; j++)
         {
             while(smoothedJointProfile[j] > M_PI)
                 smoothedJointProfile[j] -= 2 * M_PI;
             while(smoothedJointProfile[j] < -M_PI)
                 smoothedJointProfile[j] += 2 * M_PI;
-        }
-
-        for(int j = (samples / 2 + samples % 2);
-            j < armProfile->size() - (samples / 2 + samples % 2);
-            j++)
             (*smoothedArmProfile)[j][i] = smoothedJointProfile[j];
+        }
     }
 }
