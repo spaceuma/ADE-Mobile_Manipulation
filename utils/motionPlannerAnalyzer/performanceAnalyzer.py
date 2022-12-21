@@ -159,6 +159,37 @@ for approach in approaches:
 
 plt.rcParams.update({'font.size': 18})
 
+# Interchange position of the approaches (for better visualization)
+approaches[0],approaches[3] = approaches[3],approaches[0]
+approaches[1],approaches[3] = approaches[3],approaches[1]
+
+mean_computation_time[0],mean_computation_time[3] = mean_computation_time[3],mean_computation_time[0]
+mean_computation_time[1],mean_computation_time[3] = mean_computation_time[3],mean_computation_time[1]
+
+std_dev_computation_time[0],std_dev_computation_time[3] = std_dev_computation_time[3],std_dev_computation_time[0]
+std_dev_computation_time[1],std_dev_computation_time[3] = std_dev_computation_time[3],std_dev_computation_time[1]
+
+mean_self_collision_distance[0],mean_self_collision_distance[3] = mean_self_collision_distance[3],mean_self_collision_distance[0]
+mean_self_collision_distance[1],mean_self_collision_distance[3] = mean_self_collision_distance[3],mean_self_collision_distance[1]
+
+std_dev_self_collision_distance[0],std_dev_self_collision_distance[3] = std_dev_self_collision_distance[3],std_dev_self_collision_distance[0]
+std_dev_self_collision_distance[1],std_dev_self_collision_distance[3] = std_dev_self_collision_distance[3],std_dev_self_collision_distance[1]
+
+mean_proportional_total_time[0],mean_proportional_total_time[3] = mean_proportional_total_time[3],mean_proportional_total_time[0]
+mean_proportional_total_time[1],mean_proportional_total_time[3] = mean_proportional_total_time[3],mean_proportional_total_time[1]
+
+std_dev_proportional_total_time[0],std_dev_proportional_total_time[3] = std_dev_proportional_total_time[3],std_dev_proportional_total_time[0]
+std_dev_proportional_total_time[1],std_dev_proportional_total_time[3] = std_dev_proportional_total_time[3],std_dev_proportional_total_time[1]
+
+mean_total_required_time[0],mean_total_required_time[3] = mean_total_required_time[3],mean_total_required_time[0]
+mean_total_required_time[1],mean_total_required_time[3] = mean_total_required_time[3],mean_total_required_time[1]
+
+mean_base_moving_time[0],mean_base_moving_time[3] = mean_base_moving_time[3],mean_base_moving_time[0]
+mean_base_moving_time[1],mean_base_moving_time[3] = mean_base_moving_time[3],mean_base_moving_time[1]
+
+mean_arm_moving_time[0],mean_arm_moving_time[3] = mean_arm_moving_time[3],mean_arm_moving_time[0]
+mean_arm_moving_time[1],mean_arm_moving_time[3] = mean_arm_moving_time[3],mean_arm_moving_time[1]
+
 fig1, (ax1, ax2) = plt.subplots(1, 2, sharey=False)
 plot1 = ax1.errorbar(approaches, mean_computation_time, std_dev_computation_time, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
 ax1.set_ylabel('Computation time (s)')
