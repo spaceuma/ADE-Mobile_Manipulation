@@ -423,7 +423,7 @@ for i in range(0,n,round(n/5)):
   pz = np.array(pz)
 
   plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
-  plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
+  plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.09)
 
   mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
   mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
@@ -453,7 +453,7 @@ py = np.array(py)
 pz = np.array(pz)
 
 plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
-plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
+plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.09)
 
 mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
 mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
