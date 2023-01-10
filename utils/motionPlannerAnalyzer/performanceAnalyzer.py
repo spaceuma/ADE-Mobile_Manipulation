@@ -190,11 +190,25 @@ mean_base_moving_time[1],mean_base_moving_time[3] = mean_base_moving_time[3],mea
 mean_arm_moving_time[0],mean_arm_moving_time[3] = mean_arm_moving_time[3],mean_arm_moving_time[0]
 mean_arm_moving_time[1],mean_arm_moving_time[3] = mean_arm_moving_time[3],mean_arm_moving_time[1]
 
+print('')
+print('Mean computation time:')
+print(approaches[0]+' '+str(mean_computation_time[0])+' s')
+print(approaches[1]+' '+str(mean_computation_time[1])+' s')
+print(approaches[2]+' '+str(mean_computation_time[2])+' s')
+print(approaches[3]+' '+str(mean_computation_time[3])+' s')
+
 fig1, (ax1, ax2) = plt.subplots(1, 2, sharey=False)
 plot1 = ax1.errorbar(approaches, mean_computation_time, std_dev_computation_time, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
 ax1.set_ylabel('Time (s)')
 ax1.set_ylim(bottom = 0)
 ax1.grid()
+
+print('')
+print('Mean self collision distance:')
+print(approaches[0]+' '+str(mean_self_collision_distance[0])+' s')
+print(approaches[1]+' '+str(mean_self_collision_distance[1])+' s')
+print(approaches[2]+' '+str(mean_self_collision_distance[2])+' s')
+print(approaches[3]+' '+str(mean_self_collision_distance[3])+' s')
 
 plot4 = ax2.errorbar(approaches, mean_self_collision_distance, std_dev_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
 ax2.set_ylabel('Distance (m)')
@@ -209,6 +223,27 @@ plot5 = ax3.errorbar(approaches, mean_proportional_total_time, std_dev_proportio
 ax3.set_ylabel('Motion execution time w.r.t. DECOUPLED')
 ax3.set_ylim(bottom = 0)
 ax3.grid()
+
+print('')
+print('Mean total required time:')
+print(approaches[0]+' '+str(mean_total_required_time[0])+' s')
+print(approaches[1]+' '+str(mean_total_required_time[1])+' s')
+print(approaches[2]+' '+str(mean_total_required_time[2])+' s')
+print(approaches[3]+' '+str(mean_total_required_time[3])+' s')
+
+print('')
+print('Mean arm required time:')
+print(approaches[0]+' '+str(mean_arm_moving_time[0])+' s')
+print(approaches[1]+' '+str(mean_arm_moving_time[1])+' s')
+print(approaches[2]+' '+str(mean_arm_moving_time[2])+' s')
+print(approaches[3]+' '+str(mean_arm_moving_time[3])+' s')
+
+print('')
+print('Mean base required time:')
+print(approaches[0]+' '+str(mean_base_moving_time[0])+' s')
+print(approaches[1]+' '+str(mean_base_moving_time[1])+' s')
+print(approaches[2]+' '+str(mean_base_moving_time[2])+' s')
+print(approaches[3]+' '+str(mean_base_moving_time[3])+' s')
 
 x = np.arange(len(approaches))
 width = 0.12
