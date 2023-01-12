@@ -2281,7 +2281,7 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
     // std::cout<<"Min separation: "<<minWaypSeparation<<std::endl;
     // std::cout<<"Path length: "<<pathLength<<std::endl;
 
-    int minSamples = (int)(pathLength / minWaypSeparation) / 10;
+    int minSamples = (int)(pathLength / minWaypSeparation) / 8;
     if(samples < minSamples) samples = minSamples;
 
     if(samples % 2 == 0)
@@ -2348,14 +2348,30 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
             }
         }
 
+        // Linear interpolation to reduce jump to reach last joint pos
+        int indexStartInterpolation = jointProfile.size() - (int)samples * 2;
+        int indexEndInterpolation = jointProfile.size() - 1;
+        double prevJointPos = jointProfile[indexStartInterpolation];
+        double lastJointPos = jointProfile[indexEndInterpolation];
+
+        for(int j = indexStartInterpolation + 1; j < jointProfile.size() - 1; j++)
+        {
+            jointProfile[j] = prevJointPos + (j - indexStartInterpolation) *
+                                                 (lastJointPos - prevJointPos) /
+                                                 (indexEndInterpolation - indexStartInterpolation);
+        }
+
         std::vector<double> smoothedJointProfile = getGaussSmoothen(jointProfile, sigma, samples);
 
-        for(int j = 0; j < smoothedJointProfile.size() - 1; j++)
+        // Wrapping between [-pi,pi]
+        for(int j = 0; j < jointProfile.size() - 1; j++)
         {
             while(smoothedJointProfile[j] > M_PI)
                 smoothedJointProfile[j] -= 2 * M_PI;
             while(smoothedJointProfile[j] < -M_PI)
                 smoothedJointProfile[j] += 2 * M_PI;
+
+            // Saving output
             (*smoothedArmProfile)[j][i] = smoothedJointProfile[j];
         }
     }
