@@ -87,7 +87,7 @@ std_dev_total_required_time = np.zeros(np.size(approaches))
 for approach in approaches:
     index = getApproach(approach)
     num_data = np.size(computation_time[index])
-    print("Approach "+approach)
+    print("Approach "+approach+" num data: "+str(num_data))
 
     '''print("Num data: "+str(np.size(computation_time[index])))
     print("Num data: "+str(np.size(std_devs_self_collision_distance[index])))
