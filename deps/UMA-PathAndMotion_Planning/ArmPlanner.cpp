@@ -2143,13 +2143,13 @@ std::vector<double> ArmPlanner::getGaussSmoothen(std::vector<double> values,
             else if(j < 0)
             {
                 sampleWeightIndex = sampleSide + (-j - i);
-                sample += kernel[sampleWeightIndex] * values[-j];
+                sample += kernel[sampleWeightIndex] * values[0];
                 kernelSum += kernel[sampleWeightIndex];
             }
             else if(j > ubound)
             {
                 sampleWeightIndex = sampleSide + (2 * ubound - j - i);
-                sample += kernel[sampleWeightIndex] * values[2 * ubound - j];
+                sample += kernel[sampleWeightIndex] * values[ubound - 1];
                 kernelSum += kernel[sampleWeightIndex];
             }
         }
