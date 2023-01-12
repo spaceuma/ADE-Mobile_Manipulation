@@ -460,6 +460,10 @@ for i in range(1, pathSize):
     #print("Arm movement time: " + str(armMovementTime))
 
     requiredTime = np.max(np.append(baseMovementTime, armMovementTime))
+
+    #if requiredTime == armMovementTime:
+    #    print("Slowing down "+format(armMovementTime-baseMovementTime, '.4f')+" seconds the base to match arm movements in waypoint " + str(i)+ " out of "+str(pathSize))
+
     #print("Required time: " + str(requiredTime))
     totalRequiredTime = totalRequiredTime + requiredTime
     totalArmRequiredTime = totalArmRequiredTime + armMovementTime
