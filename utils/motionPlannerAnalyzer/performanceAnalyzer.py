@@ -7,13 +7,13 @@ import matplotlib.pyplot as plt
 
 # Function to obtain the index of a particular approach
 def getApproach(string):
-    if string == "END":
+    if string == "End":
         return 0
-    elif string == "PROGRESSIVE":
+    elif string == "Progressive":
         return 1
-    elif string == "BEGINNING":
+    elif string == "Beginning":
         return 2
-    elif string == "DECOUPLED":
+    elif string == "Decoupled":
         return 3
     return 4
 
@@ -33,7 +33,7 @@ base_moving_time = []
 total_required_time = []
 
 # Different approaches
-approaches = ["END", "PROGRESSIVE", "BEGINNING", "DECOUPLED"]
+approaches = ["End", "Progressive", "Beginning", "Decoupled"]
 
 # Extract data from log
 with open("motionPlanResultsLog.txt", "r") as file_object:
@@ -140,9 +140,9 @@ for approach in approaches:
     num_data = np.size(computation_time[index])
 
     for i in range(0, num_data):
-        #proportional_arm_time[index][i] = arm_moving_time[index][i]/total_required_time[getApproach("DECOUPLED")][i]
-        #proportional_base_time[index][i] = base_moving_time[index][i]/total_required_time[getApproach("DECOUPLED")][i]
-        proportional_total_time[index][i] = total_required_time[index][i]/total_required_time[getApproach("DECOUPLED")][i]
+        #proportional_arm_time[index][i] = arm_moving_time[index][i]/total_required_time[getApproach("Decoupled")][i]
+        #proportional_base_time[index][i] = base_moving_time[index][i]/total_required_time[getApproach("Decoupled")][i]
+        proportional_total_time[index][i] = total_required_time[index][i]/total_required_time[getApproach("Decoupled")][i]
 
     #mean_proportional_arm_time[index] = np.cumsum(proportional_arm_time[index])[-1]/num_data
     #mean_proportional_base_time[index] = np.cumsum(proportional_base_time[index])[-1]/num_data
@@ -157,7 +157,7 @@ for approach in approaches:
     #std_dev_proportional_base_time[index] = sqrt(std_dev_proportional_base_time[index]/num_data)
     std_dev_proportional_total_time[index] = sqrt(std_dev_proportional_total_time[index]/num_data)
 
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 14})
 
 # Interchange position of the approaches (for better visualization)
 approaches[0],approaches[3] = approaches[3],approaches[0]
@@ -200,6 +200,7 @@ mean_arm_moving_time[0],mean_arm_moving_time[3] = mean_arm_moving_time[3],mean_a
 mean_arm_moving_time[1],mean_arm_moving_time[3] = mean_arm_moving_time[3],mean_arm_moving_time[1]
 mean_arm_moving_time[1],mean_arm_moving_time[2] = mean_arm_moving_time[2],mean_arm_moving_time[1]
 
+
 print('')
 print('Mean computation time:')
 print(approaches[0]+' '+str(mean_computation_time[0])+' s')
@@ -207,32 +208,12 @@ print(approaches[1]+' '+str(mean_computation_time[1])+' s')
 print(approaches[2]+' '+str(mean_computation_time[2])+' s')
 print(approaches[3]+' '+str(mean_computation_time[3])+' s')
 
-fig1, (ax1, ax2) = plt.subplots(1, 2, sharey=False)
-plot1 = ax1.errorbar(approaches, mean_computation_time, std_dev_computation_time, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
-ax1.set_ylabel('Time (s)')
-ax1.set_ylim(bottom = 0)
-ax1.grid()
-
 print('')
 print('Mean self collision distance:')
 print(approaches[0]+' '+str(mean_self_collision_distance[0])+' s')
 print(approaches[1]+' '+str(mean_self_collision_distance[1])+' s')
 print(approaches[2]+' '+str(mean_self_collision_distance[2])+' s')
 print(approaches[3]+' '+str(mean_self_collision_distance[3])+' s')
-
-plot4 = ax2.errorbar(approaches, mean_self_collision_distance, std_dev_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
-ax2.set_ylabel('Distance (m)')
-ax2.set_ylim(bottom = 0)
-ax2.grid()
-#ax2.legend(["Min","Mean","Max"])
-
-fig2, (ax3, ax4) = plt.subplots(1, 2, sharey=False)
-#plot5 = ax3.errorbar(approaches, mean_proportional_arm_time, std_dev_proportional_arm_time, linestyle='None', marker='o', capsize = 5)
-#plot6 = ax3.errorbar(approaches, mean_proportional_base_time, std_dev_proportional_base_time, linestyle='None', marker='x', capsize = 5)
-plot5 = ax3.errorbar(approaches, mean_proportional_total_time, std_dev_proportional_total_time, linestyle='None',  ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
-ax3.set_ylabel('Motion execution time w.r.t. DECOUPLED')
-ax3.set_ylim(bottom = 0)
-ax3.grid()
 
 print('')
 print('Mean total required time:')
@@ -255,6 +236,29 @@ print(approaches[1]+' '+str(mean_base_moving_time[1])+' s')
 print(approaches[2]+' '+str(mean_base_moving_time[2])+' s')
 print(approaches[3]+' '+str(mean_base_moving_time[3])+' s')
 
+# Modifying decoupled string to better visualization
+approaches[0] = "      Decoupled"
+
+fig1, (ax1, ax2) = plt.subplots(1, 2, sharey=False)
+plot1 = ax1.errorbar(approaches, mean_computation_time, std_dev_computation_time, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
+ax1.set_ylabel('Time (s)')
+ax1.set_ylim(bottom = 0)
+ax1.grid()
+
+plot4 = ax2.errorbar(approaches, mean_self_collision_distance, std_dev_self_collision_distance, linestyle='None', ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
+ax2.set_ylabel('Distance (m)')
+ax2.set_ylim(bottom = 0)
+ax2.grid()
+#ax2.legend(["Min","Mean","Max"])
+
+fig2, (ax3, ax4) = plt.subplots(1, 2, sharey=False)
+#plot5 = ax3.errorbar(approaches, mean_proportional_arm_time, std_dev_proportional_arm_time, linestyle='None', marker='o', capsize = 5)
+#plot6 = ax3.errorbar(approaches, mean_proportional_base_time, std_dev_proportional_base_time, linestyle='None', marker='x', capsize = 5)
+plot5 = ax3.errorbar(approaches, mean_proportional_total_time, std_dev_proportional_total_time, linestyle='None',  ecolor= 'black', marker='s', mfc='y', mec = 'black', ms=8, capsize = 8)
+ax3.set_ylabel('Motion execution time w.r.t. Decoupled')
+ax3.set_ylim(bottom = 0)
+ax3.grid()
+
 x = np.arange(len(approaches))
 width = 0.12
 
@@ -263,10 +267,10 @@ plt.rcParams["hatch.linewidth"] = 4
 #plot8 = ax4.bar(x+width, mean_total_required_time, width, edgecolor='black', label='Total')
 #plot7 = ax4.bar(x, mean_base_moving_time, width, edgecolor='black', label='Base')
 #plot6 = ax4.bar(x-width, mean_arm_moving_time, width, edgecolor='black', label='Arm')
-plot9 = ax4.bar(approaches[0], mean_total_required_time[0], width, edgecolor='limegreen', label='Arm', facecolor='limegreen')
-plot8 = ax4.bar(approaches[0], mean_base_moving_time[0], width, edgecolor='blue', label='Base', facecolor='blue')
-plot7 = ax4.bar(approaches[1:], mean_total_required_time[1:], width, facecolor='limegreen', label='Coupled', edgecolor='blue', hatch=r"\\" )
-plot6 = ax4.bar(approaches[1:], mean_base_moving_time[1:]-mean_arm_moving_time[1:], width, edgecolor='blue', label='Base', facecolor='blue')
+plot9 = ax4.bar(approaches[0], mean_total_required_time[0], width, edgecolor='palegreen', label='Arm', facecolor='palegreen')
+plot8 = ax4.bar(approaches[0], mean_base_moving_time[0], width, edgecolor='cornflowerblue', label='Base', facecolor='cornflowerblue')
+plot7 = ax4.bar(approaches[1:], mean_total_required_time[1:], width, facecolor='palegreen', label='Coupled', edgecolor='cornflowerblue', hatch=r"\\" )
+plot6 = ax4.bar(approaches[1:], mean_base_moving_time[1:]-mean_arm_moving_time[1:], width, edgecolor='cornflowerblue', label='Base', facecolor='cornflowerblue')
 ax4.set_ylabel('Time (s)')
 ax4.set_ylim(bottom = 0)
 ax4.grid()
