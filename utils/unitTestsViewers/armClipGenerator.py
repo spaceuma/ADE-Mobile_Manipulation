@@ -1,9 +1,13 @@
 import sys
 import numpy as np
-from mayavi import mlab
 import matplotlib.pyplot as plt
 import math
 from numpy import dot
+import moviepy.editor as mpy
+
+from pyface.api import GUI;
+from mayavi import mlab
+
 def traslation(p):
 
     # Traslation transformation matrix
@@ -396,15 +400,14 @@ plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], sc
 plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
 plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
 
-@mlab.animate(delay = 10, ui = True)
-def anim():
-    mlab.gcf()
-    for i in range(0,len(armJoints), 100):
+duration = 10
+def make_frame(t):
+        i = (int)(t*len(armJoints)/duration)
         T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         rotT = T
-        rotT[0,3] = 0
-        rotT[1,3] = 0
-        rotT[2,3] = 0
+        rotT[0,3] = 0   
+        rotT[1,3] = 0   
+        rotT[2,3] = 0   
 
         Tx = dot(rotT, traslation([1,0,0]))
         Ty = dot(rotT, traslation([0,1,0]))
@@ -421,6 +424,7 @@ def anim():
 
         plt_arm.mlab_source.set(x=px,y=py,z=pz)
         plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
+
         plt_ee_x.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tx[0,3], v = Tx[1,3], w = Tx[2,3], scale_factor = 0.3, color=(1,0,0))
         plt_ee_y.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Ty[0,3], v = Ty[1,3], w = Ty[2,3], scale_factor = 0.3, color=(0,1,0))
         plt_ee_z.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tz[0,3], v = Tz[1,3], w = Tz[2,3], scale_factor = 0.3, color=(0,0,1))
@@ -428,9 +432,12 @@ def anim():
         plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
         plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
         plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
-#        mlab.view(azimuth = -110+i/2.0, elevation = 50)
-        yield
+        mlab.view(azimuth = 45, elevation = 80, distance = 11, focalpoint = np.array([4,4,1]))
+        #mlab.view(azimuth = 0, elevation = 20, distance = 16, focalpoint = np.array([4,4,0]))
+        return mlab.screenshot(antialiased=True)
 
-anim()
+animation = mpy.VideoClip(make_frame, duration=duration)
+animation.write_gif("sampling.gif", fps=12, program='imageio',opt = 'nq')
+
 
 mlab.show()
