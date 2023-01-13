@@ -29,17 +29,33 @@ There are several unit tests that can be used as examples. To run them:
 ./runUnitTests
 ```
 
-Then, the results can be viewed using the provided python3 utils. For example, to represent the evolution of the arm during the motion plan:
+Then, the results will be saved in:
+```
+test/unit/data/results
+```
+
+The input for the unit tests (rover and goal poses, maps...) can be modified in:
+```
+test/unit/data/input
+```
+
+The unit test results can be viewed using the provided python3 utils. For example, to represent the evolution of the arm during the motion plan:
 ```
 cd utils/unitTestsViewers/
-python3 armFullPlanViewer.py
+python3 armFullPlanViewer.py <approach>
 ```
 
-To represent the base motion plan:
+Or to represent the base motion plan:
 
 ```
-python3 baseMotionPlanViewer.py
+python3 baseMotionPlanViewer.py <approach>
 ```
+
+Where ```<approach>``` is:
+- ```0``` for end deployment within the coupled approach
+- ```1``` for progressive deployment within the coupled approach
+- ```2``` for beginning deployment within the coupled approach
+- ```3``` for decoupled solution
 
 ## External Packages
 
@@ -90,4 +106,6 @@ python3 baseMotionPlanViewer.py
 | ├── armReachabilityComputer/ | Compute and represent the arm reachability volume |
 | ├── armSingleSweepingComputer/ | Example computation of a simple sweeping movement for the end effector |
 | ├── logsHandler/ | Logs extraction and different pythonr utils for representation |
+| ├── motionPlannerAnalyzer/ | Process unit tests log data to obtain results about performance |
 | ├── unitTestsViewers/ | Python scripts to represent the results of the unit tests |
+
