@@ -101,7 +101,7 @@ private:
      * THRESHOLD VALUES
      */
     double d_slope_threshold = 20.0;          // Average slope
-    double d_sd_threshold = 16.82;            // Spherical deviation
+    double d_sd_threshold = 36.82;            // Spherical deviation
     double d_valid_ratio_threshold = .5;      // Valid pixels ratio
     double d_contour_ratio_threshold = .3;    // contour/valid pixels ratio
 
