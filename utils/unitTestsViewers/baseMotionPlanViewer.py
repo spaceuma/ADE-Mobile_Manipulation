@@ -32,7 +32,7 @@ elif int(representationNumber) == 4:
 
 res = 0.1
 
-elevation_map = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv"), skiprows=0)
+elevation_map = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/GalopprennbahnWest_Zone01_10cmDEM.csv"), skiprows=0)
 #traversabilityMap = np.loadtxt(open("../test/unit/data/results/MMMapTest/traversabilityMap.txt"), skiprows=0)
 
 costMap = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_costMap_0"+representationNumber+".txt",'r'), skiprows=0)

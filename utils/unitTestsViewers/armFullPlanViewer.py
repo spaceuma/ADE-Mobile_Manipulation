@@ -330,10 +330,6 @@ elif int(representationNumber) == 3:
 elif int(representationNumber) == 4:
   print('Case DECOUPLED deployment')
 
-cMap2d = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_3dmap_0"+representationNumber+".txt",'r'), skiprows=1)
-cMap2d[np.where(cMap2d == 0)] = 0.0001
-cMap2d[np.isinf(cMap2d)] = 0
-
 sizes = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
 resolutions = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/res_info.txt",'r'), max_rows=1)
 
@@ -347,23 +343,9 @@ zsize = int(sizes[2])
 res = resolutions[0]
 resz = resolutions[1]
 
-costMap3D = np.zeros([ysize, xsize, zsize])
-c = 0
-k = 0
-
-for i in range(2, xsize):
-    c = 0
-    k = 0
-    for j in range(0, ysize*zsize):
-        costMap3D[k][i][c] = cMap2d[i][j]
-        c += 1
-        if c > zsize-1:
-            c = 0
-            k += 1
-
 armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_profile_0"+representationNumber+".txt",'r'), skiprows=0)
 
-DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/GalopprennbahnWest_Zone01_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
@@ -391,7 +373,7 @@ X, Y, Z = np.mgrid[0:stopx:complexSizex,0:stopy:complexSizey,0:stopz:complexSize
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
 #mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255)) #np.flipud(np.fliplr(DEM0)))
+mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04)
@@ -458,8 +440,6 @@ plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8]
 mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
 mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
 mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 0.3, color=(0,0,1))
-
-#mlab.volume_slice(X,Y,Z,costMap3D, plane_orientation='x_axes', opacity = 0, plane_opacity = 0, transparent = True)
 
 """mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
 mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))

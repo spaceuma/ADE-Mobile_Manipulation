@@ -17,7 +17,7 @@ TEST(MMMotionPlanTest, nominal_working_test)
     std::vector<std::vector<double>> vvd_elevation_data, vvd_validity_data;
 
     // A dummy Rover Guidance based DEM is created
-    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",
+    ASSERT_NO_THROW(readMatrixFile("test/unit/data/input/MMMotionPlanTest/GalopprennbahnWest_Zone01_10cmDEM.csv",
                                    vvd_elevation_data));
     double res = 0.1;    // meters
     RoverGuidance_Dem * prgd_dummy_dem = new RoverGuidance_Dem;

@@ -348,7 +348,7 @@ zsize = int(sizes[2])
 res = resolutions[0]
 resz = resolutions[1]
 
-DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/GalopprennbahnWest_Zone01_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
@@ -381,8 +381,8 @@ for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255)) #np.flipud(np.fliplr(DEM0)))
+#mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
+mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)

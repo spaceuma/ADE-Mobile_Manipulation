@@ -91,7 +91,7 @@ z = np.linspace(0,stopz,zsize)"""
 
 X, Y, Z = np.mgrid[0:stopy:complexSizey,0:stopx:complexSizex,0:stopz:complexSizez]
 
-DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/RH1_Zone1_10cmDEM.csv",'r'), skiprows=0)
+DEM = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/GalopprennbahnWest_Zone01_10cmDEM.csv",'r'), skiprows=0)
 
 minz = np.min(DEM[:,:])
 DEM0 = DEM[:,:] - minz
@@ -102,7 +102,7 @@ x,y = np.meshgrid(xMap,yMap)
 
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), color = (193/255,68/255,14/255)) #np.flipud(np.fliplr(DEM0)))
+mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.05)
 mlab.contour3d(X,Y,Z,costMap3D/np.max(costMap3D), contours = 10, opacity = 0.04, transparent = True, color = (105/255,176/255,250/255), vmax = 0.99, vmin = 0.001)
 #mlab.volume_slice(costMap3D, plane_orientation='y_axes', plane_opacity = 0.1, transparent = True)
