@@ -380,6 +380,11 @@ d = np.zeros(len(path))
 for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
+# Repeat multiply the final pose in the end so it gets inside the clip
+for i in range(0, int(np.size(path,0)/10)):
+    path = np.vstack((path,path[-1]))
+    armJoints = np.vstack((armJoints,armJoints[-1]))
+
 fig1 = mlab.figure(size=(1920,1080), bgcolor=(1,1,1))
 surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
@@ -410,9 +415,9 @@ def make_frame(t):
         i = (int)(t*len(armJoints)/duration)
         T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         rotT = T
-        rotT[0,3] = 0   
-        rotT[1,3] = 0   
-        rotT[2,3] = 0   
+        rotT[0,3] = 0
+        rotT[1,3] = 0
+        rotT[2,3] = 0
 
         Tx = dot(rotT, traslation([1,0,0]))
         Ty = dot(rotT, traslation([0,1,0]))
@@ -441,7 +446,6 @@ def make_frame(t):
 
 animation = mpy.VideoClip(make_frame, duration=duration)
 animation = animation.resize((1920,1080))
-animation.write_videofile("sampling.mp4", fps=45)
-
+animation.write_videofile("sampling.mp4", fps=15)
 
 mlab.show()
