@@ -378,7 +378,7 @@ mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.fli
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04)
-mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][0]/res+0.5),int(path3D[-1][1]/res+0.5)], scale_factor = 0.2, color=(192/255,192/255,192/255))
+mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][1]/res+0.5),int(path3D[-1][0]/res+0.5)], scale_factor = 0.2, color=(50/255,50/255,50/255), mode = 'cube')
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
@@ -445,6 +445,7 @@ mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 
 mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
 mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))"""
 
+mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
 mlab.show()
 
 fig, ax = plt.subplots()
@@ -459,5 +460,3 @@ plt.xlabel("Length of the trajectory covered (m)", fontsize = 20)
 plt.ylabel("Joint position (rad)", fontsize = 20)
 plt.legend(fontsize = 17)
 plt.show()
-
-

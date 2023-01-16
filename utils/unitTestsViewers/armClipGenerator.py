@@ -385,8 +385,9 @@ fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
 mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
 #mlab.view(azimuth = -110, elevation = 50, distance = 1000)
 #mlab.view(-59, 58, 1773, [-.5, -.5, 512])
-mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)
-mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
+mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04)
+mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04)
+mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][1]/res+0.5),int(path3D[-1][0]/res+0.5)], scale_factor = 0.2, color=(50/255,50/255,50/255), mode = 'cube')
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
@@ -399,6 +400,8 @@ plt_ee_z = mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scal
 plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
 plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
 plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+
+mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
 
 duration = 10
 def make_frame(t):
@@ -432,8 +435,6 @@ def make_frame(t):
         plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
         plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
         plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
-        mlab.view(azimuth = 45, elevation = 80, distance = 11, focalpoint = np.array([4,4,1]))
-        #mlab.view(azimuth = 0, elevation = 20, distance = 16, focalpoint = np.array([4,4,0]))
         return mlab.screenshot(antialiased=True)
 
 animation = mpy.VideoClip(make_frame, duration=duration)
