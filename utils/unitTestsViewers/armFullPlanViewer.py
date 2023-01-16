@@ -336,6 +336,13 @@ resolutions = np.loadtxt(open("../../test/unit/data/input/MMMotionPlanTest/res_i
 path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
 
+if int(representationNumber) == 4:
+    for i in range(0, len(path3D)):
+        x = math.cos(path[-1,3]) * path3D[i,0] - math.sin(path[-1,3]) * path3D[i,1] + path[-1,0]
+        y = math.sin(path[-1,3]) * path3D[i,0] + math.cos(path[-1,3]) * path3D[i,1] + path[-1,1]
+        z = path3D[i,2] + path[-1,2]
+        path3D[i] = [x, y, z]
+
 xsize = int(sizes[0])
 ysize = int(sizes[1])
 zsize = int(sizes[2])
