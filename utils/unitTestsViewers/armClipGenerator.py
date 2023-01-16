@@ -438,6 +438,7 @@ def make_frame(t):
         return mlab.screenshot(antialiased=True)
 
 animation = mpy.VideoClip(make_frame, duration=duration)
+animation = animation.resize((1920,1080))
 animation.write_videofile("sampling.mp4", fps=15)
 
 
