@@ -381,12 +381,14 @@ for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
 fig1 = mlab.figure(size=(1920,1080), bgcolor=(1,1,1))
-#mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
-#mlab.view(azimuth = -110, elevation = 50, distance = 1000)
-#mlab.view(-59, 58, 1773, [-.5, -.5, 512])
-mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04)
-mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04)
+surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
+lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
+lut[:,0] = np.linspace(246, 100, 256)
+lut[:,1] = np.linspace(215, 154, 256)
+lut[:,2] = np.linspace(176, 23, 256)
+surf.module_manager.scalar_lut_manager.lut.table = lut
+mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04, opacity = 0.4)
+mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04, opacity = 0.4)
 mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][1]/res+0.5),int(path3D[-1][0]/res+0.5)], scale_factor = 0.2, color=(50/255,50/255,50/255), mode = 'cube')
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
@@ -439,7 +441,7 @@ def make_frame(t):
 
 animation = mpy.VideoClip(make_frame, duration=duration)
 animation = animation.resize((1920,1080))
-animation.write_videofile("sampling.mp4", fps=15)
+animation.write_videofile("sampling.mp4", fps=45)
 
 
 mlab.show()
