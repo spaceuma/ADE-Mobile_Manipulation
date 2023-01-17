@@ -418,7 +418,10 @@ plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], sc
 mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
 
 duration = 10
+obj = mlab.gcf()
+
 def make_frame(t):
+        obj.scene.disable_render = True
         i = (int)(t*len(armJoints)/duration)
         T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         rotT = T
@@ -449,6 +452,7 @@ def make_frame(t):
         plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
         plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
         plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+        obj.scene.disable_render = False
         return mlab.screenshot(antialiased=True)
 
 animation = mpy.VideoClip(make_frame, duration=duration)
