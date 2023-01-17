@@ -4,7 +4,7 @@ from mayavi import mlab
 import matplotlib.pyplot as plt
 import math
 from numpy import dot
-import moviepy.editor as mpy
+
 def traslation(p):
 
     # Traslation transformation matrix
