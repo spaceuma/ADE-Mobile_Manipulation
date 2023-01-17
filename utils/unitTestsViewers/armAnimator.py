@@ -4,6 +4,7 @@ from mayavi import mlab
 import matplotlib.pyplot as plt
 import math
 from numpy import dot
+
 def traslation(p):
 
     # Traslation transformation matrix
@@ -332,6 +333,14 @@ elif int(representationNumber) == 4:
 path = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_path_0"+representationNumber+".txt",'r'), skiprows=0)
 path3D = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_eepath_0"+representationNumber+".txt",'r'), skiprows=0)
 
+if int(representationNumber) == 4:
+    for i in range(0, len(path3D)):
+        x = math.cos(path[-1,3]) * path3D[i,0] - math.sin(path[-1,3]) * path3D[i,1] + path[-1,0]
+        y = math.sin(path[-1,3]) * path3D[i,0] + math.cos(path[-1,3]) * path3D[i,1] + path[-1,1]
+        z = path3D[i,2] + path[-1,2]
+        path3D[i] = [x, y, z]
+
+
 armJoints = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_profile_0"+representationNumber+".txt",'r'), skiprows=0)
 
 sizes = np.loadtxt(open("../../test/unit/data/results/MMMotionPlanTest/nominal_working_3dmap_0"+representationNumber+".txt",'r'), max_rows=1)
@@ -377,17 +386,21 @@ for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-#mlab.mesh(x,y,DEM0, color = (231/255,125/255,17/255))
-mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
-#mlab.view(azimuth = -110, elevation = 50, distance = 1000)
-#mlab.view(-59, 58, 1773, [-.5, -.5, 512])
-mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(1,1,1), tube_radius = 0.04)
-mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(0.3,0.3,0.5), tube_radius = 0.04)
+surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
+lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
+lut[:,0] = np.linspace(246, 100, 256)
+lut[:,1] = np.linspace(215, 154, 256)
+lut[:,2] = np.linspace(176, 23, 256)
+surf.module_manager.scalar_lut_manager.lut.table = lut
+mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04, opacity = 0.4)
+mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04, opacity = 0.4)
+mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][1]/res+0.5),int(path3D[-1][0]/res+0.5)], scale_factor = 0.2, color=(50/255,50/255,50/255), mode = 'cube')
 mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
+
 plt_arm = mlab.plot3d(px,py,pz,color=(0.1,0.1,0.1), tube_radius = 0.04)
-plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.05)
+plt_joints = mlab.points3d(px[np.array([1,2,4,6,7,8])],py[np.array([1,2,4,6,7,8])],pz[np.array([1,2,4,6,7,8])],color=(0.8,0.8,0.8),scale_factor= 0.09)
 plt_ee_x = mlab.quiver3d(px[-1], py[-1], pz[-1], Tx[0,3], Tx[1,3], Tx[2,3], scale_factor = 0.3, color=(1,0,0))
 plt_ee_y = mlab.quiver3d(px[-1], py[-1], pz[-1], Ty[0,3], Ty[1,3], Ty[2,3], scale_factor = 0.3, color=(0,1,0))
 plt_ee_z = mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scale_factor = 0.3, color=(0,0,1))
@@ -395,11 +408,18 @@ plt_ee_z = mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scal
 plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
 plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
 plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
+mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
+
+
+num_frames = 500
 
 @mlab.animate(delay = 10, ui = True)
 def anim():
-    mlab.gcf()
-    for i in range(0,len(armJoints), 100):
+    obj = mlab.gcf()
+    selectedWayp = list(range(0,len(armJoints), int(len(armJoints)/num_frames)+1))
+    selectedWayp += [len(armJoints)-1]
+    for i in selectedWayp:
+        obj.scene.disable_render = True
         T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         rotT = T
         rotT[0,3] = 0
@@ -428,7 +448,7 @@ def anim():
         plt_base_x.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbx[0,3], v = Tbx[1,3], w = Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
         plt_base_y.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tby[0,3], v = Tby[1,3], w = Tby[2,3], scale_factor = 0.3, color=(0,1,0))
         plt_base_z.mlab_source.set(x = px[0], y = py[0], z = pz[0], u = Tbz[0,3], v = Tbz[1,3], w = Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
-#        mlab.view(azimuth = -110+i/2.0, elevation = 50)
+        obj.scene.disable_render = False
         yield
 
 anim()
