@@ -257,7 +257,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
 
     TBCS2Sample[0][3] = 1.4;
     TBCS2Sample[1][3] = 0.7;
-    TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6 + 0.3;
+    TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6;
 
     std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
                  "Relative last waypoint to sample position = "
