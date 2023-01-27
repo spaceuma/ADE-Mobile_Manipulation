@@ -122,6 +122,7 @@ private:
     double d_operational_time;
     unsigned int ui_current_timestamp;
     unsigned int ui_past_timestamp;
+    int start_decoupled_segment = 0;
 
     /*
      * Update Functions
@@ -172,6 +173,8 @@ public:
      * Indicates whether the rover is within the corridor or not
      */
     bool isRoverWithinCorridor(base::Pose pose_rover);
+    bool isArmReady(const std::vector<double> & next_command,
+                    const proxy_library::Joints & j_present_joints);
     bool isArmReady(proxy_library::Joints & j_next_command,
                     const proxy_library::Joints & j_present_joints);
     bool isArmColliding();

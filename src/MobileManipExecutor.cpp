@@ -456,6 +456,16 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             std::cout << "Base initial command: [" << mc_m.m_speed_ms << ", "
                       << mc_m.m_turnRate_rads << "]\n";
 
+            bool decoupled = false;
+            if(decoupled && start_decoupled_segment == 0)
+                for(int i = 0; i < pvvd_arm_motion_profile->size(); i++)
+                    if((*this->pvvd_arm_motion_profile)[i][0] !=
+                       (*this->pvvd_arm_motion_profile)[0][0])
+                    {
+                        start_decoupled_segment = i;
+                        break;
+                    }
+
             if(this->i_current_segment < vpw_path.size())
             {
                 double wayps_distance = sqrt(
@@ -502,7 +512,28 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     mc_m.m_turnRate_rads *= required_base_time / required_arm_time;
                 }
             }
-            this->updateArmCommandVectors();    // TODO: could be changed to unify the
+
+            // Returns true if it is the last position
+            this->b_is_last_segment =
+                (i_current_segment == (*this->pvvd_arm_motion_profile).size() - 1);
+            if(decoupled && start_decoupled_segment > 0 && b_is_last_segment)
+            {
+                if(!isAligned(rover_pose))
+                    for(int i = 0; i < this->vd_arm_present_command.size(); i++)
+                        arm_modified_command[i] =
+                            j_arm_present_readings_m.m_jointStates[i].m_position;
+                else
+                {
+                    arm_modified_command =
+                        (*this->pvvd_arm_motion_profile)[start_decoupled_segment];
+                    if(this->isArmReady(this->vd_arm_present_command, j_arm_present_readings_m))
+                    {
+                        start_decoupled_segment++;
+                        if(start_decoupled_segment > this->pvvd_arm_motion_profile->size() - 1)
+                            start_decoupled_segment = this->pvvd_arm_motion_profile->size() - 1;
+                    }
+                }
+            }
 
             std::cout << "Arm modified command: [" << arm_modified_command[0] << ", "
                       << arm_modified_command[1] << ", " << arm_modified_command[2] << ", "
@@ -533,9 +564,8 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 }
                 this->vd_arm_present_command[i] = d_na;
             }
-            // Returns true if it is the last position
-            this->b_is_last_segment =
-                (i_current_segment == (*this->pvvd_arm_motion_profile).size() - 1);
+
+            this->updateArmCommandVectors();    // TODO: could be changed to unify the
 
             this->assignPresentCommand(j_next_arm_command_m);
             if((!isArmFollowing(j_next_arm_command_m, j_arm_present_readings_m)) &&
@@ -563,8 +593,13 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             {
                 mc_m = this->getZeroRoverCommand();
             }
+
+            std::cout << "Decoupled segment: " << start_decoupled_segment << std::endl;
+
             if((b_is_last_segment) && (isAligned(rover_pose)) &&
-               (this->isArmReady(j_next_arm_command_m, j_arm_present_readings_m)))
+               (this->isArmReady(this->vd_arm_present_command, j_arm_present_readings_m)) &&
+               (!decoupled ||
+                (start_decoupled_segment == this->pvvd_arm_motion_profile->size() - 1)))
             {
                 mc_m = this->getZeroRoverCommand();
                 this->armstate = SAMPLING_POS;
@@ -917,6 +952,28 @@ void MobileManipExecutor::fixMotionCommand(proxy_library::MotionCommand & mc_m)
 bool MobileManipExecutor::isArmColliding()
 {
     return this->p_collision_detector->isColliding(this->vd_arm_present_readings);
+}
+
+bool MobileManipExecutor::isArmReady(const std::vector<double> & next_command,
+                                     const proxy_library::Joints & j_present_joints)
+{
+    // std::cout << "Executing isArmReady" << std::endl;
+    if(next_command.size() != 6)
+    {
+        std::cout << " \033[1;33m[----------] [MobileManipExecutor::isArmReady()]\033[0m WARNING: "
+                     "The input j_next_command is empty"
+                  << std::endl;
+        return false;
+    }
+    for(uint i = 0; i < 6; i++)
+    {
+        if(abs(next_command[i] - j_present_joints.m_jointStates[i].m_position) > 0.05)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool MobileManipExecutor::isArmReady(proxy_library::Joints & j_next_command,

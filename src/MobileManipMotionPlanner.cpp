@@ -104,7 +104,7 @@ MobileManipMotionPlanner::MobileManipMotionPlanner(const RoverGuidance_Dem & nav
               << std::endl;
 
     // New instance of MotionPlan is created
-    this->p_motionplan = new MotionPlan(this->p_mmmap, s_configfile_path_m);
+    this->p_motionplan = new MotionPlan(this->p_mmmap, s_configfile_path_m, 1);
     std::cout << "[MM] \033[32m[----------] [MobileManipMotionPlanner()]\033[0m"
                  " Motion Plan Class Successfully created"
               << std::endl;
