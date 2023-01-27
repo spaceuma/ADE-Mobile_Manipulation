@@ -72,6 +72,16 @@ private:
     unsigned int ui_num_joints = 6;
     std::vector<double> vd_arm_posmargin = {0.2, 0.2, 0.2, 0.2, 0.2, 0.2};
 
+    std::vector<double> arm_joints_max_speed = {3.0 * M_PI / 180.0,
+                                                6.0 * M_PI / 180.0,
+                                                6.0 * M_PI / 180.0,
+                                                20.0 * M_PI / 180.0,
+                                                20.0 * M_PI / 180.0,
+                                                20.0 * M_PI / 180.0};
+
+    double linear_velocity = 0.1;
+    double rotational_velocity = 10.0 * M_PI / 180;
+
     /**
      * Flags and indexes
      */
