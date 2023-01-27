@@ -418,9 +418,9 @@ unsigned int MobileManipExecutor::getCoupledCommand(
             return 0;
 
         case COUPLED_MOVING:
-            {
+        {
             // To avoid the dummy turn waypoint
-            i_actual_segment = min(this->waypoint_navigation.getCurrentSegment(),
+            /*i_actual_segment = min(this->waypoint_navigation.getCurrentSegment(),
                                    (int)(*this->pvvd_arm_motion_profile).size() - 1);
             // std::cout << "COUPLED_MOVING: initial segment is " << i_initial_segment << std::endl;
             if((this->i_current_segment == this->i_initial_segment) ||
@@ -439,11 +439,23 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                         i_current_segment + 1);    // + (i_actual_segment - i_current_segment)/30);
                     // i_current_segment++; // = i_actual_segment;
                 }
-            }
-            // std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+            }*/
+            i_current_segment = this->waypoint_navigation.getCurrentSegment();
+            if(i_current_segment > pvvd_arm_motion_profile->size() - 1)
+                i_current_segment = pvvd_arm_motion_profile->size() - 1;
 
+            std::cout << "COUPLED_MOVING: current segment is " << i_current_segment << std::endl;
+            // Coordinating arm and base movements to precisely follow both trajectories
             std::vector<double> arm_modified_command =
                 (*this->pvvd_arm_motion_profile)[i_current_segment];
+
+            std::cout << "Arm initial command: [" << arm_modified_command[0] << ", "
+                      << arm_modified_command[1] << ", " << arm_modified_command[2] << ", "
+                      << arm_modified_command[3] << ", " << arm_modified_command[4] << ", "
+                      << arm_modified_command[5] << "]\n";
+            std::cout << "Base initial command: [" << mc_m.m_speed_ms << ", "
+                      << mc_m.m_turnRate_rads << "]\n";
+
             if(this->i_current_segment < vpw_path.size())
             {
                 double wayps_distance = sqrt(
@@ -454,6 +466,10 @@ unsigned int MobileManipExecutor::getCoupledCommand(
 
                 double required_base_time = std::max(wayps_distance / linear_velocity,
                                                      wayps_diff_heading / rotational_velocity);
+
+                std::cout << "Wayps distance: " << wayps_distance
+                          << ", wayps diff heading: " << wayps_diff_heading
+                          << ", required base time: " << required_base_time << std::endl;
 
                 std::vector<double> arm_joints_required_times(this->vd_arm_present_command.size()),
                     arm_joints_distances(this->vd_arm_present_command.size());
@@ -470,12 +486,15 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                         required_arm_time = arm_joints_required_times[i];
                 }
 
+                std::cout << "Arm joints required time: " << required_arm_time << std::endl;
+
                 if(required_base_time > required_arm_time)
                 {
                     for(int i = 0; i < this->vd_arm_present_command.size(); i++)
                         arm_modified_command[i] =
                             j_arm_present_readings_m.m_jointStates[i].m_position +
-                            arm_joints_distances[i] * required_arm_time / required_base_time;
+                            arm_joints_distances[i] * arm_joints_required_times[i] /
+                                required_base_time;
                 }
                 else
                 {
@@ -483,6 +502,21 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                     mc_m.m_turnRate_rads *= required_base_time / required_arm_time;
                 }
             }
+            this->updateArmCommandVectors();    // TODO: could be changed to unify the
+
+            std::cout << "Arm modified command: [" << arm_modified_command[0] << ", "
+                      << arm_modified_command[1] << ", " << arm_modified_command[2] << ", "
+                      << arm_modified_command[3] << ", " << arm_modified_command[4] << ", "
+                      << arm_modified_command[5] << "]\n";
+            std::cout << "Arm current position: ["
+                      << j_arm_present_readings_m.m_jointStates[0].m_position << ", "
+                      << j_arm_present_readings_m.m_jointStates[1].m_position << ", "
+                      << j_arm_present_readings_m.m_jointStates[2].m_position << ", "
+                      << j_arm_present_readings_m.m_jointStates[3].m_position << ", "
+                      << j_arm_present_readings_m.m_jointStates[4].m_position << ", "
+                      << j_arm_present_readings_m.m_jointStates[5].m_position << "]\n";
+            std::cout << "Base modified command: [" << mc_m.m_speed_ms << ", "
+                      << mc_m.m_turnRate_rads << "]\n";
 
             double d_angle, d_na;
             for(unsigned int i = 0; i < this->vd_arm_present_command.size(); i++)
@@ -543,7 +577,7 @@ unsigned int MobileManipExecutor::getCoupledCommand(
                 // std::cout << "For some reason the arm is not yet ready" << std::endl;
             }
             return 1;
-            }
+        }
         case SAMPLING_POS:
             mc_m = this->getZeroRoverCommand();
             return 2;
