@@ -417,7 +417,8 @@ plt_ee_z = mlab.quiver3d(px[-1], py[-1], pz[-1], Tz[0,3], Tz[1,3], Tz[2,3], scal
 plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], scale_factor = 0.3, color=(1,0,0))
 plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
 plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
-mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
+#mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0])) #azimuthal
+mlab.view(azimuth = 70, elevation = 70, distance = 10, focalpoint = np.array([18,12,2])) #frontal
 
 
 num_frames = 200
@@ -451,6 +452,7 @@ def anim():
 
         plt_arm.mlab_source.set(x=px,y=py,z=pz)
         plt_joints.mlab_source.set(x=px[np.array([1,2,4,6,7,8])], y=py[np.array([1,2,4,6,7,8])], z=pz[np.array([1,2,4,6,7,8])])
+        
         plt_ee_x.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tx[0,3], v = Tx[1,3], w = Tx[2,3], scale_factor = 0.3, color=(1,0,0))
         plt_ee_y.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Ty[0,3], v = Ty[1,3], w = Ty[2,3], scale_factor = 0.3, color=(0,1,0))
         plt_ee_z.mlab_source.set(x = px[-1], y = py[-1], z = pz[-1], u = Tz[0,3], v = Tz[1,3], w = Tz[2,3], scale_factor = 0.3, color=(0,0,1))
