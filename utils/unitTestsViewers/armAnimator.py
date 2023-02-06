@@ -381,9 +381,18 @@ px = np.array(px)
 py = np.array(py)
 pz = np.array(pz)
 
+startArmIndex = 0
+showAllIndex = 0
 d = np.zeros(len(path))
 for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
+
+for i in range(len(path)-1, 1, -1):
+    if d[i] < d[-1] - 0.05 and showAllIndex == 0:
+        showAllIndex = i
+    if d[i] < d[-1] - 3.52:
+        startArmIndex = i
+        break;
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
 surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
@@ -411,13 +420,14 @@ plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], sc
 mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
 
 
-num_frames = 500
+num_frames = 200
 
 @mlab.animate(delay = 10, ui = True)
 def anim():
     obj = mlab.gcf()
-    selectedWayp = list(range(0,len(armJoints), int(len(armJoints)/num_frames)+1))
-    selectedWayp += [len(armJoints)-1]
+    selectedWayp = list(range(0,startArmIndex, int(startArmIndex/num_frames)+1))
+    selectedWayp += list(range(startArmIndex, showAllIndex, int((showAllIndex-startArmIndex)/num_frames)+1))
+    selectedWayp += list(range(showAllIndex, len(armJoints)))
     for i in selectedWayp:
         obj.scene.disable_render = True
         T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
