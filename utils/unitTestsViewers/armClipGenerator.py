@@ -383,14 +383,18 @@ px = np.array(px)
 py = np.array(py)
 pz = np.array(pz)
 
+startArmIndex = 0
+showAllIndex = 0
 d = np.zeros(len(path))
 for i in range(1,len(path)):
     d[i] = d[i-1] + np.linalg.norm(path[i,0:2]-path[i-1,0:2])
 
-# Repeat multiply the final pose in the end so it gets inside the clip
-for i in range(0, int(np.size(path,0)/10)):
-    path = np.vstack((path,path[-1]))
-    armJoints = np.vstack((armJoints,armJoints[-1]))
+for i in range(len(path)-1, 1, -1):
+    if d[i] < d[-1] - 0.05 and showAllIndex == 0:
+        showAllIndex = i
+    if d[i] < d[-1] - 3.52:
+        startArmIndex = i
+        break;
 
 fig1 = mlab.figure(size=(1920,1080), bgcolor=(1,1,1))
 surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
@@ -417,12 +421,19 @@ plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], sc
 
 mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
 
-duration = 10
+num_frames = 500
+duration = 15
 obj = mlab.gcf()
 
+selectedWayp = list(range(0,startArmIndex, int(startArmIndex/num_frames)+1))
+selectedWayp += list(range(startArmIndex, showAllIndex, int((showAllIndex-startArmIndex)/num_frames)+1))
+selectedWayp += list(range(showAllIndex, len(armJoints)))
+
 def make_frame(t):
+
+        i = selectedWayp[(int)(t*len(selectedWayp)/duration)]
+
         obj.scene.disable_render = True
-        i = (int)(t*len(armJoints)/duration)
         T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
         rotT = T
         rotT[0,3] = 0
@@ -457,6 +468,6 @@ def make_frame(t):
 
 animation = mpy.VideoClip(make_frame, duration=duration)
 animation = animation.resize((1920,1080))
-animation.write_videofile("sampling.mp4", fps=15)
+animation.write_videofile("sampling.mp4", fps=30)
 
 mlab.show()
