@@ -419,16 +419,18 @@ plt_base_x = mlab.quiver3d(px[0], py[0], pz[0], Tbx[0,3], Tbx[1,3], Tbx[2,3], sc
 plt_base_y = mlab.quiver3d(px[0], py[0], pz[0], Tby[0,3], Tby[1,3], Tby[2,3], scale_factor = 0.3, color=(0,1,0))
 plt_base_z = mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 0.3, color=(0,0,1))
 
-#mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0])) #azimuthal
-mlab.view(azimuth = 70, elevation = 70, distance = 10, focalpoint = np.array([18,12,2])) #frontal
+mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0])) #azimuthal
+#mlab.view(azimuth = 70, elevation = 70, distance = 10, focalpoint = np.array([18,12,2])) #frontal
 
 num_frames = 500
-duration = 15
+duration = 30
 obj = mlab.gcf()
 
 selectedWayp = list(range(0,startArmIndex, int(startArmIndex/num_frames)+1))
 selectedWayp += list(range(startArmIndex, showAllIndex, int((showAllIndex-startArmIndex)/num_frames)+1))
 selectedWayp += list(range(showAllIndex, len(armJoints)))
+for i in range(0,100):
+    selectedWayp += list([len(armJoints)-1])
 
 def make_frame(t):
 
