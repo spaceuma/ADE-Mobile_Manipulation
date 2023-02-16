@@ -378,13 +378,22 @@ z = np.linspace(0,stopz,zsize)"""
 
 X, Y, Z = np.mgrid[0:stopx:complexSizex,0:stopy:complexSizey,0:stopz:complexSizez]
 
+startArmIndex = 0
+showAllIndex = 0
+for i in range(len(path)-1, 1, -1):
+    if d[i] < d[-1] - 0.05 and showAllIndex == 0:
+        showAllIndex = i
+    if d[i] < d[-1] - 3.52:
+        startArmIndex = i
+        break;
+
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
-surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'gist_earth') #np.flipud(np.fliplr(DEM0)))
-lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
+surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'Oranges') #np.flipud(np.fliplr(DEM0)))
+'''lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
 lut[:,0] = np.linspace(246, 100, 256)
 lut[:,1] = np.linspace(215, 154, 256)
 lut[:,2] = np.linspace(176, 23, 256)
-surf.module_manager.scalar_lut_manager.lut.table = lut
+surf.module_manager.scalar_lut_manager.lut.table = lut'''
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04, opacity = 0.4)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04, opacity = 0.4)
 mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][1]/res+0.5),int(path3D[-1][0]/res+0.5)], scale_factor = 0.2, color=(50/255,50/255,50/255), mode = 'cube')
@@ -392,8 +401,14 @@ mlab.quiver3d(0, 0, 0, 1, 0, 0, scale_factor = 1, color=(1,0,0))
 mlab.quiver3d(0, 0, 0, 0, 1, 0, scale_factor = 1, color=(0,1,0))
 mlab.quiver3d(0, 0, 0, 0, 0, 1, scale_factor = 1, color=(0,0,1))
 
+initial_num_frames = 5
+final_num_frames = 7
+
+selectedWayp = list(range(0,startArmIndex, int(startArmIndex/initial_num_frames)+1))
+selectedWayp += list(range(startArmIndex, len(armJoints), int((showAllIndex-startArmIndex)/final_num_frames)+1))
+
 n = np.size(armJoints,0)
-for i in range(0,n,round(n/5)):
+for i in selectedWayp:
   T = DKM(armJoints[i,:], path[i,np.array([0,1,2])], [0,0,path[i,3]])
   rotT = T
   rotT[0,3] = 0   
@@ -426,9 +441,9 @@ for i in range(0,n,round(n/5)):
 
 T = DKM(armJoints[n-1,:], path[n-1,np.array([0,1,2])], [0,0,path[n-1,3]])
 rotT = T
-rotT[0,3] = 0   
-rotT[1,3] = 0   
-rotT[2,3] = 0   
+rotT[0,3] = 0
+rotT[1,3] = 0
+rotT[2,3] = 0
 
 Tbx = dot(rotZ(path[n-1,3]), traslation([1,0,0]))
 Tby = dot(rotZ(path[n-1,3]), traslation([0,1,0]))
@@ -457,7 +472,7 @@ mlab.quiver3d(px[0], py[0], pz[0], Tbz[0,3], Tbz[1,3], Tbz[2,3], scale_factor = 
 mlab.view(azimuth = 100, elevation = 70, distance = 20, focalpoint = np.array([15,11,0]))
 mlab.show()
 
-fig, ax = plt.subplots()
+'''fig, ax = plt.subplots()
 plt.scatter(d, armJoints[:, 0], label = 'First joint', s = 17)
 plt.scatter(d, armJoints[:, 1], label = 'Second joint', s = 17)
 plt.scatter(d, armJoints[:, 2], label = 'Third joint', s = 17)
@@ -468,4 +483,4 @@ plt.scatter(d, armJoints[:, 5], label = 'Sixth joint', s = 17)
 plt.xlabel("Length of the trajectory covered (m)", fontsize = 20)
 plt.ylabel("Joint position (rad)", fontsize = 20)
 plt.legend(fontsize = 17)
-plt.show()
+plt.show()'''
