@@ -257,7 +257,7 @@ bool ArmPlanner::planArmMotion(std::vector<base::Waypoint> * roverPath,
 
     TBCS2Sample[0][3] = 1.4;
     TBCS2Sample[1][3] = 0.7;
-    TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6;
+    TBCS2Sample[2][3] = heightGround2BCS - sherpa_tt_arm->d6 + 0.15;
 
     std::cout << "[MM] \033[35m[----------] [ArmPlanner::planArmMotion()]\033[0m "
                  "Relative last waypoint to sample position = "
@@ -2262,7 +2262,8 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
     const std::vector<std::vector<double>> * armProfile,
     std::vector<std::vector<double>> * smoothedArmProfile,
     double sigma,
-    int samples)
+    int samples,
+    double linearization_size)
 {
     (*smoothedArmProfile) = (*armProfile);
 
@@ -2281,7 +2282,7 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
     // std::cout<<"Min separation: "<<minWaypSeparation<<std::endl;
     // std::cout<<"Path length: "<<pathLength<<std::endl;
 
-    int minSamples = (int)(pathLength / minWaypSeparation) / 8;
+    int minSamples = (int)(pathLength / minWaypSeparation / linearization_size);
     if(samples < minSamples) samples = minSamples;
 
     if(samples % 2 == 0)
@@ -2349,7 +2350,7 @@ void ArmPlanner::computeArmProfileGaussSmoothening(
         }
 
         // Linear interpolation to reduce jump to reach last joint pos
-        int indexStartInterpolation = jointProfile.size() - (int)samples * 2;
+        int indexStartInterpolation = jointProfile.size() - (int)samples / 2;
         int indexEndInterpolation = jointProfile.size() - 1;
         double prevJointPos = jointProfile[indexStartInterpolation];
         double lastJointPos = jointProfile[indexEndInterpolation];

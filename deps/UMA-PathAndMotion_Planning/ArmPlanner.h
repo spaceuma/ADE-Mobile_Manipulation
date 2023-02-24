@@ -196,7 +196,8 @@ public:
                                            const std::vector<std::vector<double>> * armProfile,
                                            std::vector<std::vector<double>> * smoothedArmProfile,
                                            double sigma = 5,
-                                           int samples = 5);
+                                           int samples = 5,
+                                           double linearization_size = 8);
 };
 }    // namespace ArmPlanner_lib
 #endif
