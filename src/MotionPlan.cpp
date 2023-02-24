@@ -296,7 +296,10 @@ unsigned int MotionPlan::computeArmProfilePlanning()
     unsigned int ui_deployment = this->p_arm_planner->getDeployment();
 
     bool minimize_arm_movement = true;    // TODO: make this take the true current one
-    double min_arm_moving_time = 35.21899630340112;
+
+    double speed_ratio = 1.0;
+
+    double min_arm_moving_time = 35.21899630340112 / speed_ratio;
     double rover_speed = 0.1;
     double distance_start_movement = min_arm_moving_time * rover_speed;
     double dist_to_goal = 0;
@@ -393,27 +396,54 @@ unsigned int MotionPlan::computeArmProfilePlanning()
                 if(this->vvd_arm_motion_profile.size() > this->ui_gauss_numsamples * 2 &&
                    ui_deployment != 3)
                 {
+                    int watchdog = 5;
+                    double linearization_size = 8;
+                    auto original_rover_path = this->vw_rover_path;
                     this->p_arm_planner->computeArmProfileGaussSmoothening(
                         this->vw_rover_path,
                         &(this->vvd_arm_motion_profile),
                         &(this->vvd_smoothed_arm_motion_profile),
                         this->d_gauss_sigma,
-                        this->ui_gauss_numsamples);
-                    if(this->isArmProfileSafe(this->vvd_smoothed_arm_motion_profile))
+                        this->ui_gauss_numsamples,
+                        linearization_size);
+                    std::cout << "[MM] \033[35m[----------] "
+                                 "[MotionPlan::computeArmProfilePlanning()]\033[0m "
+                                 "Performed Gauss Smoothening"
+                              << std::endl;
+                    while(!(this->isArmProfileSafe(this->vvd_smoothed_arm_motion_profile)) &&
+                          watchdog > 0)
                     {
-                        this->vvd_arm_motion_profile.clear();
-                        std::vector<double> row;
-                        for(uint j = 0; j < vvd_smoothed_arm_motion_profile.size(); j++)
-                        {
-                            for(uint i = 0; i < vvd_smoothed_arm_motion_profile[0].size(); i++)
-                            {
-                                row.push_back(vvd_smoothed_arm_motion_profile[j][i]);
-                            }
-                            this->vvd_arm_motion_profile.push_back(row);
-                            row.clear();
-                        }
-                        this->vvd_arm_motion_profile = this->vvd_smoothed_arm_motion_profile;
+                        std::cout << "[MM] \033[35m[----------] "
+                                     "[MotionPlan::computeArmProfilePlanning()]\033[0m "
+                                     "Unsafe smoothed Profile, trying again..."
+                                  << std::endl;
+                        linearization_size *= 2;
+                        watchdog -= 1;
+                        this->vvd_smoothed_arm_motion_profile.clear();
+                        this->vw_rover_path = original_rover_path;
+
+                        this->p_arm_planner->computeArmProfileGaussSmoothening(
+                            this->vw_rover_path,
+                            &(this->vvd_arm_motion_profile),
+                            &(this->vvd_smoothed_arm_motion_profile),
+                            this->d_gauss_sigma,
+                            this->ui_gauss_numsamples,
+                            linearization_size);
+
+                        std::cout << "[MM] \033[35m[----------] "
+                                     "[MotionPlan::computeArmProfilePlanning()]\033[0m "
+                                     "Performed Gauss Smoothening"
+                                  << std::endl;
                     }
+
+                    std::cout
+                        << "[MM] \033[1;35m[----------] "
+                           "[MotionPlan::computeArmProfilePlanning()]\033[0m Arm Motion Profile of "
+                        << this->vvd_arm_motion_profile.size()
+                        << " waypoints updated with the smoothed profile of "
+                        << this->vvd_smoothed_arm_motion_profile.size() << " waypoints"
+                        << std::endl;
+                    this->vvd_arm_motion_profile = this->vvd_smoothed_arm_motion_profile;
                 }
                 std::cout << "[MM] \033[1;35m[----------] "
                              "[MotionPlan::computeArmProfilePlanning()]\033[0m Arm Motion Profile "
@@ -836,6 +866,7 @@ bool MotionPlan::isArmProfileSafe(const std::vector<std::vector<double>> & vvd_p
             std::cout << " " << vvd_profile_m[i][3];
             std::cout << " " << vvd_profile_m[i][4];
             std::cout << " " << vvd_profile_m[i][5];
+            std::cout << std::endl;
             return false;
         }
     }
