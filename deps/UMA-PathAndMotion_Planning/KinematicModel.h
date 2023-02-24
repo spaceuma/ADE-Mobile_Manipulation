@@ -93,12 +93,15 @@ public:
     //                                          2.26892803,
     //                                          2.26892803,
     //                                          2.26892803};
-    std::vector<double> armJointsMaxSpeed = {3.1416 * 3.0 / 180.0,
-                                             3.1416 * 6.0 / 180.0,
-                                             3.1416 * 6.0 / 180.0,
-                                             3.1416 * 20.0 / 180.0,
-                                             3.1416 * 20.0 / 180.0,
-                                             3.1416 * 20.0 / 180.0};
+
+    double speed_ratio = 1.0;
+
+    std::vector<double> armJointsMaxSpeed = {3.1416 * 3.0 / 180.0 * speed_ratio,
+                                             3.1416 * 6.0 / 180.0 * speed_ratio,
+                                             3.1416 * 6.0 / 180.0 * speed_ratio,
+                                             3.1416 * 20.0 / 180.0 * speed_ratio,
+                                             3.1416 * 20.0 / 180.0 * speed_ratio,
+                                             3.1416 * 20.0 / 180.0 * speed_ratio};
 
     // Manipulator Workspace
     double maxArmDistance = a2 + d4 + d6;
@@ -109,8 +112,7 @@ public:
     double minArmDistance = 0.0;
     double optimalArmRadius = (maxArmOptimalDistance + minArmOptimalDistance) / 2;
 
-    std::vector<double> initialConfiguration =
-        {1.301, -1.103, 1.585, 2.016, 1.035, -2.967};
+    std::vector<double> initialConfiguration = {1.301, -1.103, 1.585, 2.016, 1.035, -2.967};
     //= {2.1377, -1.6331, 2.4466, -3.0820, 0.8144, 3.1007};
     //= {0.831571, -0.635383, 0.912176, -1.81496, 0.865747, 1.9378};
     //= {0.8, -0.7, 1.0, 1.0, -1.1, 2.4};
