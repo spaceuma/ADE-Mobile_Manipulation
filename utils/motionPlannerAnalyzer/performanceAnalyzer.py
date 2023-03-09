@@ -17,7 +17,7 @@ def getApproach(string):
         return 3
     return 4
 
-speeds = ["x06", "x08", "x12", "x14", "x1"]
+speeds = ["x04","x06", "x08", "x12", "x14", "x1"]
 
 mean_computation_times = {speeds[0]:[], speeds[1]:[], speeds[2]:[], speeds[3]:[], speeds[4]:[]}
 mean_self_collision_distances = {speeds[0]:[], speeds[1]:[], speeds[2]:[], speeds[3]:[], speeds[4]:[]}
@@ -317,12 +317,21 @@ plot22 = ax4.bar(x[0]+width*2.2, mean_total_required_times["x14"][0], width, edg
 plot23 = ax4.bar(x[0]+width*2.2, mean_base_moving_times["x14"][0], width, edgecolor='cornflowerblue', label='Base', facecolor='cornflowerblue')
 plot24 = ax4.bar(x[1:]+width*2.2, mean_total_required_times["x14"][1:], width, facecolor='palegreen', label='Coupled', edgecolor='cornflowerblue', hatch=r"\\" )
 plot25 = ax4.bar(x[1:]+width*2.2, mean_base_moving_times["x14"][1]-mean_arm_moving_times["x14"][1], width, edgecolor='cornflowerblue', label='Base', facecolor='cornflowerblue')
+plot26 = ax4.bar(x[0]-width*3.3, mean_total_required_times["x04"][0], width, edgecolor='palegreen', label='Arm', facecolor='palegreen')
+plot27 = ax4.bar(x[0]-width*3.3, mean_base_moving_times["x06"][0], width, edgecolor='cornflowerblue', label='Base', facecolor='cornflowerblue')
+plot28 = ax4.bar(x[1:]-width*3.3, mean_total_required_times["x04"][1:], width, facecolor='palegreen', label='Coupled', edgecolor='cornflowerblue', hatch=r"\\" )
+plot29 = ax4.bar(x[1:]-width*3.3, mean_base_moving_times["x04"][1]-mean_arm_moving_times["x04"][1], width, edgecolor='cornflowerblue', label='Base', facecolor='cornflowerblue')
 ax4.set_ylabel('Time (s)')
 ax4.set_ylim(bottom = 0)
 ax4.grid()
 #ax4.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 #ax4.set_xticks(x, approaches)
 #ax4.set_axisbelow(True)
+ax4.text(x[0]-width*3.8, mean_total_required_times["x04"][0]+1, "x0.4", fontsize=12)
+ax4.text(x[1]-width*3.8, mean_total_required_times["x04"][1]+1, "x0.4", fontsize=12)
+ax4.text(x[2]-width*3.8, mean_total_required_times["x04"][2]+1, "x0.4", fontsize=12)
+ax4.text(x[3]-width*3.8, mean_total_required_times["x04"][3]+1, "x0.4", fontsize=12)
+
 
 ax4.text(x[0]-width*2.75, mean_total_required_times["x06"][0]+1, "x0.6", fontsize=12)
 ax4.text(x[1]-width*2.75, mean_total_required_times["x06"][1]+1, "x0.6", fontsize=12)
