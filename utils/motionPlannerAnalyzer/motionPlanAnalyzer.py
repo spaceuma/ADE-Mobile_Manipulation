@@ -393,7 +393,7 @@ zsize = int(sizes[2])
 resXY = resolutions[0]
 resZ = resolutions[2]
 
-speedRatio = 1.0
+speed_ratio = 1.0
 
 armJointsSpeed = np.array([3, 6, 6, 20, 20, 20])*np.pi/180*speed_ratio
 roverSpeed = 0.1
