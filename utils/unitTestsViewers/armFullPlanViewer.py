@@ -389,11 +389,11 @@ for i in range(len(path)-1, 1, -1):
 
 fig1 = mlab.figure(size=(500,500), bgcolor=(1,1,1))
 surf = mlab.surf(xMap,yMap, np.flipud(np.rot90(DEM0)), colormap = 'Oranges') #np.flipud(np.fliplr(DEM0)))
-'''lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
+lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
 lut[:,0] = np.linspace(246, 100, 256)
 lut[:,1] = np.linspace(215, 154, 256)
 lut[:,2] = np.linspace(176, 23, 256)
-surf.module_manager.scalar_lut_manager.lut.table = lut'''
+surf.module_manager.scalar_lut_manager.lut.table = lut
 mlab.plot3d(path[:,0], path[:,1], path[:,2], color=(0,0,1), tube_radius = 0.04, opacity = 0.4)
 mlab.plot3d(path3D[:,0], path3D[:,1], path3D[:,2], color=(1,1,0), tube_radius = 0.04, opacity = 0.4)
 mlab.points3d(path3D[-1][0], path3D[-1][1], DEM0[int(path3D[-1][1]/res+0.5),int(path3D[-1][0]/res+0.5)], scale_factor = 0.2, color=(50/255,50/255,50/255), mode = 'cube')
