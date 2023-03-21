@@ -1,10 +1,35 @@
-# ADE_Mobile-Manipulation
-C++ code for European H2020 Project ADE
+<h1 align="center">ADE-Mobile_Manipulation</h1>
+
+<h3 align="center">Combined path and motion planner for workspace restricted mobile manipulators in planetary exploration</h3>
+
+
+<h4 align="center">C++ library used in H2020 EC Project Autonomous DEcision making in very long traverses (ADE)</h4>
+
+![image](https://user-images.githubusercontent.com/37618448/226581695-0f960cca-62d7-466f-a9d4-4c4b6082c896.png)
+
+
+*Author*: [Gonzalo Jesús Paz Delgado](https://github.com/gonzalopd96), gonzalopd96@uma.es
+
+*Supervisor*: [Carlos J. Pérez del Pulgar](https://github.com/carlibiri), carlosperez@uma.es
+
+*Organization*: [Space Robotics Lab, University of Malaga](https://www.uma.es/space-robotics)
+
 
 ## Table of Contents
+  * [Description](#description)
   * [Installation](#installation)
-  * [External Packages](#external-packages)
-  * [Folder Structure](#installation)
+  * [Examples](#examples)
+  * [Dependencies](#dependencies)
+  * [File tree](#file-tree)
+  * [Citation](#citation)
+
+
+## Description
+Coupled path and motion planner for Mobile Manipulation (MM), focused on rovers with a restricted arm workspace. 
+- First, a Fast Marching Method (FMM) based path planner generates a safe trajectory to reach the goal vicinity, avoiding obstacles and non-traversable areas in the scenario. The path planner is able to control the final rover orientation to ensure that the goal is finally reachable by the arm.
+- Second, a FMM 3D based motion planner generates the arm joints motion profile, by creating a 3D tunnel-like cost volume surrounding the already computed rover base trajectory. This tunnel makes use of an offline-computed safe workspace of the manipulator, thus ensuring that no self-collision will occur during the planned motion.
+
+Check the [Simulation and field tests video](https://youtu.be/I-cEbNgtQ9c).
 
 ## Installation
 
@@ -57,7 +82,7 @@ Where ```<approach>``` is:
 - ```2``` for beginning deployment within the coupled approach
 - ```3``` for decoupled solution
 
-## External Packages
+## Dependencies
 
 ### Required (the indicated version is the one used)
 
@@ -75,10 +100,10 @@ Where ```<approach>``` is:
 
 - python3-matplotlib
 
-## Folder Structure
+## File Tree
 
 
-| Folder            |       Description                             |
+| Directory         |       Description                             |
 | ----------------- | ------------------------                      |
 | data/             | Data required as input by the planner         |
 | deps/             | External dependencies                         |
@@ -109,3 +134,11 @@ Where ```<approach>``` is:
 | ├── motionPlannerAnalyzer/ | Process unit tests log data to obtain results about performance |
 | ├── unitTestsViewers/ | Python scripts to represent the results of the unit tests |
 
+## Citation
+
+If this work was helpful for your research, please consider citing the following BibTeX entry:
+
+@article{author = {G. J. Paz-Delgado and J. R. Sánchez-Ibáñez and R. Domínguez and C. J. Pérez-del-Pulgar and F. Kirchner and A. García-Cerezo},
+   title = {Combined path and motion planning for workspace restricted mobile manipulators in planetary exploration},
+   year = {2023}
+}
