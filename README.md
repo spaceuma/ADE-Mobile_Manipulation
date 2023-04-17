@@ -10,6 +10,8 @@
 
 *Author*: [Gonzalo Jesús Paz Delgado](https://github.com/gonzalopd96), gonzalopd96@uma.es
 
+*Co-author*: [J. Ricardo Sánchez Ibáñez](https://jricardosan-tech.carrd.co/#aboutme),  jricardosanchezibanez@gmail.com
+
 *Supervisor*: [Carlos J. Pérez del Pulgar](https://github.com/carlibiri), carlosperez@uma.es
 
 *Organization*: [Space Robotics Lab, University of Malaga](https://www.uma.es/space-robotics)
