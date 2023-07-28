@@ -140,7 +140,9 @@ Where ```<approach>``` is:
 
 If this work was helpful for your research, please consider citing the following BibTeX entry:
 
-@article{author = {G. J. Paz-Delgado and J. R. Sánchez-Ibáñez and R. Domínguez and C. J. Pérez-del-Pulgar and F. Kirchner and A. García-Cerezo},
-   title = {Combined path and motion planning for workspace restricted mobile manipulators in planetary exploration},
-   year = {2023}
-}
+@ARTICLE{author={Paz-Delgado, G.J. and Sánchez-Ibáñez, J.R. and Domínguez, R. and Pérez-Del-Pulgar, C.J. and Kirchner, F. and García-Cerezo, A.},
+  journal={IEEE Access},
+  title={Combined path and motion planning for workspace restricted mobile manipulators in planetary exploration},
+  year={2023},
+  pages={1-1},
+  doi={10.1109/ACCESS.2023.3298980}}
